@@ -1,0 +1,27 @@
+{
+  "name": "blockchain-wallet",
+  "authors": [
+    "Ben Reeves",
+    "Tim Lee",
+    "Mark Pfluger <mark@blockchain.com>",
+    "Sjors Provoost <sjors@blockchain.com>",
+    "Jaume Pernas <jaume@blockchain.com>"
+  ],
+  "description": "Blockchain.info JavaScript Wallet",
+  "main": "dist/my-wallet.js",
+  "keywords": [
+    "Bitcoin",
+    "Blockchain"
+  ],
+  "license": "",
+  "private": false,
+  "repository" : {
+    "type" : "git",
+    "url" : "git://github.com/blockchain/My-Wallet-V3-Bower.git"
+  },
+  "ignore": [
+  ],
+  "scripts": {},
+  "dependencies": {},
+  "devDependencies": {}
+}
