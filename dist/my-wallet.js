@@ -41234,7 +41234,7 @@ Address.prototype.persist = function(){
   return this;
 };
 
-},{"./helpers":340,"./wallet":350,"bitcoinjs-lib":56,"bs58":65}],335:[function(require,module,exports){
+},{"./helpers":340,"./wallet":351,"bitcoinjs-lib":56,"bs58":65}],335:[function(require,module,exports){
 'use strict';
 
 module.exports = new API();
@@ -41296,6 +41296,7 @@ API.prototype.request = function(action, method, data, withCredentials, syncBool
     request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
   }
 
+
   request.onload = function (e) {
     if (request.readyState === 4) {
       if (request.status === 200) {
@@ -41307,6 +41308,17 @@ API.prototype.request = function(action, method, data, withCredentials, syncBool
       }
     }
   };
+
+  // this is used on iOS to enable and disable web socket while doing ajax calls
+  request.onloadstart = function (a){
+    WalletStore.sendEvent("msg", {type: "ajax-start", message: 'ajax call started'});
+  };
+
+  // this is used on iOS to enable and disable web socket while doing ajax calls
+  request.onloadend = function(a) {
+    WalletStore.sendEvent("msg", {type: "ajax-end", message: 'ajax call ended'});
+  };
+
   request.onerror = function (e) {
     defer.reject(request.responseText);
   };
@@ -41509,7 +41521,7 @@ API.prototype.pushTx = function (tx, note){
 //   }
 // };
 
-},{"./helpers":340,"./wallet":350,"./wallet-store":349,"assert":115,"crypto-js":89,"q":328}],336:[function(require,module,exports){
+},{"./helpers":340,"./wallet":351,"./wallet-store":349,"assert":115,"crypto-js":89,"q":328}],336:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -41748,7 +41760,7 @@ module.exports = {
   getActivityLogs: getActivityLogs
 };
 
-},{"./wallet-store.js":349,"./wallet.js":350,"assert":115}],337:[function(require,module,exports){
+},{"./wallet-store.js":349,"./wallet.js":351,"assert":115}],337:[function(require,module,exports){
 'use strict';
 
 module.exports = Wallet;
@@ -41997,6 +42009,21 @@ Object.defineProperties(Wallet.prototype, {
       return this.activeKeys
                  .map(function(k){return k.balance;})
                  .reduce(Helpers.add, 0);
+    }
+  },
+  "balanceActiveAccounts":{
+    configurable: false,
+    get: function() {
+      return this.hdwallet.accounts
+                 .filter(function(a){return !a.archived;})
+                 .map(function(a){return a.balance;})
+                 .reduce(Helpers.add, 0);
+    }
+  },
+  "balanceActive":{
+    configurable: false,
+    get: function() {
+      return this.balanceActiveLegacy + this.balanceActiveAccounts;
     }
   },
   "balanceSpendableActiveLegacy":{
@@ -42478,7 +42505,7 @@ Wallet.prototype.whitelistWallet = function (secret, subdomain, email, name) {
   return defer.promise;
 };
 
-},{"./address":334,"./api":335,"./hd-account":338,"./hd-wallet":339,"./helpers":340,"./import-export":341,"./wallet":350,"./wallet-crypto":347,"./wallet-store":349,"assert":115,"bigi":3,"bip39":5,"bitcoinjs-lib":56,"bs58":65,"buffer":117,"rsvp":330}],338:[function(require,module,exports){
+},{"./address":334,"./api":335,"./hd-account":338,"./hd-wallet":339,"./helpers":340,"./import-export":341,"./wallet":351,"./wallet-crypto":347,"./wallet-store":349,"assert":115,"bigi":3,"bip39":5,"bitcoinjs-lib":56,"bs58":65,"buffer":117,"rsvp":330}],338:[function(require,module,exports){
 'use strict';
 
 module.exports = HDAccount;
@@ -42781,7 +42808,7 @@ HDAccount.prototype.persist = function(){
   return this;
 };
 
-},{"./helpers":340,"./keyring":344,"./wallet":350,"./wallet-crypto":347,"assert":115,"bitcoinjs-lib":56}],339:[function(require,module,exports){
+},{"./helpers":340,"./keyring":344,"./wallet":351,"./wallet-crypto":347,"assert":115,"bitcoinjs-lib":56}],339:[function(require,module,exports){
 'use strict';
 
 module.exports = HDWallet;
@@ -43101,7 +43128,7 @@ HDWallet.prototype.isValidAccountIndex = function(index){
   return Helpers.isNumber(index) && index >= 0 && index < this._accounts.length;
 };
 
-},{"./hd-account":338,"./helpers":340,"./wallet":350,"./wallet-crypto":347,"assert":115,"bip39":5,"bitcoinjs-lib":56}],340:[function(require,module,exports){
+},{"./hd-account":338,"./helpers":340,"./wallet":351,"./wallet-crypto":347,"assert":115,"bip39":5,"bitcoinjs-lib":56}],340:[function(require,module,exports){
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -43848,7 +43875,8 @@ module.exports = {
   BlockchainSettingsAPI: require('./blockchain-settings-api'),
   // only for debugging
   Helpers: require('./helpers'),
-  API: require('./api')
+  API: require('./api'),
+  Tx: require('./wallet-transaction')
   // Wallet: require('./blockchain-wallet'),
   // Address: require('./address'),
   // HDAccount: require('./hd-account'),
@@ -43861,7 +43889,7 @@ module.exports = {
   // BIP39: require('bip39')
 };
 
-},{"./api":335,"./blockchain-settings-api":336,"./helpers":340,"./import-export":341,"./payment":345,"./wallet":350,"./wallet-crypto":347,"./wallet-store":349,"buffer":117,"crypto-js":89}],343:[function(require,module,exports){
+},{"./api":335,"./blockchain-settings-api":336,"./helpers":340,"./import-export":341,"./payment":345,"./wallet":351,"./wallet-crypto":347,"./wallet-store":349,"./wallet-transaction":350,"buffer":117,"crypto-js":89}],343:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyChain;
@@ -44493,7 +44521,7 @@ function computeSuggestedSweep(coins){
 //   .catch(error)
 
 }).call(this,require("buffer").Buffer)
-},{"./api":335,"./helpers":340,"./keyring":344,"./transaction":346,"./wallet":350,"./wallet-crypto":347,"bitcoinjs-lib":56,"buffer":117,"q":328}],346:[function(require,module,exports){
+},{"./api":335,"./helpers":340,"./keyring":344,"./transaction":346,"./wallet":351,"./wallet-crypto":347,"bitcoinjs-lib":56,"buffer":117,"q":328}],346:[function(require,module,exports){
 'use strict';
 
 var assert      = require('assert');
@@ -44667,7 +44695,7 @@ function sortUnspentOutputs(unspentOutputs) {
 
 module.exports = Transaction;
 
-},{"./helpers":340,"./wallet":350,"assert":115,"bitcoinjs-lib":56,"randombytes":329}],347:[function(require,module,exports){
+},{"./helpers":340,"./wallet":351,"assert":115,"bitcoinjs-lib":56,"randombytes":329}],347:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -45029,7 +45057,7 @@ function insertWallet(guid, sharedKey, password, extra, successcallback, errorca
             successcallback(data);
           },
           function(e) {
-            errorcallback(e.responseText);
+            errorcallback(e);
           }
         );
 
@@ -45053,7 +45081,7 @@ function generateUUIDs(n, success, error) {
     }
   };
   var err = function(data) {
-    error(data.responseText);
+    error(data);
   };
 
   var data = {
@@ -45106,7 +45134,7 @@ module.exports = {
   generateNewWallet: generateNewWallet
 };
 
-},{"./api":335,"./blockchain-wallet":337,"./helpers":340,"./wallet":350,"./wallet-crypto":347,"./wallet-store":349,"assert":115,"crypto-js":89}],349:[function(require,module,exports){
+},{"./api":335,"./blockchain-wallet":337,"./helpers":340,"./wallet":351,"./wallet-crypto":347,"./wallet-store":349,"assert":115,"crypto-js":89}],349:[function(require,module,exports){
 'use strict';
 
 var CryptoJS = require('crypto-js');
@@ -45390,7 +45418,116 @@ var WalletStore = (function() {
 
 module.exports = WalletStore;
 
-},{"./wallet":350,"./wallet-crypto":347,"crypto-js":89}],350:[function(require,module,exports){
+},{"./wallet":351,"./wallet-crypto":347,"crypto-js":89}],350:[function(require,module,exports){
+'use strict';
+
+module.exports = Tx;
+////////////////////////////////////////////////////////////////////////////////
+// var Base58   = require('bs58');
+// var Bitcoin  = require('bitcoinjs-lib');
+var Helpers  = require('./helpers');
+var MyWallet = require('./wallet');
+////////////////////////////////////////////////////////////////////////////////
+function Tx(object){
+  var obj = object || {};
+  // original properties
+  this.balance          = obj.balance;
+  this.block_height     = obj.block_height;
+  this.hash             = obj.hash;
+  this.inputs           = obj.inputs || [];
+  this.lock_time        = obj.lock_time;
+  this.out              = obj.out  || [];
+  this.relayed_by       = obj.relayed_by;
+  this.result           = obj.result;
+  this.size             = obj.size;
+  this.time             = obj.time;
+  this.tx_index         = obj.tx_index;
+  this.ver              = obj.ver;
+  this.vin_sz           = obj.vin_sz;
+  this.vout_sz          = obj.vout_sz;
+  this.double_spend     = obj.double_spend;
+  this.note             = obj.note;
+
+  // computed properties
+  this._processed_ins    = this.inputs.map(process.compose(unpackInput));
+  this._processed_outs   = this.out.map(process);
+  this._confirmations    = null; // should be filled later
+}
+
+Object.defineProperties(Tx.prototype, {
+  "confirmations": {
+    configurable: false,
+    get: function() { return this._confirmations;},
+    set: function(num) {
+      if(Helpers.isNumber(num))
+        this._confirmations = num;
+      else
+        throw 'Error: Tx.confirmations must be a number';
+    }
+  },
+  "processedInputs": {
+    configurable: false,
+    get: function() { return this._processed_ins.map(function(x){return x;});}
+  },
+  "processedOutputs": {
+    configurable: false,
+    get: function() { return this._processed_outs.map(function(x){return x;});}
+  },
+  "totalIn": {
+    configurable: false,
+    get: function() {
+      return this._processed_ins.map(function(x){return x.amount;})
+                                 .reduce(Helpers.add, 0);
+    }
+  },
+  "totalOut": {
+    configurable: false,
+    get: function() {
+      return this._processed_outs.map(function(x){return x.amount;})
+                                 .reduce(Helpers.add, 0);
+    }
+  },
+  "fee": {
+    configurable: false,
+    get: function() {
+      return this.totalIn - this.totalOut;
+    }
+  }
+});
+
+function isAccount(x) {
+  if (x.xpub) { return true;}
+  else {return false;}
+};
+
+function accountPath(x){
+  var accIdx = MyWallet.wallet.hdwallet.account(x.xpub.m).index;
+  return accIdx + x.xpub.path.substr(1);
+};
+
+function process(x) {
+  var ad = x.addr;
+  var am = x.value;
+  var tg = null;
+
+  switch (true) {
+    case MyWallet.wallet.containsLegacyAddress(ad):
+      tg = "legacy";
+      break;
+    case isAccount(x):
+      tg = accountPath(x);
+      break;
+    default:
+      tg = "external";
+  }
+  return {address: ad, amount: am, tag: tg};
+};
+
+function unpackInput(input) {
+  return input.prev_out;
+};
+
+},{"./helpers":340,"./wallet":351}],351:[function(require,module,exports){
 'use strict';
 
 var MyWallet = module.exports = {};
@@ -45952,6 +46089,31 @@ MyWallet.getBaseFee = function() {
  */
  // used only on the frontend
 
+MyWallet.fetchMoreTransactionsForAll = function(success, error, didFetchOldestTransaction) {
+
+  console.log("MyWallet.fetchMoreTransactionsForAll");
+
+  var list = MyWallet.wallet.activeAddresses.concat(MyWallet.wallet.hdwallet.activeXpubs);
+  
+  var txListP = API.getHistory( list, null
+                           , MyWallet.wallet.hdwallet.numTxFetched
+                           , MyWallet.wallet.txPerScroll);
+  function process(data) {
+    var pTx = data.txs.map(MyWallet.processTransaction.compose(TransactionFromJSON));
+    MyWallet.wallet.hdwallet.numTxFetched += pTx.length;
+    if (pTx.length < MyWallet.wallet.txPerScroll) { didFetchOldestTransaction(); }
+    success && success(pTx);
+  };
+  txListP.then(process).catch(error);
+};
+
+/**
+ * @param {function(Array)} successCallback success callback function with transaction array
+ * @param {function()} errorCallback error callback function
+ * @param {function()} didFetchOldestTransaction callback is called when all transanctions for the specified account has been fetched
+ */
+ // used only on the frontend
+
 MyWallet.fetchMoreTransactionsForAccounts = function(success, error, didFetchOldestTransaction) {
 
   console.log("MyWallet.fetchMoreTransactionsForAccounts");
@@ -46391,29 +46553,25 @@ MyWallet.login = function ( user_guid
 
     }
 
+
     var error = function(e) {
-      if(e.responseJSON && e.responseJSON.initial_error && !e.responseJSON.authorization_required) {
-        other_error(e.responseJSON.initial_error);
-        return;
-      }
-
-      WalletStore.sendEvent('did_fail_set_guid');
-
-      var obj = JSON.parse(e.responseText);
-
-      if (obj.authorization_required && typeof(authorization_required) === "function") {
-        authorization_required(function() {
-          MyWallet.pollForSessionGUID(function() {
-            tryToFetchWalletJSON(guid, successCallback);
-          });
-        });
-      }
-
-      if (obj.initial_error) {
-        WalletStore.sendEvent("msg", {type: "error", message: obj.initial_error});
-      }
+       var obj = JSON.parse(e);
+       if(obj && obj.initial_error && !obj.authorization_required) {
+         other_error(obj.initial_error);
+         return;
+       }
+       WalletStore.sendEvent('did_fail_set_guid');
+       if (obj.authorization_required && typeof(authorization_required) === "function") {
+         authorization_required(function() {
+           MyWallet.pollForSessionGUID(function() {
+             tryToFetchWalletJSON(guid, successCallback);
+           });
+         });
+       }
+       if (obj.initial_error) {
+         WalletStore.sendEvent("msg", {type: "error", message: obj.initial_error});
+       }
     }
-
     API.request("GET", 'wallet/' + guid, data, true, false).then(success).catch(error);
   }
 
