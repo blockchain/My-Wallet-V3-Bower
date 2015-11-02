@@ -41801,6 +41801,7 @@ var Helpers = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 var ImportExport = require('./import-export');
 var API = require('./api');
+var Tx = require('./wallet-transaction');
 
 ////////////////////////////////////////////////////////////////////////////////
 // Wallet
@@ -42149,7 +42150,6 @@ Wallet.prototype._updateWalletInfo = function(obj) {
 
 // equivalent to MyWallet.get_history(success, error) but returning a promise
 Wallet.prototype.getHistory = function() {
-  console.log("GETHISTORY!!");
   var allAddresses = this.activeAddresses;
   if (this.isUpgradedToHD) {
     this.hdwallet.accounts.forEach(
@@ -42162,15 +42162,23 @@ Wallet.prototype.getHistory = function() {
 };
 
 Wallet.prototype.fetchMoreTransactions = function(didFetchOldestTransaction) {
-  var list = this.activeAddresses.concat(this.hdwallet.activeXpubs);
+  var xpubs = this.isUpgradedToHD ? this.hdwallet.activeXpubs : [];
+  var list = this.activeAddresses.concat(xpubs);
   var txListP = API.getHistory(list, null, this.numberTxFetched, this.txPerScroll);
-  function process(data) {
+  function processTxs(data) {
     var pTx = data.txs.map(MyWallet.processTransaction.compose(TransactionFromJSON));
     this.numberTxFetched += pTx.length;
     if (pTx.length < this.txPerScroll) { didFetchOldestTransaction(); }
     return pTx;
   };
-  return txListP.then(process.bind(this));
+  return txListP.then(processTxs.bind(this));
+};
+
+Wallet.prototype.ask100TxTest = function(){
+  var context = this.activeAddresses.concat(this.hdwallet.activeXpubs);
+  var txListP = API.getHistory(context, null, 0, 100);
+  function processTxs(data) { return data.txs.map(Tx.factory);};
+  return txListP.then(processTxs);
 };
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -42388,7 +42396,7 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
   var newHDwallet = HDWallet.restore(seedHex, pass39, encoder);
   this._hd_wallets[0] = newHDwallet;
-  var account = this.newAccount("Account 1", pw, 0);
+  var account = this.newAccount("Account 1", pw, 0, undefined, true);
   var accountIndex  = 1;
   var AccountsGap = 10;
 
@@ -42402,7 +42410,7 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
       return true;
     } else{
       accountIndex++;
-      account = self.newAccount("Account " + accountIndex.toString(), pw, 0);
+      account = self.newAccount("Account " + accountIndex.toString(), pw, 0, undefined, true);
       return isAccountNonUsed(account).then(go);
     };
   };
@@ -42546,7 +42554,7 @@ Wallet.prototype.whitelistWallet = function (secret, subdomain, email, name) {
   return defer.promise;
 };
 
-},{"./address":334,"./api":335,"./hd-account":338,"./hd-wallet":339,"./helpers":340,"./import-export":341,"./wallet":351,"./wallet-crypto":347,"./wallet-store":349,"assert":115,"bigi":3,"bip39":5,"bitcoinjs-lib":56,"bs58":65,"buffer":117,"rsvp":330}],338:[function(require,module,exports){
+},{"./address":334,"./api":335,"./hd-account":338,"./hd-wallet":339,"./helpers":340,"./import-export":341,"./wallet":351,"./wallet-crypto":347,"./wallet-store":349,"./wallet-transaction":350,"assert":115,"bigi":3,"bip39":5,"bitcoinjs-lib":56,"bs58":65,"buffer":117,"rsvp":330}],338:[function(require,module,exports){
 'use strict';
 
 module.exports = HDAccount;
@@ -45442,10 +45450,9 @@ module.exports = WalletStore;
 
 module.exports = Tx;
 ////////////////////////////////////////////////////////////////////////////////
-// var Base58   = require('bs58');
-// var Bitcoin  = require('bitcoinjs-lib');
-var Helpers  = require('./helpers');
-var MyWallet = require('./wallet');
+var Helpers     = require('./helpers');
+var MyWallet    = require('./wallet');
+var WalletStore = require('./wallet-store');
 ////////////////////////////////////////////////////////////////////////////////
 function Tx(object){
   var obj = object || {};
@@ -45465,23 +45472,23 @@ function Tx(object){
   this.vin_sz           = obj.vin_sz;
   this.vout_sz          = obj.vout_sz;
   this.double_spend     = obj.double_spend;
-  this.note             = obj.note;
-
+  this.publicNote       = obj.note;
+  this.note             = MyWallet.wallet.getNote(this.hash);
   // computed properties
-  this._processed_ins    = this.inputs.map(process.compose(unpackInput));
-  this._processed_outs   = this.out.map(process);
-  this._confirmations    = null; // should be filled later
+  this._processed_ins    = this.inputs.map(tagCoin.compose(unpackInput));
+  this._processed_outs   = this.out.map(tagCoin);
 }
 
 Object.defineProperties(Tx.prototype, {
   "confirmations": {
     configurable: false,
-    get: function() { return this._confirmations;},
-    set: function(num) {
-      if(Helpers.isNumber(num))
-        this._confirmations = num;
-      else
-        throw 'Error: Tx.confirmations must be a number';
+    get: function() {
+      var lastBlock = WalletStore.getLatestBlock();
+      var conf = 0;
+      if (lastBlock && this.block_height != null && this.block_height > 0) {
+        conf = lastBlock.height - this.block_height + 1;
+      }
+      return conf;
     }
   },
   "processedInputs": {
@@ -45515,7 +45522,7 @@ Object.defineProperties(Tx.prototype, {
   "internalSpend": {
     configurable: false,
     get: function() {
-      return this._processed_ins.filter(function(i){ return i.type !== 'external';})
+      return this._processed_ins.filter(function(i){ return i.coinType !== 'external';})
                                 .map(function(i){return i.amount})
                                 .reduce(Helpers.add, 0);
     }
@@ -45523,30 +45530,52 @@ Object.defineProperties(Tx.prototype, {
   "internalReceive": {
     configurable: false,
     get: function() {
-      return this._processed_outs.filter(function(i){ return i.type !== 'external';})
+      return this._processed_outs.filter(function(i){ return i.coinType !== 'external';})
                                  .map(function(i){return i.amount})
                                  .reduce(Helpers.add, 0);
     }
   },
-  "walletImpact": {
+  "amount": {
     configurable: false,
     get: function() {
-      return this.internalReceive - this.internalSpend;
+      var am = 0;
+      switch (this.txType) {
+        case "transfer":
+          am = this.internalReceive - this.changeAmount;
+          break;
+        case "sent":
+          am = this.internalReceive - this.internalSpend;
+          break;
+        case "received":
+          am = this.internalReceive - this.internalSpend;
+          break;
+        default:
+          am = this.result;
+      }
+      return am;
     }
   },
-  "veredict": {
+  "changeAmount": {
+    configurable: false,
+    get: function() {
+      return this._processed_outs.filter(function(i){ return (i.coinType !== 'external') && (i.change === true);})
+                                 .map(function(i){return i.amount})
+                                 .reduce(Helpers.add, 0);
+    }
+  },
+  "txType": {
     configurable: false,
     get: function() {
       var v = null;
-      var balance = this.walletImpact + this.fee
+      var impactNoFee = this.result + this.fee
       switch (true) {
-        case balance === 0:
+        case impactNoFee === 0:
           v = "transfer"
           break;
-        case balance < 0:
+        case impactNoFee < 0:
           v = "sent"
           break;
-        case balance > 0:
+        case impactNoFee > 0:
           v = "received"
           break;
         default:
@@ -45570,15 +45599,20 @@ function isInternal(x) {
   return (isAccount(x) || isLegacy(x));
 };
 
+function isAccountChange(x) {
+  return (isAccount(x) && x.xpub.path.split('/')[1] === '1');
+};
+
 function accountPath(x){
   var accIdx = MyWallet.wallet.hdwallet.account(x.xpub.m).index;
   return accIdx + x.xpub.path.substr(1);
 };
 
-function process(x) {
+function tagCoin(x) {
   var ad = x.addr;
   var am = x.value;
   var coinType = null;
+  var change = false;
 
   switch (true) {
     case isLegacy(x):
@@ -45586,18 +45620,26 @@ function process(x) {
       break;
     case isAccount(x):
       coinType = accountPath(x);
+      change = isAccountChange(x);
       break;
     default:
       coinType = "external";
   }
-  return {address: ad, amount: am, type: coinType};
+  return {address: ad, amount: am, coinType: coinType, change: change};
 };
 
 function unpackInput(input) {
   return input.prev_out;
 };
 
-},{"./helpers":340,"./wallet":351}],351:[function(require,module,exports){
+Tx.factory = function(o){
+  if (o instanceof Object && !(o instanceof Tx)) {
+    return new Tx(o);
+  }
+  else { return o; };
+};
+
+},{"./helpers":340,"./wallet":351,"./wallet-store":349}],351:[function(require,module,exports){
 'use strict';
 
 var MyWallet = module.exports = {};
@@ -46691,7 +46733,7 @@ function syncWallet (successcallback, errorcallback) {
     //Now Decrypt the it again to double check for any possible corruption
     WalletCrypto.decryptWallet(crypted, WalletStore.getPassword(), function(obj) {
       try {
-        var old_checksum = WalletStore.getPayloadChecksum();
+        var oldChecksum = WalletStore.getPayloadChecksum();
         WalletStore.sendEvent('on_backup_wallet_start');
         WalletStore.setEncryptedWalletData(crypted);
         var new_checksum = WalletStore.getPayloadChecksum();
@@ -46699,14 +46741,16 @@ function syncWallet (successcallback, errorcallback) {
           length: crypted.length,
           payload: crypted,
           checksum: new_checksum,
-          old_checksum : old_checksum,
           method : method,
           format : 'plain',
           language : WalletStore.getLanguage()
         };
 
+        if (Helpers.isHex(oldChecksum)) {
+          data.old_checksum = oldChecksum;
+        }
+
         if (WalletStore.isSyncPubKeys()) {
-          // why is this needed?
           data.active = MyWallet.wallet.activeAddresses.join('|');
         }
 
@@ -46751,6 +46795,7 @@ function syncWallet (successcallback, errorcallback) {
 
 };
 MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function(){
+  console.log("SAVE CALLED...");
   WalletStore.setIsSynchronizedWithServer(false)
 });
 ////////////////////////////////////////////////////////////////////////////////
@@ -46836,19 +46881,10 @@ function nKeys(obj) {
 MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryMnemonic, bip39Password, success, error) {
   var walletSuccess = function(guid, sharedKey, password) {
     WalletStore.unsafeSetPassword(password);
-    MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password);
-    MyWallet.syncWallet(function() {
-      success({
-        guid: guid,
-        sharedKey: sharedKey,
-        password: password
-      });
-    }, error);
+    var runSuccess = function () {success({ guid: guid, sharedKey: sharedKey, password: password});}
+    MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password).then(runSuccess).catch(error);
   };
-
-  WalletSignup.generateNewWallet(
-    inputedPassword, inputedEmail, null, walletSuccess, error
-  );
+  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, null, walletSuccess, error);
 };
 
 // used frontend and mywallet
