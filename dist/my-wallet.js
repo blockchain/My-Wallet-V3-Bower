@@ -6257,6 +6257,36 @@ var otherTypes = {
     return object;
   },
 
+  map: function map(propertyType) {
+    function map(value, strict) {
+      typeforce(nativeTypes.Object, value, strict);
+
+      var propertyName, propertyValue;
+
+      try {
+        for (propertyName in value) {
+          propertyValue = value[propertyName];
+
+          typeforce(propertyType, propertyValue, strict);
+        }
+      } catch (e) {
+        if (/Expected property "/.test(e.message)) {
+          e.message = e.message.replace(/Expected property "(.+)" of/, 'Expected property "' + propertyName + '.$1" of');
+          throw e;
+        }
+
+        throw new TypeError(tfPropertyErrorString(propertyType, propertyName, propertyValue));
+      }
+
+      return true;
+    }
+    map.toJSON = function () {
+      return '{' + tfJSON(propertyType) + '}';
+    };
+
+    return map;
+  },
+
   oneOf: function oneOf() {
     for (var _len = arguments.length, types = Array(_len), _key = 0; _key < _len; _key++) {
       types[_key] = arguments[_key];
@@ -42121,8 +42151,11 @@ Wallet.prototype._updateWalletInfo = function(obj) {
       if (account){
         account.balance      = e.final_balance;
         account.n_tx         = e.n_tx;
-        account.receiveIndex = e.account_index;
+        account.lastUsedReceiveIndex = e.account_index;
+        account.receiveIndex = Math.max(account.lastUsedReceiveIndex, account.maxLabeledReceiveIndex);
+
         account.changeIndex  = e.change_index;
+
         if (account.getLabelForReceivingAddress(account.receiveIndex)) {
           account.incrementReceiveIndex();
         };
@@ -42381,14 +42414,15 @@ Wallet.reviver = function(k,v){
   return v;
 }
 
-function isAccountNonUsed (account) {
+function isAccountNonUsed (account, progress) {
   var isNonUsed = function(obj){
+    if (progress) { progress(obj);}
     return obj.addresses[0].account_index === 0 && obj.addresses[0].change_index === 0;
   };
   return API.getHistory([account.extendedPublicKey], 0, 0, 50).then(isNonUsed);
 };
 
-Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
+Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, progress){
   // wallet restoration
   var self = this;
   var seedHex = BIP39.mnemonicToEntropy(mnemonic);
@@ -42411,7 +42445,7 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
     } else{
       accountIndex++;
       account = self.newAccount("Account " + accountIndex.toString(), pw, 0, undefined, true);
-      return isAccountNonUsed(account).then(go);
+      return isAccountNonUsed(account, progress).then(go);
     };
   };
 
@@ -42560,6 +42594,7 @@ Wallet.prototype.whitelistWallet = function (secret, subdomain, email, name) {
 module.exports = HDAccount;
 ////////////////////////////////////////////////////////////////////////////////
 var Bitcoin = require('bitcoinjs-lib');
+var Q       = require('q');
 var assert  = require('assert');
 var Helpers = require('./helpers');
 var WalletCrypto = require('./wallet-crypto');
@@ -42587,6 +42622,8 @@ function HDAccount(object){
   // computed properties
   this._keyRing       = new KeyRing(obj.xpub, obj.cache);
   this._receiveIndex  = 0;
+  // The highest receive index with transactions, as returned by the server:
+  this._lastUsedReceiveIndex = 0;
   this._changeIndex   = 0;
   this._n_tx          = 0;
   this._balance       = null;
@@ -42659,6 +42696,29 @@ Object.defineProperties(HDAccount.prototype, {
         this._receiveIndex = value;
       else
         throw 'Error: account.receiveIndex must be a number';
+    }
+  },
+  "lastUsedReceiveIndex": {
+    configurable: false,
+    get: function() { return this._lastUsedReceiveIndex;},
+    set: function(value) {
+      if(Helpers.isNumber(value))
+        this._lastUsedReceiveIndex = value;
+      else
+        throw 'Error: account.lastUsedReceiveIndex must be a number';
+    }
+  },
+  "maxLabeledReceiveIndex" : {
+    configurable: false,
+    get: function() {
+      var keys = Object.keys(this._address_labels).map(function(k) {
+        return parseInt(k);
+      });
+      if (keys.length == 0) {
+        return -1;
+      } else {
+        return Math.max.apply(null, keys);
+      }
     }
   },
   "changeIndex": {
@@ -42807,9 +42867,29 @@ HDAccount.prototype.incrementReceiveIndexIfLast = function(index) {
 // address labels
 HDAccount.prototype.setLabelForReceivingAddress = function(index, label) {
   assert(Helpers.isNumber(index), "Error: address index must be a number");
-  assert(Helpers.isValidLabel(label), "Error: address label must be alphanumeric");
-  this._address_labels[index] = label;
-  this.incrementReceiveIndexIfLast(index);
+
+  var defer = Q.defer();
+
+  if(!Helpers.isValidLabel(label)) {
+    defer.reject("NOT_ALPHANUMERIC");
+    // Error: address label must be alphanumeric
+  } else if (index - this.lastUsedReceiveIndex >= 20) {
+    // Exceeds BIP 44 unused address gap limit
+    defer.reject("GAP");
+  } else {
+    this._address_labels[index] = label;
+    this.incrementReceiveIndexIfLast(index);
+    MyWallet.syncWallet();
+
+    defer.resolve();
+  }
+
+  return defer.promise;
+};
+
+HDAccount.prototype.removeLabelForReceivingAddress = function(index) {
+  assert(Helpers.isNumber(index), "Error: address index must be a number");
+  delete this._address_labels[index];
   MyWallet.syncWallet();
   return this;
 };
@@ -42847,7 +42927,7 @@ HDAccount.prototype.persist = function(){
   return this;
 };
 
-},{"./helpers":340,"./keyring":344,"./wallet":351,"./wallet-crypto":347,"assert":115,"bitcoinjs-lib":56}],339:[function(require,module,exports){
+},{"./helpers":340,"./keyring":344,"./wallet":351,"./wallet-crypto":347,"assert":115,"bitcoinjs-lib":56,"q":328}],339:[function(require,module,exports){
 'use strict';
 
 module.exports = HDWallet;
@@ -46878,11 +46958,11 @@ function nKeys(obj) {
 };
 
 // used on frontend
-MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryMnemonic, bip39Password, success, error) {
+MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryMnemonic, bip39Password, success, error, progress) {
   var walletSuccess = function(guid, sharedKey, password) {
     WalletStore.unsafeSetPassword(password);
     var runSuccess = function () {success({ guid: guid, sharedKey: sharedKey, password: password});}
-    MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password).then(runSuccess).catch(error);
+    MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password, undefined, progress).then(runSuccess).catch(error);
   };
   WalletSignup.generateNewWallet(inputedPassword, inputedEmail, null, walletSuccess, error);
 };
