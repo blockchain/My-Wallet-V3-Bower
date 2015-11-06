@@ -7103,15 +7103,12 @@ ECKey.fromWIF = function (string) {
 ECKey.makeRandom = function (compressed, rng) {
   rng = rng || randomBytes
 
-  var d
+  var buffer = rng(32)
+  typeForce('Buffer', buffer)
+  assert.equal(buffer.length, 32, 'Expected 256-bit Buffer from RNG')
 
-  do {
-    var buffer = rng(32)
-    typeForce('Buffer', buffer)
-    assert.equal(buffer.length, 32, 'Expected 256-bit Buffer from RNG')
-
-    d = BigInteger.fromBuffer(buffer)
-  } while (d.compareTo(ECKey.curve) >= 0)
+  var d = BigInteger.fromBuffer(buffer)
+  d = d.mod(ECKey.curve.n)
 
   return new ECKey(d, compressed)
 }
@@ -7496,6 +7493,14 @@ HDNode.prototype.getIdentifier = function () {
 
 HDNode.prototype.getFingerprint = function () {
   return this.getIdentifier().slice(0, 4)
+}
+
+HDNode.prototype.getKeyPair = function () {
+  return this.keyPair
+}
+
+HDNode.prototype.getPubKey = function () {
+  return this.pubKey
 }
 
 HDNode.prototype.getAddress = function () {
@@ -11118,14 +11123,11 @@ arguments[4][19][0].apply(exports,arguments)
 	                    var thatByte = (thatWords[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
 	                    thisWords[(thisSigBytes + i) >>> 2] |= thatByte << (24 - ((thisSigBytes + i) % 4) * 8);
 	                }
-	            } else if (thatWords.length > 0xffff) {
+	            } else {
 	                // Copy one word at a time
 	                for (var i = 0; i < thatSigBytes; i += 4) {
 	                    thisWords[(thisSigBytes + i) >>> 2] = thatWords[i >>> 2];
 	                }
-	            } else {
-	                // Copy all words at once
-	                thisWords.push.apply(thisWords, thatWords);
 	            }
 	            this.sigBytes += thatSigBytes;
 
@@ -39335,6 +39337,226 @@ UChar.udata={
 }(this));
 
 },{}],339:[function(require,module,exports){
+(function (global){
+
+var rng;
+
+if (global.crypto && crypto.getRandomValues) {
+  // WHATWG crypto-based RNG - http://wiki.whatwg.org/wiki/Crypto
+  // Moderately fast, high quality
+  var _rnds8 = new Uint8Array(16);
+  rng = function whatwgRNG() {
+    crypto.getRandomValues(_rnds8);
+    return _rnds8;
+  };
+}
+
+if (!rng) {
+  // Math.random()-based (RNG)
+  //
+  // If all else fails, use Math.random().  It's fast, but is of unspecified
+  // quality.
+  var  _rnds = new Array(16);
+  rng = function() {
+    for (var i = 0, r; i < 16; i++) {
+      if ((i & 0x03) === 0) r = Math.random() * 0x100000000;
+      _rnds[i] = r >>> ((i & 0x03) << 3) & 0xff;
+    }
+
+    return _rnds;
+  };
+}
+
+module.exports = rng;
+
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],340:[function(require,module,exports){
+//     uuid.js
+//
+//     Copyright (c) 2010-2012 Robert Kieffer
+//     MIT License - http://opensource.org/licenses/mit-license.php
+
+// Unique ID creation requires a high quality random # generator.  We feature
+// detect to determine the best RNG source, normalizing to a function that
+// returns 128-bits of randomness, since that's what's usually required
+var _rng = require('./rng');
+
+// Maps for number <-> hex string conversion
+var _byteToHex = [];
+var _hexToByte = {};
+for (var i = 0; i < 256; i++) {
+  _byteToHex[i] = (i + 0x100).toString(16).substr(1);
+  _hexToByte[_byteToHex[i]] = i;
+}
+
+// **`parse()` - Parse a UUID into it's component bytes**
+function parse(s, buf, offset) {
+  var i = (buf && offset) || 0, ii = 0;
+
+  buf = buf || [];
+  s.toLowerCase().replace(/[0-9a-f]{2}/g, function(oct) {
+    if (ii < 16) { // Don't overflow!
+      buf[i + ii++] = _hexToByte[oct];
+    }
+  });
+
+  // Zero out remaining bytes if string was short
+  while (ii < 16) {
+    buf[i + ii++] = 0;
+  }
+
+  return buf;
+}
+
+// **`unparse()` - Convert UUID byte array (ala parse()) into a string**
+function unparse(buf, offset) {
+  var i = offset || 0, bth = _byteToHex;
+  return  bth[buf[i++]] + bth[buf[i++]] +
+          bth[buf[i++]] + bth[buf[i++]] + '-' +
+          bth[buf[i++]] + bth[buf[i++]] + '-' +
+          bth[buf[i++]] + bth[buf[i++]] + '-' +
+          bth[buf[i++]] + bth[buf[i++]] + '-' +
+          bth[buf[i++]] + bth[buf[i++]] +
+          bth[buf[i++]] + bth[buf[i++]] +
+          bth[buf[i++]] + bth[buf[i++]];
+}
+
+// **`v1()` - Generate time-based UUID**
+//
+// Inspired by https://github.com/LiosK/UUID.js
+// and http://docs.python.org/library/uuid.html
+
+// random #'s we need to init node and clockseq
+var _seedBytes = _rng();
+
+// Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
+var _nodeId = [
+  _seedBytes[0] | 0x01,
+  _seedBytes[1], _seedBytes[2], _seedBytes[3], _seedBytes[4], _seedBytes[5]
+];
+
+// Per 4.2.2, randomize (14 bit) clockseq
+var _clockseq = (_seedBytes[6] << 8 | _seedBytes[7]) & 0x3fff;
+
+// Previous uuid creation time
+var _lastMSecs = 0, _lastNSecs = 0;
+
+// See https://github.com/broofa/node-uuid for API details
+function v1(options, buf, offset) {
+  var i = buf && offset || 0;
+  var b = buf || [];
+
+  options = options || {};
+
+  var clockseq = options.clockseq !== undefined ? options.clockseq : _clockseq;
+
+  // UUID timestamps are 100 nano-second units since the Gregorian epoch,
+  // (1582-10-15 00:00).  JSNumbers aren't precise enough for this, so
+  // time is handled internally as 'msecs' (integer milliseconds) and 'nsecs'
+  // (100-nanoseconds offset from msecs) since unix epoch, 1970-01-01 00:00.
+  var msecs = options.msecs !== undefined ? options.msecs : new Date().getTime();
+
+  // Per 4.2.1.2, use count of uuid's generated during the current clock
+  // cycle to simulate higher resolution clock
+  var nsecs = options.nsecs !== undefined ? options.nsecs : _lastNSecs + 1;
+
+  // Time since last uuid creation (in msecs)
+  var dt = (msecs - _lastMSecs) + (nsecs - _lastNSecs)/10000;
+
+  // Per 4.2.1.2, Bump clockseq on clock regression
+  if (dt < 0 && options.clockseq === undefined) {
+    clockseq = clockseq + 1 & 0x3fff;
+  }
+
+  // Reset nsecs if clock regresses (new clockseq) or we've moved onto a new
+  // time interval
+  if ((dt < 0 || msecs > _lastMSecs) && options.nsecs === undefined) {
+    nsecs = 0;
+  }
+
+  // Per 4.2.1.2 Throw error if too many uuids are requested
+  if (nsecs >= 10000) {
+    throw new Error('uuid.v1(): Can\'t create more than 10M uuids/sec');
+  }
+
+  _lastMSecs = msecs;
+  _lastNSecs = nsecs;
+  _clockseq = clockseq;
+
+  // Per 4.1.4 - Convert from unix epoch to Gregorian epoch
+  msecs += 12219292800000;
+
+  // `time_low`
+  var tl = ((msecs & 0xfffffff) * 10000 + nsecs) % 0x100000000;
+  b[i++] = tl >>> 24 & 0xff;
+  b[i++] = tl >>> 16 & 0xff;
+  b[i++] = tl >>> 8 & 0xff;
+  b[i++] = tl & 0xff;
+
+  // `time_mid`
+  var tmh = (msecs / 0x100000000 * 10000) & 0xfffffff;
+  b[i++] = tmh >>> 8 & 0xff;
+  b[i++] = tmh & 0xff;
+
+  // `time_high_and_version`
+  b[i++] = tmh >>> 24 & 0xf | 0x10; // include version
+  b[i++] = tmh >>> 16 & 0xff;
+
+  // `clock_seq_hi_and_reserved` (Per 4.2.2 - include variant)
+  b[i++] = clockseq >>> 8 | 0x80;
+
+  // `clock_seq_low`
+  b[i++] = clockseq & 0xff;
+
+  // `node`
+  var node = options.node || _nodeId;
+  for (var n = 0; n < 6; n++) {
+    b[i + n] = node[n];
+  }
+
+  return buf ? buf : unparse(b);
+}
+
+// **`v4()` - Generate random UUID**
+
+// See https://github.com/broofa/node-uuid for API details
+function v4(options, buf, offset) {
+  // Deprecated - 'format' argument, as supported in v1.2
+  var i = buf && offset || 0;
+
+  if (typeof(options) == 'string') {
+    buf = options == 'binary' ? new Array(16) : null;
+    options = null;
+  }
+  options = options || {};
+
+  var rnds = options.random || (options.rng || _rng)();
+
+  // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
+  rnds[6] = (rnds[6] & 0x0f) | 0x40;
+  rnds[8] = (rnds[8] & 0x3f) | 0x80;
+
+  // Copy bytes to buffer, if provided
+  if (buf) {
+    for (var ii = 0; ii < 16; ii++) {
+      buf[i + ii] = rnds[ii];
+    }
+  }
+
+  return buf || unparse(rnds);
+}
+
+// Export public API
+var uuid = v4;
+uuid.v1 = v1;
+uuid.v4 = v4;
+uuid.parse = parse;
+uuid.unparse = unparse;
+
+module.exports = uuid;
+
+},{"./rng":339}],341:[function(require,module,exports){
 
 /***** xregexp.js *****/
 
@@ -41644,7 +41866,7 @@ XRegExp = XRegExp || (function (undef) {
 }(XRegExp));
 
 
-},{}],340:[function(require,module,exports){
+},{}],342:[function(require,module,exports){
 'use strict';
 
 module.exports = Address;
@@ -41843,7 +42065,7 @@ Address.prototype.persist = function(){
   return this;
 };
 
-},{"./helpers":346,"./wallet":357,"bitcoinjs-lib":56,"bs58":65}],341:[function(require,module,exports){
+},{"./helpers":348,"./wallet":359,"bitcoinjs-lib":56,"bs58":65}],343:[function(require,module,exports){
 'use strict';
 
 module.exports = new API();
@@ -42130,7 +42352,7 @@ API.prototype.pushTx = function (tx, note){
 //   }
 // };
 
-},{"./helpers":346,"./wallet":357,"./wallet-store":355,"assert":115,"crypto-js":89,"q":334}],342:[function(require,module,exports){
+},{"./helpers":348,"./wallet":359,"./wallet-store":357,"assert":115,"crypto-js":89,"q":334}],344:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -42369,7 +42591,7 @@ module.exports = {
   getActivityLogs: getActivityLogs
 };
 
-},{"./wallet-store.js":355,"./wallet.js":357,"assert":115}],343:[function(require,module,exports){
+},{"./wallet-store.js":357,"./wallet.js":359,"assert":115}],345:[function(require,module,exports){
 'use strict';
 
 module.exports = Wallet;
@@ -42407,8 +42629,17 @@ function Wallet(object) {
   obj.keys       = obj.keys || [];
   obj.hd_wallets = obj.hd_wallets || [];
 
-  this._guid              = obj.guid;
-  this._sharedKey         = obj.sharedKey;
+  if(obj.metaDataXpub) {
+    this._metaDataXpub      = obj.metaDataXpub;
+  }
+
+  // Version 3 wallets that were upgraded from version 2 or that were created
+  // before August 2015 have a non-deterministic GUID and shared key.
+  if(!obj.metaDataXpub || (obj.guid && obj.sharedKey)) {
+    this._guid              = obj.guid;
+    this._sharedKey         = obj.sharedKey;
+  }
+
   this._double_encryption = obj.double_encryption || false;
   this._dpasswordhash     = obj.dpasswordhash;
   //options
@@ -42458,13 +42689,29 @@ function Wallet(object) {
 }
 
 Object.defineProperties(Wallet.prototype, {
+  "metaDataXpub": {
+    configurable: false,
+    get: function() { return this._metaDataXpub;}
+  },
   "guid": {
     configurable: false,
-    get: function() { return this._guid;}
+    get: function() {
+      if(this._metaDataXpub && !this._guid) {
+        return WalletCrypto.xpubToGuid(this._metaDataXpub);
+      } else {
+        return this._guid;
+      }
+    }
   },
   "sharedKey": {
     configurable: false,
-    get: function() { return this._sharedKey;}
+    get: function() {
+      if(this._metaDataXpub && !this._sharedKey) {
+        return WalletCrypto.xpubToSharedKey(this._metaDataXpub);
+      } else {
+        return this._sharedKey;
+      }
+    }
   },
   "isDoubleEncrypted": {
     configurable: false,
@@ -42804,8 +43051,6 @@ Wallet.prototype.toJSON = function(){
   };
 
   var wallet = {
-    guid              : this.guid,
-    sharedKey         : this.sharedKey,
     double_encryption : this.isDoubleEncrypted,
     dpasswordhash     : this.dpasswordhash,
     options           : {
@@ -42822,6 +43067,17 @@ Wallet.prototype.toJSON = function(){
     paidTo            : this._paidTo,
     hd_wallets        : Helpers.isEmptyArray(this._hd_wallets) ? undefined : this._hd_wallets
   };
+
+  if(this._metaDataXpub != undefined && this._metaDataXpub != null) {
+    wallet.metaDataXpub = this._metaDataXpub;
+  }
+
+  // Only store GUID & shared key if they are not deterministic:
+  if(this._guid && this._sharedKey) {
+    wallet.guid = this.guid,
+    wallet.sharedKey = this.sharedKey
+  }
+
   return wallet;
 };
 
@@ -43025,11 +43281,11 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, started
 };
 
 // creating a new wallet object
-Wallet.new = function(guid, sharedKey, firstAccountLabel, success, isHD){
+Wallet.new = function(mnemonic, metaDataXpub, firstAccountLabel, success, isHD){
   isHD = Helpers.isBoolean(isHD) ? isHD : true;
+
   var object = {
-    guid              : guid,
-    sharedKey         : sharedKey,
+    metaDataXpub      : metaDataXpub,
     double_encryption : false,
     options: {
       pbkdf2_iterations  : 5000,
@@ -43038,11 +43294,11 @@ Wallet.new = function(guid, sharedKey, firstAccountLabel, success, isHD){
       logout_time        : 600000
     }
   };
-  MyWallet.wallet = new Wallet(object);
+  MyWallet.wallet   = new Wallet(object);
   var label = firstAccountLabel ||  "My Bitcoin Wallet";
   if (isHD) {
     // hd wallet
-    var newHDwallet = HDWallet.new();
+    var newHDwallet = HDWallet.new(mnemonic);
     MyWallet.wallet._hd_wallets.push(newHDwallet);
     newHDwallet.newAccount(label);
   } else {
@@ -43056,7 +43312,11 @@ Wallet.new = function(guid, sharedKey, firstAccountLabel, success, isHD){
 // adding and hd wallet to an existing wallet
 Wallet.prototype.newHDWallet = function(firstAccountLabel, pw, success, error){
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
-  var newHDwallet = HDWallet.new(encoder);
+  var mnemonic = BIP39.generateMnemonic();
+  var newHDwallet = HDWallet.new(mnemonic, encoder);
+
+  var seed = BIP39.mnemonicToSeedHex(mnemonic);
+  this._metaDataXpub = WalletCrypto.seedToMetaDataXpub(seed);
   this._hd_wallets.push(newHDwallet);
   var label = firstAccountLabel ? firstAccountLabel : "My Bitcoin Wallet";
   var account = this.newAccount(label, pw, this._hd_wallets.length-1, true);
@@ -43118,6 +43378,7 @@ Wallet.prototype.changePbkdf2Iterations = function(newIterations, password){
     }
     else { // no double encrypted wallet
       this._pbkdf2_iterations = newIterations;
+      WalletStore.updateEncryptedPasswordIfNeeded(WalletStore.getPassword());
       MyWallet.syncWallet();
     };
   };
@@ -43152,7 +43413,7 @@ Wallet.prototype.whitelistWallet = function (secret, subdomain, email, name) {
   return defer.promise;
 };
 
-},{"./address":340,"./api":341,"./hd-account":344,"./hd-wallet":345,"./helpers":346,"./import-export":347,"./wallet":357,"./wallet-crypto":353,"./wallet-store":355,"./wallet-transaction":356,"assert":115,"bigi":3,"bip39":5,"bitcoinjs-lib":56,"bs58":65,"buffer":117,"q":334,"rsvp":336}],344:[function(require,module,exports){
+},{"./address":342,"./api":343,"./hd-account":346,"./hd-wallet":347,"./helpers":348,"./import-export":349,"./wallet":359,"./wallet-crypto":355,"./wallet-store":357,"./wallet-transaction":358,"assert":115,"bigi":3,"bip39":5,"bitcoinjs-lib":56,"bs58":65,"buffer":117,"q":334,"rsvp":336}],346:[function(require,module,exports){
 'use strict';
 
 module.exports = HDAccount;
@@ -43491,7 +43752,7 @@ HDAccount.prototype.persist = function(){
   return this;
 };
 
-},{"./helpers":346,"./keyring":350,"./wallet":357,"./wallet-crypto":353,"assert":115,"bitcoinjs-lib":56,"q":334}],345:[function(require,module,exports){
+},{"./helpers":348,"./keyring":352,"./wallet":359,"./wallet-crypto":355,"assert":115,"bitcoinjs-lib":56,"q":334}],347:[function(require,module,exports){
 'use strict';
 
 module.exports = HDWallet;
@@ -43646,8 +43907,7 @@ function getMasterHex (seedHex, bip39Password, cipher){
 // load hdwallet
 // restore hdwallet
 
-HDWallet.new = function(cipher){
-  var mnemonic = BIP39.generateMnemonic();
+HDWallet.new = function(mnemonic, cipher){
   var seedHex  = BIP39.mnemonicToEntropy(mnemonic);
   return HDWallet.restore(seedHex, '', cipher);
 };
@@ -43798,7 +44058,7 @@ HDWallet.prototype.isValidAccountIndex = function(index){
   return Helpers.isNumber(index) && index >= 0 && index < this._accounts.length;
 };
 
-},{"./hd-account":344,"./helpers":346,"./wallet":357,"./wallet-crypto":353,"assert":115,"bip39":5,"bitcoinjs-lib":56}],346:[function(require,module,exports){
+},{"./hd-account":346,"./helpers":348,"./wallet":359,"./wallet-crypto":355,"assert":115,"bip39":5,"bitcoinjs-lib":56}],348:[function(require,module,exports){
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -44048,7 +44308,7 @@ Helpers.scorePassword = function (password){
 
 module.exports = Helpers;
 
-},{"bitcoinjs-lib":56}],347:[function(require,module,exports){
+},{"bitcoinjs-lib":56}],349:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -44517,7 +44777,7 @@ var ImportExport = new function() {
 module.exports = ImportExport;
 
 }).call(this,require("buffer").Buffer)
-},{"assert":115,"bigi":3,"bitcoinjs-lib":56,"bs58":65,"buffer":117,"crypto-js":89,"unorm":338}],348:[function(require,module,exports){
+},{"assert":115,"bigi":3,"bitcoinjs-lib":56,"bs58":65,"buffer":117,"crypto-js":89,"unorm":338}],350:[function(require,module,exports){
 'use strict';
 
 var Buffer = require('buffer').Buffer
@@ -44558,7 +44818,7 @@ module.exports = {
   // BIP39: require('bip39')
 };
 
-},{"./api":341,"./blockchain-settings-api":342,"./helpers":346,"./import-export":347,"./payment":351,"./wallet":357,"./wallet-crypto":353,"./wallet-store":355,"./wallet-transaction":356,"buffer":117,"crypto-js":89}],349:[function(require,module,exports){
+},{"./api":343,"./blockchain-settings-api":344,"./helpers":348,"./import-export":349,"./payment":353,"./wallet":359,"./wallet-crypto":355,"./wallet-store":357,"./wallet-transaction":358,"buffer":117,"crypto-js":89}],351:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyChain;
@@ -44614,7 +44874,7 @@ KeyChain.prototype.getPrivateKey = function(index) {
   return key ? key : null;
 };
 
-},{"./helpers":346,"assert":115,"bitcoinjs-lib":56}],350:[function(require,module,exports){
+},{"./helpers":348,"assert":115,"bitcoinjs-lib":56}],352:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyRing;
@@ -44678,7 +44938,7 @@ KeyRing.prototype.toJSON = function (){
   return cacheJSON;
 };
 
-},{"./helpers":346,"./keychain":349,"assert":115,"bitcoinjs-lib":56}],351:[function(require,module,exports){
+},{"./helpers":348,"./keychain":351,"assert":115,"bitcoinjs-lib":56}],353:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -45190,7 +45450,7 @@ function computeSuggestedSweep(coins){
 //   .catch(error)
 
 }).call(this,require("buffer").Buffer)
-},{"./api":341,"./helpers":346,"./keyring":350,"./transaction":352,"./wallet":357,"./wallet-crypto":353,"bitcoinjs-lib":56,"buffer":117,"q":334}],352:[function(require,module,exports){
+},{"./api":343,"./helpers":348,"./keyring":352,"./transaction":354,"./wallet":359,"./wallet-crypto":355,"bitcoinjs-lib":56,"buffer":117,"q":334}],354:[function(require,module,exports){
 'use strict';
 
 var assert      = require('assert');
@@ -45364,12 +45624,15 @@ function sortUnspentOutputs(unspentOutputs) {
 
 module.exports = Transaction;
 
-},{"./helpers":346,"./wallet":357,"assert":115,"bitcoinjs-lib":56,"randombytes":335}],353:[function(require,module,exports){
+},{"./helpers":348,"./wallet":359,"assert":115,"bitcoinjs-lib":56,"randombytes":335}],355:[function(require,module,exports){
+(function (Buffer){
 'use strict';
 
 var assert = require('assert');
 var CryptoJS = require('crypto-js');
 var sjcl = require('sjcl');
+var uuid = require('uuid');
+var Bitcoin = require('bitcoinjs-lib');
 
 var SUPPORTED_ENCRYPTION_VERSION = 3.0;
 
@@ -45535,17 +45798,23 @@ function decryptAes(data, password, pbkdf2_iterations, options) {
   return decoded;
 }
 
-function encryptWallet(data, password, pbkdf2_iterations, version) {
+function encryptWallet(data, password, pbkdf2_iterations, version, encryptedPassword)  {
   assert(data, "data missing");
   assert(password, "password missing");
   assert(pbkdf2_iterations, "pbkdf2_iterations missing");
   assert(version, "version missing");
 
-  return JSON.stringify({
+  var payload = {
     pbkdf2_iterations: pbkdf2_iterations,
     version: version,
-    payload: encrypt(data, password, pbkdf2_iterations)
-  });
+    payload: encrypt(data, password, pbkdf2_iterations),
+  };
+
+  if(encryptedPassword != undefined && encryptedPassword != null) {
+    payload.encryptedPassword = encryptedPassword;
+  }
+
+  return JSON.stringify(payload);
 }
 
 function decryptWallet(data, password, success, error) {
@@ -45652,6 +45921,81 @@ function hashNTimes(password, iterations) {
   return round_data.toString();
 };
 
+// http://stackoverflow.com/a/11893415
+function wordToByteArray(wordArray) {
+    var byteArray = [], word, i, j;
+    for (i = 0; i < wordArray.length; ++i) {
+        word = wordArray[i];
+        for (j = 3; j >= 0; --j) {
+            byteArray.push((word >> 8 * j) & 0xFF);
+        }
+    }
+    return byteArray;
+}
+
+function encryptPasswordWithSeed(password, seedHexString, pbkdf2_iterations) {
+  assert(seedHexString.length == 128, "Expected a 256 bit seed as a hex string")
+  var seed = CryptoJS.enc.Hex.parse(seedHexString);
+
+  return encrypt(password, seed, pbkdf2_iterations);
+}
+
+function decryptPasswordWithSeed(encryptedPassword, seedHexString, pbkdf2_iterations) {
+  assert(seedHexString.length == 128, "Expected a 512 bit seed as a hex string")
+  var seed = CryptoJS.enc.Hex.parse(seedHexString);
+
+  return decryptAes(encryptedPassword, seed, pbkdf2_iterations);
+}
+
+function seedToMetaDataXpub(seedHexString) {
+  assert(seedHexString.length == 128, "Expected a 512 bit seed as a hex string");
+  return Bitcoin.HDNode.fromSeedHex(seedHexString).deriveHardened(1).neutered().toBase58();
+}
+
+function pubKeyToPseudoAddress(pubKey) {
+  // https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
+  // This takes steps 2 (double sha256) and 3 (ripemd) of the above process:
+  return Bitcoin.crypto.ripemd160(Bitcoin.crypto.sha256(pubKey))
+}
+
+function metaDataXpubToKey(xpub, i, bytes) {
+  assert(xpub, "xpub required");
+  assert(xpub.slice(0,4) == "xpub", "Invalid xpub");
+
+  assert(!isNaN(i), "i should be a number");
+  assert(i === parseInt(i, 10), "i should be an integer");
+  assert(i < 256, "i should be < 256");
+
+  assert(!isNaN(bytes), "bytes should be a number");
+  assert(i === parseInt(i, 10), "bytes should be an integer");
+  assert(i < 256 / 8, "max 256 bits");
+
+  var node = Bitcoin.HDNode.fromBase58(xpub);
+  var childNode = node.derive(i);
+
+  var pubKey = childNode.getPubKey()
+
+  var pseudoAddress = pubKeyToPseudoAddress(pubKey.toBuffer())
+
+  var desiredBytes = new Buffer(bytes);
+
+  pseudoAddress.copy(desiredBytes,0,0,bytes);
+
+  return desiredBytes;
+}
+
+function xpubToGuid(xpub) {
+  return uuid.v4({
+    random: metaDataXpubToKey(xpub, 0, 16)
+  })
+}
+
+function xpubToSharedKey(xpub) {
+  return uuid.v4({
+    random: metaDataXpubToKey(xpub, 1, 16)
+  })
+}
+
 module.exports = {
   decryptSecretWithSecondPassword: decryptSecretWithSecondPassword,
   encryptSecretWithSecondPassword: encryptSecretWithSecondPassword,
@@ -45664,10 +46008,19 @@ module.exports = {
   stretchPassword: stretchPassword,
   hashNTimes: hashNTimes,
   cipherFunction: cipherFunction,
-  decryptAes: decryptAes
+  decryptAes: decryptAes,
+  wordToByteArray: wordToByteArray,
+  encryptPasswordWithSeed: encryptPasswordWithSeed,
+  decryptPasswordWithSeed: decryptPasswordWithSeed,
+  seedToMetaDataXpub: seedToMetaDataXpub,
+  xpubToSharedKey: xpubToSharedKey,
+  xpubToGuid: xpubToGuid,
+  metaDataXpubToKey: metaDataXpubToKey,
+  pubKeyToPseudoAddress: pubKeyToPseudoAddress // For testing only
 };
 
-},{"assert":115,"crypto-js":89,"sjcl":337}],354:[function(require,module,exports){
+}).call(this,require("buffer").Buffer)
+},{"assert":115,"bitcoinjs-lib":56,"buffer":117,"crypto-js":89,"sjcl":337,"uuid":340}],356:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -45679,6 +46032,7 @@ var WalletCrypto = require('./wallet-crypto');
 var API = require('./api');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
+var BIP39 = require('bip39');
 
 // Save the javascript wallet to the remote server
 function insertWallet(guid, sharedKey, password, extra, successcallback, errorcallback, decryptWalletProgress) {
@@ -45692,7 +46046,7 @@ function insertWallet(guid, sharedKey, password, extra, successcallback, errorca
     var data = JSON.stringify(MyWallet.wallet, null, 2);
 
     //Everything looks ok, Encrypt the JSON output
-    var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.wallet.defaultPbkdf2Iterations,  MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0);
+    var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.wallet.defaultPbkdf2Iterations,  MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0, WalletStore.getEncryptedPassword());
 
     if (crypted.length == 0) {
       throw 'Error encrypting the JSON output';
@@ -45743,76 +46097,58 @@ function insertWallet(guid, sharedKey, password, extra, successcallback, errorca
   }
 }
 
-function generateUUIDs(n, success, error) {
+function generateNewWallet(mnemonic, bip39pwd, password, email, firstAccountName, success, error, generateUUIDProgress, decryptWalletProgress) {
+  var seed = BIP39.mnemonicToSeedHex(mnemonic);
 
-  var succ = function(data) {
-    if (data.uuids && data.uuids.length == n) {
-      success(data.uuids);
-    } else {
-      error('Unknown Error');
-    }
-  };
-  var err = function(data) {
-    error(data);
-  };
+  assert(seed != undefined && seed != null && seed != "", "HD seed required");
 
-  var data = {
-      format: 'json'
-    , n: n
-    , api_code : API.API_CODE
-  };
+  var xpub = WalletCrypto.seedToMetaDataXpub(seed);
 
-  API.retry(API.request.bind(API, "GET", "uuid-generator", data))
-    .then(succ)
-    .catch(err);
-};
+  if (password.length > 255) {
+    throw 'Passwords must be shorter than 256 characters';
+  }
 
-function generateNewWallet(password, email, firstAccountName, success, error, isHD, generateUUIDProgress, decryptWalletProgress) {
-  isHD = Helpers.isBoolean(isHD) ? isHD : true;
-  generateUUIDProgress && generateUUIDProgress();
-  this.generateUUIDs(2, function(uuids) {
-    var guid = uuids[0];
-    var sharedKey = uuids[1];
+  //User reported this browser generated an invalid private key
+  if(navigator.userAgent.match(/MeeGo/i)) {
+    throw 'MeeGo browser currently not supported.';
+  }
 
-    if (password.length > 255) {
-      throw 'Passwords must be shorter than 256 characters';
-    }
+  var outerThis = this;
 
-    //User reported this browser generated an invalid private key
-    if(navigator.userAgent.match(/MeeGo/i)) {
-      throw 'MeeGo browser currently not supported.';
-    }
+  var saveWallet = function(wallet) {
+    outerThis.insertWallet(wallet.guid, wallet.sharedKey, password, {email : email}, function(message){
+      success(wallet.guid);
+    }, function(e) {
+      error(e);
+    }, decryptWalletProgress);
+  }
 
-    if (guid.length != 36 || sharedKey.length != 36) {
-      throw 'Error generating wallet identifier';
-    }
+  // MyWallet.wallet.defaultPbkdf2Iterations is not available, hard coding 5000 for now:
+  var encryptedPassword = WalletCrypto.encryptPasswordWithSeed(password, seed, 5000);
 
-    // Upgrade to HD immediately:
+  WalletStore.setEncryptedPassword(encryptedPassword);
 
-    var saveWallet = function() {
-      insertWallet(guid, sharedKey, password, {email : email}, function(message){
-        success(guid, sharedKey, password);
-      }, function(e) {
-        error(e);
-      }, decryptWalletProgress);
-    };
-
-    Wallet.new(guid, sharedKey, firstAccountName, saveWallet, isHD);
-
-  }, error);
+  Wallet.new(
+    mnemonic,
+    xpub,
+    firstAccountName,
+    saveWallet,
+    true
+  );
 };
 
 module.exports = {
-  generateUUIDs: generateUUIDs,
-  generateNewWallet: generateNewWallet
+  generateNewWallet: generateNewWallet,
+  insertWallet: insertWallet // Exported for tests
 };
 
-},{"./api":341,"./blockchain-wallet":343,"./helpers":346,"./wallet":357,"./wallet-crypto":353,"./wallet-store":355,"assert":115,"crypto-js":89}],355:[function(require,module,exports){
+},{"./api":343,"./blockchain-wallet":345,"./helpers":348,"./wallet":359,"./wallet-crypto":355,"./wallet-store":357,"assert":115,"bip39":5,"crypto-js":89}],357:[function(require,module,exports){
 'use strict';
 
 var CryptoJS = require('crypto-js');
 var MyWallet = require('./wallet');
 var WalletCrypto = require('./wallet-crypto');
+var BIP39 = require('bip39');
 var hasProp = {}.hasOwnProperty;
 
 var WalletStore = (function() {
@@ -45868,6 +46204,7 @@ var WalletStore = (function() {
     'RUB': 'Russian Ruble'
   };
   var password; //Password
+  var encryptedPassword; //Password encrypted using the HD seed
   var guid; //Wallet identifier
   var language = 'en';
   var transactions = [];
@@ -46068,13 +46405,30 @@ var WalletStore = (function() {
     },
     changePassword: function(new_password, success, error){
       password = new_password;
+
+      this.updateEncryptedPasswordIfNeeded(password);
+
       MyWallet.syncWallet(success, error);
+    },
+    updateEncryptedPasswordIfNeeded: function(password) {
+      // Todo: support encrypting password with seed is 2nd password is enabled
+      if(MyWallet.wallet.isUpgradedToHD && !MyWallet.wallet.isDoubleEncrypted && WalletStore.getEncryptedPassword() != undefined && WalletStore.getEncryptedPassword() != null) {
+        var seed = BIP39.mnemonicToSeedHex(BIP39.entropyToMnemonic(MyWallet.wallet.hdwallet.seedHex));
+        var encryptedPwd = WalletCrypto.encryptPasswordWithSeed(password, seed, WalletStore.getPbkdf2Iterations());
+        WalletStore.setEncryptedPassword(encryptedPwd);
+      }
     },
     unsafeSetPassword: function(newPassword){
       password = newPassword;
     },
     getPassword: function(){
       return password;
+    },
+    getEncryptedPassword: function(){
+      return encryptedPassword;
+    },
+    setEncryptedPassword:  function(value){
+      encryptedPassword = value;
     },
     getLogoutTime: function() {
       return MyWallet.wallet._logout_time;
@@ -46091,7 +46445,7 @@ var WalletStore = (function() {
 
 module.exports = WalletStore;
 
-},{"./wallet":357,"./wallet-crypto":353,"crypto-js":89}],356:[function(require,module,exports){
+},{"./wallet":359,"./wallet-crypto":355,"bip39":5,"crypto-js":89}],358:[function(require,module,exports){
 'use strict';
 
 module.exports = Tx;
@@ -46285,7 +46639,7 @@ Tx.factory = function(o){
   else { return o; };
 };
 
-},{"./helpers":346,"./wallet":357,"./wallet-store":355}],357:[function(require,module,exports){
+},{"./helpers":348,"./wallet":359,"./wallet-store":357}],359:[function(require,module,exports){
 'use strict';
 
 var MyWallet = module.exports = {};
@@ -46516,7 +46870,7 @@ function wsSuccess(ws) {
       MyWallet.wallet.getHistory();
 
       if (tx_account) {
-        var account = MyWallet.wallet.hdwallet.accounts[tx_account.index];
+        var account = MyWallet.wallet.error_restoring_wallet.accounts[tx_account.index];
         account.balance += tx_processed.result;
 
         // Increase receive address index if this was an incoming transaction using the highest index:
@@ -47073,6 +47427,9 @@ function decryptAndInitializeWallet(success, error, decrypt_success, build_hd_su
       // TODO: pbkdf2 iterations should be stored correctly on wallet wrapper
       if (rootContainer) {
         WalletStore.setPbkdf2Iterations(rootContainer.pbkdf2_iterations);
+        if(rootContainer.encryptedPassword != undefined) {
+          WalletStore.setEncryptedPassword(rootContainer.encryptedPassword);
+        }
       }
       //If we don't have a checksum then the wallet is probably brand new - so we can generate our own
       if (WalletStore.getPayloadChecksum() == null || WalletStore.getPayloadChecksum().length == 0) {
@@ -47130,6 +47487,97 @@ MyWallet.resendTwoFactorSms = function(user_guid, success, error) {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+MyWallet.recoverResetPasswordAndLogin = function (
+                            mnemonic
+                          , bip39pwd // Not implemented yet
+                          , email    // only used when recovering non-deterministic
+                          , newPassword
+                          , successCallback
+                          , other_error) {
+
+  assert(mnemonic, 'Mnemonic required');
+  assert(MyWallet.isValidateBIP39Mnemonic(mnemonic), "Invalid mnemonic");
+  assert(newPassword, 'New password required');
+  assert(successCallback, 'Success callback required');
+  assert(other_error, 'Error callback required');
+
+  var seed = BIP39.mnemonicToSeedHex(mnemonic);
+
+  var xpub = WalletCrypto.seedToMetaDataXpub(seed);
+
+  var guid = WalletCrypto.xpubToGuid(xpub);
+  var sharedKey = WalletCrypto.xpubToSharedKey(xpub);
+
+  var didFetchWalletJSON = function(obj) {
+
+
+    if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
+     WalletStore.setEncryptedWalletData(obj.payload);
+    }
+
+    war_checksum = obj.war_checksum;
+
+    if (obj.language && WalletStore.getLanguage() != obj.language) {
+     WalletStore.setLanguage(obj.language);
+    }
+
+    // Decrypt password
+    var json = JSON.parse(obj.payload);
+
+    var oldPassword = WalletCrypto.decryptPasswordWithSeed(
+      json.encryptedPassword,
+      seed,
+      json.pbkdf2_iterations
+    );
+
+    var success = function() {
+      WalletStore.changePassword(
+        newPassword,
+        function() {
+          successCallback(guid);
+        },
+        function(e) {
+          console.log("Couldn't change password.");
+          console.log(e);
+          other_error("Couldn't reset password.");
+        }
+      );
+
+    };
+
+    // Finish regular login
+    MyWallet.initializeWallet(oldPassword, success, other_error);
+
+
+  };
+
+  var failedToFetch = function() {
+    // The mnemonic is either from a non deterministic wallet or
+    // a non-blockchain wallet. Register a new one:
+    var walletSuccess = function() {
+      WalletStore.unsafeSetPassword(newPassword);
+      successCallback(guid);
+    };
+    WalletSignup.generateNewWallet(mnemonic, "", newPassword, email, null, walletSuccess, other_error);
+  };
+
+  // There's three ways this can fail, we treat them the same:
+  var needs_two_factor_code = failedToFetch;
+  var authorization_required = failedToFetch;
+  // This can have various reasons which are difficult to distinguish:
+  var error = failedToFetch;
+
+  MyWallet.tryToFetchWalletJSON(
+    guid,
+    sharedKey,
+    needs_two_factor_code,
+    authorization_required,
+    didFetchWalletJSON,
+    error
+  );
+
+}
+
 MyWallet.login = function ( user_guid
                           , shared_key
                           , inputedPassword
@@ -47151,53 +47599,6 @@ MyWallet.login = function ( user_guid
   var data = { format : 'json', resend_code : null, ct : clientTime, api_code : API.API_CODE };
 
   if (shared_key) { data.sharedKey = shared_key; }
-
-  var tryToFetchWalletJSON = function(guid, successCallback) {
-
-    var success = function(obj) {
-      fetch_success && fetch_success();
-      // Even if Two Factor is enabled, some settings need to be saved here,
-      // because they won't be part of the 2FA response.
-
-      if (!obj.guid) {
-        WalletStore.sendEvent("msg", {type: "error", message: 'Server returned null guid.'});
-        other_error('Server returned null guid.');
-        return;
-      }
-
-      // I should create a new class to store the encrypted wallet over wallet
-      WalletStore.setGuid(obj.guid);
-      WalletStore.setRealAuthType(obj.real_auth_type);
-      WalletStore.setSyncPubKeys(obj.sync_pubkeys);
-
-      if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
-      } else {
-        needs_two_factor_code(obj.auth_type);
-        return;
-      }
-      successCallback(obj)
-    }
-
-    var error = function(e) {
-       var obj = JSON.parse(e);
-       if(obj && obj.initial_error && !obj.authorization_required) {
-         other_error(obj.initial_error);
-         return;
-       }
-       WalletStore.sendEvent('did_fail_set_guid');
-       if (obj.authorization_required && typeof(authorization_required) === "function") {
-         authorization_required(function() {
-           MyWallet.pollForSessionGUID(function() {
-             tryToFetchWalletJSON(guid, successCallback);
-           });
-         });
-       }
-       if (obj.initial_error) {
-         WalletStore.sendEvent("msg", {type: "error", message: obj.initial_error});
-       }
-    }
-    API.request("GET", 'wallet/' + guid, data, true, false).then(success).catch(error);
-  }
 
   var tryToFetchWalletWith2FA = function (guid, two_factor_auth_key, successCallback) {
 
@@ -47227,6 +47628,7 @@ MyWallet.login = function ( user_guid
   }
 
   var didFetchWalletJSON = function(obj) {
+    fetch_success && fetch_success();
 
     if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
      WalletStore.setEncryptedWalletData(obj.payload);
@@ -47237,11 +47639,12 @@ MyWallet.login = function ( user_guid
     if (obj.language && WalletStore.getLanguage() != obj.language) {
      WalletStore.setLanguage(obj.language);
     }
+
     MyWallet.initializeWallet(inputedPassword, success, other_error, decrypt_success, build_hd_success);
   }
 
   if(twoFACode == null) {
-    tryToFetchWalletJSON(user_guid, didFetchWalletJSON)
+    MyWallet.tryToFetchWalletJSON(user_guid, null, needs_two_factor_code, authorization_required, didFetchWalletJSON, other_error)
   } else {
     // If 2FA is enabled and we already fetched the wallet before, don't fetch
     // it again
@@ -47254,7 +47657,72 @@ MyWallet.login = function ( user_guid
 };
 ////////////////////////////////////////////////////////////////////////////////
 
-// used locally
+
+MyWallet.tryToFetchWalletJSON = function(guid,
+                                         shared_key,
+                                         needs_two_factor_code,
+                                         authorization_required,
+                                         successCallback,
+                                         other_error) {
+
+  assert(successCallback, "successCallback required");
+  var success = function(obj) {
+    // Even if Two Factor is enabled, some settings need to be saved here,
+    // because they won't be part of the 2FA response.
+
+    if (!obj.guid) {
+      WalletStore.sendEvent("msg", {type: "error", message: 'Server returned null guid.'});
+      other_error('Server returned null guid.');
+      return;
+    }
+
+    // I should create a new class to store the encrypted wallet over wallet
+    WalletStore.setGuid(obj.guid);
+    WalletStore.setRealAuthType(obj.real_auth_type);
+    WalletStore.setSyncPubKeys(obj.sync_pubkeys);
+
+    if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
+    } else {
+      needs_two_factor_code(obj.auth_type);
+      return;
+    }
+
+    successCallback(obj)
+
+  }
+
+  var error = function(e) {
+  var obj = JSON.parse(e);
+
+   if(obj && obj.initial_error && !obj.authorization_required) {
+     other_error(obj.initial_error);
+     return;
+   }
+
+   WalletStore.sendEvent('did_fail_set_guid');
+
+   if (obj.authorization_required && typeof(authorization_required) === "function") {
+     authorization_required(function() {
+       MyWallet.pollForSessionGUID(function() {
+         MyWallet.tryToFetchWalletJSON(guid, null, needs_two_factor_code ,authorization_required, successCallback, other_error)
+       });
+     });
+   }
+
+   if (obj.initial_error) {
+     WalletStore.sendEvent("msg", {type: "error", message: obj.initial_error});
+   }
+  }
+
+  var clientTime = (new Date()).getTime();
+  var data = { format : 'json', resend_code : null, ct : clientTime, api_code : API.API_CODE };
+
+  if (shared_key) { data.sharedKey = shared_key; }
+
+  API.request("GET", 'wallet/' + guid, data, true, false).then(success).catch(error);
+};
+
+
 MyWallet.pollForSessionGUID = function(successCallback) {
 
   if (WalletStore.isPolling()) return;
@@ -47370,7 +47838,8 @@ function syncWallet (successcallback, errorcallback) {
     var crypted = WalletCrypto.encryptWallet( data
                                               , WalletStore.getPassword()
                                               , WalletStore.getPbkdf2Iterations()
-                                              , MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0 );
+                                              , MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0
+                                              , WalletStore.getEncryptedPassword());
 
     if (crypted.length == 0) {
       throw 'Error encrypting the JSON output';
@@ -47501,18 +47970,19 @@ MyWallet.signMessage = function(address, message) {
  * @param {function(string)} error callback function with error message
  */
  // used on mywallet, iOS and frontend
-MyWallet.createNewWallet = function(inputedEmail, inputedPassword, firstAccountName, languageCode, currencyCode, success, error, isHD) {
-  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, firstAccountName, function(createdGuid, createdSharedKey, createdPassword) {
 
+MyWallet.createNewWallet = function(inputedEmail, inputedPassword, firstAccountName, languageCode, currencyCode, success, error) {
+  var mnemonic = BIP39.generateMnemonic();
+  WalletSignup.generateNewWallet(mnemonic, "", inputedPassword, inputedEmail, firstAccountName, function(createdGuid) {
     if (languageCode)
       WalletStore.setLanguage(languageCode);
 
-    WalletStore.unsafeSetPassword(createdPassword);
+    WalletStore.unsafeSetPassword(inputedPassword);
 
-    success(createdGuid, createdSharedKey, createdPassword);
+    success(createdGuid);
   }, function (e) {
     error(e);
-  }, isHD);
+  });
 };
 // used 3 times
 function nKeys(obj) {
@@ -47521,16 +47991,6 @@ function nKeys(obj) {
     size++;
   }
   return size;
-};
-
-// used on frontend
-MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryMnemonic, bip39Password, success, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
-  var walletSuccess = function(guid, sharedKey, password) {
-    WalletStore.unsafeSetPassword(password);
-    var runSuccess = function () {success({ guid: guid, sharedKey: sharedKey, password: password});}
-    MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password, undefined, startedRestoreHDWallet, accountProgress).then(runSuccess).catch(error);
-  };
-  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, null, walletSuccess, error, true, generateUUIDProgress, decryptWalletProgress);
 };
 
 // used frontend and mywallet
@@ -47648,5 +48108,5 @@ MyWallet.precisionToSatoshiBN = function(x) {
   return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, sShift(symbol_btc)).toString()));
 };
 
-},{"./api":341,"./blockchain-wallet":343,"./hd-account":344,"./hd-wallet":345,"./helpers":346,"./import-export":347,"./transaction":352,"./wallet-crypto":353,"./wallet-signup":354,"./wallet-store":355,"assert":115,"bigi":3,"bip39":5,"bitcoinjs-lib":56,"bs58":65,"buffer":117,"crypto-js":89,"xregexp":339}]},{},[348])(348)
+},{"./api":343,"./blockchain-wallet":345,"./hd-account":346,"./hd-wallet":347,"./helpers":348,"./import-export":349,"./transaction":354,"./wallet-crypto":355,"./wallet-signup":356,"./wallet-store":357,"assert":115,"bigi":3,"bip39":5,"bitcoinjs-lib":56,"bs58":65,"buffer":117,"crypto-js":89,"xregexp":341}]},{},[350])(350)
 });
