@@ -2,17 +2,11 @@ __Blockchain Wallet V3__
 
 _Recent changes_
 
-#   (2015-11-06)
+#   (2015-11-12)
 
 
 
 ---
-
-## Features
-
-- **Wallet:** deterministic guid + shared key and recovery
-  ([ecaf91be](https://github.com/blockchain/My-Wallet-V3/commit/ecaf91be8d31d82adb0bfc406edede78f77d2e6a))
-
 
 
 ---
