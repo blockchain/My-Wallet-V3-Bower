@@ -28392,9 +28392,12 @@ exports.shr64_lo = shr64_lo;
 },{"inherits":313}],179:[function(require,module,exports){
 module.exports={
   "name": "elliptic",
-  "version": "6.0.1",
+  "version": "6.0.2",
   "description": "EC cryptography",
   "main": "lib/elliptic.js",
+  "files": [
+    "lib"
+  ],
   "scripts": {
     "test": "make lint && istanbul test _mocha --reporter=spec test/*-test.js",
     "coveralls": "cat ./coverage/lcov.info | coveralls"
@@ -28433,9 +28436,9 @@ module.exports={
     "hash.js": "^1.0.0",
     "inherits": "^2.0.1"
   },
-  "gitHead": "a9eb628eec9a2f562e67947c5417e9b2435d0a2d",
-  "_id": "elliptic@6.0.1",
-  "_shasum": "91d573ecb2a3c274b8c07e0d1f35ff19f07e6978",
+  "gitHead": "330106da186712d228d79bc71ae8e7e68565fa9d",
+  "_id": "elliptic@6.0.2",
+  "_shasum": "219b96cd92aa9885d91d31c1fd42eaa5eb4483a9",
   "_from": "elliptic@>=6.0.0 <7.0.0",
   "_npmVersion": "3.3.6",
   "_nodeVersion": "5.0.0",
@@ -28444,8 +28447,8 @@ module.exports={
     "email": "fedor@indutny.com"
   },
   "dist": {
-    "shasum": "91d573ecb2a3c274b8c07e0d1f35ff19f07e6978",
-    "tarball": "http://registry.npmjs.org/elliptic/-/elliptic-6.0.1.tgz"
+    "shasum": "219b96cd92aa9885d91d31c1fd42eaa5eb4483a9",
+    "tarball": "http://registry.npmjs.org/elliptic/-/elliptic-6.0.2.tgz"
   },
   "maintainers": [
     {
@@ -28454,7 +28457,7 @@ module.exports={
     }
   ],
   "directories": {},
-  "_resolved": "https://registry.npmjs.org/elliptic/-/elliptic-6.0.1.tgz",
+  "_resolved": "https://registry.npmjs.org/elliptic/-/elliptic-6.0.2.tgz",
   "readme": "ERROR: No README data found!"
 }
 
@@ -43086,6 +43089,16 @@ Wallet.prototype.getAddressBookLabel = function(address){
   return this._address_book[address];
 };
 
+Wallet.prototype.addAddressBookEntry = function(address, label){
+  this._address_book[address] = label;
+  MyWallet.syncWallet();
+};
+
+Wallet.prototype.removeAddressBookEntry = function(address){
+  delete this._address_book[address];
+  MyWallet.syncWallet();
+};
+
 Wallet.prototype.getNote = function(txHash){
   return this._tx_notes[txHash];
 };
@@ -43113,11 +43126,13 @@ Wallet.prototype.changePbkdf2Iterations = function(newIterations, password){
   if (newIterations !== this._pbkdf2_iterations) {
     if (this.isDoubleEncrypted) {
       this.decrypt(password);
-      this._pbkdf2_iterations = newIterations;
+      this._pbkdf2_iterations = newIterations;         // sec pass iterations
+      WalletStore.setPbkdf2Iterations(newIterations);  // main pass iterations
       this.encrypt(password);
     }
     else { // no double encrypted wallet
-      this._pbkdf2_iterations = newIterations;
+      this._pbkdf2_iterations = newIterations;        // sec pass iterations
+      WalletStore.setPbkdf2Iterations(newIterations); // main pass iterations
       MyWallet.syncWallet();
     };
   };
@@ -45871,7 +45886,7 @@ var WalletStore = (function() {
   var guid; //Wallet identifier
   var language = 'en';
   var transactions = [];
-  var pbkdf2_iterations = null;
+  var pbkdf2_iterations = 5000; // pbkdf2_interations of the main password (to encrypt the full payload)
   var disable_logout = false;
   var mixer_fee = 0.5;
   var latest_block = null;
@@ -45895,11 +45910,11 @@ var WalletStore = (function() {
   ////////////////////////////////////////////////////////////////////////////
   return {
     setPbkdf2Iterations: function(iterations) {
-      MyWallet.wallet._pbkdf2_iterations = iterations;
+      pbkdf2_iterations = iterations;
       return;
     },
     getPbkdf2Iterations: function() {
-      return MyWallet.wallet.pbkdf2_iterations;
+      return pbkdf2_iterations;
     },
     getLanguage: function() {
       return language;
@@ -47219,7 +47234,7 @@ MyWallet.login = function ( user_guid
     }
     var error = function (response) {
      WalletStore.setRestoringWallet(false);
-     wrong_two_factor_code(response.responseText);
+     wrong_two_factor_code(response);
     }
 
     var myData = { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : API.API_CODE};

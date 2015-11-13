@@ -2,7 +2,7 @@ __Blockchain Wallet V3__
 
 _Recent changes_
 
-#   (2015-11-06)
+#   (2015-11-13)
 
 
 
@@ -10,12 +10,8 @@ _Recent changes_
 
 ## Bug Fixes
 
-- **Changelog:** generate before tagging
-  ([a77a6812](https://github.com/blockchain/My-Wallet-V3/commit/a77a681297e7b21b8f21f0ab34ae73ca17809f95))
-- **balance:** update balance after sending
-  ([491ab881](https://github.com/blockchain/My-Wallet-V3/commit/491ab88171a107889d5059bc307b6d6e76f090a7))
-- **mnemonic:** save included in the promise chain
-  ([532340cd](https://github.com/blockchain/My-Wallet-V3/commit/532340cdb1a1e65d34976494de81640e290201de))
+- **Login:** 2FA error message was not propagated
+  ([64fb3e17](https://github.com/blockchain/My-Wallet-V3/commit/64fb3e1781abc3f5c379285ae66c55acecc0a879))
 
 
 
