@@ -2,7 +2,7 @@ __Blockchain Wallet V3__
 
 _Recent changes_
 
-#   (2015-11-13)
+#   (2015-11-19)
 
 
 
@@ -10,8 +10,21 @@ _Recent changes_
 
 ## Bug Fixes
 
-- **Login:** 2FA error message was not propagated
-  ([64fb3e17](https://github.com/blockchain/My-Wallet-V3/commit/64fb3e1781abc3f5c379285ae66c55acecc0a879))
+- (processTransaction) dont set properties on a null object
+  ([5751542b](https://github.com/blockchain/My-Wallet-V3/commit/5751542bb13e56c589ca038be05d4caca67baea1))
+- **Notifications:** prevent crash in lame mode
+  ([cb2a5faa](https://github.com/blockchain/My-Wallet-V3/commit/cb2a5faa48ff4b15ef2e2b344cdb288fbf397df9))
+
+
+## Features
+
+- **Notifications:** notifications for HD addresses
+  ([4e4ccfba](https://github.com/blockchain/My-Wallet-V3/commit/4e4ccfbac986e9c24d3985bb2a2067e51e4d78b6))
+
+
+## Refactor
+
+- **BlockchainSettings:** use API.securePost for notifications
 
 
 
