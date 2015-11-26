@@ -21354,6 +21354,10 @@ BN.prototype.byteLength = function byteLength() {
   return Math.ceil(this.bitLength() / 8);
 };
 
+BN.prototype.isNeg = function isNeg() {
+  return this.negative !== 0;
+};
+
 // Return negative clone of `this`
 BN.prototype.neg = function neg() {
   if (this.cmpn(0) === 0)
@@ -35304,8 +35308,12 @@ function endWritable(stream, state, cb) {
 
 // NOTE: These type checking functions intentionally don't use `instanceof`
 // because it is fragile and can be easily faked with `Object.create()`.
-function isArray(ar) {
-  return Array.isArray(ar);
+
+function isArray(arg) {
+  if (Array.isArray) {
+    return Array.isArray(arg);
+  }
+  return objectToString(arg) === '[object Array]';
 }
 exports.isArray = isArray;
 
@@ -35345,7 +35353,7 @@ function isUndefined(arg) {
 exports.isUndefined = isUndefined;
 
 function isRegExp(re) {
-  return isObject(re) && objectToString(re) === '[object RegExp]';
+  return objectToString(re) === '[object RegExp]';
 }
 exports.isRegExp = isRegExp;
 
@@ -35355,13 +35363,12 @@ function isObject(arg) {
 exports.isObject = isObject;
 
 function isDate(d) {
-  return isObject(d) && objectToString(d) === '[object Date]';
+  return objectToString(d) === '[object Date]';
 }
 exports.isDate = isDate;
 
 function isError(e) {
-  return isObject(e) &&
-      (objectToString(e) === '[object Error]' || e instanceof Error);
+  return (objectToString(e) === '[object Error]' || e instanceof Error);
 }
 exports.isError = isError;
 
@@ -35380,14 +35387,12 @@ function isPrimitive(arg) {
 }
 exports.isPrimitive = isPrimitive;
 
-function isBuffer(arg) {
-  return Buffer.isBuffer(arg);
-}
-exports.isBuffer = isBuffer;
+exports.isBuffer = Buffer.isBuffer;
 
 function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
+
 }).call(this,{"isBuffer":require("../../../../insert-module-globals/node_modules/is-buffer/index.js")})
 },{"../../../../insert-module-globals/node_modules/is-buffer/index.js":314}],324:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
@@ -43522,11 +43527,11 @@ function updateKV(txt, method, value, success, error, extra) {
   extra = extra || '';
 
   MyWallet.securePost("wallet"+extra, { length : (value+'').length, payload : value+'', method : method }, function(data) {
-    WalletStore.sendEvent("msg", {type: "success", message: method + '-success' + data});
+    WalletStore.sendEvent("msg", {type: "success", message: method + '-success: ' + data});
 
     typeof(success) === "function" && success();
   }, function(data) {
-    WalletStore.sendEvent("msg", {type: "error", message: method + '-error' + data.responseText});
+    WalletStore.sendEvent("msg", {type: "error", message: method + '-error: ' + data});
 
     typeof(error) === "function" &&  error();
   });
@@ -43566,17 +43571,35 @@ function update_tor_ip_block(enabled, success, error) {
 };
 
 function update_password_hint1(value, success, error) {
-  if (value.split('').some(function(c){return c.charCodeAt(0) > 255;}))
-    error(101);
-  else
-    updateKV('Updating Main Password Hint', 'update-password-hint1', value, success, error);
+  switch (true) {
+    case value.split('').some(function(c){return c.charCodeAt(0) > 255;}):
+      error(101); // invalid charset
+      break;
+    case (WalletStore.getPassword() === value):
+      error(102); // password hint cannot be main wallet pass
+      break;
+    case (MyWallet.wallet.isDoubleEncrypted && MyWallet.wallet.validateSecondPassword(value)):
+      error(103); // password hint cannot be second passord
+      break;
+    default:
+      updateKV('Updating Main Password Hint', 'update-password-hint1', value, success, error);
+  };
 };
 
 function update_password_hint2(value, success, error) {
-  if (value.split('').some(function(c){return c.charCodeAt(0) > 255;}))
-    error(101);
-  else
-    updateKV('Updating Second Password Hint', 'update-password-hint2', value, success, error);
+  switch (true) {
+    case value.split('').some(function(c){return c.charCodeAt(0) > 255;}):
+      error(101); // invalid charset
+      break;
+    case (WalletStore.getPassword() === value):
+      error(102); // password hint cannot be main wallet pass
+      break;
+    case (MyWallet.wallet.isDoubleEncrypted && MyWallet.wallet.validateSecondPassword(value)):
+      error(103); // password hint cannot be second passord
+      break;
+    default:
+      updateKV('Updating Logging Level', 'update-password-hint2', value, success, error);
+  };
 };
 
 function change_email(email, success, error) {
@@ -43689,7 +43712,7 @@ function verifyMobile(code, success, error) {
     WalletStore.sendEvent("msg", {type: "success", message: data});
     typeof(success) === "function" && success(data);
   }, function(data) {
-    WalletStore.sendEvent("msg", {type: "error", message: data.responseText});
+    WalletStore.sendEvent("msg", {type: "error", message: data});
     typeof(error) === "function" &&  error();
   });
 };
@@ -44255,7 +44278,7 @@ Wallet.prototype.importLegacyAddress = function(addr, label, secPass, bipPass){
 
   var importAddress = (function(key) {
     var ad = Address.import(key, label);
-    if (this.containsLegacyAddress(ad)) { defer.reject('presentInWallet'); };
+    if (this.containsLegacyAddress(ad)) { defer.reject('presentInWallet'); return;};
     if (this.isDoubleEncrypted) {
       assert(secPass, "Error: second password needed");
       var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, "enc");
