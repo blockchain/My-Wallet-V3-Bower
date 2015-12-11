@@ -23508,10 +23508,15 @@ BN.prototype.isubn = function isubn(num) {
 
   this.words[0] -= num;
 
-  // Carry
-  for (var i = 0; i < this.length && this.words[i] < 0; i++) {
-    this.words[i] += 0x4000000;
-    this.words[i + 1] -= 1;
+  if (this.length === 1 && this.words[0] < 0) {
+    this.words[0] = -this.words[0];
+    this.negative = 1;
+  } else {
+    // Carry
+    for (var i = 0; i < this.length && this.words[i] < 0; i++) {
+      this.words[i] += 0x4000000;
+      this.words[i + 1] -= 1;
+    }
   }
 
   return this.strip();
@@ -46796,6 +46801,7 @@ var Bitcoin     = require('bitcoinjs-lib');
 var randomBytes = require('randombytes');
 var Helpers     = require('./helpers');
 var MyWallet    = require('./wallet');
+var Buffer      = require('buffer').Buffer;
 
 var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAddress, listener) {
 
@@ -46913,31 +46919,15 @@ Transaction.prototype.randomizeOutputs = function () {
 
 Transaction.prototype.sortBIP69 = function (){
 
-  var compareNum = function(a, b) {
-      if (a == b) return 0;
-      return a < b ? -1 : 1;
-  };
-
   var compareInputs = function(a, b) {
-    var x = a[0].hash.reverse().toString("hex");
-    var y = b[0].hash.reverse().toString("hex");
-    var comp1 = x.localeCompare(y);
-    a[0].hash.reverse();
-    b[0].hash.reverse();
-    if (comp1 === 0)
-      return compareNum(a[0].index, b[0].index);
-    else
-      return comp1;
+    var hasha = new Buffer(a[0].hash);
+    var hashb = new Buffer(b[0].hash);
+    var x = [].reverse.call(hasha)
+    var y = [].reverse.call(hashb)
+    return x.compare(y) || a[0].index - b[0].index
   };
   var compareOutputs = function(a, b) {
-    var comp1 = compareNum(a.value, b.value);
-    if (comp1 === 0) {
-      var x = a.script.buffer.toString("hex");
-      var y = b.script.buffer.toString("hex");
-      return x.localeCompare(y);
-    }
-    else
-      { return comp1;}
+    return (a.value - b.value) || (a.script.buffer).compare(b.script.buffer)
   };
   var mix = Helpers.zip3(this.transaction.ins, this.privateKeys, this.addressesOfInputs);
   mix.sort(compareInputs);
@@ -47000,7 +46990,7 @@ function sortUnspentOutputs(unspentOutputs) {
 
 module.exports = Transaction;
 
-},{"./helpers":346,"./wallet":357,"assert":116,"bitcoinjs-lib":57,"randombytes":335}],353:[function(require,module,exports){
+},{"./helpers":346,"./wallet":357,"assert":116,"bitcoinjs-lib":57,"buffer":118,"randombytes":335}],353:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');

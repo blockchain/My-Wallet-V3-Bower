@@ -2,7 +2,7 @@ __Blockchain Wallet V3__
 
 _Recent changes_
 
-#   (2015-12-08)
+#   (2015-12-11)
 
 
 
@@ -10,14 +10,11 @@ _Recent changes_
 
 ## Bug Fixes
 
-- **bip69:** sort pk and addr of inputs too
-  ([24ddb8cb](https://github.com/blockchain/My-Wallet-V3/commit/24ddb8cbc554f5d0ef2e0d3b39402745a91da229))
-
-
-## Features
-
-- **API:** remove verifyEmail()
-  ([3b5a2f64](https://github.com/blockchain/My-Wallet-V3/commit/3b5a2f64f5ae58fba354e5f9749cf2cb0a09ace1))
+- **bip69:**
+  - undo previous commit
+  ([ea3306f2](https://github.com/blockchain/My-Wallet-V3/commit/ea3306f2c667f27832999e337f5b4ce6627fb975))
+  - remove include
+  ([76370e1d](https://github.com/blockchain/My-Wallet-V3/commit/76370e1dd0bf2c73e1ad7bde0b1fde3d5168be41))
 
 
 
