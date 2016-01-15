@@ -34,7 +34,8 @@ module.exports = {
   API: require('./src/api'),
   Tx: require('./src/wallet-transaction'),
   Shared: require('./src/shared'),
-  WalletTokenEndpoints: require('./src/wallet-token-endpoints')
+  WalletTokenEndpoints: require('./src/wallet-token-endpoints'),
+  WalletNetwork: require('./src/wallet-network')
   // Wallet: require('./blockchain-wallet'),
   // Address: require('./address'),
   // HDAccount: require('./hd-account'),
@@ -47,7 +48,7 @@ module.exports = {
   // BIP39: require('bip39')
 };
 
-},{"./src/api":347,"./src/blockchain-settings-api":348,"./src/helpers":353,"./src/import-export":354,"./src/payment":357,"./src/shared":358,"./src/wallet":365,"./src/wallet-crypto":360,"./src/wallet-store":362,"./src/wallet-token-endpoints":363,"./src/wallet-transaction":364,"buffer":120,"crypto-js":91,"es6-promise":117,"isomorphic-fetch":337}],2:[function(require,module,exports){
+},{"./src/api":345,"./src/blockchain-settings-api":346,"./src/helpers":351,"./src/import-export":352,"./src/payment":355,"./src/shared":356,"./src/wallet":364,"./src/wallet-crypto":358,"./src/wallet-network":359,"./src/wallet-store":361,"./src/wallet-token-endpoints":362,"./src/wallet-transaction":363,"buffer":120,"crypto-js":91,"es6-promise":117,"isomorphic-fetch":337}],2:[function(require,module,exports){
 // (public) Constructor
 function BigInteger(a, b, c) {
   if (!(this instanceof BigInteger))
@@ -1887,7 +1888,7 @@ module.exports = {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./wordlists/en.json":24,"assert":118,"buffer":120,"create-hash":7,"pbkdf2":21,"randombytes":340,"unorm":343}],7:[function(require,module,exports){
+},{"./wordlists/en.json":24,"assert":118,"buffer":120,"create-hash":7,"pbkdf2":21,"randombytes":339,"unorm":341}],7:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 var inherits = require('inherits')
@@ -7079,7 +7080,7 @@ ECKey.prototype.sign = function (hash) {
 module.exports = ECKey
 
 }).call(this,require("buffer").Buffer)
-},{"./ecdsa":53,"./ecpubkey":55,"./networks":60,"assert":118,"bigi":4,"bs58check":68,"buffer":120,"ecurve":43,"randombytes":340,"typeforce":46}],55:[function(require,module,exports){
+},{"./ecdsa":53,"./ecpubkey":55,"./networks":60,"assert":118,"bigi":4,"bs58check":68,"buffer":120,"ecurve":43,"randombytes":339,"typeforce":46}],55:[function(require,module,exports){
 (function (Buffer){
 var crypto = require('./crypto')
 var ecdsa = require('./ecdsa')
@@ -9563,7 +9564,7 @@ Wallet.prototype.createTx = Wallet.prototype.createTransaction
 module.exports = Wallet
 
 }).call(this,require("buffer").Buffer)
-},{"./address":48,"./bufferutils":51,"./hdnode":57,"./networks":60,"./script":62,"./transaction_builder":65,"assert":118,"buffer":120,"randombytes":340,"typeforce":46}],67:[function(require,module,exports){
+},{"./address":48,"./bufferutils":51,"./hdnode":57,"./networks":60,"./script":62,"./transaction_builder":65,"assert":118,"buffer":120,"randombytes":339,"typeforce":46}],67:[function(require,module,exports){
 // Base58 encoding/decoding
 // Originally written by Mike Hearn for BitcoinJ
 // Copyright (c) 2011 Google Inc
@@ -19483,7 +19484,7 @@ var publicEncrypt = require('public-encrypt')
   }
 })
 
-},{"browserify-cipher":125,"browserify-sign":155,"browserify-sign/algos":154,"create-ecdh":222,"create-hash":248,"create-hmac":261,"diffie-hellman":262,"pbkdf2":269,"public-encrypt":270,"randombytes":340}],125:[function(require,module,exports){
+},{"browserify-cipher":125,"browserify-sign":155,"browserify-sign/algos":154,"create-ecdh":222,"create-hash":248,"create-hmac":261,"diffie-hellman":262,"pbkdf2":269,"public-encrypt":270,"randombytes":339}],125:[function(require,module,exports){
 var ebtk = require('evp_bytestokey')
 var aes = require('browserify-aes/browser')
 var DES = require('browserify-des')
@@ -22137,8 +22138,9 @@ exports['1.3.132.0.35'] = 'p521'
 
   BN.prototype.toArray = function toArray (endian, length) {
     var byteLength = this.byteLength();
-    var reqLength = length || byteLength;
+    var reqLength = length || Math.max(1, byteLength);
     assert(byteLength <= reqLength, 'byte array longer than desired length');
+    assert(reqLength > 0, 'Requested array length <= 0');
 
     this.strip();
     var littleEndian = endian === 'le';
@@ -22593,69 +22595,6 @@ exports['1.3.132.0.35'] = 'p521'
     return this.clone().isub(num);
   };
 
-  /*
-  // NOTE: This could be potentionally used to generate loop-less multiplications
-  function _genCombMulTo(alen, blen) {
-    var len = alen + blen - 1;
-    var src = [
-      'var a = self.words;',
-      'var b = num.words;',
-      'var o = out.words;',
-      'var c = 0;',
-      'var lo;',
-      'var mid;',
-      'var hi;'
-    ];
-    for (var i = 0; i < alen; i++) {
-      src.push('var a' + i + ' = a[' + i + '] | 0;');
-      src.push('var al' + i + ' = a' + i + ' & 0x1fff;');
-      src.push('var ah' + i + ' = a' + i + ' >>> 13;');
-    }
-    for (var i = 0; i < blen; i++) {
-      src.push('var b' + i + ' = b[' + i + '] | 0;');
-      src.push('var bl' + i + ' = b' + i + ' & 0x1fff;');
-      src.push('var bh' + i + ' = b' + i + ' >>> 13;');
-    }
-    src.push('');
-    src.push('out.length = ' + len + ';');
-
-    for (var k = 0; k < len; k++) {
-      var minJ = Math.max(0, k - alen + 1);
-      var maxJ = Math.min(k, blen - 1);
-
-      src.push('\/* k = ' + k + ' *\/');
-      src.push('var w' + k + ' = c;');
-      src.push('c = 0;');
-      for (var j = minJ; j <= maxJ; j++) {
-        var i = k - j;
-
-        src.push('lo = Math.imul(al' + i + ', bl' + j + ');');
-        src.push('mid = Math.imul(al' + i + ', bh' + j + ');');
-        src.push('mid = (mid + Math.imul(ah' + i + ', bl' + j + ')) | 0;');
-        src.push('hi = Math.imul(ah' + i + ', bh' + j + ');');
-
-        src.push('w' + k + ' = (w' + k + ' + lo) | 0;');
-        src.push('w' + k + ' = (w' + k + ' + ((mid & 0x1fff) << 13)) | 0;');
-        src.push('c = (c + hi) | 0;');
-        src.push('c = (c + (mid >>> 13)) | 0;');
-        src.push('c = (c + (w' + k + ' >>> 26)) | 0;');
-        src.push('w' + k + ' &= 0x3ffffff;');
-      }
-    }
-    // Store in separate step for better memory access
-    for (var k = 0; k < len; k++)
-      src.push('o[' + k + '] = w' + k + ';');
-    src.push('if (c !== 0) {',
-             '  o[' + k + '] = c;',
-             '  out.length++;',
-             '}',
-             'return out;');
-
-    return src.join('\n');
-  }
-  console.log(_genCombMulTo(10, 10));
-  */
-
   function smallMulTo (self, num, out) {
     out.negative = num.negative ^ self.negative;
     var len = (self.length + num.length) | 0;
@@ -22771,1061 +22710,480 @@ exports['1.3.132.0.35'] = 'p521'
 
     out.length = 19;
     /* k = 0 */
-    var w0 = c;
-    c = 0;
     lo = Math.imul(al0, bl0);
     mid = Math.imul(al0, bh0);
-    mid = (mid + Math.imul(ah0, bl0)) | 0;
+    mid += Math.imul(ah0, bl0);
     hi = Math.imul(ah0, bh0);
-    w0 = (w0 + lo) | 0;
-    w0 = (w0 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w0 >>> 26)) | 0;
+    var w0 = c + lo + ((mid & 0x1fff) << 13);
+    c = hi + (mid >>> 13) + (w0 >>> 26);
     w0 &= 0x3ffffff;
     /* k = 1 */
-    var w1 = c;
-    c = 0;
     lo = Math.imul(al1, bl0);
     mid = Math.imul(al1, bh0);
-    mid = (mid + Math.imul(ah1, bl0)) | 0;
+    mid += Math.imul(ah1, bl0);
     hi = Math.imul(ah1, bh0);
-    w1 = (w1 + lo) | 0;
-    w1 = (w1 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w1 >>> 26)) | 0;
-    w1 &= 0x3ffffff;
-    lo = Math.imul(al0, bl1);
-    mid = Math.imul(al0, bh1);
-    mid = (mid + Math.imul(ah0, bl1)) | 0;
-    hi = Math.imul(ah0, bh1);
-    w1 = (w1 + lo) | 0;
-    w1 = (w1 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w1 >>> 26)) | 0;
+    lo += Math.imul(al0, bl1);
+    mid += Math.imul(al0, bh1);
+    mid += Math.imul(ah0, bl1);
+    hi += Math.imul(ah0, bh1);
+    var w1 = c + lo + ((mid & 0x1fff) << 13);
+    c = hi + (mid >>> 13) + (w1 >>> 26);
     w1 &= 0x3ffffff;
     /* k = 2 */
-    var w2 = c;
-    c = 0;
     lo = Math.imul(al2, bl0);
     mid = Math.imul(al2, bh0);
-    mid = (mid + Math.imul(ah2, bl0)) | 0;
+    mid += Math.imul(ah2, bl0);
     hi = Math.imul(ah2, bh0);
-    w2 = (w2 + lo) | 0;
-    w2 = (w2 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w2 >>> 26)) | 0;
-    w2 &= 0x3ffffff;
-    lo = Math.imul(al1, bl1);
-    mid = Math.imul(al1, bh1);
-    mid = (mid + Math.imul(ah1, bl1)) | 0;
-    hi = Math.imul(ah1, bh1);
-    w2 = (w2 + lo) | 0;
-    w2 = (w2 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w2 >>> 26)) | 0;
-    w2 &= 0x3ffffff;
-    lo = Math.imul(al0, bl2);
-    mid = Math.imul(al0, bh2);
-    mid = (mid + Math.imul(ah0, bl2)) | 0;
-    hi = Math.imul(ah0, bh2);
-    w2 = (w2 + lo) | 0;
-    w2 = (w2 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w2 >>> 26)) | 0;
+    lo += Math.imul(al1, bl1);
+    mid += Math.imul(al1, bh1);
+    mid += Math.imul(ah1, bl1);
+    hi += Math.imul(ah1, bh1);
+    lo += Math.imul(al0, bl2);
+    mid += Math.imul(al0, bh2);
+    mid += Math.imul(ah0, bl2);
+    hi += Math.imul(ah0, bh2);
+    var w2 = c + lo + ((mid & 0x1fff) << 13);
+    c = hi + (mid >>> 13) + (w2 >>> 26);
     w2 &= 0x3ffffff;
     /* k = 3 */
-    var w3 = c;
-    c = 0;
     lo = Math.imul(al3, bl0);
     mid = Math.imul(al3, bh0);
-    mid = (mid + Math.imul(ah3, bl0)) | 0;
+    mid += Math.imul(ah3, bl0);
     hi = Math.imul(ah3, bh0);
-    w3 = (w3 + lo) | 0;
-    w3 = (w3 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w3 >>> 26)) | 0;
-    w3 &= 0x3ffffff;
-    lo = Math.imul(al2, bl1);
-    mid = Math.imul(al2, bh1);
-    mid = (mid + Math.imul(ah2, bl1)) | 0;
-    hi = Math.imul(ah2, bh1);
-    w3 = (w3 + lo) | 0;
-    w3 = (w3 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w3 >>> 26)) | 0;
-    w3 &= 0x3ffffff;
-    lo = Math.imul(al1, bl2);
-    mid = Math.imul(al1, bh2);
-    mid = (mid + Math.imul(ah1, bl2)) | 0;
-    hi = Math.imul(ah1, bh2);
-    w3 = (w3 + lo) | 0;
-    w3 = (w3 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w3 >>> 26)) | 0;
-    w3 &= 0x3ffffff;
-    lo = Math.imul(al0, bl3);
-    mid = Math.imul(al0, bh3);
-    mid = (mid + Math.imul(ah0, bl3)) | 0;
-    hi = Math.imul(ah0, bh3);
-    w3 = (w3 + lo) | 0;
-    w3 = (w3 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w3 >>> 26)) | 0;
+    lo += Math.imul(al2, bl1);
+    mid += Math.imul(al2, bh1);
+    mid += Math.imul(ah2, bl1);
+    hi += Math.imul(ah2, bh1);
+    lo += Math.imul(al1, bl2);
+    mid += Math.imul(al1, bh2);
+    mid += Math.imul(ah1, bl2);
+    hi += Math.imul(ah1, bh2);
+    lo += Math.imul(al0, bl3);
+    mid += Math.imul(al0, bh3);
+    mid += Math.imul(ah0, bl3);
+    hi += Math.imul(ah0, bh3);
+    var w3 = c + lo + ((mid & 0x1fff) << 13);
+    c = hi + (mid >>> 13) + (w3 >>> 26);
     w3 &= 0x3ffffff;
     /* k = 4 */
-    var w4 = c;
-    c = 0;
     lo = Math.imul(al4, bl0);
     mid = Math.imul(al4, bh0);
-    mid = (mid + Math.imul(ah4, bl0)) | 0;
+    mid += Math.imul(ah4, bl0);
     hi = Math.imul(ah4, bh0);
-    w4 = (w4 + lo) | 0;
-    w4 = (w4 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w4 >>> 26)) | 0;
-    w4 &= 0x3ffffff;
-    lo = Math.imul(al3, bl1);
-    mid = Math.imul(al3, bh1);
-    mid = (mid + Math.imul(ah3, bl1)) | 0;
-    hi = Math.imul(ah3, bh1);
-    w4 = (w4 + lo) | 0;
-    w4 = (w4 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w4 >>> 26)) | 0;
-    w4 &= 0x3ffffff;
-    lo = Math.imul(al2, bl2);
-    mid = Math.imul(al2, bh2);
-    mid = (mid + Math.imul(ah2, bl2)) | 0;
-    hi = Math.imul(ah2, bh2);
-    w4 = (w4 + lo) | 0;
-    w4 = (w4 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w4 >>> 26)) | 0;
-    w4 &= 0x3ffffff;
-    lo = Math.imul(al1, bl3);
-    mid = Math.imul(al1, bh3);
-    mid = (mid + Math.imul(ah1, bl3)) | 0;
-    hi = Math.imul(ah1, bh3);
-    w4 = (w4 + lo) | 0;
-    w4 = (w4 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w4 >>> 26)) | 0;
-    w4 &= 0x3ffffff;
-    lo = Math.imul(al0, bl4);
-    mid = Math.imul(al0, bh4);
-    mid = (mid + Math.imul(ah0, bl4)) | 0;
-    hi = Math.imul(ah0, bh4);
-    w4 = (w4 + lo) | 0;
-    w4 = (w4 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w4 >>> 26)) | 0;
+    lo += Math.imul(al3, bl1);
+    mid += Math.imul(al3, bh1);
+    mid += Math.imul(ah3, bl1);
+    hi += Math.imul(ah3, bh1);
+    lo += Math.imul(al2, bl2);
+    mid += Math.imul(al2, bh2);
+    mid += Math.imul(ah2, bl2);
+    hi += Math.imul(ah2, bh2);
+    lo += Math.imul(al1, bl3);
+    mid += Math.imul(al1, bh3);
+    mid += Math.imul(ah1, bl3);
+    hi += Math.imul(ah1, bh3);
+    lo += Math.imul(al0, bl4);
+    mid += Math.imul(al0, bh4);
+    mid += Math.imul(ah0, bl4);
+    hi += Math.imul(ah0, bh4);
+    var w4 = c + lo + ((mid & 0x1fff) << 13);
+    c = hi + (mid >>> 13) + (w4 >>> 26);
     w4 &= 0x3ffffff;
     /* k = 5 */
-    var w5 = c;
-    c = 0;
     lo = Math.imul(al5, bl0);
     mid = Math.imul(al5, bh0);
-    mid = (mid + Math.imul(ah5, bl0)) | 0;
+    mid += Math.imul(ah5, bl0);
     hi = Math.imul(ah5, bh0);
-    w5 = (w5 + lo) | 0;
-    w5 = (w5 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w5 >>> 26)) | 0;
-    w5 &= 0x3ffffff;
-    lo = Math.imul(al4, bl1);
-    mid = Math.imul(al4, bh1);
-    mid = (mid + Math.imul(ah4, bl1)) | 0;
-    hi = Math.imul(ah4, bh1);
-    w5 = (w5 + lo) | 0;
-    w5 = (w5 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w5 >>> 26)) | 0;
-    w5 &= 0x3ffffff;
-    lo = Math.imul(al3, bl2);
-    mid = Math.imul(al3, bh2);
-    mid = (mid + Math.imul(ah3, bl2)) | 0;
-    hi = Math.imul(ah3, bh2);
-    w5 = (w5 + lo) | 0;
-    w5 = (w5 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w5 >>> 26)) | 0;
-    w5 &= 0x3ffffff;
-    lo = Math.imul(al2, bl3);
-    mid = Math.imul(al2, bh3);
-    mid = (mid + Math.imul(ah2, bl3)) | 0;
-    hi = Math.imul(ah2, bh3);
-    w5 = (w5 + lo) | 0;
-    w5 = (w5 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w5 >>> 26)) | 0;
-    w5 &= 0x3ffffff;
-    lo = Math.imul(al1, bl4);
-    mid = Math.imul(al1, bh4);
-    mid = (mid + Math.imul(ah1, bl4)) | 0;
-    hi = Math.imul(ah1, bh4);
-    w5 = (w5 + lo) | 0;
-    w5 = (w5 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w5 >>> 26)) | 0;
-    w5 &= 0x3ffffff;
-    lo = Math.imul(al0, bl5);
-    mid = Math.imul(al0, bh5);
-    mid = (mid + Math.imul(ah0, bl5)) | 0;
-    hi = Math.imul(ah0, bh5);
-    w5 = (w5 + lo) | 0;
-    w5 = (w5 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w5 >>> 26)) | 0;
+    lo += Math.imul(al4, bl1);
+    mid += Math.imul(al4, bh1);
+    mid += Math.imul(ah4, bl1);
+    hi += Math.imul(ah4, bh1);
+    lo += Math.imul(al3, bl2);
+    mid += Math.imul(al3, bh2);
+    mid += Math.imul(ah3, bl2);
+    hi += Math.imul(ah3, bh2);
+    lo += Math.imul(al2, bl3);
+    mid += Math.imul(al2, bh3);
+    mid += Math.imul(ah2, bl3);
+    hi += Math.imul(ah2, bh3);
+    lo += Math.imul(al1, bl4);
+    mid += Math.imul(al1, bh4);
+    mid += Math.imul(ah1, bl4);
+    hi += Math.imul(ah1, bh4);
+    lo += Math.imul(al0, bl5);
+    mid += Math.imul(al0, bh5);
+    mid += Math.imul(ah0, bl5);
+    hi += Math.imul(ah0, bh5);
+    var w5 = c + lo + ((mid & 0x1fff) << 13);
+    c = hi + (mid >>> 13) + (w5 >>> 26);
     w5 &= 0x3ffffff;
     /* k = 6 */
-    var w6 = c;
-    c = 0;
     lo = Math.imul(al6, bl0);
     mid = Math.imul(al6, bh0);
-    mid = (mid + Math.imul(ah6, bl0)) | 0;
+    mid += Math.imul(ah6, bl0);
     hi = Math.imul(ah6, bh0);
-    w6 = (w6 + lo) | 0;
-    w6 = (w6 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w6 >>> 26)) | 0;
-    w6 &= 0x3ffffff;
-    lo = Math.imul(al5, bl1);
-    mid = Math.imul(al5, bh1);
-    mid = (mid + Math.imul(ah5, bl1)) | 0;
-    hi = Math.imul(ah5, bh1);
-    w6 = (w6 + lo) | 0;
-    w6 = (w6 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w6 >>> 26)) | 0;
-    w6 &= 0x3ffffff;
-    lo = Math.imul(al4, bl2);
-    mid = Math.imul(al4, bh2);
-    mid = (mid + Math.imul(ah4, bl2)) | 0;
-    hi = Math.imul(ah4, bh2);
-    w6 = (w6 + lo) | 0;
-    w6 = (w6 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w6 >>> 26)) | 0;
-    w6 &= 0x3ffffff;
-    lo = Math.imul(al3, bl3);
-    mid = Math.imul(al3, bh3);
-    mid = (mid + Math.imul(ah3, bl3)) | 0;
-    hi = Math.imul(ah3, bh3);
-    w6 = (w6 + lo) | 0;
-    w6 = (w6 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w6 >>> 26)) | 0;
-    w6 &= 0x3ffffff;
-    lo = Math.imul(al2, bl4);
-    mid = Math.imul(al2, bh4);
-    mid = (mid + Math.imul(ah2, bl4)) | 0;
-    hi = Math.imul(ah2, bh4);
-    w6 = (w6 + lo) | 0;
-    w6 = (w6 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w6 >>> 26)) | 0;
-    w6 &= 0x3ffffff;
-    lo = Math.imul(al1, bl5);
-    mid = Math.imul(al1, bh5);
-    mid = (mid + Math.imul(ah1, bl5)) | 0;
-    hi = Math.imul(ah1, bh5);
-    w6 = (w6 + lo) | 0;
-    w6 = (w6 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w6 >>> 26)) | 0;
-    w6 &= 0x3ffffff;
-    lo = Math.imul(al0, bl6);
-    mid = Math.imul(al0, bh6);
-    mid = (mid + Math.imul(ah0, bl6)) | 0;
-    hi = Math.imul(ah0, bh6);
-    w6 = (w6 + lo) | 0;
-    w6 = (w6 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w6 >>> 26)) | 0;
+    lo += Math.imul(al5, bl1);
+    mid += Math.imul(al5, bh1);
+    mid += Math.imul(ah5, bl1);
+    hi += Math.imul(ah5, bh1);
+    lo += Math.imul(al4, bl2);
+    mid += Math.imul(al4, bh2);
+    mid += Math.imul(ah4, bl2);
+    hi += Math.imul(ah4, bh2);
+    lo += Math.imul(al3, bl3);
+    mid += Math.imul(al3, bh3);
+    mid += Math.imul(ah3, bl3);
+    hi += Math.imul(ah3, bh3);
+    lo += Math.imul(al2, bl4);
+    mid += Math.imul(al2, bh4);
+    mid += Math.imul(ah2, bl4);
+    hi += Math.imul(ah2, bh4);
+    lo += Math.imul(al1, bl5);
+    mid += Math.imul(al1, bh5);
+    mid += Math.imul(ah1, bl5);
+    hi += Math.imul(ah1, bh5);
+    lo += Math.imul(al0, bl6);
+    mid += Math.imul(al0, bh6);
+    mid += Math.imul(ah0, bl6);
+    hi += Math.imul(ah0, bh6);
+    var w6 = c + lo + ((mid & 0x1fff) << 13);
+    c = hi + (mid >>> 13) + (w6 >>> 26);
     w6 &= 0x3ffffff;
     /* k = 7 */
-    var w7 = c;
-    c = 0;
     lo = Math.imul(al7, bl0);
     mid = Math.imul(al7, bh0);
-    mid = (mid + Math.imul(ah7, bl0)) | 0;
+    mid += Math.imul(ah7, bl0);
     hi = Math.imul(ah7, bh0);
-    w7 = (w7 + lo) | 0;
-    w7 = (w7 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w7 >>> 26)) | 0;
-    w7 &= 0x3ffffff;
-    lo = Math.imul(al6, bl1);
-    mid = Math.imul(al6, bh1);
-    mid = (mid + Math.imul(ah6, bl1)) | 0;
-    hi = Math.imul(ah6, bh1);
-    w7 = (w7 + lo) | 0;
-    w7 = (w7 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w7 >>> 26)) | 0;
-    w7 &= 0x3ffffff;
-    lo = Math.imul(al5, bl2);
-    mid = Math.imul(al5, bh2);
-    mid = (mid + Math.imul(ah5, bl2)) | 0;
-    hi = Math.imul(ah5, bh2);
-    w7 = (w7 + lo) | 0;
-    w7 = (w7 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w7 >>> 26)) | 0;
-    w7 &= 0x3ffffff;
-    lo = Math.imul(al4, bl3);
-    mid = Math.imul(al4, bh3);
-    mid = (mid + Math.imul(ah4, bl3)) | 0;
-    hi = Math.imul(ah4, bh3);
-    w7 = (w7 + lo) | 0;
-    w7 = (w7 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w7 >>> 26)) | 0;
-    w7 &= 0x3ffffff;
-    lo = Math.imul(al3, bl4);
-    mid = Math.imul(al3, bh4);
-    mid = (mid + Math.imul(ah3, bl4)) | 0;
-    hi = Math.imul(ah3, bh4);
-    w7 = (w7 + lo) | 0;
-    w7 = (w7 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w7 >>> 26)) | 0;
-    w7 &= 0x3ffffff;
-    lo = Math.imul(al2, bl5);
-    mid = Math.imul(al2, bh5);
-    mid = (mid + Math.imul(ah2, bl5)) | 0;
-    hi = Math.imul(ah2, bh5);
-    w7 = (w7 + lo) | 0;
-    w7 = (w7 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w7 >>> 26)) | 0;
-    w7 &= 0x3ffffff;
-    lo = Math.imul(al1, bl6);
-    mid = Math.imul(al1, bh6);
-    mid = (mid + Math.imul(ah1, bl6)) | 0;
-    hi = Math.imul(ah1, bh6);
-    w7 = (w7 + lo) | 0;
-    w7 = (w7 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w7 >>> 26)) | 0;
-    w7 &= 0x3ffffff;
-    lo = Math.imul(al0, bl7);
-    mid = Math.imul(al0, bh7);
-    mid = (mid + Math.imul(ah0, bl7)) | 0;
-    hi = Math.imul(ah0, bh7);
-    w7 = (w7 + lo) | 0;
-    w7 = (w7 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w7 >>> 26)) | 0;
+    lo += Math.imul(al6, bl1);
+    mid += Math.imul(al6, bh1);
+    mid += Math.imul(ah6, bl1);
+    hi += Math.imul(ah6, bh1);
+    lo += Math.imul(al5, bl2);
+    mid += Math.imul(al5, bh2);
+    mid += Math.imul(ah5, bl2);
+    hi += Math.imul(ah5, bh2);
+    lo += Math.imul(al4, bl3);
+    mid += Math.imul(al4, bh3);
+    mid += Math.imul(ah4, bl3);
+    hi += Math.imul(ah4, bh3);
+    lo += Math.imul(al3, bl4);
+    mid += Math.imul(al3, bh4);
+    mid += Math.imul(ah3, bl4);
+    hi += Math.imul(ah3, bh4);
+    lo += Math.imul(al2, bl5);
+    mid += Math.imul(al2, bh5);
+    mid += Math.imul(ah2, bl5);
+    hi += Math.imul(ah2, bh5);
+    lo += Math.imul(al1, bl6);
+    mid += Math.imul(al1, bh6);
+    mid += Math.imul(ah1, bl6);
+    hi += Math.imul(ah1, bh6);
+    lo += Math.imul(al0, bl7);
+    mid += Math.imul(al0, bh7);
+    mid += Math.imul(ah0, bl7);
+    hi += Math.imul(ah0, bh7);
+    var w7 = c + lo + ((mid & 0x1fff) << 13);
+    c = hi + (mid >>> 13) + (w7 >>> 26);
     w7 &= 0x3ffffff;
     /* k = 8 */
-    var w8 = c;
-    c = 0;
     lo = Math.imul(al8, bl0);
     mid = Math.imul(al8, bh0);
-    mid = (mid + Math.imul(ah8, bl0)) | 0;
+    mid += Math.imul(ah8, bl0);
     hi = Math.imul(ah8, bh0);
-    w8 = (w8 + lo) | 0;
-    w8 = (w8 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w8 >>> 26)) | 0;
-    w8 &= 0x3ffffff;
-    lo = Math.imul(al7, bl1);
-    mid = Math.imul(al7, bh1);
-    mid = (mid + Math.imul(ah7, bl1)) | 0;
-    hi = Math.imul(ah7, bh1);
-    w8 = (w8 + lo) | 0;
-    w8 = (w8 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w8 >>> 26)) | 0;
-    w8 &= 0x3ffffff;
-    lo = Math.imul(al6, bl2);
-    mid = Math.imul(al6, bh2);
-    mid = (mid + Math.imul(ah6, bl2)) | 0;
-    hi = Math.imul(ah6, bh2);
-    w8 = (w8 + lo) | 0;
-    w8 = (w8 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w8 >>> 26)) | 0;
-    w8 &= 0x3ffffff;
-    lo = Math.imul(al5, bl3);
-    mid = Math.imul(al5, bh3);
-    mid = (mid + Math.imul(ah5, bl3)) | 0;
-    hi = Math.imul(ah5, bh3);
-    w8 = (w8 + lo) | 0;
-    w8 = (w8 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w8 >>> 26)) | 0;
-    w8 &= 0x3ffffff;
-    lo = Math.imul(al4, bl4);
-    mid = Math.imul(al4, bh4);
-    mid = (mid + Math.imul(ah4, bl4)) | 0;
-    hi = Math.imul(ah4, bh4);
-    w8 = (w8 + lo) | 0;
-    w8 = (w8 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w8 >>> 26)) | 0;
-    w8 &= 0x3ffffff;
-    lo = Math.imul(al3, bl5);
-    mid = Math.imul(al3, bh5);
-    mid = (mid + Math.imul(ah3, bl5)) | 0;
-    hi = Math.imul(ah3, bh5);
-    w8 = (w8 + lo) | 0;
-    w8 = (w8 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w8 >>> 26)) | 0;
-    w8 &= 0x3ffffff;
-    lo = Math.imul(al2, bl6);
-    mid = Math.imul(al2, bh6);
-    mid = (mid + Math.imul(ah2, bl6)) | 0;
-    hi = Math.imul(ah2, bh6);
-    w8 = (w8 + lo) | 0;
-    w8 = (w8 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w8 >>> 26)) | 0;
-    w8 &= 0x3ffffff;
-    lo = Math.imul(al1, bl7);
-    mid = Math.imul(al1, bh7);
-    mid = (mid + Math.imul(ah1, bl7)) | 0;
-    hi = Math.imul(ah1, bh7);
-    w8 = (w8 + lo) | 0;
-    w8 = (w8 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w8 >>> 26)) | 0;
-    w8 &= 0x3ffffff;
-    lo = Math.imul(al0, bl8);
-    mid = Math.imul(al0, bh8);
-    mid = (mid + Math.imul(ah0, bl8)) | 0;
-    hi = Math.imul(ah0, bh8);
-    w8 = (w8 + lo) | 0;
-    w8 = (w8 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w8 >>> 26)) | 0;
+    lo += Math.imul(al7, bl1);
+    mid += Math.imul(al7, bh1);
+    mid += Math.imul(ah7, bl1);
+    hi += Math.imul(ah7, bh1);
+    lo += Math.imul(al6, bl2);
+    mid += Math.imul(al6, bh2);
+    mid += Math.imul(ah6, bl2);
+    hi += Math.imul(ah6, bh2);
+    lo += Math.imul(al5, bl3);
+    mid += Math.imul(al5, bh3);
+    mid += Math.imul(ah5, bl3);
+    hi += Math.imul(ah5, bh3);
+    lo += Math.imul(al4, bl4);
+    mid += Math.imul(al4, bh4);
+    mid += Math.imul(ah4, bl4);
+    hi += Math.imul(ah4, bh4);
+    lo += Math.imul(al3, bl5);
+    mid += Math.imul(al3, bh5);
+    mid += Math.imul(ah3, bl5);
+    hi += Math.imul(ah3, bh5);
+    lo += Math.imul(al2, bl6);
+    mid += Math.imul(al2, bh6);
+    mid += Math.imul(ah2, bl6);
+    hi += Math.imul(ah2, bh6);
+    lo += Math.imul(al1, bl7);
+    mid += Math.imul(al1, bh7);
+    mid += Math.imul(ah1, bl7);
+    hi += Math.imul(ah1, bh7);
+    lo += Math.imul(al0, bl8);
+    mid += Math.imul(al0, bh8);
+    mid += Math.imul(ah0, bl8);
+    hi += Math.imul(ah0, bh8);
+    var w8 = c + lo + ((mid & 0x1fff) << 13);
+    c = hi + (mid >>> 13) + (w8 >>> 26);
     w8 &= 0x3ffffff;
     /* k = 9 */
-    var w9 = c;
-    c = 0;
     lo = Math.imul(al9, bl0);
     mid = Math.imul(al9, bh0);
-    mid = (mid + Math.imul(ah9, bl0)) | 0;
+    mid += Math.imul(ah9, bl0);
     hi = Math.imul(ah9, bh0);
-    w9 = (w9 + lo) | 0;
-    w9 = (w9 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w9 >>> 26)) | 0;
-    w9 &= 0x3ffffff;
-    lo = Math.imul(al8, bl1);
-    mid = Math.imul(al8, bh1);
-    mid = (mid + Math.imul(ah8, bl1)) | 0;
-    hi = Math.imul(ah8, bh1);
-    w9 = (w9 + lo) | 0;
-    w9 = (w9 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w9 >>> 26)) | 0;
-    w9 &= 0x3ffffff;
-    lo = Math.imul(al7, bl2);
-    mid = Math.imul(al7, bh2);
-    mid = (mid + Math.imul(ah7, bl2)) | 0;
-    hi = Math.imul(ah7, bh2);
-    w9 = (w9 + lo) | 0;
-    w9 = (w9 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w9 >>> 26)) | 0;
-    w9 &= 0x3ffffff;
-    lo = Math.imul(al6, bl3);
-    mid = Math.imul(al6, bh3);
-    mid = (mid + Math.imul(ah6, bl3)) | 0;
-    hi = Math.imul(ah6, bh3);
-    w9 = (w9 + lo) | 0;
-    w9 = (w9 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w9 >>> 26)) | 0;
-    w9 &= 0x3ffffff;
-    lo = Math.imul(al5, bl4);
-    mid = Math.imul(al5, bh4);
-    mid = (mid + Math.imul(ah5, bl4)) | 0;
-    hi = Math.imul(ah5, bh4);
-    w9 = (w9 + lo) | 0;
-    w9 = (w9 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w9 >>> 26)) | 0;
-    w9 &= 0x3ffffff;
-    lo = Math.imul(al4, bl5);
-    mid = Math.imul(al4, bh5);
-    mid = (mid + Math.imul(ah4, bl5)) | 0;
-    hi = Math.imul(ah4, bh5);
-    w9 = (w9 + lo) | 0;
-    w9 = (w9 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w9 >>> 26)) | 0;
-    w9 &= 0x3ffffff;
-    lo = Math.imul(al3, bl6);
-    mid = Math.imul(al3, bh6);
-    mid = (mid + Math.imul(ah3, bl6)) | 0;
-    hi = Math.imul(ah3, bh6);
-    w9 = (w9 + lo) | 0;
-    w9 = (w9 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w9 >>> 26)) | 0;
-    w9 &= 0x3ffffff;
-    lo = Math.imul(al2, bl7);
-    mid = Math.imul(al2, bh7);
-    mid = (mid + Math.imul(ah2, bl7)) | 0;
-    hi = Math.imul(ah2, bh7);
-    w9 = (w9 + lo) | 0;
-    w9 = (w9 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w9 >>> 26)) | 0;
-    w9 &= 0x3ffffff;
-    lo = Math.imul(al1, bl8);
-    mid = Math.imul(al1, bh8);
-    mid = (mid + Math.imul(ah1, bl8)) | 0;
-    hi = Math.imul(ah1, bh8);
-    w9 = (w9 + lo) | 0;
-    w9 = (w9 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w9 >>> 26)) | 0;
-    w9 &= 0x3ffffff;
-    lo = Math.imul(al0, bl9);
-    mid = Math.imul(al0, bh9);
-    mid = (mid + Math.imul(ah0, bl9)) | 0;
-    hi = Math.imul(ah0, bh9);
-    w9 = (w9 + lo) | 0;
-    w9 = (w9 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w9 >>> 26)) | 0;
+    lo += Math.imul(al8, bl1);
+    mid += Math.imul(al8, bh1);
+    mid += Math.imul(ah8, bl1);
+    hi += Math.imul(ah8, bh1);
+    lo += Math.imul(al7, bl2);
+    mid += Math.imul(al7, bh2);
+    mid += Math.imul(ah7, bl2);
+    hi += Math.imul(ah7, bh2);
+    lo += Math.imul(al6, bl3);
+    mid += Math.imul(al6, bh3);
+    mid += Math.imul(ah6, bl3);
+    hi += Math.imul(ah6, bh3);
+    lo += Math.imul(al5, bl4);
+    mid += Math.imul(al5, bh4);
+    mid += Math.imul(ah5, bl4);
+    hi += Math.imul(ah5, bh4);
+    lo += Math.imul(al4, bl5);
+    mid += Math.imul(al4, bh5);
+    mid += Math.imul(ah4, bl5);
+    hi += Math.imul(ah4, bh5);
+    lo += Math.imul(al3, bl6);
+    mid += Math.imul(al3, bh6);
+    mid += Math.imul(ah3, bl6);
+    hi += Math.imul(ah3, bh6);
+    lo += Math.imul(al2, bl7);
+    mid += Math.imul(al2, bh7);
+    mid += Math.imul(ah2, bl7);
+    hi += Math.imul(ah2, bh7);
+    lo += Math.imul(al1, bl8);
+    mid += Math.imul(al1, bh8);
+    mid += Math.imul(ah1, bl8);
+    hi += Math.imul(ah1, bh8);
+    lo += Math.imul(al0, bl9);
+    mid += Math.imul(al0, bh9);
+    mid += Math.imul(ah0, bl9);
+    hi += Math.imul(ah0, bh9);
+    var w9 = c + lo + ((mid & 0x1fff) << 13);
+    c = hi + (mid >>> 13) + (w9 >>> 26);
     w9 &= 0x3ffffff;
     /* k = 10 */
-    var w10 = c;
-    c = 0;
     lo = Math.imul(al9, bl1);
     mid = Math.imul(al9, bh1);
-    mid = (mid + Math.imul(ah9, bl1)) | 0;
+    mid += Math.imul(ah9, bl1);
     hi = Math.imul(ah9, bh1);
-    w10 = (w10 + lo) | 0;
-    w10 = (w10 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w10 >>> 26)) | 0;
-    w10 &= 0x3ffffff;
-    lo = Math.imul(al8, bl2);
-    mid = Math.imul(al8, bh2);
-    mid = (mid + Math.imul(ah8, bl2)) | 0;
-    hi = Math.imul(ah8, bh2);
-    w10 = (w10 + lo) | 0;
-    w10 = (w10 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w10 >>> 26)) | 0;
-    w10 &= 0x3ffffff;
-    lo = Math.imul(al7, bl3);
-    mid = Math.imul(al7, bh3);
-    mid = (mid + Math.imul(ah7, bl3)) | 0;
-    hi = Math.imul(ah7, bh3);
-    w10 = (w10 + lo) | 0;
-    w10 = (w10 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w10 >>> 26)) | 0;
-    w10 &= 0x3ffffff;
-    lo = Math.imul(al6, bl4);
-    mid = Math.imul(al6, bh4);
-    mid = (mid + Math.imul(ah6, bl4)) | 0;
-    hi = Math.imul(ah6, bh4);
-    w10 = (w10 + lo) | 0;
-    w10 = (w10 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w10 >>> 26)) | 0;
-    w10 &= 0x3ffffff;
-    lo = Math.imul(al5, bl5);
-    mid = Math.imul(al5, bh5);
-    mid = (mid + Math.imul(ah5, bl5)) | 0;
-    hi = Math.imul(ah5, bh5);
-    w10 = (w10 + lo) | 0;
-    w10 = (w10 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w10 >>> 26)) | 0;
-    w10 &= 0x3ffffff;
-    lo = Math.imul(al4, bl6);
-    mid = Math.imul(al4, bh6);
-    mid = (mid + Math.imul(ah4, bl6)) | 0;
-    hi = Math.imul(ah4, bh6);
-    w10 = (w10 + lo) | 0;
-    w10 = (w10 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w10 >>> 26)) | 0;
-    w10 &= 0x3ffffff;
-    lo = Math.imul(al3, bl7);
-    mid = Math.imul(al3, bh7);
-    mid = (mid + Math.imul(ah3, bl7)) | 0;
-    hi = Math.imul(ah3, bh7);
-    w10 = (w10 + lo) | 0;
-    w10 = (w10 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w10 >>> 26)) | 0;
-    w10 &= 0x3ffffff;
-    lo = Math.imul(al2, bl8);
-    mid = Math.imul(al2, bh8);
-    mid = (mid + Math.imul(ah2, bl8)) | 0;
-    hi = Math.imul(ah2, bh8);
-    w10 = (w10 + lo) | 0;
-    w10 = (w10 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w10 >>> 26)) | 0;
-    w10 &= 0x3ffffff;
-    lo = Math.imul(al1, bl9);
-    mid = Math.imul(al1, bh9);
-    mid = (mid + Math.imul(ah1, bl9)) | 0;
-    hi = Math.imul(ah1, bh9);
-    w10 = (w10 + lo) | 0;
-    w10 = (w10 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w10 >>> 26)) | 0;
+    lo += Math.imul(al8, bl2);
+    mid += Math.imul(al8, bh2);
+    mid += Math.imul(ah8, bl2);
+    hi += Math.imul(ah8, bh2);
+    lo += Math.imul(al7, bl3);
+    mid += Math.imul(al7, bh3);
+    mid += Math.imul(ah7, bl3);
+    hi += Math.imul(ah7, bh3);
+    lo += Math.imul(al6, bl4);
+    mid += Math.imul(al6, bh4);
+    mid += Math.imul(ah6, bl4);
+    hi += Math.imul(ah6, bh4);
+    lo += Math.imul(al5, bl5);
+    mid += Math.imul(al5, bh5);
+    mid += Math.imul(ah5, bl5);
+    hi += Math.imul(ah5, bh5);
+    lo += Math.imul(al4, bl6);
+    mid += Math.imul(al4, bh6);
+    mid += Math.imul(ah4, bl6);
+    hi += Math.imul(ah4, bh6);
+    lo += Math.imul(al3, bl7);
+    mid += Math.imul(al3, bh7);
+    mid += Math.imul(ah3, bl7);
+    hi += Math.imul(ah3, bh7);
+    lo += Math.imul(al2, bl8);
+    mid += Math.imul(al2, bh8);
+    mid += Math.imul(ah2, bl8);
+    hi += Math.imul(ah2, bh8);
+    lo += Math.imul(al1, bl9);
+    mid += Math.imul(al1, bh9);
+    mid += Math.imul(ah1, bl9);
+    hi += Math.imul(ah1, bh9);
+    var w10 = c + lo + ((mid & 0x1fff) << 13);
+    c = hi + (mid >>> 13) + (w10 >>> 26);
     w10 &= 0x3ffffff;
     /* k = 11 */
-    var w11 = c;
-    c = 0;
     lo = Math.imul(al9, bl2);
     mid = Math.imul(al9, bh2);
-    mid = (mid + Math.imul(ah9, bl2)) | 0;
+    mid += Math.imul(ah9, bl2);
     hi = Math.imul(ah9, bh2);
-    w11 = (w11 + lo) | 0;
-    w11 = (w11 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w11 >>> 26)) | 0;
-    w11 &= 0x3ffffff;
-    lo = Math.imul(al8, bl3);
-    mid = Math.imul(al8, bh3);
-    mid = (mid + Math.imul(ah8, bl3)) | 0;
-    hi = Math.imul(ah8, bh3);
-    w11 = (w11 + lo) | 0;
-    w11 = (w11 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w11 >>> 26)) | 0;
-    w11 &= 0x3ffffff;
-    lo = Math.imul(al7, bl4);
-    mid = Math.imul(al7, bh4);
-    mid = (mid + Math.imul(ah7, bl4)) | 0;
-    hi = Math.imul(ah7, bh4);
-    w11 = (w11 + lo) | 0;
-    w11 = (w11 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w11 >>> 26)) | 0;
-    w11 &= 0x3ffffff;
-    lo = Math.imul(al6, bl5);
-    mid = Math.imul(al6, bh5);
-    mid = (mid + Math.imul(ah6, bl5)) | 0;
-    hi = Math.imul(ah6, bh5);
-    w11 = (w11 + lo) | 0;
-    w11 = (w11 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w11 >>> 26)) | 0;
-    w11 &= 0x3ffffff;
-    lo = Math.imul(al5, bl6);
-    mid = Math.imul(al5, bh6);
-    mid = (mid + Math.imul(ah5, bl6)) | 0;
-    hi = Math.imul(ah5, bh6);
-    w11 = (w11 + lo) | 0;
-    w11 = (w11 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w11 >>> 26)) | 0;
-    w11 &= 0x3ffffff;
-    lo = Math.imul(al4, bl7);
-    mid = Math.imul(al4, bh7);
-    mid = (mid + Math.imul(ah4, bl7)) | 0;
-    hi = Math.imul(ah4, bh7);
-    w11 = (w11 + lo) | 0;
-    w11 = (w11 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w11 >>> 26)) | 0;
-    w11 &= 0x3ffffff;
-    lo = Math.imul(al3, bl8);
-    mid = Math.imul(al3, bh8);
-    mid = (mid + Math.imul(ah3, bl8)) | 0;
-    hi = Math.imul(ah3, bh8);
-    w11 = (w11 + lo) | 0;
-    w11 = (w11 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w11 >>> 26)) | 0;
-    w11 &= 0x3ffffff;
-    lo = Math.imul(al2, bl9);
-    mid = Math.imul(al2, bh9);
-    mid = (mid + Math.imul(ah2, bl9)) | 0;
-    hi = Math.imul(ah2, bh9);
-    w11 = (w11 + lo) | 0;
-    w11 = (w11 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w11 >>> 26)) | 0;
+    lo += Math.imul(al8, bl3);
+    mid += Math.imul(al8, bh3);
+    mid += Math.imul(ah8, bl3);
+    hi += Math.imul(ah8, bh3);
+    lo += Math.imul(al7, bl4);
+    mid += Math.imul(al7, bh4);
+    mid += Math.imul(ah7, bl4);
+    hi += Math.imul(ah7, bh4);
+    lo += Math.imul(al6, bl5);
+    mid += Math.imul(al6, bh5);
+    mid += Math.imul(ah6, bl5);
+    hi += Math.imul(ah6, bh5);
+    lo += Math.imul(al5, bl6);
+    mid += Math.imul(al5, bh6);
+    mid += Math.imul(ah5, bl6);
+    hi += Math.imul(ah5, bh6);
+    lo += Math.imul(al4, bl7);
+    mid += Math.imul(al4, bh7);
+    mid += Math.imul(ah4, bl7);
+    hi += Math.imul(ah4, bh7);
+    lo += Math.imul(al3, bl8);
+    mid += Math.imul(al3, bh8);
+    mid += Math.imul(ah3, bl8);
+    hi += Math.imul(ah3, bh8);
+    lo += Math.imul(al2, bl9);
+    mid += Math.imul(al2, bh9);
+    mid += Math.imul(ah2, bl9);
+    hi += Math.imul(ah2, bh9);
+    var w11 = c + lo + ((mid & 0x1fff) << 13);
+    c = hi + (mid >>> 13) + (w11 >>> 26);
     w11 &= 0x3ffffff;
     /* k = 12 */
-    var w12 = c;
-    c = 0;
     lo = Math.imul(al9, bl3);
     mid = Math.imul(al9, bh3);
-    mid = (mid + Math.imul(ah9, bl3)) | 0;
+    mid += Math.imul(ah9, bl3);
     hi = Math.imul(ah9, bh3);
-    w12 = (w12 + lo) | 0;
-    w12 = (w12 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w12 >>> 26)) | 0;
-    w12 &= 0x3ffffff;
-    lo = Math.imul(al8, bl4);
-    mid = Math.imul(al8, bh4);
-    mid = (mid + Math.imul(ah8, bl4)) | 0;
-    hi = Math.imul(ah8, bh4);
-    w12 = (w12 + lo) | 0;
-    w12 = (w12 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w12 >>> 26)) | 0;
-    w12 &= 0x3ffffff;
-    lo = Math.imul(al7, bl5);
-    mid = Math.imul(al7, bh5);
-    mid = (mid + Math.imul(ah7, bl5)) | 0;
-    hi = Math.imul(ah7, bh5);
-    w12 = (w12 + lo) | 0;
-    w12 = (w12 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w12 >>> 26)) | 0;
-    w12 &= 0x3ffffff;
-    lo = Math.imul(al6, bl6);
-    mid = Math.imul(al6, bh6);
-    mid = (mid + Math.imul(ah6, bl6)) | 0;
-    hi = Math.imul(ah6, bh6);
-    w12 = (w12 + lo) | 0;
-    w12 = (w12 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w12 >>> 26)) | 0;
-    w12 &= 0x3ffffff;
-    lo = Math.imul(al5, bl7);
-    mid = Math.imul(al5, bh7);
-    mid = (mid + Math.imul(ah5, bl7)) | 0;
-    hi = Math.imul(ah5, bh7);
-    w12 = (w12 + lo) | 0;
-    w12 = (w12 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w12 >>> 26)) | 0;
-    w12 &= 0x3ffffff;
-    lo = Math.imul(al4, bl8);
-    mid = Math.imul(al4, bh8);
-    mid = (mid + Math.imul(ah4, bl8)) | 0;
-    hi = Math.imul(ah4, bh8);
-    w12 = (w12 + lo) | 0;
-    w12 = (w12 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w12 >>> 26)) | 0;
-    w12 &= 0x3ffffff;
-    lo = Math.imul(al3, bl9);
-    mid = Math.imul(al3, bh9);
-    mid = (mid + Math.imul(ah3, bl9)) | 0;
-    hi = Math.imul(ah3, bh9);
-    w12 = (w12 + lo) | 0;
-    w12 = (w12 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w12 >>> 26)) | 0;
+    lo += Math.imul(al8, bl4);
+    mid += Math.imul(al8, bh4);
+    mid += Math.imul(ah8, bl4);
+    hi += Math.imul(ah8, bh4);
+    lo += Math.imul(al7, bl5);
+    mid += Math.imul(al7, bh5);
+    mid += Math.imul(ah7, bl5);
+    hi += Math.imul(ah7, bh5);
+    lo += Math.imul(al6, bl6);
+    mid += Math.imul(al6, bh6);
+    mid += Math.imul(ah6, bl6);
+    hi += Math.imul(ah6, bh6);
+    lo += Math.imul(al5, bl7);
+    mid += Math.imul(al5, bh7);
+    mid += Math.imul(ah5, bl7);
+    hi += Math.imul(ah5, bh7);
+    lo += Math.imul(al4, bl8);
+    mid += Math.imul(al4, bh8);
+    mid += Math.imul(ah4, bl8);
+    hi += Math.imul(ah4, bh8);
+    lo += Math.imul(al3, bl9);
+    mid += Math.imul(al3, bh9);
+    mid += Math.imul(ah3, bl9);
+    hi += Math.imul(ah3, bh9);
+    var w12 = c + lo + ((mid & 0x1fff) << 13);
+    c = hi + (mid >>> 13) + (w12 >>> 26);
     w12 &= 0x3ffffff;
     /* k = 13 */
-    var w13 = c;
-    c = 0;
     lo = Math.imul(al9, bl4);
     mid = Math.imul(al9, bh4);
-    mid = (mid + Math.imul(ah9, bl4)) | 0;
+    mid += Math.imul(ah9, bl4);
     hi = Math.imul(ah9, bh4);
-    w13 = (w13 + lo) | 0;
-    w13 = (w13 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w13 >>> 26)) | 0;
-    w13 &= 0x3ffffff;
-    lo = Math.imul(al8, bl5);
-    mid = Math.imul(al8, bh5);
-    mid = (mid + Math.imul(ah8, bl5)) | 0;
-    hi = Math.imul(ah8, bh5);
-    w13 = (w13 + lo) | 0;
-    w13 = (w13 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w13 >>> 26)) | 0;
-    w13 &= 0x3ffffff;
-    lo = Math.imul(al7, bl6);
-    mid = Math.imul(al7, bh6);
-    mid = (mid + Math.imul(ah7, bl6)) | 0;
-    hi = Math.imul(ah7, bh6);
-    w13 = (w13 + lo) | 0;
-    w13 = (w13 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w13 >>> 26)) | 0;
-    w13 &= 0x3ffffff;
-    lo = Math.imul(al6, bl7);
-    mid = Math.imul(al6, bh7);
-    mid = (mid + Math.imul(ah6, bl7)) | 0;
-    hi = Math.imul(ah6, bh7);
-    w13 = (w13 + lo) | 0;
-    w13 = (w13 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w13 >>> 26)) | 0;
-    w13 &= 0x3ffffff;
-    lo = Math.imul(al5, bl8);
-    mid = Math.imul(al5, bh8);
-    mid = (mid + Math.imul(ah5, bl8)) | 0;
-    hi = Math.imul(ah5, bh8);
-    w13 = (w13 + lo) | 0;
-    w13 = (w13 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w13 >>> 26)) | 0;
-    w13 &= 0x3ffffff;
-    lo = Math.imul(al4, bl9);
-    mid = Math.imul(al4, bh9);
-    mid = (mid + Math.imul(ah4, bl9)) | 0;
-    hi = Math.imul(ah4, bh9);
-    w13 = (w13 + lo) | 0;
-    w13 = (w13 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w13 >>> 26)) | 0;
+    lo += Math.imul(al8, bl5);
+    mid += Math.imul(al8, bh5);
+    mid += Math.imul(ah8, bl5);
+    hi += Math.imul(ah8, bh5);
+    lo += Math.imul(al7, bl6);
+    mid += Math.imul(al7, bh6);
+    mid += Math.imul(ah7, bl6);
+    hi += Math.imul(ah7, bh6);
+    lo += Math.imul(al6, bl7);
+    mid += Math.imul(al6, bh7);
+    mid += Math.imul(ah6, bl7);
+    hi += Math.imul(ah6, bh7);
+    lo += Math.imul(al5, bl8);
+    mid += Math.imul(al5, bh8);
+    mid += Math.imul(ah5, bl8);
+    hi += Math.imul(ah5, bh8);
+    lo += Math.imul(al4, bl9);
+    mid += Math.imul(al4, bh9);
+    mid += Math.imul(ah4, bl9);
+    hi += Math.imul(ah4, bh9);
+    var w13 = c + lo + ((mid & 0x1fff) << 13);
+    c = hi + (mid >>> 13) + (w13 >>> 26);
     w13 &= 0x3ffffff;
     /* k = 14 */
-    var w14 = c;
-    c = 0;
     lo = Math.imul(al9, bl5);
     mid = Math.imul(al9, bh5);
-    mid = (mid + Math.imul(ah9, bl5)) | 0;
+    mid += Math.imul(ah9, bl5);
     hi = Math.imul(ah9, bh5);
-    w14 = (w14 + lo) | 0;
-    w14 = (w14 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w14 >>> 26)) | 0;
-    w14 &= 0x3ffffff;
-    lo = Math.imul(al8, bl6);
-    mid = Math.imul(al8, bh6);
-    mid = (mid + Math.imul(ah8, bl6)) | 0;
-    hi = Math.imul(ah8, bh6);
-    w14 = (w14 + lo) | 0;
-    w14 = (w14 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w14 >>> 26)) | 0;
-    w14 &= 0x3ffffff;
-    lo = Math.imul(al7, bl7);
-    mid = Math.imul(al7, bh7);
-    mid = (mid + Math.imul(ah7, bl7)) | 0;
-    hi = Math.imul(ah7, bh7);
-    w14 = (w14 + lo) | 0;
-    w14 = (w14 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w14 >>> 26)) | 0;
-    w14 &= 0x3ffffff;
-    lo = Math.imul(al6, bl8);
-    mid = Math.imul(al6, bh8);
-    mid = (mid + Math.imul(ah6, bl8)) | 0;
-    hi = Math.imul(ah6, bh8);
-    w14 = (w14 + lo) | 0;
-    w14 = (w14 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w14 >>> 26)) | 0;
-    w14 &= 0x3ffffff;
-    lo = Math.imul(al5, bl9);
-    mid = Math.imul(al5, bh9);
-    mid = (mid + Math.imul(ah5, bl9)) | 0;
-    hi = Math.imul(ah5, bh9);
-    w14 = (w14 + lo) | 0;
-    w14 = (w14 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w14 >>> 26)) | 0;
+    lo += Math.imul(al8, bl6);
+    mid += Math.imul(al8, bh6);
+    mid += Math.imul(ah8, bl6);
+    hi += Math.imul(ah8, bh6);
+    lo += Math.imul(al7, bl7);
+    mid += Math.imul(al7, bh7);
+    mid += Math.imul(ah7, bl7);
+    hi += Math.imul(ah7, bh7);
+    lo += Math.imul(al6, bl8);
+    mid += Math.imul(al6, bh8);
+    mid += Math.imul(ah6, bl8);
+    hi += Math.imul(ah6, bh8);
+    lo += Math.imul(al5, bl9);
+    mid += Math.imul(al5, bh9);
+    mid += Math.imul(ah5, bl9);
+    hi += Math.imul(ah5, bh9);
+    var w14 = c + lo + ((mid & 0x1fff) << 13);
+    c = hi + (mid >>> 13) + (w14 >>> 26);
     w14 &= 0x3ffffff;
     /* k = 15 */
-    var w15 = c;
-    c = 0;
     lo = Math.imul(al9, bl6);
     mid = Math.imul(al9, bh6);
-    mid = (mid + Math.imul(ah9, bl6)) | 0;
+    mid += Math.imul(ah9, bl6);
     hi = Math.imul(ah9, bh6);
-    w15 = (w15 + lo) | 0;
-    w15 = (w15 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w15 >>> 26)) | 0;
-    w15 &= 0x3ffffff;
-    lo = Math.imul(al8, bl7);
-    mid = Math.imul(al8, bh7);
-    mid = (mid + Math.imul(ah8, bl7)) | 0;
-    hi = Math.imul(ah8, bh7);
-    w15 = (w15 + lo) | 0;
-    w15 = (w15 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w15 >>> 26)) | 0;
-    w15 &= 0x3ffffff;
-    lo = Math.imul(al7, bl8);
-    mid = Math.imul(al7, bh8);
-    mid = (mid + Math.imul(ah7, bl8)) | 0;
-    hi = Math.imul(ah7, bh8);
-    w15 = (w15 + lo) | 0;
-    w15 = (w15 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w15 >>> 26)) | 0;
-    w15 &= 0x3ffffff;
-    lo = Math.imul(al6, bl9);
-    mid = Math.imul(al6, bh9);
-    mid = (mid + Math.imul(ah6, bl9)) | 0;
-    hi = Math.imul(ah6, bh9);
-    w15 = (w15 + lo) | 0;
-    w15 = (w15 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w15 >>> 26)) | 0;
+    lo += Math.imul(al8, bl7);
+    mid += Math.imul(al8, bh7);
+    mid += Math.imul(ah8, bl7);
+    hi += Math.imul(ah8, bh7);
+    lo += Math.imul(al7, bl8);
+    mid += Math.imul(al7, bh8);
+    mid += Math.imul(ah7, bl8);
+    hi += Math.imul(ah7, bh8);
+    lo += Math.imul(al6, bl9);
+    mid += Math.imul(al6, bh9);
+    mid += Math.imul(ah6, bl9);
+    hi += Math.imul(ah6, bh9);
+    var w15 = c + lo + ((mid & 0x1fff) << 13);
+    c = hi + (mid >>> 13) + (w15 >>> 26);
     w15 &= 0x3ffffff;
     /* k = 16 */
-    var w16 = c;
-    c = 0;
     lo = Math.imul(al9, bl7);
     mid = Math.imul(al9, bh7);
-    mid = (mid + Math.imul(ah9, bl7)) | 0;
+    mid += Math.imul(ah9, bl7);
     hi = Math.imul(ah9, bh7);
-    w16 = (w16 + lo) | 0;
-    w16 = (w16 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w16 >>> 26)) | 0;
-    w16 &= 0x3ffffff;
-    lo = Math.imul(al8, bl8);
-    mid = Math.imul(al8, bh8);
-    mid = (mid + Math.imul(ah8, bl8)) | 0;
-    hi = Math.imul(ah8, bh8);
-    w16 = (w16 + lo) | 0;
-    w16 = (w16 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w16 >>> 26)) | 0;
-    w16 &= 0x3ffffff;
-    lo = Math.imul(al7, bl9);
-    mid = Math.imul(al7, bh9);
-    mid = (mid + Math.imul(ah7, bl9)) | 0;
-    hi = Math.imul(ah7, bh9);
-    w16 = (w16 + lo) | 0;
-    w16 = (w16 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w16 >>> 26)) | 0;
+    lo += Math.imul(al8, bl8);
+    mid += Math.imul(al8, bh8);
+    mid += Math.imul(ah8, bl8);
+    hi += Math.imul(ah8, bh8);
+    lo += Math.imul(al7, bl9);
+    mid += Math.imul(al7, bh9);
+    mid += Math.imul(ah7, bl9);
+    hi += Math.imul(ah7, bh9);
+    var w16 = c + lo + ((mid & 0x1fff) << 13);
+    c = hi + (mid >>> 13) + (w16 >>> 26);
     w16 &= 0x3ffffff;
     /* k = 17 */
-    var w17 = c;
-    c = 0;
     lo = Math.imul(al9, bl8);
     mid = Math.imul(al9, bh8);
-    mid = (mid + Math.imul(ah9, bl8)) | 0;
+    mid += Math.imul(ah9, bl8);
     hi = Math.imul(ah9, bh8);
-    w17 = (w17 + lo) | 0;
-    w17 = (w17 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w17 >>> 26)) | 0;
-    w17 &= 0x3ffffff;
-    lo = Math.imul(al8, bl9);
-    mid = Math.imul(al8, bh9);
-    mid = (mid + Math.imul(ah8, bl9)) | 0;
-    hi = Math.imul(ah8, bh9);
-    w17 = (w17 + lo) | 0;
-    w17 = (w17 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w17 >>> 26)) | 0;
+    lo += Math.imul(al8, bl9);
+    mid += Math.imul(al8, bh9);
+    mid += Math.imul(ah8, bl9);
+    hi += Math.imul(ah8, bh9);
+    var w17 = c + lo + ((mid & 0x1fff) << 13);
+    c = hi + (mid >>> 13) + (w17 >>> 26);
     w17 &= 0x3ffffff;
     /* k = 18 */
-    var w18 = c;
-    c = 0;
     lo = Math.imul(al9, bl9);
     mid = Math.imul(al9, bh9);
-    mid = (mid + Math.imul(ah9, bl9)) | 0;
+    mid += Math.imul(ah9, bl9);
     hi = Math.imul(ah9, bh9);
-    w18 = (w18 + lo) | 0;
-    w18 = (w18 + ((mid & 0x1fff) << 13)) | 0;
-    c = (c + hi) | 0;
-    c = (c + (mid >>> 13)) | 0;
-    c = (c + (w18 >>> 26)) | 0;
+    var w18 = c + lo + ((mid & 0x1fff) << 13);
+    c = hi + (mid >>> 13) + (w18 >>> 26);
     w18 &= 0x3ffffff;
     o[0] = w0;
     o[1] = w1;
@@ -24745,25 +24103,31 @@ exports['1.3.132.0.35'] = 'p521'
     var xp = x.clone();
 
     while (!x.isZero()) {
-      while (x.isEven()) {
-        x.iushrn(1);
-        if (A.isEven() && B.isEven()) {
+      for (var i = 0, im = 1; (x.words[0] & im) === 0 && i < 26; ++i, im <<= 1);
+      if (i > 0) {
+        x.iushrn(i);
+        while (i-- > 0) {
+          if (A.isOdd() || B.isOdd()) {
+            A.iadd(yp);
+            B.isub(xp);
+          }
+
           A.iushrn(1);
           B.iushrn(1);
-        } else {
-          A.iadd(yp).iushrn(1);
-          B.isub(xp).iushrn(1);
         }
       }
 
-      while (y.isEven()) {
-        y.iushrn(1);
-        if (C.isEven() && D.isEven()) {
+      for (var j = 0, jm = 1; (y.words[0] & jm) === 0 && j < 26; ++j, jm <<= 1);
+      if (j > 0) {
+        y.iushrn(j);
+        while (j-- > 0) {
+          if (C.isOdd() || D.isOdd()) {
+            C.iadd(yp);
+            D.isub(xp);
+          }
+
           C.iushrn(1);
           D.iushrn(1);
-        } else {
-          C.iadd(yp).iushrn(1);
-          D.isub(xp).iushrn(1);
         }
       }
 
@@ -24807,22 +24171,30 @@ exports['1.3.132.0.35'] = 'p521'
     var delta = b.clone();
 
     while (a.cmpn(1) > 0 && b.cmpn(1) > 0) {
-      while (a.isEven()) {
-        a.iushrn(1);
-        if (x1.isEven()) {
+      for (var i = 0, im = 1; (a.words[0] & im) === 0 && i < 26; ++i, im <<= 1);
+      if (i > 0) {
+        a.iushrn(i);
+        while (i-- > 0) {
+          if (x1.isOdd()) {
+            x1.iadd(delta);
+          }
+
           x1.iushrn(1);
-        } else {
-          x1.iadd(delta).iushrn(1);
         }
       }
-      while (b.isEven()) {
-        b.iushrn(1);
-        if (x2.isEven()) {
+
+      for (var j = 0, jm = 1; (b.words[0] & jm) === 0 && j < 26; ++j, jm <<= 1);
+      if (j > 0) {
+        b.iushrn(j);
+        while (j-- > 0) {
+          if (x2.isOdd()) {
+            x2.iadd(delta);
+          }
+
           x2.iushrn(1);
-        } else {
-          x2.iadd(delta).iushrn(1);
         }
       }
+
       if (a.cmp(b) >= 0) {
         a.isub(b);
         x1.isub(x2);
@@ -25210,18 +24582,12 @@ exports['1.3.132.0.35'] = 'p521'
     num.length += 2;
 
     // bounded at: 0x40 * 0x3ffffff + 0x3d0 = 0x100000390
-    var hi;
     var lo = 0;
     for (var i = 0; i < num.length; i++) {
       var w = num.words[i] | 0;
-      hi = w * 0x40;
       lo += w * 0x3d1;
-      hi += (lo / 0x4000000) | 0;
-      lo &= 0x3ffffff;
-
-      num.words[i] = lo;
-
-      lo = hi;
+      num.words[i] = lo & 0x3ffffff;
+      lo = w * 0x40 + ((lo / 0x4000000) | 0);
     }
 
     // Fast length reduction
@@ -25648,7 +25014,7 @@ function getr(priv) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"bn.js":157,"buffer":120,"randombytes":340}],159:[function(require,module,exports){
+},{"bn.js":157,"buffer":120,"randombytes":339}],159:[function(require,module,exports){
 'use strict';
 
 var elliptic = exports;
@@ -33317,46 +32683,48 @@ arguments[4][20][0].apply(exports,arguments)
 arguments[4][22][0].apply(exports,arguments)
 },{"buffer":120,"create-hash/browser":248,"dup":22,"inherits":316,"stream":331}],262:[function(require,module,exports){
 (function (Buffer){
-var generatePrime = require('./lib/generatePrime');
-var primes = require('./lib/primes');
+var generatePrime = require('./lib/generatePrime')
+var primes = require('./lib/primes')
 
-var DH = require('./lib/dh');
+var DH = require('./lib/dh')
 
-function getDiffieHellman(mod) {
-  var prime = new Buffer(primes[mod].prime, 'hex');
-  var gen = new Buffer(primes[mod].gen, 'hex');
+function getDiffieHellman (mod) {
+  var prime = new Buffer(primes[mod].prime, 'hex')
+  var gen = new Buffer(primes[mod].gen, 'hex')
 
-  return new DH(prime, gen);
+  return new DH(prime, gen)
 }
 
-function createDiffieHellman(prime, enc, generator, genc) {
-  if (Buffer.isBuffer(enc) || (typeof enc === 'string' && ['hex', 'binary', 'base64'].indexOf(enc) === -1)) {
-    genc = generator;
-    generator = enc;
-    enc = undefined;
+var ENCODINGS = {
+  'binary': true, 'hex': true, 'base64': true
+}
+
+function createDiffieHellman (prime, enc, generator, genc) {
+  if (Buffer.isBuffer(enc) || ENCODINGS[enc] === undefined) {
+    return createDiffieHellman(prime, 'binary', enc, generator)
   }
 
-  enc = enc || 'binary';
-  genc = genc || 'binary';
-  generator = generator || new Buffer([2]);
+  enc = enc || 'binary'
+  genc = genc || 'binary'
+  generator = generator || new Buffer([2])
 
   if (!Buffer.isBuffer(generator)) {
-    generator = new Buffer(generator, genc);
+    generator = new Buffer(generator, genc)
   }
 
   if (typeof prime === 'number') {
-    return new DH(generatePrime(prime, generator), generator, true);
+    return new DH(generatePrime(prime, generator), generator, true)
   }
 
   if (!Buffer.isBuffer(prime)) {
-    prime = new Buffer(prime, enc);
+    prime = new Buffer(prime, enc)
   }
 
-  return new DH(prime, generator, true);
+  return new DH(prime, generator, true)
 }
 
-exports.DiffieHellmanGroup = exports.createDiffieHellmanGroup = exports.getDiffieHellman = getDiffieHellman;
-exports.createDiffieHellman = exports.DiffieHellman = createDiffieHellman;
+exports.DiffieHellmanGroup = exports.createDiffieHellmanGroup = exports.getDiffieHellman = getDiffieHellman
+exports.createDiffieHellman = exports.DiffieHellman = createDiffieHellman
 
 }).call(this,require("buffer").Buffer)
 },{"./lib/dh":263,"./lib/generatePrime":264,"./lib/primes":265,"buffer":120}],263:[function(require,module,exports){
@@ -33527,7 +32895,7 @@ function formatReturnValue(bn, enc) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./generatePrime":264,"bn.js":266,"buffer":120,"miller-rabin":267,"randombytes":340}],264:[function(require,module,exports){
+},{"./generatePrime":264,"bn.js":266,"buffer":120,"miller-rabin":267,"randombytes":339}],264:[function(require,module,exports){
 var randomBytes = require('randombytes');
 module.exports = findPrime;
 findPrime.simpleSieve = simpleSieve;
@@ -33634,7 +33002,7 @@ function findPrime(bits, gen) {
 
 }
 
-},{"bn.js":266,"miller-rabin":267,"randombytes":340}],265:[function(require,module,exports){
+},{"bn.js":266,"miller-rabin":267,"randombytes":339}],265:[function(require,module,exports){
 module.exports={
     "modp1": {
         "gen": "02",
@@ -33824,7 +33192,7 @@ function i2ops(c) {
 arguments[4][157][0].apply(exports,arguments)
 },{"dup":157}],273:[function(require,module,exports){
 arguments[4][158][0].apply(exports,arguments)
-},{"bn.js":272,"buffer":120,"dup":158,"randombytes":340}],274:[function(require,module,exports){
+},{"bn.js":272,"buffer":120,"dup":158,"randombytes":339}],274:[function(require,module,exports){
 arguments[4][183][0].apply(exports,arguments)
 },{"dup":183}],275:[function(require,module,exports){
 arguments[4][184][0].apply(exports,arguments)
@@ -34107,7 +33475,7 @@ function nonZero(len, crypto) {
   return out;
 }
 }).call(this,require("buffer").Buffer)
-},{"./mgf":271,"./withPublic":313,"./xor":314,"bn.js":272,"browserify-rsa":273,"buffer":120,"create-hash":248,"parse-asn1":277,"randombytes":340}],313:[function(require,module,exports){
+},{"./mgf":271,"./withPublic":313,"./xor":314,"bn.js":272,"browserify-rsa":273,"buffer":120,"create-hash":248,"parse-asn1":277,"randombytes":339}],313:[function(require,module,exports){
 (function (Buffer){
 var bn = require('bn.js');
 function withPublic(paddedMsg, key) {
@@ -37963,3691 +37331,45 @@ module.exports = self.fetch.bind(self);
 })();
 
 },{}],339:[function(require,module,exports){
-(function (process){
-// vim:ts=4:sts=4:sw=4:
-/*!
- *
- * Copyright 2009-2012 Kris Kowal under the terms of the MIT
- * license found at http://github.com/kriskowal/q/raw/master/LICENSE
- *
- * With parts by Tyler Close
- * Copyright 2007-2009 Tyler Close under the terms of the MIT X license found
- * at http://www.opensource.org/licenses/mit-license.html
- * Forked at ref_send.js version: 2009-05-11
- *
- * With parts by Mark Miller
- * Copyright (C) 2011 Google Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-
-(function (definition) {
-    "use strict";
-
-    // This file will function properly as a <script> tag, or a module
-    // using CommonJS and NodeJS or RequireJS module formats.  In
-    // Common/Node/RequireJS, the module exports the Q API and when
-    // executed as a simple <script>, it creates a Q global instead.
-
-    // Montage Require
-    if (typeof bootstrap === "function") {
-        bootstrap("promise", definition);
-
-    // CommonJS
-    } else if (typeof exports === "object" && typeof module === "object") {
-        module.exports = definition();
-
-    // RequireJS
-    } else if (typeof define === "function" && define.amd) {
-        define(definition);
-
-    // SES (Secure EcmaScript)
-    } else if (typeof ses !== "undefined") {
-        if (!ses.ok()) {
-            return;
-        } else {
-            ses.makeQ = definition;
-        }
-
-    // <script>
-    } else if (typeof window !== "undefined" || typeof self !== "undefined") {
-        // Prefer window over self for add-on scripts. Use self for
-        // non-windowed contexts.
-        var global = typeof window !== "undefined" ? window : self;
-
-        // Get the `window` object, save the previous Q global
-        // and initialize Q as a global.
-        var previousQ = global.Q;
-        global.Q = definition();
-
-        // Add a noConflict function so Q can be removed from the
-        // global namespace.
-        global.Q.noConflict = function () {
-            global.Q = previousQ;
-            return this;
-        };
-
-    } else {
-        throw new Error("This environment was not anticipated by Q. Please file a bug.");
-    }
-
-})(function () {
-"use strict";
-
-var hasStacks = false;
-try {
-    throw new Error();
-} catch (e) {
-    hasStacks = !!e.stack;
-}
-
-// All code after this point will be filtered from stack traces reported
-// by Q.
-var qStartingLine = captureLine();
-var qFileName;
-
-// shims
-
-// used for fallback in "allResolved"
-var noop = function () {};
-
-// Use the fastest possible means to execute a task in a future turn
-// of the event loop.
-var nextTick =(function () {
-    // linked list of tasks (single, with head node)
-    var head = {task: void 0, next: null};
-    var tail = head;
-    var flushing = false;
-    var requestTick = void 0;
-    var isNodeJS = false;
-    // queue for late tasks, used by unhandled rejection tracking
-    var laterQueue = [];
-
-    function flush() {
-        /* jshint loopfunc: true */
-        var task, domain;
-
-        while (head.next) {
-            head = head.next;
-            task = head.task;
-            head.task = void 0;
-            domain = head.domain;
-
-            if (domain) {
-                head.domain = void 0;
-                domain.enter();
-            }
-            runSingle(task, domain);
-
-        }
-        while (laterQueue.length) {
-            task = laterQueue.pop();
-            runSingle(task);
-        }
-        flushing = false;
-    }
-    // runs a single function in the async queue
-    function runSingle(task, domain) {
-        try {
-            task();
-
-        } catch (e) {
-            if (isNodeJS) {
-                // In node, uncaught exceptions are considered fatal errors.
-                // Re-throw them synchronously to interrupt flushing!
-
-                // Ensure continuation if the uncaught exception is suppressed
-                // listening "uncaughtException" events (as domains does).
-                // Continue in next event to avoid tick recursion.
-                if (domain) {
-                    domain.exit();
-                }
-                setTimeout(flush, 0);
-                if (domain) {
-                    domain.enter();
-                }
-
-                throw e;
-
-            } else {
-                // In browsers, uncaught exceptions are not fatal.
-                // Re-throw them asynchronously to avoid slow-downs.
-                setTimeout(function () {
-                    throw e;
-                }, 0);
-            }
-        }
-
-        if (domain) {
-            domain.exit();
-        }
-    }
-
-    nextTick = function (task) {
-        tail = tail.next = {
-            task: task,
-            domain: isNodeJS && process.domain,
-            next: null
-        };
-
-        if (!flushing) {
-            flushing = true;
-            requestTick();
-        }
-    };
-
-    if (typeof process === "object" &&
-        process.toString() === "[object process]" && process.nextTick) {
-        // Ensure Q is in a real Node environment, with a `process.nextTick`.
-        // To see through fake Node environments:
-        // * Mocha test runner - exposes a `process` global without a `nextTick`
-        // * Browserify - exposes a `process.nexTick` function that uses
-        //   `setTimeout`. In this case `setImmediate` is preferred because
-        //    it is faster. Browserify's `process.toString()` yields
-        //   "[object Object]", while in a real Node environment
-        //   `process.nextTick()` yields "[object process]".
-        isNodeJS = true;
-
-        requestTick = function () {
-            process.nextTick(flush);
-        };
-
-    } else if (typeof setImmediate === "function") {
-        // In IE10, Node.js 0.9+, or https://github.com/NobleJS/setImmediate
-        if (typeof window !== "undefined") {
-            requestTick = setImmediate.bind(window, flush);
-        } else {
-            requestTick = function () {
-                setImmediate(flush);
-            };
-        }
-
-    } else if (typeof MessageChannel !== "undefined") {
-        // modern browsers
-        // http://www.nonblocking.io/2011/06/windownexttick.html
-        var channel = new MessageChannel();
-        // At least Safari Version 6.0.5 (8536.30.1) intermittently cannot create
-        // working message ports the first time a page loads.
-        channel.port1.onmessage = function () {
-            requestTick = requestPortTick;
-            channel.port1.onmessage = flush;
-            flush();
-        };
-        var requestPortTick = function () {
-            // Opera requires us to provide a message payload, regardless of
-            // whether we use it.
-            channel.port2.postMessage(0);
-        };
-        requestTick = function () {
-            setTimeout(flush, 0);
-            requestPortTick();
-        };
-
-    } else {
-        // old browsers
-        requestTick = function () {
-            setTimeout(flush, 0);
-        };
-    }
-    // runs a task after all other tasks have been run
-    // this is useful for unhandled rejection tracking that needs to happen
-    // after all `then`d tasks have been run.
-    nextTick.runAfter = function (task) {
-        laterQueue.push(task);
-        if (!flushing) {
-            flushing = true;
-            requestTick();
-        }
-    };
-    return nextTick;
-})();
-
-// Attempt to make generics safe in the face of downstream
-// modifications.
-// There is no situation where this is necessary.
-// If you need a security guarantee, these primordials need to be
-// deeply frozen anyway, and if you don’t need a security guarantee,
-// this is just plain paranoid.
-// However, this **might** have the nice side-effect of reducing the size of
-// the minified code by reducing x.call() to merely x()
-// See Mark Miller’s explanation of what this does.
-// http://wiki.ecmascript.org/doku.php?id=conventions:safe_meta_programming
-var call = Function.call;
-function uncurryThis(f) {
-    return function () {
-        return call.apply(f, arguments);
-    };
-}
-// This is equivalent, but slower:
-// uncurryThis = Function_bind.bind(Function_bind.call);
-// http://jsperf.com/uncurrythis
-
-var array_slice = uncurryThis(Array.prototype.slice);
-
-var array_reduce = uncurryThis(
-    Array.prototype.reduce || function (callback, basis) {
-        var index = 0,
-            length = this.length;
-        // concerning the initial value, if one is not provided
-        if (arguments.length === 1) {
-            // seek to the first value in the array, accounting
-            // for the possibility that is is a sparse array
-            do {
-                if (index in this) {
-                    basis = this[index++];
-                    break;
-                }
-                if (++index >= length) {
-                    throw new TypeError();
-                }
-            } while (1);
-        }
-        // reduce
-        for (; index < length; index++) {
-            // account for the possibility that the array is sparse
-            if (index in this) {
-                basis = callback(basis, this[index], index);
-            }
-        }
-        return basis;
-    }
-);
-
-var array_indexOf = uncurryThis(
-    Array.prototype.indexOf || function (value) {
-        // not a very good shim, but good enough for our one use of it
-        for (var i = 0; i < this.length; i++) {
-            if (this[i] === value) {
-                return i;
-            }
-        }
-        return -1;
-    }
-);
-
-var array_map = uncurryThis(
-    Array.prototype.map || function (callback, thisp) {
-        var self = this;
-        var collect = [];
-        array_reduce(self, function (undefined, value, index) {
-            collect.push(callback.call(thisp, value, index, self));
-        }, void 0);
-        return collect;
-    }
-);
-
-var object_create = Object.create || function (prototype) {
-    function Type() { }
-    Type.prototype = prototype;
-    return new Type();
-};
-
-var object_hasOwnProperty = uncurryThis(Object.prototype.hasOwnProperty);
-
-var object_keys = Object.keys || function (object) {
-    var keys = [];
-    for (var key in object) {
-        if (object_hasOwnProperty(object, key)) {
-            keys.push(key);
-        }
-    }
-    return keys;
-};
-
-var object_toString = uncurryThis(Object.prototype.toString);
-
-function isObject(value) {
-    return value === Object(value);
-}
-
-// generator related shims
-
-// FIXME: Remove this function once ES6 generators are in SpiderMonkey.
-function isStopIteration(exception) {
-    return (
-        object_toString(exception) === "[object StopIteration]" ||
-        exception instanceof QReturnValue
-    );
-}
-
-// FIXME: Remove this helper and Q.return once ES6 generators are in
-// SpiderMonkey.
-var QReturnValue;
-if (typeof ReturnValue !== "undefined") {
-    QReturnValue = ReturnValue;
-} else {
-    QReturnValue = function (value) {
-        this.value = value;
-    };
-}
-
-// long stack traces
-
-var STACK_JUMP_SEPARATOR = "From previous event:";
-
-function makeStackTraceLong(error, promise) {
-    // If possible, transform the error stack trace by removing Node and Q
-    // cruft, then concatenating with the stack trace of `promise`. See #57.
-    if (hasStacks &&
-        promise.stack &&
-        typeof error === "object" &&
-        error !== null &&
-        error.stack &&
-        error.stack.indexOf(STACK_JUMP_SEPARATOR) === -1
-    ) {
-        var stacks = [];
-        for (var p = promise; !!p; p = p.source) {
-            if (p.stack) {
-                stacks.unshift(p.stack);
-            }
-        }
-        stacks.unshift(error.stack);
-
-        var concatedStacks = stacks.join("\n" + STACK_JUMP_SEPARATOR + "\n");
-        error.stack = filterStackString(concatedStacks);
-    }
-}
-
-function filterStackString(stackString) {
-    var lines = stackString.split("\n");
-    var desiredLines = [];
-    for (var i = 0; i < lines.length; ++i) {
-        var line = lines[i];
-
-        if (!isInternalFrame(line) && !isNodeFrame(line) && line) {
-            desiredLines.push(line);
-        }
-    }
-    return desiredLines.join("\n");
-}
-
-function isNodeFrame(stackLine) {
-    return stackLine.indexOf("(module.js:") !== -1 ||
-           stackLine.indexOf("(node.js:") !== -1;
-}
-
-function getFileNameAndLineNumber(stackLine) {
-    // Named functions: "at functionName (filename:lineNumber:columnNumber)"
-    // In IE10 function name can have spaces ("Anonymous function") O_o
-    var attempt1 = /at .+ \((.+):(\d+):(?:\d+)\)$/.exec(stackLine);
-    if (attempt1) {
-        return [attempt1[1], Number(attempt1[2])];
-    }
-
-    // Anonymous functions: "at filename:lineNumber:columnNumber"
-    var attempt2 = /at ([^ ]+):(\d+):(?:\d+)$/.exec(stackLine);
-    if (attempt2) {
-        return [attempt2[1], Number(attempt2[2])];
-    }
-
-    // Firefox style: "function@filename:lineNumber or @filename:lineNumber"
-    var attempt3 = /.*@(.+):(\d+)$/.exec(stackLine);
-    if (attempt3) {
-        return [attempt3[1], Number(attempt3[2])];
-    }
-}
-
-function isInternalFrame(stackLine) {
-    var fileNameAndLineNumber = getFileNameAndLineNumber(stackLine);
-
-    if (!fileNameAndLineNumber) {
-        return false;
-    }
-
-    var fileName = fileNameAndLineNumber[0];
-    var lineNumber = fileNameAndLineNumber[1];
-
-    return fileName === qFileName &&
-        lineNumber >= qStartingLine &&
-        lineNumber <= qEndingLine;
-}
-
-// discover own file name and line number range for filtering stack
-// traces
-function captureLine() {
-    if (!hasStacks) {
-        return;
-    }
-
-    try {
-        throw new Error();
-    } catch (e) {
-        var lines = e.stack.split("\n");
-        var firstLine = lines[0].indexOf("@") > 0 ? lines[1] : lines[2];
-        var fileNameAndLineNumber = getFileNameAndLineNumber(firstLine);
-        if (!fileNameAndLineNumber) {
-            return;
-        }
-
-        qFileName = fileNameAndLineNumber[0];
-        return fileNameAndLineNumber[1];
-    }
-}
-
-function deprecate(callback, name, alternative) {
-    return function () {
-        if (typeof console !== "undefined" &&
-            typeof console.warn === "function") {
-            console.warn(name + " is deprecated, use " + alternative +
-                         " instead.", new Error("").stack);
-        }
-        return callback.apply(callback, arguments);
-    };
-}
-
-// end of shims
-// beginning of real work
-
-/**
- * Constructs a promise for an immediate reference, passes promises through, or
- * coerces promises from different systems.
- * @param value immediate reference or promise
- */
-function Q(value) {
-    // If the object is already a Promise, return it directly.  This enables
-    // the resolve function to both be used to created references from objects,
-    // but to tolerably coerce non-promises to promises.
-    if (value instanceof Promise) {
-        return value;
-    }
-
-    // assimilate thenables
-    if (isPromiseAlike(value)) {
-        return coerce(value);
-    } else {
-        return fulfill(value);
-    }
-}
-Q.resolve = Q;
-
-/**
- * Performs a task in a future turn of the event loop.
- * @param {Function} task
- */
-Q.nextTick = nextTick;
-
-/**
- * Controls whether or not long stack traces will be on
- */
-Q.longStackSupport = false;
-
-// enable long stacks if Q_DEBUG is set
-if (typeof process === "object" && process && process.env && process.env.Q_DEBUG) {
-    Q.longStackSupport = true;
-}
-
-/**
- * Constructs a {promise, resolve, reject} object.
- *
- * `resolve` is a callback to invoke with a more resolved value for the
- * promise. To fulfill the promise, invoke `resolve` with any value that is
- * not a thenable. To reject the promise, invoke `resolve` with a rejected
- * thenable, or invoke `reject` with the reason directly. To resolve the
- * promise to another thenable, thus putting it in the same state, invoke
- * `resolve` with that other thenable.
- */
-Q.defer = defer;
-function defer() {
-    // if "messages" is an "Array", that indicates that the promise has not yet
-    // been resolved.  If it is "undefined", it has been resolved.  Each
-    // element of the messages array is itself an array of complete arguments to
-    // forward to the resolved promise.  We coerce the resolution value to a
-    // promise using the `resolve` function because it handles both fully
-    // non-thenable values and other thenables gracefully.
-    var messages = [], progressListeners = [], resolvedPromise;
-
-    var deferred = object_create(defer.prototype);
-    var promise = object_create(Promise.prototype);
-
-    promise.promiseDispatch = function (resolve, op, operands) {
-        var args = array_slice(arguments);
-        if (messages) {
-            messages.push(args);
-            if (op === "when" && operands[1]) { // progress operand
-                progressListeners.push(operands[1]);
-            }
-        } else {
-            Q.nextTick(function () {
-                resolvedPromise.promiseDispatch.apply(resolvedPromise, args);
-            });
-        }
-    };
-
-    // XXX deprecated
-    promise.valueOf = function () {
-        if (messages) {
-            return promise;
-        }
-        var nearerValue = nearer(resolvedPromise);
-        if (isPromise(nearerValue)) {
-            resolvedPromise = nearerValue; // shorten chain
-        }
-        return nearerValue;
-    };
-
-    promise.inspect = function () {
-        if (!resolvedPromise) {
-            return { state: "pending" };
-        }
-        return resolvedPromise.inspect();
-    };
-
-    if (Q.longStackSupport && hasStacks) {
-        try {
-            throw new Error();
-        } catch (e) {
-            // NOTE: don't try to use `Error.captureStackTrace` or transfer the
-            // accessor around; that causes memory leaks as per GH-111. Just
-            // reify the stack trace as a string ASAP.
-            //
-            // At the same time, cut off the first line; it's always just
-            // "[object Promise]\n", as per the `toString`.
-            promise.stack = e.stack.substring(e.stack.indexOf("\n") + 1);
-        }
-    }
-
-    // NOTE: we do the checks for `resolvedPromise` in each method, instead of
-    // consolidating them into `become`, since otherwise we'd create new
-    // promises with the lines `become(whatever(value))`. See e.g. GH-252.
-
-    function become(newPromise) {
-        resolvedPromise = newPromise;
-        promise.source = newPromise;
-
-        array_reduce(messages, function (undefined, message) {
-            Q.nextTick(function () {
-                newPromise.promiseDispatch.apply(newPromise, message);
-            });
-        }, void 0);
-
-        messages = void 0;
-        progressListeners = void 0;
-    }
-
-    deferred.promise = promise;
-    deferred.resolve = function (value) {
-        if (resolvedPromise) {
-            return;
-        }
-
-        become(Q(value));
-    };
-
-    deferred.fulfill = function (value) {
-        if (resolvedPromise) {
-            return;
-        }
-
-        become(fulfill(value));
-    };
-    deferred.reject = function (reason) {
-        if (resolvedPromise) {
-            return;
-        }
-
-        become(reject(reason));
-    };
-    deferred.notify = function (progress) {
-        if (resolvedPromise) {
-            return;
-        }
-
-        array_reduce(progressListeners, function (undefined, progressListener) {
-            Q.nextTick(function () {
-                progressListener(progress);
-            });
-        }, void 0);
-    };
-
-    return deferred;
-}
-
-/**
- * Creates a Node-style callback that will resolve or reject the deferred
- * promise.
- * @returns a nodeback
- */
-defer.prototype.makeNodeResolver = function () {
-    var self = this;
-    return function (error, value) {
-        if (error) {
-            self.reject(error);
-        } else if (arguments.length > 2) {
-            self.resolve(array_slice(arguments, 1));
-        } else {
-            self.resolve(value);
-        }
-    };
-};
-
-/**
- * @param resolver {Function} a function that returns nothing and accepts
- * the resolve, reject, and notify functions for a deferred.
- * @returns a promise that may be resolved with the given resolve and reject
- * functions, or rejected by a thrown exception in resolver
- */
-Q.Promise = promise; // ES6
-Q.promise = promise;
-function promise(resolver) {
-    if (typeof resolver !== "function") {
-        throw new TypeError("resolver must be a function.");
-    }
-    var deferred = defer();
-    try {
-        resolver(deferred.resolve, deferred.reject, deferred.notify);
-    } catch (reason) {
-        deferred.reject(reason);
-    }
-    return deferred.promise;
-}
-
-promise.race = race; // ES6
-promise.all = all; // ES6
-promise.reject = reject; // ES6
-promise.resolve = Q; // ES6
-
-// XXX experimental.  This method is a way to denote that a local value is
-// serializable and should be immediately dispatched to a remote upon request,
-// instead of passing a reference.
-Q.passByCopy = function (object) {
-    //freeze(object);
-    //passByCopies.set(object, true);
-    return object;
-};
-
-Promise.prototype.passByCopy = function () {
-    //freeze(object);
-    //passByCopies.set(object, true);
-    return this;
-};
-
-/**
- * If two promises eventually fulfill to the same value, promises that value,
- * but otherwise rejects.
- * @param x {Any*}
- * @param y {Any*}
- * @returns {Any*} a promise for x and y if they are the same, but a rejection
- * otherwise.
- *
- */
-Q.join = function (x, y) {
-    return Q(x).join(y);
-};
-
-Promise.prototype.join = function (that) {
-    return Q([this, that]).spread(function (x, y) {
-        if (x === y) {
-            // TODO: "===" should be Object.is or equiv
-            return x;
-        } else {
-            throw new Error("Can't join: not the same: " + x + " " + y);
-        }
-    });
-};
-
-/**
- * Returns a promise for the first of an array of promises to become settled.
- * @param answers {Array[Any*]} promises to race
- * @returns {Any*} the first promise to be settled
- */
-Q.race = race;
-function race(answerPs) {
-    return promise(function (resolve, reject) {
-        // Switch to this once we can assume at least ES5
-        // answerPs.forEach(function (answerP) {
-        //     Q(answerP).then(resolve, reject);
-        // });
-        // Use this in the meantime
-        for (var i = 0, len = answerPs.length; i < len; i++) {
-            Q(answerPs[i]).then(resolve, reject);
-        }
-    });
-}
-
-Promise.prototype.race = function () {
-    return this.then(Q.race);
-};
-
-/**
- * Constructs a Promise with a promise descriptor object and optional fallback
- * function.  The descriptor contains methods like when(rejected), get(name),
- * set(name, value), post(name, args), and delete(name), which all
- * return either a value, a promise for a value, or a rejection.  The fallback
- * accepts the operation name, a resolver, and any further arguments that would
- * have been forwarded to the appropriate method above had a method been
- * provided with the proper name.  The API makes no guarantees about the nature
- * of the returned object, apart from that it is usable whereever promises are
- * bought and sold.
- */
-Q.makePromise = Promise;
-function Promise(descriptor, fallback, inspect) {
-    if (fallback === void 0) {
-        fallback = function (op) {
-            return reject(new Error(
-                "Promise does not support operation: " + op
-            ));
-        };
-    }
-    if (inspect === void 0) {
-        inspect = function () {
-            return {state: "unknown"};
-        };
-    }
-
-    var promise = object_create(Promise.prototype);
-
-    promise.promiseDispatch = function (resolve, op, args) {
-        var result;
-        try {
-            if (descriptor[op]) {
-                result = descriptor[op].apply(promise, args);
-            } else {
-                result = fallback.call(promise, op, args);
-            }
-        } catch (exception) {
-            result = reject(exception);
-        }
-        if (resolve) {
-            resolve(result);
-        }
-    };
-
-    promise.inspect = inspect;
-
-    // XXX deprecated `valueOf` and `exception` support
-    if (inspect) {
-        var inspected = inspect();
-        if (inspected.state === "rejected") {
-            promise.exception = inspected.reason;
-        }
-
-        promise.valueOf = function () {
-            var inspected = inspect();
-            if (inspected.state === "pending" ||
-                inspected.state === "rejected") {
-                return promise;
-            }
-            return inspected.value;
-        };
-    }
-
-    return promise;
-}
-
-Promise.prototype.toString = function () {
-    return "[object Promise]";
-};
-
-Promise.prototype.then = function (fulfilled, rejected, progressed) {
-    var self = this;
-    var deferred = defer();
-    var done = false;   // ensure the untrusted promise makes at most a
-                        // single call to one of the callbacks
-
-    function _fulfilled(value) {
-        try {
-            return typeof fulfilled === "function" ? fulfilled(value) : value;
-        } catch (exception) {
-            return reject(exception);
-        }
-    }
-
-    function _rejected(exception) {
-        if (typeof rejected === "function") {
-            makeStackTraceLong(exception, self);
-            try {
-                return rejected(exception);
-            } catch (newException) {
-                return reject(newException);
-            }
-        }
-        return reject(exception);
-    }
-
-    function _progressed(value) {
-        return typeof progressed === "function" ? progressed(value) : value;
-    }
-
-    Q.nextTick(function () {
-        self.promiseDispatch(function (value) {
-            if (done) {
-                return;
-            }
-            done = true;
-
-            deferred.resolve(_fulfilled(value));
-        }, "when", [function (exception) {
-            if (done) {
-                return;
-            }
-            done = true;
-
-            deferred.resolve(_rejected(exception));
-        }]);
-    });
-
-    // Progress propagator need to be attached in the current tick.
-    self.promiseDispatch(void 0, "when", [void 0, function (value) {
-        var newValue;
-        var threw = false;
-        try {
-            newValue = _progressed(value);
-        } catch (e) {
-            threw = true;
-            if (Q.onerror) {
-                Q.onerror(e);
-            } else {
-                throw e;
-            }
-        }
-
-        if (!threw) {
-            deferred.notify(newValue);
-        }
-    }]);
-
-    return deferred.promise;
-};
-
-Q.tap = function (promise, callback) {
-    return Q(promise).tap(callback);
-};
-
-/**
- * Works almost like "finally", but not called for rejections.
- * Original resolution value is passed through callback unaffected.
- * Callback may return a promise that will be awaited for.
- * @param {Function} callback
- * @returns {Q.Promise}
- * @example
- * doSomething()
- *   .then(...)
- *   .tap(console.log)
- *   .then(...);
- */
-Promise.prototype.tap = function (callback) {
-    callback = Q(callback);
-
-    return this.then(function (value) {
-        return callback.fcall(value).thenResolve(value);
-    });
-};
-
-/**
- * Registers an observer on a promise.
- *
- * Guarantees:
- *
- * 1. that fulfilled and rejected will be called only once.
- * 2. that either the fulfilled callback or the rejected callback will be
- *    called, but not both.
- * 3. that fulfilled and rejected will not be called in this turn.
- *
- * @param value      promise or immediate reference to observe
- * @param fulfilled  function to be called with the fulfilled value
- * @param rejected   function to be called with the rejection exception
- * @param progressed function to be called on any progress notifications
- * @return promise for the return value from the invoked callback
- */
-Q.when = when;
-function when(value, fulfilled, rejected, progressed) {
-    return Q(value).then(fulfilled, rejected, progressed);
-}
-
-Promise.prototype.thenResolve = function (value) {
-    return this.then(function () { return value; });
-};
-
-Q.thenResolve = function (promise, value) {
-    return Q(promise).thenResolve(value);
-};
-
-Promise.prototype.thenReject = function (reason) {
-    return this.then(function () { throw reason; });
-};
-
-Q.thenReject = function (promise, reason) {
-    return Q(promise).thenReject(reason);
-};
-
-/**
- * If an object is not a promise, it is as "near" as possible.
- * If a promise is rejected, it is as "near" as possible too.
- * If it’s a fulfilled promise, the fulfillment value is nearer.
- * If it’s a deferred promise and the deferred has been resolved, the
- * resolution is "nearer".
- * @param object
- * @returns most resolved (nearest) form of the object
- */
-
-// XXX should we re-do this?
-Q.nearer = nearer;
-function nearer(value) {
-    if (isPromise(value)) {
-        var inspected = value.inspect();
-        if (inspected.state === "fulfilled") {
-            return inspected.value;
-        }
-    }
-    return value;
-}
-
-/**
- * @returns whether the given object is a promise.
- * Otherwise it is a fulfilled value.
- */
-Q.isPromise = isPromise;
-function isPromise(object) {
-    return object instanceof Promise;
-}
-
-Q.isPromiseAlike = isPromiseAlike;
-function isPromiseAlike(object) {
-    return isObject(object) && typeof object.then === "function";
-}
-
-/**
- * @returns whether the given object is a pending promise, meaning not
- * fulfilled or rejected.
- */
-Q.isPending = isPending;
-function isPending(object) {
-    return isPromise(object) && object.inspect().state === "pending";
-}
-
-Promise.prototype.isPending = function () {
-    return this.inspect().state === "pending";
-};
-
-/**
- * @returns whether the given object is a value or fulfilled
- * promise.
- */
-Q.isFulfilled = isFulfilled;
-function isFulfilled(object) {
-    return !isPromise(object) || object.inspect().state === "fulfilled";
-}
-
-Promise.prototype.isFulfilled = function () {
-    return this.inspect().state === "fulfilled";
-};
-
-/**
- * @returns whether the given object is a rejected promise.
- */
-Q.isRejected = isRejected;
-function isRejected(object) {
-    return isPromise(object) && object.inspect().state === "rejected";
-}
-
-Promise.prototype.isRejected = function () {
-    return this.inspect().state === "rejected";
-};
-
-//// BEGIN UNHANDLED REJECTION TRACKING
-
-// This promise library consumes exceptions thrown in handlers so they can be
-// handled by a subsequent promise.  The exceptions get added to this array when
-// they are created, and removed when they are handled.  Note that in ES6 or
-// shimmed environments, this would naturally be a `Set`.
-var unhandledReasons = [];
-var unhandledRejections = [];
-var reportedUnhandledRejections = [];
-var trackUnhandledRejections = true;
-
-function resetUnhandledRejections() {
-    unhandledReasons.length = 0;
-    unhandledRejections.length = 0;
-
-    if (!trackUnhandledRejections) {
-        trackUnhandledRejections = true;
-    }
-}
-
-function trackRejection(promise, reason) {
-    if (!trackUnhandledRejections) {
-        return;
-    }
-    if (typeof process === "object" && typeof process.emit === "function") {
-        Q.nextTick.runAfter(function () {
-            if (array_indexOf(unhandledRejections, promise) !== -1) {
-                process.emit("unhandledRejection", reason, promise);
-                reportedUnhandledRejections.push(promise);
-            }
-        });
-    }
-
-    unhandledRejections.push(promise);
-    if (reason && typeof reason.stack !== "undefined") {
-        unhandledReasons.push(reason.stack);
-    } else {
-        unhandledReasons.push("(no stack) " + reason);
-    }
-}
-
-function untrackRejection(promise) {
-    if (!trackUnhandledRejections) {
-        return;
-    }
-
-    var at = array_indexOf(unhandledRejections, promise);
-    if (at !== -1) {
-        if (typeof process === "object" && typeof process.emit === "function") {
-            Q.nextTick.runAfter(function () {
-                var atReport = array_indexOf(reportedUnhandledRejections, promise);
-                if (atReport !== -1) {
-                    process.emit("rejectionHandled", unhandledReasons[at], promise);
-                    reportedUnhandledRejections.splice(atReport, 1);
-                }
-            });
-        }
-        unhandledRejections.splice(at, 1);
-        unhandledReasons.splice(at, 1);
-    }
-}
-
-Q.resetUnhandledRejections = resetUnhandledRejections;
-
-Q.getUnhandledReasons = function () {
-    // Make a copy so that consumers can't interfere with our internal state.
-    return unhandledReasons.slice();
-};
-
-Q.stopUnhandledRejectionTracking = function () {
-    resetUnhandledRejections();
-    trackUnhandledRejections = false;
-};
-
-resetUnhandledRejections();
-
-//// END UNHANDLED REJECTION TRACKING
-
-/**
- * Constructs a rejected promise.
- * @param reason value describing the failure
- */
-Q.reject = reject;
-function reject(reason) {
-    var rejection = Promise({
-        "when": function (rejected) {
-            // note that the error has been handled
-            if (rejected) {
-                untrackRejection(this);
-            }
-            return rejected ? rejected(reason) : this;
-        }
-    }, function fallback() {
-        return this;
-    }, function inspect() {
-        return { state: "rejected", reason: reason };
-    });
-
-    // Note that the reason has not been handled.
-    trackRejection(rejection, reason);
-
-    return rejection;
-}
-
-/**
- * Constructs a fulfilled promise for an immediate reference.
- * @param value immediate reference
- */
-Q.fulfill = fulfill;
-function fulfill(value) {
-    return Promise({
-        "when": function () {
-            return value;
-        },
-        "get": function (name) {
-            return value[name];
-        },
-        "set": function (name, rhs) {
-            value[name] = rhs;
-        },
-        "delete": function (name) {
-            delete value[name];
-        },
-        "post": function (name, args) {
-            // Mark Miller proposes that post with no name should apply a
-            // promised function.
-            if (name === null || name === void 0) {
-                return value.apply(void 0, args);
-            } else {
-                return value[name].apply(value, args);
-            }
-        },
-        "apply": function (thisp, args) {
-            return value.apply(thisp, args);
-        },
-        "keys": function () {
-            return object_keys(value);
-        }
-    }, void 0, function inspect() {
-        return { state: "fulfilled", value: value };
-    });
-}
-
-/**
- * Converts thenables to Q promises.
- * @param promise thenable promise
- * @returns a Q promise
- */
-function coerce(promise) {
-    var deferred = defer();
-    Q.nextTick(function () {
-        try {
-            promise.then(deferred.resolve, deferred.reject, deferred.notify);
-        } catch (exception) {
-            deferred.reject(exception);
-        }
-    });
-    return deferred.promise;
-}
-
-/**
- * Annotates an object such that it will never be
- * transferred away from this process over any promise
- * communication channel.
- * @param object
- * @returns promise a wrapping of that object that
- * additionally responds to the "isDef" message
- * without a rejection.
- */
-Q.master = master;
-function master(object) {
-    return Promise({
-        "isDef": function () {}
-    }, function fallback(op, args) {
-        return dispatch(object, op, args);
-    }, function () {
-        return Q(object).inspect();
-    });
-}
-
-/**
- * Spreads the values of a promised array of arguments into the
- * fulfillment callback.
- * @param fulfilled callback that receives variadic arguments from the
- * promised array
- * @param rejected callback that receives the exception if the promise
- * is rejected.
- * @returns a promise for the return value or thrown exception of
- * either callback.
- */
-Q.spread = spread;
-function spread(value, fulfilled, rejected) {
-    return Q(value).spread(fulfilled, rejected);
-}
-
-Promise.prototype.spread = function (fulfilled, rejected) {
-    return this.all().then(function (array) {
-        return fulfilled.apply(void 0, array);
-    }, rejected);
-};
-
-/**
- * The async function is a decorator for generator functions, turning
- * them into asynchronous generators.  Although generators are only part
- * of the newest ECMAScript 6 drafts, this code does not cause syntax
- * errors in older engines.  This code should continue to work and will
- * in fact improve over time as the language improves.
- *
- * ES6 generators are currently part of V8 version 3.19 with the
- * --harmony-generators runtime flag enabled.  SpiderMonkey has had them
- * for longer, but under an older Python-inspired form.  This function
- * works on both kinds of generators.
- *
- * Decorates a generator function such that:
- *  - it may yield promises
- *  - execution will continue when that promise is fulfilled
- *  - the value of the yield expression will be the fulfilled value
- *  - it returns a promise for the return value (when the generator
- *    stops iterating)
- *  - the decorated function returns a promise for the return value
- *    of the generator or the first rejected promise among those
- *    yielded.
- *  - if an error is thrown in the generator, it propagates through
- *    every following yield until it is caught, or until it escapes
- *    the generator function altogether, and is translated into a
- *    rejection for the promise returned by the decorated generator.
- */
-Q.async = async;
-function async(makeGenerator) {
-    return function () {
-        // when verb is "send", arg is a value
-        // when verb is "throw", arg is an exception
-        function continuer(verb, arg) {
-            var result;
-
-            // Until V8 3.19 / Chromium 29 is released, SpiderMonkey is the only
-            // engine that has a deployed base of browsers that support generators.
-            // However, SM's generators use the Python-inspired semantics of
-            // outdated ES6 drafts.  We would like to support ES6, but we'd also
-            // like to make it possible to use generators in deployed browsers, so
-            // we also support Python-style generators.  At some point we can remove
-            // this block.
-
-            if (typeof StopIteration === "undefined") {
-                // ES6 Generators
-                try {
-                    result = generator[verb](arg);
-                } catch (exception) {
-                    return reject(exception);
-                }
-                if (result.done) {
-                    return Q(result.value);
-                } else {
-                    return when(result.value, callback, errback);
-                }
-            } else {
-                // SpiderMonkey Generators
-                // FIXME: Remove this case when SM does ES6 generators.
-                try {
-                    result = generator[verb](arg);
-                } catch (exception) {
-                    if (isStopIteration(exception)) {
-                        return Q(exception.value);
-                    } else {
-                        return reject(exception);
-                    }
-                }
-                return when(result, callback, errback);
-            }
-        }
-        var generator = makeGenerator.apply(this, arguments);
-        var callback = continuer.bind(continuer, "next");
-        var errback = continuer.bind(continuer, "throw");
-        return callback();
-    };
-}
-
-/**
- * The spawn function is a small wrapper around async that immediately
- * calls the generator and also ends the promise chain, so that any
- * unhandled errors are thrown instead of forwarded to the error
- * handler. This is useful because it's extremely common to run
- * generators at the top-level to work with libraries.
- */
-Q.spawn = spawn;
-function spawn(makeGenerator) {
-    Q.done(Q.async(makeGenerator)());
-}
-
-// FIXME: Remove this interface once ES6 generators are in SpiderMonkey.
-/**
- * Throws a ReturnValue exception to stop an asynchronous generator.
- *
- * This interface is a stop-gap measure to support generator return
- * values in older Firefox/SpiderMonkey.  In browsers that support ES6
- * generators like Chromium 29, just use "return" in your generator
- * functions.
- *
- * @param value the return value for the surrounding generator
- * @throws ReturnValue exception with the value.
- * @example
- * // ES6 style
- * Q.async(function* () {
- *      var foo = yield getFooPromise();
- *      var bar = yield getBarPromise();
- *      return foo + bar;
- * })
- * // Older SpiderMonkey style
- * Q.async(function () {
- *      var foo = yield getFooPromise();
- *      var bar = yield getBarPromise();
- *      Q.return(foo + bar);
- * })
- */
-Q["return"] = _return;
-function _return(value) {
-    throw new QReturnValue(value);
-}
-
-/**
- * The promised function decorator ensures that any promise arguments
- * are settled and passed as values (`this` is also settled and passed
- * as a value).  It will also ensure that the result of a function is
- * always a promise.
- *
- * @example
- * var add = Q.promised(function (a, b) {
- *     return a + b;
- * });
- * add(Q(a), Q(B));
- *
- * @param {function} callback The function to decorate
- * @returns {function} a function that has been decorated.
- */
-Q.promised = promised;
-function promised(callback) {
-    return function () {
-        return spread([this, all(arguments)], function (self, args) {
-            return callback.apply(self, args);
-        });
-    };
-}
-
-/**
- * sends a message to a value in a future turn
- * @param object* the recipient
- * @param op the name of the message operation, e.g., "when",
- * @param args further arguments to be forwarded to the operation
- * @returns result {Promise} a promise for the result of the operation
- */
-Q.dispatch = dispatch;
-function dispatch(object, op, args) {
-    return Q(object).dispatch(op, args);
-}
-
-Promise.prototype.dispatch = function (op, args) {
-    var self = this;
-    var deferred = defer();
-    Q.nextTick(function () {
-        self.promiseDispatch(deferred.resolve, op, args);
-    });
-    return deferred.promise;
-};
-
-/**
- * Gets the value of a property in a future turn.
- * @param object    promise or immediate reference for target object
- * @param name      name of property to get
- * @return promise for the property value
- */
-Q.get = function (object, key) {
-    return Q(object).dispatch("get", [key]);
-};
-
-Promise.prototype.get = function (key) {
-    return this.dispatch("get", [key]);
-};
-
-/**
- * Sets the value of a property in a future turn.
- * @param object    promise or immediate reference for object object
- * @param name      name of property to set
- * @param value     new value of property
- * @return promise for the return value
- */
-Q.set = function (object, key, value) {
-    return Q(object).dispatch("set", [key, value]);
-};
-
-Promise.prototype.set = function (key, value) {
-    return this.dispatch("set", [key, value]);
-};
-
-/**
- * Deletes a property in a future turn.
- * @param object    promise or immediate reference for target object
- * @param name      name of property to delete
- * @return promise for the return value
- */
-Q.del = // XXX legacy
-Q["delete"] = function (object, key) {
-    return Q(object).dispatch("delete", [key]);
-};
-
-Promise.prototype.del = // XXX legacy
-Promise.prototype["delete"] = function (key) {
-    return this.dispatch("delete", [key]);
-};
-
-/**
- * Invokes a method in a future turn.
- * @param object    promise or immediate reference for target object
- * @param name      name of method to invoke
- * @param value     a value to post, typically an array of
- *                  invocation arguments for promises that
- *                  are ultimately backed with `resolve` values,
- *                  as opposed to those backed with URLs
- *                  wherein the posted value can be any
- *                  JSON serializable object.
- * @return promise for the return value
- */
-// bound locally because it is used by other methods
-Q.mapply = // XXX As proposed by "Redsandro"
-Q.post = function (object, name, args) {
-    return Q(object).dispatch("post", [name, args]);
-};
-
-Promise.prototype.mapply = // XXX As proposed by "Redsandro"
-Promise.prototype.post = function (name, args) {
-    return this.dispatch("post", [name, args]);
-};
-
-/**
- * Invokes a method in a future turn.
- * @param object    promise or immediate reference for target object
- * @param name      name of method to invoke
- * @param ...args   array of invocation arguments
- * @return promise for the return value
- */
-Q.send = // XXX Mark Miller's proposed parlance
-Q.mcall = // XXX As proposed by "Redsandro"
-Q.invoke = function (object, name /*...args*/) {
-    return Q(object).dispatch("post", [name, array_slice(arguments, 2)]);
-};
-
-Promise.prototype.send = // XXX Mark Miller's proposed parlance
-Promise.prototype.mcall = // XXX As proposed by "Redsandro"
-Promise.prototype.invoke = function (name /*...args*/) {
-    return this.dispatch("post", [name, array_slice(arguments, 1)]);
-};
-
-/**
- * Applies the promised function in a future turn.
- * @param object    promise or immediate reference for target function
- * @param args      array of application arguments
- */
-Q.fapply = function (object, args) {
-    return Q(object).dispatch("apply", [void 0, args]);
-};
-
-Promise.prototype.fapply = function (args) {
-    return this.dispatch("apply", [void 0, args]);
-};
-
-/**
- * Calls the promised function in a future turn.
- * @param object    promise or immediate reference for target function
- * @param ...args   array of application arguments
- */
-Q["try"] =
-Q.fcall = function (object /* ...args*/) {
-    return Q(object).dispatch("apply", [void 0, array_slice(arguments, 1)]);
-};
-
-Promise.prototype.fcall = function (/*...args*/) {
-    return this.dispatch("apply", [void 0, array_slice(arguments)]);
-};
-
-/**
- * Binds the promised function, transforming return values into a fulfilled
- * promise and thrown errors into a rejected one.
- * @param object    promise or immediate reference for target function
- * @param ...args   array of application arguments
- */
-Q.fbind = function (object /*...args*/) {
-    var promise = Q(object);
-    var args = array_slice(arguments, 1);
-    return function fbound() {
-        return promise.dispatch("apply", [
-            this,
-            args.concat(array_slice(arguments))
-        ]);
-    };
-};
-Promise.prototype.fbind = function (/*...args*/) {
-    var promise = this;
-    var args = array_slice(arguments);
-    return function fbound() {
-        return promise.dispatch("apply", [
-            this,
-            args.concat(array_slice(arguments))
-        ]);
-    };
-};
-
-/**
- * Requests the names of the owned properties of a promised
- * object in a future turn.
- * @param object    promise or immediate reference for target object
- * @return promise for the keys of the eventually settled object
- */
-Q.keys = function (object) {
-    return Q(object).dispatch("keys", []);
-};
-
-Promise.prototype.keys = function () {
-    return this.dispatch("keys", []);
-};
-
-/**
- * Turns an array of promises into a promise for an array.  If any of
- * the promises gets rejected, the whole array is rejected immediately.
- * @param {Array*} an array (or promise for an array) of values (or
- * promises for values)
- * @returns a promise for an array of the corresponding values
- */
-// By Mark Miller
-// http://wiki.ecmascript.org/doku.php?id=strawman:concurrency&rev=1308776521#allfulfilled
-Q.all = all;
-function all(promises) {
-    return when(promises, function (promises) {
-        var pendingCount = 0;
-        var deferred = defer();
-        array_reduce(promises, function (undefined, promise, index) {
-            var snapshot;
-            if (
-                isPromise(promise) &&
-                (snapshot = promise.inspect()).state === "fulfilled"
-            ) {
-                promises[index] = snapshot.value;
-            } else {
-                ++pendingCount;
-                when(
-                    promise,
-                    function (value) {
-                        promises[index] = value;
-                        if (--pendingCount === 0) {
-                            deferred.resolve(promises);
-                        }
-                    },
-                    deferred.reject,
-                    function (progress) {
-                        deferred.notify({ index: index, value: progress });
-                    }
-                );
-            }
-        }, void 0);
-        if (pendingCount === 0) {
-            deferred.resolve(promises);
-        }
-        return deferred.promise;
-    });
-}
-
-Promise.prototype.all = function () {
-    return all(this);
-};
-
-/**
- * Returns the first resolved promise of an array. Prior rejected promises are
- * ignored.  Rejects only if all promises are rejected.
- * @param {Array*} an array containing values or promises for values
- * @returns a promise fulfilled with the value of the first resolved promise,
- * or a rejected promise if all promises are rejected.
- */
-Q.any = any;
-
-function any(promises) {
-    if (promises.length === 0) {
-        return Q.resolve();
-    }
-
-    var deferred = Q.defer();
-    var pendingCount = 0;
-    array_reduce(promises, function (prev, current, index) {
-        var promise = promises[index];
-
-        pendingCount++;
-
-        when(promise, onFulfilled, onRejected, onProgress);
-        function onFulfilled(result) {
-            deferred.resolve(result);
-        }
-        function onRejected() {
-            pendingCount--;
-            if (pendingCount === 0) {
-                deferred.reject(new Error(
-                    "Can't get fulfillment value from any promise, all " +
-                    "promises were rejected."
-                ));
-            }
-        }
-        function onProgress(progress) {
-            deferred.notify({
-                index: index,
-                value: progress
-            });
-        }
-    }, undefined);
-
-    return deferred.promise;
-}
-
-Promise.prototype.any = function () {
-    return any(this);
-};
-
-/**
- * Waits for all promises to be settled, either fulfilled or
- * rejected.  This is distinct from `all` since that would stop
- * waiting at the first rejection.  The promise returned by
- * `allResolved` will never be rejected.
- * @param promises a promise for an array (or an array) of promises
- * (or values)
- * @return a promise for an array of promises
- */
-Q.allResolved = deprecate(allResolved, "allResolved", "allSettled");
-function allResolved(promises) {
-    return when(promises, function (promises) {
-        promises = array_map(promises, Q);
-        return when(all(array_map(promises, function (promise) {
-            return when(promise, noop, noop);
-        })), function () {
-            return promises;
-        });
-    });
-}
-
-Promise.prototype.allResolved = function () {
-    return allResolved(this);
-};
-
-/**
- * @see Promise#allSettled
- */
-Q.allSettled = allSettled;
-function allSettled(promises) {
-    return Q(promises).allSettled();
-}
-
-/**
- * Turns an array of promises into a promise for an array of their states (as
- * returned by `inspect`) when they have all settled.
- * @param {Array[Any*]} values an array (or promise for an array) of values (or
- * promises for values)
- * @returns {Array[State]} an array of states for the respective values.
- */
-Promise.prototype.allSettled = function () {
-    return this.then(function (promises) {
-        return all(array_map(promises, function (promise) {
-            promise = Q(promise);
-            function regardless() {
-                return promise.inspect();
-            }
-            return promise.then(regardless, regardless);
-        }));
-    });
-};
-
-/**
- * Captures the failure of a promise, giving an oportunity to recover
- * with a callback.  If the given promise is fulfilled, the returned
- * promise is fulfilled.
- * @param {Any*} promise for something
- * @param {Function} callback to fulfill the returned promise if the
- * given promise is rejected
- * @returns a promise for the return value of the callback
- */
-Q.fail = // XXX legacy
-Q["catch"] = function (object, rejected) {
-    return Q(object).then(void 0, rejected);
-};
-
-Promise.prototype.fail = // XXX legacy
-Promise.prototype["catch"] = function (rejected) {
-    return this.then(void 0, rejected);
-};
-
-/**
- * Attaches a listener that can respond to progress notifications from a
- * promise's originating deferred. This listener receives the exact arguments
- * passed to ``deferred.notify``.
- * @param {Any*} promise for something
- * @param {Function} callback to receive any progress notifications
- * @returns the given promise, unchanged
- */
-Q.progress = progress;
-function progress(object, progressed) {
-    return Q(object).then(void 0, void 0, progressed);
-}
-
-Promise.prototype.progress = function (progressed) {
-    return this.then(void 0, void 0, progressed);
-};
-
-/**
- * Provides an opportunity to observe the settling of a promise,
- * regardless of whether the promise is fulfilled or rejected.  Forwards
- * the resolution to the returned promise when the callback is done.
- * The callback can return a promise to defer completion.
- * @param {Any*} promise
- * @param {Function} callback to observe the resolution of the given
- * promise, takes no arguments.
- * @returns a promise for the resolution of the given promise when
- * ``fin`` is done.
- */
-Q.fin = // XXX legacy
-Q["finally"] = function (object, callback) {
-    return Q(object)["finally"](callback);
-};
-
-Promise.prototype.fin = // XXX legacy
-Promise.prototype["finally"] = function (callback) {
-    callback = Q(callback);
-    return this.then(function (value) {
-        return callback.fcall().then(function () {
-            return value;
-        });
-    }, function (reason) {
-        // TODO attempt to recycle the rejection with "this".
-        return callback.fcall().then(function () {
-            throw reason;
-        });
-    });
-};
-
-/**
- * Terminates a chain of promises, forcing rejections to be
- * thrown as exceptions.
- * @param {Any*} promise at the end of a chain of promises
- * @returns nothing
- */
-Q.done = function (object, fulfilled, rejected, progress) {
-    return Q(object).done(fulfilled, rejected, progress);
-};
-
-Promise.prototype.done = function (fulfilled, rejected, progress) {
-    var onUnhandledError = function (error) {
-        // forward to a future turn so that ``when``
-        // does not catch it and turn it into a rejection.
-        Q.nextTick(function () {
-            makeStackTraceLong(error, promise);
-            if (Q.onerror) {
-                Q.onerror(error);
-            } else {
-                throw error;
-            }
-        });
-    };
-
-    // Avoid unnecessary `nextTick`ing via an unnecessary `when`.
-    var promise = fulfilled || rejected || progress ?
-        this.then(fulfilled, rejected, progress) :
-        this;
-
-    if (typeof process === "object" && process && process.domain) {
-        onUnhandledError = process.domain.bind(onUnhandledError);
-    }
-
-    promise.then(void 0, onUnhandledError);
-};
-
-/**
- * Causes a promise to be rejected if it does not get fulfilled before
- * some milliseconds time out.
- * @param {Any*} promise
- * @param {Number} milliseconds timeout
- * @param {Any*} custom error message or Error object (optional)
- * @returns a promise for the resolution of the given promise if it is
- * fulfilled before the timeout, otherwise rejected.
- */
-Q.timeout = function (object, ms, error) {
-    return Q(object).timeout(ms, error);
-};
-
-Promise.prototype.timeout = function (ms, error) {
-    var deferred = defer();
-    var timeoutId = setTimeout(function () {
-        if (!error || "string" === typeof error) {
-            error = new Error(error || "Timed out after " + ms + " ms");
-            error.code = "ETIMEDOUT";
-        }
-        deferred.reject(error);
-    }, ms);
-
-    this.then(function (value) {
-        clearTimeout(timeoutId);
-        deferred.resolve(value);
-    }, function (exception) {
-        clearTimeout(timeoutId);
-        deferred.reject(exception);
-    }, deferred.notify);
-
-    return deferred.promise;
-};
-
-/**
- * Returns a promise for the given value (or promised value), some
- * milliseconds after it resolved. Passes rejections immediately.
- * @param {Any*} promise
- * @param {Number} milliseconds
- * @returns a promise for the resolution of the given promise after milliseconds
- * time has elapsed since the resolution of the given promise.
- * If the given promise rejects, that is passed immediately.
- */
-Q.delay = function (object, timeout) {
-    if (timeout === void 0) {
-        timeout = object;
-        object = void 0;
-    }
-    return Q(object).delay(timeout);
-};
-
-Promise.prototype.delay = function (timeout) {
-    return this.then(function (value) {
-        var deferred = defer();
-        setTimeout(function () {
-            deferred.resolve(value);
-        }, timeout);
-        return deferred.promise;
-    });
-};
-
-/**
- * Passes a continuation to a Node function, which is called with the given
- * arguments provided as an array, and returns a promise.
- *
- *      Q.nfapply(FS.readFile, [__filename])
- *      .then(function (content) {
- *      })
- *
- */
-Q.nfapply = function (callback, args) {
-    return Q(callback).nfapply(args);
-};
-
-Promise.prototype.nfapply = function (args) {
-    var deferred = defer();
-    var nodeArgs = array_slice(args);
-    nodeArgs.push(deferred.makeNodeResolver());
-    this.fapply(nodeArgs).fail(deferred.reject);
-    return deferred.promise;
-};
-
-/**
- * Passes a continuation to a Node function, which is called with the given
- * arguments provided individually, and returns a promise.
- * @example
- * Q.nfcall(FS.readFile, __filename)
- * .then(function (content) {
- * })
- *
- */
-Q.nfcall = function (callback /*...args*/) {
-    var args = array_slice(arguments, 1);
-    return Q(callback).nfapply(args);
-};
-
-Promise.prototype.nfcall = function (/*...args*/) {
-    var nodeArgs = array_slice(arguments);
-    var deferred = defer();
-    nodeArgs.push(deferred.makeNodeResolver());
-    this.fapply(nodeArgs).fail(deferred.reject);
-    return deferred.promise;
-};
-
-/**
- * Wraps a NodeJS continuation passing function and returns an equivalent
- * version that returns a promise.
- * @example
- * Q.nfbind(FS.readFile, __filename)("utf-8")
- * .then(console.log)
- * .done()
- */
-Q.nfbind =
-Q.denodeify = function (callback /*...args*/) {
-    var baseArgs = array_slice(arguments, 1);
-    return function () {
-        var nodeArgs = baseArgs.concat(array_slice(arguments));
-        var deferred = defer();
-        nodeArgs.push(deferred.makeNodeResolver());
-        Q(callback).fapply(nodeArgs).fail(deferred.reject);
-        return deferred.promise;
-    };
-};
-
-Promise.prototype.nfbind =
-Promise.prototype.denodeify = function (/*...args*/) {
-    var args = array_slice(arguments);
-    args.unshift(this);
-    return Q.denodeify.apply(void 0, args);
-};
-
-Q.nbind = function (callback, thisp /*...args*/) {
-    var baseArgs = array_slice(arguments, 2);
-    return function () {
-        var nodeArgs = baseArgs.concat(array_slice(arguments));
-        var deferred = defer();
-        nodeArgs.push(deferred.makeNodeResolver());
-        function bound() {
-            return callback.apply(thisp, arguments);
-        }
-        Q(bound).fapply(nodeArgs).fail(deferred.reject);
-        return deferred.promise;
-    };
-};
-
-Promise.prototype.nbind = function (/*thisp, ...args*/) {
-    var args = array_slice(arguments, 0);
-    args.unshift(this);
-    return Q.nbind.apply(void 0, args);
-};
-
-/**
- * Calls a method of a Node-style object that accepts a Node-style
- * callback with a given array of arguments, plus a provided callback.
- * @param object an object that has the named method
- * @param {String} name name of the method of object
- * @param {Array} args arguments to pass to the method; the callback
- * will be provided by Q and appended to these arguments.
- * @returns a promise for the value or error
- */
-Q.nmapply = // XXX As proposed by "Redsandro"
-Q.npost = function (object, name, args) {
-    return Q(object).npost(name, args);
-};
-
-Promise.prototype.nmapply = // XXX As proposed by "Redsandro"
-Promise.prototype.npost = function (name, args) {
-    var nodeArgs = array_slice(args || []);
-    var deferred = defer();
-    nodeArgs.push(deferred.makeNodeResolver());
-    this.dispatch("post", [name, nodeArgs]).fail(deferred.reject);
-    return deferred.promise;
-};
-
-/**
- * Calls a method of a Node-style object that accepts a Node-style
- * callback, forwarding the given variadic arguments, plus a provided
- * callback argument.
- * @param object an object that has the named method
- * @param {String} name name of the method of object
- * @param ...args arguments to pass to the method; the callback will
- * be provided by Q and appended to these arguments.
- * @returns a promise for the value or error
- */
-Q.nsend = // XXX Based on Mark Miller's proposed "send"
-Q.nmcall = // XXX Based on "Redsandro's" proposal
-Q.ninvoke = function (object, name /*...args*/) {
-    var nodeArgs = array_slice(arguments, 2);
-    var deferred = defer();
-    nodeArgs.push(deferred.makeNodeResolver());
-    Q(object).dispatch("post", [name, nodeArgs]).fail(deferred.reject);
-    return deferred.promise;
-};
-
-Promise.prototype.nsend = // XXX Based on Mark Miller's proposed "send"
-Promise.prototype.nmcall = // XXX Based on "Redsandro's" proposal
-Promise.prototype.ninvoke = function (name /*...args*/) {
-    var nodeArgs = array_slice(arguments, 1);
-    var deferred = defer();
-    nodeArgs.push(deferred.makeNodeResolver());
-    this.dispatch("post", [name, nodeArgs]).fail(deferred.reject);
-    return deferred.promise;
-};
-
-/**
- * If a function would like to support both Node continuation-passing-style and
- * promise-returning-style, it can end its internal promise chain with
- * `nodeify(nodeback)`, forwarding the optional nodeback argument.  If the user
- * elects to use a nodeback, the result will be sent there.  If they do not
- * pass a nodeback, they will receive the result promise.
- * @param object a result (or a promise for a result)
- * @param {Function} nodeback a Node.js-style callback
- * @returns either the promise or nothing
- */
-Q.nodeify = nodeify;
-function nodeify(object, nodeback) {
-    return Q(object).nodeify(nodeback);
-}
-
-Promise.prototype.nodeify = function (nodeback) {
-    if (nodeback) {
-        this.then(function (value) {
-            Q.nextTick(function () {
-                nodeback(null, value);
-            });
-        }, function (error) {
-            Q.nextTick(function () {
-                nodeback(error);
-            });
-        });
-    } else {
-        return this;
-    }
-};
-
-Q.noConflict = function() {
-    throw new Error("Q.noConflict only works when Q is used as a global");
-};
-
-// All code before this point will be filtered from stack traces.
-var qEndingLine = captureLine();
-
-return Q;
-
-});
-
-}).call(this,require('_process'))
-},{"_process":319}],340:[function(require,module,exports){
 (function (process,global,Buffer){
-'use strict';
+'use strict'
+
+function oldBrowser () {
+  throw new Error('secure random number generation not supported by this browser\nuse chrome, FireFox or Internet Explorer 11')
+}
 
 var crypto = global.crypto || global.msCrypto
-if(crypto && crypto.getRandomValues) {
-  module.exports = randomBytes;
-} else {
-  module.exports = oldBrowser;
-}
-function randomBytes(size, cb) {
-  var bytes = new Buffer(size); //in browserify, this is an extended Uint8Array
-    /* This will not work in older browsers.
-     * See https://developer.mozilla.org/en-US/docs/Web/API/window.crypto.getRandomValues
-     */
 
-  crypto.getRandomValues(bytes);
+if (crypto && crypto.getRandomValues) {
+  module.exports = randomBytes
+} else {
+  module.exports = oldBrowser
+}
+
+function randomBytes (size, cb) {
+  // phantomjs needs to throw
+  if (size > 65536) throw new Error('requested too many random bytes')
+  // in case browserify  isn't using the Uint8Array version
+  var rawBytes = new global.Uint8Array(size)
+
+  // This will not work in older browsers.
+  // See https://developer.mozilla.org/en-US/docs/Web/API/window.crypto.getRandomValues
+  crypto.getRandomValues(rawBytes)
+
+  // phantomjs doesn't like a buffer being passed here
+  var bytes = new Buffer(rawBytes.buffer)
+
   if (typeof cb === 'function') {
     return process.nextTick(function () {
-      cb(null, bytes);
-    });
+      cb(null, bytes)
+    })
   }
-  return bytes;
-}
-function oldBrowser() {
-  throw new Error(
-      'secure random number generation not supported by this browser\n'+
-      'use chrome, FireFox or Internet Explorer 11'
-    )
+
+  return bytes
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"_process":319,"buffer":120}],341:[function(require,module,exports){
-(function (process,global){
-/*!
- * @overview RSVP - a tiny implementation of Promises/A+.
- * @copyright Copyright (c) 2014 Yehuda Katz, Tom Dale, Stefan Penner and contributors
- * @license   Licensed under MIT license
- *            See https://raw.githubusercontent.com/tildeio/rsvp.js/master/LICENSE
- * @version   3.1.0
- */
-
-(function() {
-    "use strict";
-    function lib$rsvp$utils$$objectOrFunction(x) {
-      return typeof x === 'function' || (typeof x === 'object' && x !== null);
-    }
-
-    function lib$rsvp$utils$$isFunction(x) {
-      return typeof x === 'function';
-    }
-
-    function lib$rsvp$utils$$isMaybeThenable(x) {
-      return typeof x === 'object' && x !== null;
-    }
-
-    var lib$rsvp$utils$$_isArray;
-    if (!Array.isArray) {
-      lib$rsvp$utils$$_isArray = function (x) {
-        return Object.prototype.toString.call(x) === '[object Array]';
-      };
-    } else {
-      lib$rsvp$utils$$_isArray = Array.isArray;
-    }
-
-    var lib$rsvp$utils$$isArray = lib$rsvp$utils$$_isArray;
-
-    var lib$rsvp$utils$$now = Date.now || function() { return new Date().getTime(); };
-
-    function lib$rsvp$utils$$F() { }
-
-    var lib$rsvp$utils$$o_create = (Object.create || function (o) {
-      if (arguments.length > 1) {
-        throw new Error('Second argument not supported');
-      }
-      if (typeof o !== 'object') {
-        throw new TypeError('Argument must be an object');
-      }
-      lib$rsvp$utils$$F.prototype = o;
-      return new lib$rsvp$utils$$F();
-    });
-    function lib$rsvp$events$$indexOf(callbacks, callback) {
-      for (var i=0, l=callbacks.length; i<l; i++) {
-        if (callbacks[i] === callback) { return i; }
-      }
-
-      return -1;
-    }
-
-    function lib$rsvp$events$$callbacksFor(object) {
-      var callbacks = object._promiseCallbacks;
-
-      if (!callbacks) {
-        callbacks = object._promiseCallbacks = {};
-      }
-
-      return callbacks;
-    }
-
-    var lib$rsvp$events$$default = {
-
-      /**
-        `RSVP.EventTarget.mixin` extends an object with EventTarget methods. For
-        Example:
-
-        ```javascript
-        var object = {};
-
-        RSVP.EventTarget.mixin(object);
-
-        object.on('finished', function(event) {
-          // handle event
-        });
-
-        object.trigger('finished', { detail: value });
-        ```
-
-        `EventTarget.mixin` also works with prototypes:
-
-        ```javascript
-        var Person = function() {};
-        RSVP.EventTarget.mixin(Person.prototype);
-
-        var yehuda = new Person();
-        var tom = new Person();
-
-        yehuda.on('poke', function(event) {
-          console.log('Yehuda says OW');
-        });
-
-        tom.on('poke', function(event) {
-          console.log('Tom says OW');
-        });
-
-        yehuda.trigger('poke');
-        tom.trigger('poke');
-        ```
-
-        @method mixin
-        @for RSVP.EventTarget
-        @private
-        @param {Object} object object to extend with EventTarget methods
-      */
-      'mixin': function(object) {
-        object['on']      = this['on'];
-        object['off']     = this['off'];
-        object['trigger'] = this['trigger'];
-        object._promiseCallbacks = undefined;
-        return object;
-      },
-
-      /**
-        Registers a callback to be executed when `eventName` is triggered
-
-        ```javascript
-        object.on('event', function(eventInfo){
-          // handle the event
-        });
-
-        object.trigger('event');
-        ```
-
-        @method on
-        @for RSVP.EventTarget
-        @private
-        @param {String} eventName name of the event to listen for
-        @param {Function} callback function to be called when the event is triggered.
-      */
-      'on': function(eventName, callback) {
-        if (typeof callback !== 'function') {
-          throw new TypeError('Callback must be a function');
-        }
-
-        var allCallbacks = lib$rsvp$events$$callbacksFor(this), callbacks;
-
-        callbacks = allCallbacks[eventName];
-
-        if (!callbacks) {
-          callbacks = allCallbacks[eventName] = [];
-        }
-
-        if (lib$rsvp$events$$indexOf(callbacks, callback) === -1) {
-          callbacks.push(callback);
-        }
-      },
-
-      /**
-        You can use `off` to stop firing a particular callback for an event:
-
-        ```javascript
-        function doStuff() { // do stuff! }
-        object.on('stuff', doStuff);
-
-        object.trigger('stuff'); // doStuff will be called
-
-        // Unregister ONLY the doStuff callback
-        object.off('stuff', doStuff);
-        object.trigger('stuff'); // doStuff will NOT be called
-        ```
-
-        If you don't pass a `callback` argument to `off`, ALL callbacks for the
-        event will not be executed when the event fires. For example:
-
-        ```javascript
-        var callback1 = function(){};
-        var callback2 = function(){};
-
-        object.on('stuff', callback1);
-        object.on('stuff', callback2);
-
-        object.trigger('stuff'); // callback1 and callback2 will be executed.
-
-        object.off('stuff');
-        object.trigger('stuff'); // callback1 and callback2 will not be executed!
-        ```
-
-        @method off
-        @for RSVP.EventTarget
-        @private
-        @param {String} eventName event to stop listening to
-        @param {Function} callback optional argument. If given, only the function
-        given will be removed from the event's callback queue. If no `callback`
-        argument is given, all callbacks will be removed from the event's callback
-        queue.
-      */
-      'off': function(eventName, callback) {
-        var allCallbacks = lib$rsvp$events$$callbacksFor(this), callbacks, index;
-
-        if (!callback) {
-          allCallbacks[eventName] = [];
-          return;
-        }
-
-        callbacks = allCallbacks[eventName];
-
-        index = lib$rsvp$events$$indexOf(callbacks, callback);
-
-        if (index !== -1) { callbacks.splice(index, 1); }
-      },
-
-      /**
-        Use `trigger` to fire custom events. For example:
-
-        ```javascript
-        object.on('foo', function(){
-          console.log('foo event happened!');
-        });
-        object.trigger('foo');
-        // 'foo event happened!' logged to the console
-        ```
-
-        You can also pass a value as a second argument to `trigger` that will be
-        passed as an argument to all event listeners for the event:
-
-        ```javascript
-        object.on('foo', function(value){
-          console.log(value.name);
-        });
-
-        object.trigger('foo', { name: 'bar' });
-        // 'bar' logged to the console
-        ```
-
-        @method trigger
-        @for RSVP.EventTarget
-        @private
-        @param {String} eventName name of the event to be triggered
-        @param {*} options optional value to be passed to any event handlers for
-        the given `eventName`
-      */
-      'trigger': function(eventName, options, label) {
-        var allCallbacks = lib$rsvp$events$$callbacksFor(this), callbacks, callback;
-
-        if (callbacks = allCallbacks[eventName]) {
-          // Don't cache the callbacks.length since it may grow
-          for (var i=0; i<callbacks.length; i++) {
-            callback = callbacks[i];
-
-            callback(options, label);
-          }
-        }
-      }
-    };
-
-    var lib$rsvp$config$$config = {
-      instrument: false
-    };
-
-    lib$rsvp$events$$default['mixin'](lib$rsvp$config$$config);
-
-    function lib$rsvp$config$$configure(name, value) {
-      if (name === 'onerror') {
-        // handle for legacy users that expect the actual
-        // error to be passed to their function added via
-        // `RSVP.configure('onerror', someFunctionHere);`
-        lib$rsvp$config$$config['on']('error', value);
-        return;
-      }
-
-      if (arguments.length === 2) {
-        lib$rsvp$config$$config[name] = value;
-      } else {
-        return lib$rsvp$config$$config[name];
-      }
-    }
-
-    var lib$rsvp$instrument$$queue = [];
-
-    function lib$rsvp$instrument$$scheduleFlush() {
-      setTimeout(function() {
-        var entry;
-        for (var i = 0; i < lib$rsvp$instrument$$queue.length; i++) {
-          entry = lib$rsvp$instrument$$queue[i];
-
-          var payload = entry.payload;
-
-          payload.guid = payload.key + payload.id;
-          payload.childGuid = payload.key + payload.childId;
-          if (payload.error) {
-            payload.stack = payload.error.stack;
-          }
-
-          lib$rsvp$config$$config['trigger'](entry.name, entry.payload);
-        }
-        lib$rsvp$instrument$$queue.length = 0;
-      }, 50);
-    }
-
-    function lib$rsvp$instrument$$instrument(eventName, promise, child) {
-      if (1 === lib$rsvp$instrument$$queue.push({
-        name: eventName,
-        payload: {
-          key: promise._guidKey,
-          id:  promise._id,
-          eventName: eventName,
-          detail: promise._result,
-          childId: child && child._id,
-          label: promise._label,
-          timeStamp: lib$rsvp$utils$$now(),
-          error: lib$rsvp$config$$config["instrument-with-stack"] ? new Error(promise._label) : null
-        }})) {
-          lib$rsvp$instrument$$scheduleFlush();
-        }
-      }
-    var lib$rsvp$instrument$$default = lib$rsvp$instrument$$instrument;
-
-    function  lib$rsvp$$internal$$withOwnPromise() {
-      return new TypeError('A promises callback cannot return that same promise.');
-    }
-
-    function lib$rsvp$$internal$$noop() {}
-
-    var lib$rsvp$$internal$$PENDING   = void 0;
-    var lib$rsvp$$internal$$FULFILLED = 1;
-    var lib$rsvp$$internal$$REJECTED  = 2;
-
-    var lib$rsvp$$internal$$GET_THEN_ERROR = new lib$rsvp$$internal$$ErrorObject();
-
-    function lib$rsvp$$internal$$getThen(promise) {
-      try {
-        return promise.then;
-      } catch(error) {
-        lib$rsvp$$internal$$GET_THEN_ERROR.error = error;
-        return lib$rsvp$$internal$$GET_THEN_ERROR;
-      }
-    }
-
-    function lib$rsvp$$internal$$tryThen(then, value, fulfillmentHandler, rejectionHandler) {
-      try {
-        then.call(value, fulfillmentHandler, rejectionHandler);
-      } catch(e) {
-        return e;
-      }
-    }
-
-    function lib$rsvp$$internal$$handleForeignThenable(promise, thenable, then) {
-      lib$rsvp$config$$config.async(function(promise) {
-        var sealed = false;
-        var error = lib$rsvp$$internal$$tryThen(then, thenable, function(value) {
-          if (sealed) { return; }
-          sealed = true;
-          if (thenable !== value) {
-            lib$rsvp$$internal$$resolve(promise, value);
-          } else {
-            lib$rsvp$$internal$$fulfill(promise, value);
-          }
-        }, function(reason) {
-          if (sealed) { return; }
-          sealed = true;
-
-          lib$rsvp$$internal$$reject(promise, reason);
-        }, 'Settle: ' + (promise._label || ' unknown promise'));
-
-        if (!sealed && error) {
-          sealed = true;
-          lib$rsvp$$internal$$reject(promise, error);
-        }
-      }, promise);
-    }
-
-    function lib$rsvp$$internal$$handleOwnThenable(promise, thenable) {
-      if (thenable._state === lib$rsvp$$internal$$FULFILLED) {
-        lib$rsvp$$internal$$fulfill(promise, thenable._result);
-      } else if (thenable._state === lib$rsvp$$internal$$REJECTED) {
-        thenable._onError = null;
-        lib$rsvp$$internal$$reject(promise, thenable._result);
-      } else {
-        lib$rsvp$$internal$$subscribe(thenable, undefined, function(value) {
-          if (thenable !== value) {
-            lib$rsvp$$internal$$resolve(promise, value);
-          } else {
-            lib$rsvp$$internal$$fulfill(promise, value);
-          }
-        }, function(reason) {
-          lib$rsvp$$internal$$reject(promise, reason);
-        });
-      }
-    }
-
-    function lib$rsvp$$internal$$handleMaybeThenable(promise, maybeThenable) {
-      if (maybeThenable.constructor === promise.constructor) {
-        lib$rsvp$$internal$$handleOwnThenable(promise, maybeThenable);
-      } else {
-        var then = lib$rsvp$$internal$$getThen(maybeThenable);
-
-        if (then === lib$rsvp$$internal$$GET_THEN_ERROR) {
-          lib$rsvp$$internal$$reject(promise, lib$rsvp$$internal$$GET_THEN_ERROR.error);
-        } else if (then === undefined) {
-          lib$rsvp$$internal$$fulfill(promise, maybeThenable);
-        } else if (lib$rsvp$utils$$isFunction(then)) {
-          lib$rsvp$$internal$$handleForeignThenable(promise, maybeThenable, then);
-        } else {
-          lib$rsvp$$internal$$fulfill(promise, maybeThenable);
-        }
-      }
-    }
-
-    function lib$rsvp$$internal$$resolve(promise, value) {
-      if (promise === value) {
-        lib$rsvp$$internal$$fulfill(promise, value);
-      } else if (lib$rsvp$utils$$objectOrFunction(value)) {
-        lib$rsvp$$internal$$handleMaybeThenable(promise, value);
-      } else {
-        lib$rsvp$$internal$$fulfill(promise, value);
-      }
-    }
-
-    function lib$rsvp$$internal$$publishRejection(promise) {
-      if (promise._onError) {
-        promise._onError(promise._result);
-      }
-
-      lib$rsvp$$internal$$publish(promise);
-    }
-
-    function lib$rsvp$$internal$$fulfill(promise, value) {
-      if (promise._state !== lib$rsvp$$internal$$PENDING) { return; }
-
-      promise._result = value;
-      promise._state = lib$rsvp$$internal$$FULFILLED;
-
-      if (promise._subscribers.length === 0) {
-        if (lib$rsvp$config$$config.instrument) {
-          lib$rsvp$instrument$$default('fulfilled', promise);
-        }
-      } else {
-        lib$rsvp$config$$config.async(lib$rsvp$$internal$$publish, promise);
-      }
-    }
-
-    function lib$rsvp$$internal$$reject(promise, reason) {
-      if (promise._state !== lib$rsvp$$internal$$PENDING) { return; }
-      promise._state = lib$rsvp$$internal$$REJECTED;
-      promise._result = reason;
-      lib$rsvp$config$$config.async(lib$rsvp$$internal$$publishRejection, promise);
-    }
-
-    function lib$rsvp$$internal$$subscribe(parent, child, onFulfillment, onRejection) {
-      var subscribers = parent._subscribers;
-      var length = subscribers.length;
-
-      parent._onError = null;
-
-      subscribers[length] = child;
-      subscribers[length + lib$rsvp$$internal$$FULFILLED] = onFulfillment;
-      subscribers[length + lib$rsvp$$internal$$REJECTED]  = onRejection;
-
-      if (length === 0 && parent._state) {
-        lib$rsvp$config$$config.async(lib$rsvp$$internal$$publish, parent);
-      }
-    }
-
-    function lib$rsvp$$internal$$publish(promise) {
-      var subscribers = promise._subscribers;
-      var settled = promise._state;
-
-      if (lib$rsvp$config$$config.instrument) {
-        lib$rsvp$instrument$$default(settled === lib$rsvp$$internal$$FULFILLED ? 'fulfilled' : 'rejected', promise);
-      }
-
-      if (subscribers.length === 0) { return; }
-
-      var child, callback, detail = promise._result;
-
-      for (var i = 0; i < subscribers.length; i += 3) {
-        child = subscribers[i];
-        callback = subscribers[i + settled];
-
-        if (child) {
-          lib$rsvp$$internal$$invokeCallback(settled, child, callback, detail);
-        } else {
-          callback(detail);
-        }
-      }
-
-      promise._subscribers.length = 0;
-    }
-
-    function lib$rsvp$$internal$$ErrorObject() {
-      this.error = null;
-    }
-
-    var lib$rsvp$$internal$$TRY_CATCH_ERROR = new lib$rsvp$$internal$$ErrorObject();
-
-    function lib$rsvp$$internal$$tryCatch(callback, detail) {
-      try {
-        return callback(detail);
-      } catch(e) {
-        lib$rsvp$$internal$$TRY_CATCH_ERROR.error = e;
-        return lib$rsvp$$internal$$TRY_CATCH_ERROR;
-      }
-    }
-
-    function lib$rsvp$$internal$$invokeCallback(settled, promise, callback, detail) {
-      var hasCallback = lib$rsvp$utils$$isFunction(callback),
-          value, error, succeeded, failed;
-
-      if (hasCallback) {
-        value = lib$rsvp$$internal$$tryCatch(callback, detail);
-
-        if (value === lib$rsvp$$internal$$TRY_CATCH_ERROR) {
-          failed = true;
-          error = value.error;
-          value = null;
-        } else {
-          succeeded = true;
-        }
-
-        if (promise === value) {
-          lib$rsvp$$internal$$reject(promise, lib$rsvp$$internal$$withOwnPromise());
-          return;
-        }
-
-      } else {
-        value = detail;
-        succeeded = true;
-      }
-
-      if (promise._state !== lib$rsvp$$internal$$PENDING) {
-        // noop
-      } else if (hasCallback && succeeded) {
-        lib$rsvp$$internal$$resolve(promise, value);
-      } else if (failed) {
-        lib$rsvp$$internal$$reject(promise, error);
-      } else if (settled === lib$rsvp$$internal$$FULFILLED) {
-        lib$rsvp$$internal$$fulfill(promise, value);
-      } else if (settled === lib$rsvp$$internal$$REJECTED) {
-        lib$rsvp$$internal$$reject(promise, value);
-      }
-    }
-
-    function lib$rsvp$$internal$$initializePromise(promise, resolver) {
-      var resolved = false;
-      try {
-        resolver(function resolvePromise(value){
-          if (resolved) { return; }
-          resolved = true;
-          lib$rsvp$$internal$$resolve(promise, value);
-        }, function rejectPromise(reason) {
-          if (resolved) { return; }
-          resolved = true;
-          lib$rsvp$$internal$$reject(promise, reason);
-        });
-      } catch(e) {
-        lib$rsvp$$internal$$reject(promise, e);
-      }
-    }
-
-    function lib$rsvp$enumerator$$makeSettledResult(state, position, value) {
-      if (state === lib$rsvp$$internal$$FULFILLED) {
-        return {
-          state: 'fulfilled',
-          value: value
-        };
-      } else {
-         return {
-          state: 'rejected',
-          reason: value
-        };
-      }
-    }
-
-    function lib$rsvp$enumerator$$Enumerator(Constructor, input, abortOnReject, label) {
-      var enumerator = this;
-
-      enumerator._instanceConstructor = Constructor;
-      enumerator.promise = new Constructor(lib$rsvp$$internal$$noop, label);
-      enumerator._abortOnReject = abortOnReject;
-
-      if (enumerator._validateInput(input)) {
-        enumerator._input     = input;
-        enumerator.length     = input.length;
-        enumerator._remaining = input.length;
-
-        enumerator._init();
-
-        if (enumerator.length === 0) {
-          lib$rsvp$$internal$$fulfill(enumerator.promise, enumerator._result);
-        } else {
-          enumerator.length = enumerator.length || 0;
-          enumerator._enumerate();
-          if (enumerator._remaining === 0) {
-            lib$rsvp$$internal$$fulfill(enumerator.promise, enumerator._result);
-          }
-        }
-      } else {
-        lib$rsvp$$internal$$reject(enumerator.promise, enumerator._validationError());
-      }
-    }
-
-    var lib$rsvp$enumerator$$default = lib$rsvp$enumerator$$Enumerator;
-
-    lib$rsvp$enumerator$$Enumerator.prototype._validateInput = function(input) {
-      return lib$rsvp$utils$$isArray(input);
-    };
-
-    lib$rsvp$enumerator$$Enumerator.prototype._validationError = function() {
-      return new Error('Array Methods must be provided an Array');
-    };
-
-    lib$rsvp$enumerator$$Enumerator.prototype._init = function() {
-      this._result = new Array(this.length);
-    };
-
-    lib$rsvp$enumerator$$Enumerator.prototype._enumerate = function() {
-      var enumerator = this;
-      var length     = enumerator.length;
-      var promise    = enumerator.promise;
-      var input      = enumerator._input;
-
-      for (var i = 0; promise._state === lib$rsvp$$internal$$PENDING && i < length; i++) {
-        enumerator._eachEntry(input[i], i);
-      }
-    };
-
-    lib$rsvp$enumerator$$Enumerator.prototype._eachEntry = function(entry, i) {
-      var enumerator = this;
-      var c = enumerator._instanceConstructor;
-      if (lib$rsvp$utils$$isMaybeThenable(entry)) {
-        if (entry.constructor === c && entry._state !== lib$rsvp$$internal$$PENDING) {
-          entry._onError = null;
-          enumerator._settledAt(entry._state, i, entry._result);
-        } else {
-          enumerator._willSettleAt(c.resolve(entry), i);
-        }
-      } else {
-        enumerator._remaining--;
-        enumerator._result[i] = enumerator._makeResult(lib$rsvp$$internal$$FULFILLED, i, entry);
-      }
-    };
-
-    lib$rsvp$enumerator$$Enumerator.prototype._settledAt = function(state, i, value) {
-      var enumerator = this;
-      var promise = enumerator.promise;
-
-      if (promise._state === lib$rsvp$$internal$$PENDING) {
-        enumerator._remaining--;
-
-        if (enumerator._abortOnReject && state === lib$rsvp$$internal$$REJECTED) {
-          lib$rsvp$$internal$$reject(promise, value);
-        } else {
-          enumerator._result[i] = enumerator._makeResult(state, i, value);
-        }
-      }
-
-      if (enumerator._remaining === 0) {
-        lib$rsvp$$internal$$fulfill(promise, enumerator._result);
-      }
-    };
-
-    lib$rsvp$enumerator$$Enumerator.prototype._makeResult = function(state, i, value) {
-      return value;
-    };
-
-    lib$rsvp$enumerator$$Enumerator.prototype._willSettleAt = function(promise, i) {
-      var enumerator = this;
-
-      lib$rsvp$$internal$$subscribe(promise, undefined, function(value) {
-        enumerator._settledAt(lib$rsvp$$internal$$FULFILLED, i, value);
-      }, function(reason) {
-        enumerator._settledAt(lib$rsvp$$internal$$REJECTED, i, reason);
-      });
-    };
-    function lib$rsvp$promise$all$$all(entries, label) {
-      return new lib$rsvp$enumerator$$default(this, entries, true /* abort on reject */, label).promise;
-    }
-    var lib$rsvp$promise$all$$default = lib$rsvp$promise$all$$all;
-    function lib$rsvp$promise$race$$race(entries, label) {
-      /*jshint validthis:true */
-      var Constructor = this;
-
-      var promise = new Constructor(lib$rsvp$$internal$$noop, label);
-
-      if (!lib$rsvp$utils$$isArray(entries)) {
-        lib$rsvp$$internal$$reject(promise, new TypeError('You must pass an array to race.'));
-        return promise;
-      }
-
-      var length = entries.length;
-
-      function onFulfillment(value) {
-        lib$rsvp$$internal$$resolve(promise, value);
-      }
-
-      function onRejection(reason) {
-        lib$rsvp$$internal$$reject(promise, reason);
-      }
-
-      for (var i = 0; promise._state === lib$rsvp$$internal$$PENDING && i < length; i++) {
-        lib$rsvp$$internal$$subscribe(Constructor.resolve(entries[i]), undefined, onFulfillment, onRejection);
-      }
-
-      return promise;
-    }
-    var lib$rsvp$promise$race$$default = lib$rsvp$promise$race$$race;
-    function lib$rsvp$promise$resolve$$resolve(object, label) {
-      /*jshint validthis:true */
-      var Constructor = this;
-
-      if (object && typeof object === 'object' && object.constructor === Constructor) {
-        return object;
-      }
-
-      var promise = new Constructor(lib$rsvp$$internal$$noop, label);
-      lib$rsvp$$internal$$resolve(promise, object);
-      return promise;
-    }
-    var lib$rsvp$promise$resolve$$default = lib$rsvp$promise$resolve$$resolve;
-    function lib$rsvp$promise$reject$$reject(reason, label) {
-      /*jshint validthis:true */
-      var Constructor = this;
-      var promise = new Constructor(lib$rsvp$$internal$$noop, label);
-      lib$rsvp$$internal$$reject(promise, reason);
-      return promise;
-    }
-    var lib$rsvp$promise$reject$$default = lib$rsvp$promise$reject$$reject;
-
-    var lib$rsvp$promise$$guidKey = 'rsvp_' + lib$rsvp$utils$$now() + '-';
-    var lib$rsvp$promise$$counter = 0;
-
-    function lib$rsvp$promise$$needsResolver() {
-      throw new TypeError('You must pass a resolver function as the first argument to the promise constructor');
-    }
-
-    function lib$rsvp$promise$$needsNew() {
-      throw new TypeError("Failed to construct 'Promise': Please use the 'new' operator, this object constructor cannot be called as a function.");
-    }
-
-    function lib$rsvp$promise$$Promise(resolver, label) {
-      var promise = this;
-
-      promise._id = lib$rsvp$promise$$counter++;
-      promise._label = label;
-      promise._state = undefined;
-      promise._result = undefined;
-      promise._subscribers = [];
-
-      if (lib$rsvp$config$$config.instrument) {
-        lib$rsvp$instrument$$default('created', promise);
-      }
-
-      if (lib$rsvp$$internal$$noop !== resolver) {
-        if (!lib$rsvp$utils$$isFunction(resolver)) {
-          lib$rsvp$promise$$needsResolver();
-        }
-
-        if (!(promise instanceof lib$rsvp$promise$$Promise)) {
-          lib$rsvp$promise$$needsNew();
-        }
-
-        lib$rsvp$$internal$$initializePromise(promise, resolver);
-      }
-    }
-
-    var lib$rsvp$promise$$default = lib$rsvp$promise$$Promise;
-
-    // deprecated
-    lib$rsvp$promise$$Promise.cast = lib$rsvp$promise$resolve$$default;
-    lib$rsvp$promise$$Promise.all = lib$rsvp$promise$all$$default;
-    lib$rsvp$promise$$Promise.race = lib$rsvp$promise$race$$default;
-    lib$rsvp$promise$$Promise.resolve = lib$rsvp$promise$resolve$$default;
-    lib$rsvp$promise$$Promise.reject = lib$rsvp$promise$reject$$default;
-
-    lib$rsvp$promise$$Promise.prototype = {
-      constructor: lib$rsvp$promise$$Promise,
-
-      _guidKey: lib$rsvp$promise$$guidKey,
-
-      _onError: function (reason) {
-        var promise = this;
-        lib$rsvp$config$$config.after(function() {
-          if (promise._onError) {
-            lib$rsvp$config$$config['trigger']('error', reason, promise._label);
-          }
-        });
-      },
-
-    /**
-      The primary way of interacting with a promise is through its `then` method,
-      which registers callbacks to receive either a promise's eventual value or the
-      reason why the promise cannot be fulfilled.
-
-      ```js
-      findUser().then(function(user){
-        // user is available
-      }, function(reason){
-        // user is unavailable, and you are given the reason why
-      });
-      ```
-
-      Chaining
-      --------
-
-      The return value of `then` is itself a promise.  This second, 'downstream'
-      promise is resolved with the return value of the first promise's fulfillment
-      or rejection handler, or rejected if the handler throws an exception.
-
-      ```js
-      findUser().then(function (user) {
-        return user.name;
-      }, function (reason) {
-        return 'default name';
-      }).then(function (userName) {
-        // If `findUser` fulfilled, `userName` will be the user's name, otherwise it
-        // will be `'default name'`
-      });
-
-      findUser().then(function (user) {
-        throw new Error('Found user, but still unhappy');
-      }, function (reason) {
-        throw new Error('`findUser` rejected and we're unhappy');
-      }).then(function (value) {
-        // never reached
-      }, function (reason) {
-        // if `findUser` fulfilled, `reason` will be 'Found user, but still unhappy'.
-        // If `findUser` rejected, `reason` will be '`findUser` rejected and we're unhappy'.
-      });
-      ```
-      If the downstream promise does not specify a rejection handler, rejection reasons will be propagated further downstream.
-
-      ```js
-      findUser().then(function (user) {
-        throw new PedagogicalException('Upstream error');
-      }).then(function (value) {
-        // never reached
-      }).then(function (value) {
-        // never reached
-      }, function (reason) {
-        // The `PedgagocialException` is propagated all the way down to here
-      });
-      ```
-
-      Assimilation
-      ------------
-
-      Sometimes the value you want to propagate to a downstream promise can only be
-      retrieved asynchronously. This can be achieved by returning a promise in the
-      fulfillment or rejection handler. The downstream promise will then be pending
-      until the returned promise is settled. This is called *assimilation*.
-
-      ```js
-      findUser().then(function (user) {
-        return findCommentsByAuthor(user);
-      }).then(function (comments) {
-        // The user's comments are now available
-      });
-      ```
-
-      If the assimliated promise rejects, then the downstream promise will also reject.
-
-      ```js
-      findUser().then(function (user) {
-        return findCommentsByAuthor(user);
-      }).then(function (comments) {
-        // If `findCommentsByAuthor` fulfills, we'll have the value here
-      }, function (reason) {
-        // If `findCommentsByAuthor` rejects, we'll have the reason here
-      });
-      ```
-
-      Simple Example
-      --------------
-
-      Synchronous Example
-
-      ```javascript
-      var result;
-
-      try {
-        result = findResult();
-        // success
-      } catch(reason) {
-        // failure
-      }
-      ```
-
-      Errback Example
-
-      ```js
-      findResult(function(result, err){
-        if (err) {
-          // failure
-        } else {
-          // success
-        }
-      });
-      ```
-
-      Promise Example;
-
-      ```javascript
-      findResult().then(function(result){
-        // success
-      }, function(reason){
-        // failure
-      });
-      ```
-
-      Advanced Example
-      --------------
-
-      Synchronous Example
-
-      ```javascript
-      var author, books;
-
-      try {
-        author = findAuthor();
-        books  = findBooksByAuthor(author);
-        // success
-      } catch(reason) {
-        // failure
-      }
-      ```
-
-      Errback Example
-
-      ```js
-
-      function foundBooks(books) {
-
-      }
-
-      function failure(reason) {
-
-      }
-
-      findAuthor(function(author, err){
-        if (err) {
-          failure(err);
-          // failure
-        } else {
-          try {
-            findBoooksByAuthor(author, function(books, err) {
-              if (err) {
-                failure(err);
-              } else {
-                try {
-                  foundBooks(books);
-                } catch(reason) {
-                  failure(reason);
-                }
-              }
-            });
-          } catch(error) {
-            failure(err);
-          }
-          // success
-        }
-      });
-      ```
-
-      Promise Example;
-
-      ```javascript
-      findAuthor().
-        then(findBooksByAuthor).
-        then(function(books){
-          // found books
-      }).catch(function(reason){
-        // something went wrong
-      });
-      ```
-
-      @method then
-      @param {Function} onFulfillment
-      @param {Function} onRejection
-      @param {String} label optional string for labeling the promise.
-      Useful for tooling.
-      @return {Promise}
-    */
-      then: function(onFulfillment, onRejection, label) {
-        var parent = this;
-        var state = parent._state;
-
-        if (state === lib$rsvp$$internal$$FULFILLED && !onFulfillment || state === lib$rsvp$$internal$$REJECTED && !onRejection) {
-          if (lib$rsvp$config$$config.instrument) {
-            lib$rsvp$instrument$$default('chained', parent, parent);
-          }
-          return parent;
-        }
-
-        parent._onError = null;
-
-        var child = new parent.constructor(lib$rsvp$$internal$$noop, label);
-        var result = parent._result;
-
-        if (lib$rsvp$config$$config.instrument) {
-          lib$rsvp$instrument$$default('chained', parent, child);
-        }
-
-        if (state) {
-          var callback = arguments[state - 1];
-          lib$rsvp$config$$config.async(function(){
-            lib$rsvp$$internal$$invokeCallback(state, child, callback, result);
-          });
-        } else {
-          lib$rsvp$$internal$$subscribe(parent, child, onFulfillment, onRejection);
-        }
-
-        return child;
-      },
-
-    /**
-      `catch` is simply sugar for `then(undefined, onRejection)` which makes it the same
-      as the catch block of a try/catch statement.
-
-      ```js
-      function findAuthor(){
-        throw new Error('couldn't find that author');
-      }
-
-      // synchronous
-      try {
-        findAuthor();
-      } catch(reason) {
-        // something went wrong
-      }
-
-      // async with promises
-      findAuthor().catch(function(reason){
-        // something went wrong
-      });
-      ```
-
-      @method catch
-      @param {Function} onRejection
-      @param {String} label optional string for labeling the promise.
-      Useful for tooling.
-      @return {Promise}
-    */
-      'catch': function(onRejection, label) {
-        return this.then(undefined, onRejection, label);
-      },
-
-    /**
-      `finally` will be invoked regardless of the promise's fate just as native
-      try/catch/finally behaves
-
-      Synchronous example:
-
-      ```js
-      findAuthor() {
-        if (Math.random() > 0.5) {
-          throw new Error();
-        }
-        return new Author();
-      }
-
-      try {
-        return findAuthor(); // succeed or fail
-      } catch(error) {
-        return findOtherAuther();
-      } finally {
-        // always runs
-        // doesn't affect the return value
-      }
-      ```
-
-      Asynchronous example:
-
-      ```js
-      findAuthor().catch(function(reason){
-        return findOtherAuther();
-      }).finally(function(){
-        // author was either found, or not
-      });
-      ```
-
-      @method finally
-      @param {Function} callback
-      @param {String} label optional string for labeling the promise.
-      Useful for tooling.
-      @return {Promise}
-    */
-      'finally': function(callback, label) {
-        var promise = this;
-        var constructor = promise.constructor;
-
-        return promise.then(function(value) {
-          return constructor.resolve(callback()).then(function(){
-            return value;
-          });
-        }, function(reason) {
-          return constructor.resolve(callback()).then(function(){
-            throw reason;
-          });
-        }, label);
-      }
-    };
-
-    function lib$rsvp$all$settled$$AllSettled(Constructor, entries, label) {
-      this._superConstructor(Constructor, entries, false /* don't abort on reject */, label);
-    }
-
-    lib$rsvp$all$settled$$AllSettled.prototype = lib$rsvp$utils$$o_create(lib$rsvp$enumerator$$default.prototype);
-    lib$rsvp$all$settled$$AllSettled.prototype._superConstructor = lib$rsvp$enumerator$$default;
-    lib$rsvp$all$settled$$AllSettled.prototype._makeResult = lib$rsvp$enumerator$$makeSettledResult;
-    lib$rsvp$all$settled$$AllSettled.prototype._validationError = function() {
-      return new Error('allSettled must be called with an array');
-    };
-
-    function lib$rsvp$all$settled$$allSettled(entries, label) {
-      return new lib$rsvp$all$settled$$AllSettled(lib$rsvp$promise$$default, entries, label).promise;
-    }
-    var lib$rsvp$all$settled$$default = lib$rsvp$all$settled$$allSettled;
-    function lib$rsvp$all$$all(array, label) {
-      return lib$rsvp$promise$$default.all(array, label);
-    }
-    var lib$rsvp$all$$default = lib$rsvp$all$$all;
-    var lib$rsvp$asap$$len = 0;
-    var lib$rsvp$asap$$toString = {}.toString;
-    var lib$rsvp$asap$$vertxNext;
-    function lib$rsvp$asap$$asap(callback, arg) {
-      lib$rsvp$asap$$queue[lib$rsvp$asap$$len] = callback;
-      lib$rsvp$asap$$queue[lib$rsvp$asap$$len + 1] = arg;
-      lib$rsvp$asap$$len += 2;
-      if (lib$rsvp$asap$$len === 2) {
-        // If len is 1, that means that we need to schedule an async flush.
-        // If additional callbacks are queued before the queue is flushed, they
-        // will be processed by this flush that we are scheduling.
-        lib$rsvp$asap$$scheduleFlush();
-      }
-    }
-
-    var lib$rsvp$asap$$default = lib$rsvp$asap$$asap;
-
-    var lib$rsvp$asap$$browserWindow = (typeof window !== 'undefined') ? window : undefined;
-    var lib$rsvp$asap$$browserGlobal = lib$rsvp$asap$$browserWindow || {};
-    var lib$rsvp$asap$$BrowserMutationObserver = lib$rsvp$asap$$browserGlobal.MutationObserver || lib$rsvp$asap$$browserGlobal.WebKitMutationObserver;
-    var lib$rsvp$asap$$isNode = typeof self === 'undefined' &&
-      typeof process !== 'undefined' && {}.toString.call(process) === '[object process]';
-
-    // test for web worker but not in IE10
-    var lib$rsvp$asap$$isWorker = typeof Uint8ClampedArray !== 'undefined' &&
-      typeof importScripts !== 'undefined' &&
-      typeof MessageChannel !== 'undefined';
-
-    // node
-    function lib$rsvp$asap$$useNextTick() {
-      var nextTick = process.nextTick;
-      // node version 0.10.x displays a deprecation warning when nextTick is used recursively
-      // setImmediate should be used instead instead
-      var version = process.versions.node.match(/^(?:(\d+)\.)?(?:(\d+)\.)?(\*|\d+)$/);
-      if (Array.isArray(version) && version[1] === '0' && version[2] === '10') {
-        nextTick = setImmediate;
-      }
-      return function() {
-        nextTick(lib$rsvp$asap$$flush);
-      };
-    }
-
-    // vertx
-    function lib$rsvp$asap$$useVertxTimer() {
-      return function() {
-        lib$rsvp$asap$$vertxNext(lib$rsvp$asap$$flush);
-      };
-    }
-
-    function lib$rsvp$asap$$useMutationObserver() {
-      var iterations = 0;
-      var observer = new lib$rsvp$asap$$BrowserMutationObserver(lib$rsvp$asap$$flush);
-      var node = document.createTextNode('');
-      observer.observe(node, { characterData: true });
-
-      return function() {
-        node.data = (iterations = ++iterations % 2);
-      };
-    }
-
-    // web worker
-    function lib$rsvp$asap$$useMessageChannel() {
-      var channel = new MessageChannel();
-      channel.port1.onmessage = lib$rsvp$asap$$flush;
-      return function () {
-        channel.port2.postMessage(0);
-      };
-    }
-
-    function lib$rsvp$asap$$useSetTimeout() {
-      return function() {
-        setTimeout(lib$rsvp$asap$$flush, 1);
-      };
-    }
-
-    var lib$rsvp$asap$$queue = new Array(1000);
-    function lib$rsvp$asap$$flush() {
-      for (var i = 0; i < lib$rsvp$asap$$len; i+=2) {
-        var callback = lib$rsvp$asap$$queue[i];
-        var arg = lib$rsvp$asap$$queue[i+1];
-
-        callback(arg);
-
-        lib$rsvp$asap$$queue[i] = undefined;
-        lib$rsvp$asap$$queue[i+1] = undefined;
-      }
-
-      lib$rsvp$asap$$len = 0;
-    }
-
-    function lib$rsvp$asap$$attemptVertex() {
-      try {
-        var r = require;
-        var vertx = r('vertx');
-        lib$rsvp$asap$$vertxNext = vertx.runOnLoop || vertx.runOnContext;
-        return lib$rsvp$asap$$useVertxTimer();
-      } catch(e) {
-        return lib$rsvp$asap$$useSetTimeout();
-      }
-    }
-
-    var lib$rsvp$asap$$scheduleFlush;
-    // Decide what async method to use to triggering processing of queued callbacks:
-    if (lib$rsvp$asap$$isNode) {
-      lib$rsvp$asap$$scheduleFlush = lib$rsvp$asap$$useNextTick();
-    } else if (lib$rsvp$asap$$BrowserMutationObserver) {
-      lib$rsvp$asap$$scheduleFlush = lib$rsvp$asap$$useMutationObserver();
-    } else if (lib$rsvp$asap$$isWorker) {
-      lib$rsvp$asap$$scheduleFlush = lib$rsvp$asap$$useMessageChannel();
-    } else if (lib$rsvp$asap$$browserWindow === undefined && typeof require === 'function') {
-      lib$rsvp$asap$$scheduleFlush = lib$rsvp$asap$$attemptVertex();
-    } else {
-      lib$rsvp$asap$$scheduleFlush = lib$rsvp$asap$$useSetTimeout();
-    }
-    function lib$rsvp$defer$$defer(label) {
-      var deferred = {};
-
-      deferred['promise'] = new lib$rsvp$promise$$default(function(resolve, reject) {
-        deferred['resolve'] = resolve;
-        deferred['reject'] = reject;
-      }, label);
-
-      return deferred;
-    }
-    var lib$rsvp$defer$$default = lib$rsvp$defer$$defer;
-    function lib$rsvp$filter$$filter(promises, filterFn, label) {
-      return lib$rsvp$promise$$default.all(promises, label).then(function(values) {
-        if (!lib$rsvp$utils$$isFunction(filterFn)) {
-          throw new TypeError("You must pass a function as filter's second argument.");
-        }
-
-        var length = values.length;
-        var filtered = new Array(length);
-
-        for (var i = 0; i < length; i++) {
-          filtered[i] = filterFn(values[i]);
-        }
-
-        return lib$rsvp$promise$$default.all(filtered, label).then(function(filtered) {
-          var results = new Array(length);
-          var newLength = 0;
-
-          for (var i = 0; i < length; i++) {
-            if (filtered[i]) {
-              results[newLength] = values[i];
-              newLength++;
-            }
-          }
-
-          results.length = newLength;
-
-          return results;
-        });
-      });
-    }
-    var lib$rsvp$filter$$default = lib$rsvp$filter$$filter;
-
-    function lib$rsvp$promise$hash$$PromiseHash(Constructor, object, label) {
-      this._superConstructor(Constructor, object, true, label);
-    }
-
-    var lib$rsvp$promise$hash$$default = lib$rsvp$promise$hash$$PromiseHash;
-
-    lib$rsvp$promise$hash$$PromiseHash.prototype = lib$rsvp$utils$$o_create(lib$rsvp$enumerator$$default.prototype);
-    lib$rsvp$promise$hash$$PromiseHash.prototype._superConstructor = lib$rsvp$enumerator$$default;
-    lib$rsvp$promise$hash$$PromiseHash.prototype._init = function() {
-      this._result = {};
-    };
-
-    lib$rsvp$promise$hash$$PromiseHash.prototype._validateInput = function(input) {
-      return input && typeof input === 'object';
-    };
-
-    lib$rsvp$promise$hash$$PromiseHash.prototype._validationError = function() {
-      return new Error('Promise.hash must be called with an object');
-    };
-
-    lib$rsvp$promise$hash$$PromiseHash.prototype._enumerate = function() {
-      var enumerator = this;
-      var promise    = enumerator.promise;
-      var input      = enumerator._input;
-      var results    = [];
-
-      for (var key in input) {
-        if (promise._state === lib$rsvp$$internal$$PENDING && Object.prototype.hasOwnProperty.call(input, key)) {
-          results.push({
-            position: key,
-            entry: input[key]
-          });
-        }
-      }
-
-      var length = results.length;
-      enumerator._remaining = length;
-      var result;
-
-      for (var i = 0; promise._state === lib$rsvp$$internal$$PENDING && i < length; i++) {
-        result = results[i];
-        enumerator._eachEntry(result.entry, result.position);
-      }
-    };
-
-    function lib$rsvp$hash$settled$$HashSettled(Constructor, object, label) {
-      this._superConstructor(Constructor, object, false, label);
-    }
-
-    lib$rsvp$hash$settled$$HashSettled.prototype = lib$rsvp$utils$$o_create(lib$rsvp$promise$hash$$default.prototype);
-    lib$rsvp$hash$settled$$HashSettled.prototype._superConstructor = lib$rsvp$enumerator$$default;
-    lib$rsvp$hash$settled$$HashSettled.prototype._makeResult = lib$rsvp$enumerator$$makeSettledResult;
-
-    lib$rsvp$hash$settled$$HashSettled.prototype._validationError = function() {
-      return new Error('hashSettled must be called with an object');
-    };
-
-    function lib$rsvp$hash$settled$$hashSettled(object, label) {
-      return new lib$rsvp$hash$settled$$HashSettled(lib$rsvp$promise$$default, object, label).promise;
-    }
-    var lib$rsvp$hash$settled$$default = lib$rsvp$hash$settled$$hashSettled;
-    function lib$rsvp$hash$$hash(object, label) {
-      return new lib$rsvp$promise$hash$$default(lib$rsvp$promise$$default, object, label).promise;
-    }
-    var lib$rsvp$hash$$default = lib$rsvp$hash$$hash;
-    function lib$rsvp$map$$map(promises, mapFn, label) {
-      return lib$rsvp$promise$$default.all(promises, label).then(function(values) {
-        if (!lib$rsvp$utils$$isFunction(mapFn)) {
-          throw new TypeError("You must pass a function as map's second argument.");
-        }
-
-        var length = values.length;
-        var results = new Array(length);
-
-        for (var i = 0; i < length; i++) {
-          results[i] = mapFn(values[i]);
-        }
-
-        return lib$rsvp$promise$$default.all(results, label);
-      });
-    }
-    var lib$rsvp$map$$default = lib$rsvp$map$$map;
-
-    function lib$rsvp$node$$Result() {
-      this.value = undefined;
-    }
-
-    var lib$rsvp$node$$ERROR = new lib$rsvp$node$$Result();
-    var lib$rsvp$node$$GET_THEN_ERROR = new lib$rsvp$node$$Result();
-
-    function lib$rsvp$node$$getThen(obj) {
-      try {
-       return obj.then;
-      } catch(error) {
-        lib$rsvp$node$$ERROR.value= error;
-        return lib$rsvp$node$$ERROR;
-      }
-    }
-
-
-    function lib$rsvp$node$$tryApply(f, s, a) {
-      try {
-        f.apply(s, a);
-      } catch(error) {
-        lib$rsvp$node$$ERROR.value = error;
-        return lib$rsvp$node$$ERROR;
-      }
-    }
-
-    function lib$rsvp$node$$makeObject(_, argumentNames) {
-      var obj = {};
-      var name;
-      var i;
-      var length = _.length;
-      var args = new Array(length);
-
-      for (var x = 0; x < length; x++) {
-        args[x] = _[x];
-      }
-
-      for (i = 0; i < argumentNames.length; i++) {
-        name = argumentNames[i];
-        obj[name] = args[i + 1];
-      }
-
-      return obj;
-    }
-
-    function lib$rsvp$node$$arrayResult(_) {
-      var length = _.length;
-      var args = new Array(length - 1);
-
-      for (var i = 1; i < length; i++) {
-        args[i - 1] = _[i];
-      }
-
-      return args;
-    }
-
-    function lib$rsvp$node$$wrapThenable(then, promise) {
-      return {
-        then: function(onFulFillment, onRejection) {
-          return then.call(promise, onFulFillment, onRejection);
-        }
-      };
-    }
-
-    function lib$rsvp$node$$denodeify(nodeFunc, options) {
-      var fn = function() {
-        var self = this;
-        var l = arguments.length;
-        var args = new Array(l + 1);
-        var arg;
-        var promiseInput = false;
-
-        for (var i = 0; i < l; ++i) {
-          arg = arguments[i];
-
-          if (!promiseInput) {
-            // TODO: clean this up
-            promiseInput = lib$rsvp$node$$needsPromiseInput(arg);
-            if (promiseInput === lib$rsvp$node$$GET_THEN_ERROR) {
-              var p = new lib$rsvp$promise$$default(lib$rsvp$$internal$$noop);
-              lib$rsvp$$internal$$reject(p, lib$rsvp$node$$GET_THEN_ERROR.value);
-              return p;
-            } else if (promiseInput && promiseInput !== true) {
-              arg = lib$rsvp$node$$wrapThenable(promiseInput, arg);
-            }
-          }
-          args[i] = arg;
-        }
-
-        var promise = new lib$rsvp$promise$$default(lib$rsvp$$internal$$noop);
-
-        args[l] = function(err, val) {
-          if (err)
-            lib$rsvp$$internal$$reject(promise, err);
-          else if (options === undefined)
-            lib$rsvp$$internal$$resolve(promise, val);
-          else if (options === true)
-            lib$rsvp$$internal$$resolve(promise, lib$rsvp$node$$arrayResult(arguments));
-          else if (lib$rsvp$utils$$isArray(options))
-            lib$rsvp$$internal$$resolve(promise, lib$rsvp$node$$makeObject(arguments, options));
-          else
-            lib$rsvp$$internal$$resolve(promise, val);
-        };
-
-        if (promiseInput) {
-          return lib$rsvp$node$$handlePromiseInput(promise, args, nodeFunc, self);
-        } else {
-          return lib$rsvp$node$$handleValueInput(promise, args, nodeFunc, self);
-        }
-      };
-
-      fn.__proto__ = nodeFunc;
-
-      return fn;
-    }
-
-    var lib$rsvp$node$$default = lib$rsvp$node$$denodeify;
-
-    function lib$rsvp$node$$handleValueInput(promise, args, nodeFunc, self) {
-      var result = lib$rsvp$node$$tryApply(nodeFunc, self, args);
-      if (result === lib$rsvp$node$$ERROR) {
-        lib$rsvp$$internal$$reject(promise, result.value);
-      }
-      return promise;
-    }
-
-    function lib$rsvp$node$$handlePromiseInput(promise, args, nodeFunc, self){
-      return lib$rsvp$promise$$default.all(args).then(function(args){
-        var result = lib$rsvp$node$$tryApply(nodeFunc, self, args);
-        if (result === lib$rsvp$node$$ERROR) {
-          lib$rsvp$$internal$$reject(promise, result.value);
-        }
-        return promise;
-      });
-    }
-
-    function lib$rsvp$node$$needsPromiseInput(arg) {
-      if (arg && typeof arg === 'object') {
-        if (arg.constructor === lib$rsvp$promise$$default) {
-          return true;
-        } else {
-          return lib$rsvp$node$$getThen(arg);
-        }
-      } else {
-        return false;
-      }
-    }
-    var lib$rsvp$platform$$platform;
-
-    /* global self */
-    if (typeof self === 'object') {
-      lib$rsvp$platform$$platform = self;
-
-    /* global global */
-    } else if (typeof global === 'object') {
-      lib$rsvp$platform$$platform = global;
-    } else {
-      throw new Error('no global: `self` or `global` found');
-    }
-
-    var lib$rsvp$platform$$default = lib$rsvp$platform$$platform;
-    function lib$rsvp$race$$race(array, label) {
-      return lib$rsvp$promise$$default.race(array, label);
-    }
-    var lib$rsvp$race$$default = lib$rsvp$race$$race;
-    function lib$rsvp$reject$$reject(reason, label) {
-      return lib$rsvp$promise$$default.reject(reason, label);
-    }
-    var lib$rsvp$reject$$default = lib$rsvp$reject$$reject;
-    function lib$rsvp$resolve$$resolve(value, label) {
-      return lib$rsvp$promise$$default.resolve(value, label);
-    }
-    var lib$rsvp$resolve$$default = lib$rsvp$resolve$$resolve;
-    function lib$rsvp$rethrow$$rethrow(reason) {
-      setTimeout(function() {
-        throw reason;
-      });
-      throw reason;
-    }
-    var lib$rsvp$rethrow$$default = lib$rsvp$rethrow$$rethrow;
-
-    // defaults
-    lib$rsvp$config$$config.async = lib$rsvp$asap$$default;
-    lib$rsvp$config$$config.after = function(cb) {
-      setTimeout(cb, 0);
-    };
-    var lib$rsvp$$cast = lib$rsvp$resolve$$default;
-    function lib$rsvp$$async(callback, arg) {
-      lib$rsvp$config$$config.async(callback, arg);
-    }
-
-    function lib$rsvp$$on() {
-      lib$rsvp$config$$config['on'].apply(lib$rsvp$config$$config, arguments);
-    }
-
-    function lib$rsvp$$off() {
-      lib$rsvp$config$$config['off'].apply(lib$rsvp$config$$config, arguments);
-    }
-
-    // Set up instrumentation through `window.__PROMISE_INTRUMENTATION__`
-    if (typeof window !== 'undefined' && typeof window['__PROMISE_INSTRUMENTATION__'] === 'object') {
-      var lib$rsvp$$callbacks = window['__PROMISE_INSTRUMENTATION__'];
-      lib$rsvp$config$$configure('instrument', true);
-      for (var lib$rsvp$$eventName in lib$rsvp$$callbacks) {
-        if (lib$rsvp$$callbacks.hasOwnProperty(lib$rsvp$$eventName)) {
-          lib$rsvp$$on(lib$rsvp$$eventName, lib$rsvp$$callbacks[lib$rsvp$$eventName]);
-        }
-      }
-    }
-
-    var lib$rsvp$umd$$RSVP = {
-      'race': lib$rsvp$race$$default,
-      'Promise': lib$rsvp$promise$$default,
-      'allSettled': lib$rsvp$all$settled$$default,
-      'hash': lib$rsvp$hash$$default,
-      'hashSettled': lib$rsvp$hash$settled$$default,
-      'denodeify': lib$rsvp$node$$default,
-      'on': lib$rsvp$$on,
-      'off': lib$rsvp$$off,
-      'map': lib$rsvp$map$$default,
-      'filter': lib$rsvp$filter$$default,
-      'resolve': lib$rsvp$resolve$$default,
-      'reject': lib$rsvp$reject$$default,
-      'all': lib$rsvp$all$$default,
-      'rethrow': lib$rsvp$rethrow$$default,
-      'defer': lib$rsvp$defer$$default,
-      'EventTarget': lib$rsvp$events$$default,
-      'configure': lib$rsvp$config$$configure,
-      'async': lib$rsvp$$async
-    };
-
-    /* global define:true module:true window: true */
-    if (typeof define === 'function' && define['amd']) {
-      define(function() { return lib$rsvp$umd$$RSVP; });
-    } else if (typeof module !== 'undefined' && module['exports']) {
-      module['exports'] = lib$rsvp$umd$$RSVP;
-    } else if (typeof lib$rsvp$platform$$default !== 'undefined') {
-      lib$rsvp$platform$$default['RSVP'] = lib$rsvp$umd$$RSVP;
-    }
-}).call(this);
-
-
-}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":319}],342:[function(require,module,exports){
+},{"_process":319,"buffer":120}],340:[function(require,module,exports){
 "use strict";function q(a){throw a;}var r=void 0,s=!1;var sjcl={cipher:{},hash:{},keyexchange:{},mode:{},misc:{},codec:{},exception:{corrupt:function(a){this.toString=function(){return"CORRUPT: "+this.message};this.message=a},invalid:function(a){this.toString=function(){return"INVALID: "+this.message};this.message=a},bug:function(a){this.toString=function(){return"BUG: "+this.message};this.message=a},notReady:function(a){this.toString=function(){return"NOT READY: "+this.message};this.message=a}}};
 "undefined"!==typeof module&&module.exports&&(module.exports=sjcl);"function"===typeof define&&define([],function(){return sjcl});
 sjcl.cipher.aes=function(a){this.n[0][0][0]||this.H();var b,c,d,e,f=this.n[0][4],g=this.n[1];b=a.length;var h=1;4!==b&&(6!==b&&8!==b)&&q(new sjcl.exception.invalid("invalid aes key size"));this.b=[d=a.slice(0),e=[]];for(a=b;a<4*b+28;a++){c=d[a-1];if(0===a%b||8===b&&4===a%b)c=f[c>>>24]<<24^f[c>>16&255]<<16^f[c>>8&255]<<8^f[c&255],0===a%b&&(c=c<<8^c>>>24^h<<24,h=h<<1^283*(h>>7));d[a]=d[a-b]^c}for(b=0;a;b++,a--)c=d[b&3?a:a-4],e[b]=4>=a||4>b?c:g[0][f[c>>>24]]^g[1][f[c>>16&255]]^g[2][f[c>>8&255]]^g[3][f[c&
@@ -41706,7 +37428,7 @@ b.mode&&sjcl.arrayBuffer&&sjcl.arrayBuffer.ccm&&b.ct instanceof ArrayBuffer?sjcl
 q(new sjcl.exception.invalid("json decode: this isn't json!")),null!=d[3]?b[d[2]]=parseInt(d[3],10):null!=d[4]?b[d[2]]=d[2].match(/^(ct|adata|salt|iv)$/)?sjcl.codec.base64.toBits(d[4]):unescape(d[4]):null!=d[5]&&(b[d[2]]="true"===d[5]);return b},h:function(a,b,c){a===r&&(a={});if(b===r)return a;for(var d in b)b.hasOwnProperty(d)&&(c&&(a[d]!==r&&a[d]!==b[d])&&q(new sjcl.exception.invalid("required parameter overridden")),a[d]=b[d]);return a},ja:function(a,b){var c={},d;for(d in a)a.hasOwnProperty(d)&&
 a[d]!==b[d]&&(c[d]=a[d]);return c},ia:function(a,b){var c={},d;for(d=0;d<b.length;d++)a[b[d]]!==r&&(c[b[d]]=a[b[d]]);return c}};sjcl.encrypt=sjcl.json.encrypt;sjcl.decrypt=sjcl.json.decrypt;sjcl.misc.ga={};sjcl.misc.cachedPbkdf2=function(a,b){var c=sjcl.misc.ga,d;b=b||{};d=b.iter||1E3;c=c[a]=c[a]||{};d=c[d]=c[d]||{firstSalt:b.salt&&b.salt.length?b.salt.slice(0):sjcl.random.randomWords(2,0)};c=b.salt===r?d.firstSalt:b.salt;d[c]=d[c]||sjcl.misc.pbkdf2(a,c,b.iter);return{key:d[c].slice(0),salt:c.slice(0)}};
 
-},{"crypto":124}],343:[function(require,module,exports){
+},{"crypto":124}],341:[function(require,module,exports){
 (function (root) {
    "use strict";
 
@@ -42150,7 +37872,7 @@ UChar.udata={
    }
 }(this));
 
-},{}],344:[function(require,module,exports){
+},{}],342:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -42195,7 +37917,7 @@ function ws(uri, protocols, opts) {
 
 if (WebSocket) ws.prototype = WebSocket.prototype;
 
-},{}],345:[function(require,module,exports){
+},{}],343:[function(require,module,exports){
 
 /***** xregexp.js *****/
 
@@ -44505,7 +40227,7 @@ XRegExp = XRegExp || (function (undef) {
 }(XRegExp));
 
 
-},{}],346:[function(require,module,exports){
+},{}],344:[function(require,module,exports){
 'use strict';
 
 module.exports = Address;
@@ -44727,12 +40449,11 @@ Address.prototype.persist = function(){
   return this;
 };
 
-},{"./helpers":353,"./shared":358,"./wallet":365,"bitcoinjs-lib":58,"bs58":67}],347:[function(require,module,exports){
+},{"./helpers":351,"./shared":356,"./wallet":364,"bitcoinjs-lib":58,"bs58":67}],345:[function(require,module,exports){
 'use strict';
 
 module.exports = new API();
 ////////////////////////////////////////////////////////////////////////////////
-var Q           = require('q')
 var assert      = require('assert');
 var Helpers     = require('./helpers');
 var WalletStore = require('./wallet-store');
@@ -44776,7 +40497,7 @@ API.prototype.request = function(action, method, data, withCred) {
   if (action === 'POST') options.body = body;
 
   var handleNetworkError = function () {
-    return Q.reject({ initial_error: 'Connectivity error, failed to send network request' });
+    return Promise.reject({ initial_error: 'Connectivity error, failed to send network request' });
   };
 
   var checkStatus = function (response) {
@@ -44793,7 +40514,7 @@ API.prototype.request = function(action, method, data, withCred) {
 
       }
     } else {
-      return response.text().then(Q.reject);
+      return response.text().then(Promise.reject.bind(Promise));
     }
   };
 
@@ -44996,7 +40717,7 @@ API.prototype.pushTx = function (tx, note){
 //   }
 // };
 
-},{"./helpers":353,"./wallet":365,"./wallet-store":362,"assert":118,"buffer":120,"crypto-js":91,"q":339}],348:[function(require,module,exports){
+},{"./helpers":351,"./wallet":364,"./wallet-store":361,"assert":118,"buffer":120,"crypto-js":91}],346:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -45316,7 +41037,7 @@ module.exports = {
   disableAllNotifications: disableAllNotifications
 };
 
-},{"./api":347,"./wallet-store.js":362,"./wallet.js":365,"assert":118}],349:[function(require,module,exports){
+},{"./api":345,"./wallet-store.js":361,"./wallet.js":364,"assert":118}],347:[function(require,module,exports){
 
 var WebSocket = require('ws');
 
@@ -45374,7 +41095,7 @@ BlockchainSocket.prototype.send = function (message) {
 
 module.exports = BlockchainSocket;
 
-},{"ws":344}],350:[function(require,module,exports){
+},{"ws":342}],348:[function(require,module,exports){
 'use strict';
 
 module.exports = Wallet;
@@ -45388,8 +41109,6 @@ var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
 var BIP39 = require('bip39');
-var RSVP = require('rsvp');
-var q = require('q');
 
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
@@ -45837,53 +41556,61 @@ Wallet.prototype.toJSON = function(){
   return wallet;
 };
 
-Wallet.prototype.importLegacyAddress = function(addr, label, secPass, bipPass){
-  var defer = RSVP.defer();
-
-  var importAddress = (function(key) {
+Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) {
+  var importAddress = function (key) {
     var ad = Address.import(key, label);
-    if (this.containsLegacyAddress(ad)) { defer.reject('presentInWallet'); return;};
+    if (this.containsLegacyAddress(ad)) {
+      throw 'presentInWallet';
+    }
     if (this.isDoubleEncrypted) {
-      assert(secPass, "Error: second password needed");
-      var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, "enc");
+      if (!secPass) {
+        throw 'Error: second password needed';
+      }
+      var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, 'enc');
       ad.encrypt(cipher).persist();
-    };
+    }
     this._addresses[ad.address] = ad;
-    MyWallet.ws.send('{"op":"addr_sub", "addr":"'+ad.address+'"}');
-    defer.resolve(ad);
+    MyWallet.ws.send('{"op":"addr_sub", "addr":"' + ad.address + '"}');
     MyWallet.syncWallet();
     this.getHistory();
-  }).bind(this)
+    return ad;
+  }.bind(this);
 
-  // if read only address
-  if (Helpers.isBitcoinAddress(addr)) { importAddress(addr); };
+  var attemptImport = function (resolve, reject) {
+    // Import read-only address
+    if (Helpers.isBitcoinAddress(addr)) {
+      return resolve(importAddress(addr));
+    }
 
-  // otherwise
-  var format = MyWallet.detectPrivateKeyFormat(addr);
-  switch (true) {
-    case format === 'bip38':
-      if (bipPass === '') defer.reject('needsBip38');
-      else ImportExport.parseBIP38toECKey(
+    // Import private key
+    var format    = MyWallet.detectPrivateKeyFormat(addr)
+      , okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
+
+    if (format === 'bip38') {
+      if (bipPass == undefined || bipPass === '') {
+        return reject('needsBip38');
+      }
+      ImportExport.parseBIP38toECKey(
         addr, bipPass,
-        function (key) { importAddress(key); },
-        function () { defer.reject('wrongBipPass'); },
-        function () { defer.reject('importError'); }
+        function (key) { resolve(importAddress(key)); },
+        function () { reject('wrongBipPass'); },
+        function () { reject('importError'); }
       );
-      break;
-    case ["base58","base64","hex","mini","sipa","compsipa"].some(function(e) {return e === format;}):
+    }
+    else if (okFormats.indexOf(format) > -1) {
       var k = MyWallet.privateKeyStringToKey(addr, format);
-      importAddress(k);
-      break;
-    default:
-      defer.reject('importError');
-      break;
+      resolve(importAddress(k));
+    }
+    else {
+      reject('importError');
+    }
   };
 
-  return defer.promise;
+  return new Promise(attemptImport);
 };
 
 Wallet.prototype.containsLegacyAddress = function(address) {
-  if (address instanceof Address) address = address.address;
+  if(Helpers.isInstanceOf(address, Address)) address = address.address;
   return this._addresses.hasOwnProperty(address);
 }
 
@@ -46028,7 +41755,7 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, started
   };
 
   var saveAndReturn = function (){
-    return q.Promise(MyWallet.syncWallet);
+    return new Promise(MyWallet.syncWallet);
   };
 
   // it returns a promise of the newHDWallet
@@ -46205,13 +41932,12 @@ Wallet.prototype._getPrivateKey = function(accountIndex, path, secondPassword) {
   return kr.privateKeyFromPath(path).toWIF();
 };
 
-},{"./address":346,"./api":347,"./blockchain-settings-api":348,"./hd-account":351,"./hd-wallet":352,"./helpers":353,"./import-export":354,"./keyring":356,"./shared":358,"./wallet":365,"./wallet-crypto":360,"./wallet-store":362,"./wallet-transaction":364,"assert":118,"bigi":4,"bip39":6,"bitcoinjs-lib":58,"bs58":67,"buffer":120,"q":339,"rsvp":341}],351:[function(require,module,exports){
+},{"./address":344,"./api":345,"./blockchain-settings-api":346,"./hd-account":349,"./hd-wallet":350,"./helpers":351,"./import-export":352,"./keyring":354,"./shared":356,"./wallet":364,"./wallet-crypto":358,"./wallet-store":361,"./wallet-transaction":363,"assert":118,"bigi":4,"bip39":6,"bitcoinjs-lib":58,"bs58":67,"buffer":120}],349:[function(require,module,exports){
 'use strict';
 
 module.exports = HDAccount;
 ////////////////////////////////////////////////////////////////////////////////
 var Bitcoin = require('bitcoinjs-lib');
-var Q       = require('q');
 var assert  = require('assert');
 var Helpers = require('./helpers');
 var WalletCrypto = require('./wallet-crypto');
@@ -46493,25 +42219,20 @@ HDAccount.prototype.incrementReceiveIndexIfLast = function(index) {
 ////////////////////////////////////////////////////////////////////////////////
 // address labels
 HDAccount.prototype.setLabelForReceivingAddress = function(index, label) {
-  assert(Helpers.isNumber(index), "Error: address index must be a number");
-
-  var defer = Q.defer();
+  assert(Helpers.isNumber(index), 'Error: address index must be a number');
 
   if(!Helpers.isValidLabel(label)) {
-    defer.reject("NOT_ALPHANUMERIC");
+    return Promise.reject('NOT_ALPHANUMERIC');
     // Error: address label must be alphanumeric
   } else if (index - this.lastUsedReceiveIndex >= 20) {
     // Exceeds BIP 44 unused address gap limit
-    defer.reject("GAP");
+    return Promise.reject('GAP');
   } else {
     this._address_labels[index] = label;
     this.incrementReceiveIndexIfLast(index);
     MyWallet.syncWallet();
-
-    defer.resolve();
+    return Promise.resolve();
   }
-
-  return defer.promise;
 };
 
 HDAccount.prototype.removeLabelForReceivingAddress = function(index) {
@@ -46554,7 +42275,7 @@ HDAccount.prototype.persist = function(){
   return this;
 };
 
-},{"./helpers":353,"./keyring":356,"./wallet":365,"./wallet-crypto":360,"assert":118,"bitcoinjs-lib":58,"q":339}],352:[function(require,module,exports){
+},{"./helpers":351,"./keyring":354,"./wallet":364,"./wallet-crypto":358,"assert":118,"bitcoinjs-lib":58}],350:[function(require,module,exports){
 'use strict';
 
 module.exports = HDWallet;
@@ -46861,7 +42582,7 @@ HDWallet.prototype.isValidAccountIndex = function(index){
   return Helpers.isNumber(index) && index >= 0 && index < this._accounts.length;
 };
 
-},{"./hd-account":351,"./helpers":353,"./wallet":365,"./wallet-crypto":360,"assert":118,"bip39":6,"bitcoinjs-lib":58}],353:[function(require,module,exports){
+},{"./hd-account":349,"./helpers":351,"./wallet":364,"./wallet-crypto":358,"assert":118,"bip39":6,"bitcoinjs-lib":58}],351:[function(require,module,exports){
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -46873,6 +42594,9 @@ Helpers.isString = function (str){
 };
 Helpers.isKey = function (bitcoinKey){
   return bitcoinKey instanceof Bitcoin.ECKey;
+};
+Helpers.isInstanceOf = function(object, theClass) {
+  return object instanceof theClass;
 };
 Helpers.isBitcoinAddress = function(candidate) {
   try {
@@ -47120,7 +42844,7 @@ Helpers.scorePassword = function (password){
 
 module.exports = Helpers;
 
-},{"bitcoinjs-lib":58}],354:[function(require,module,exports){
+},{"bitcoinjs-lib":58}],352:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -47589,7 +43313,7 @@ var ImportExport = new function() {
 module.exports = ImportExport;
 
 }).call(this,require("buffer").Buffer)
-},{"assert":118,"bigi":4,"bitcoinjs-lib":58,"bs58":67,"buffer":120,"crypto-js":91,"unorm":343}],355:[function(require,module,exports){
+},{"assert":118,"bigi":4,"bitcoinjs-lib":58,"bs58":67,"buffer":120,"crypto-js":91,"unorm":341}],353:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyChain;
@@ -47645,7 +43369,7 @@ KeyChain.prototype.getPrivateKey = function(index) {
   return key ? key : null;
 };
 
-},{"./helpers":353,"assert":118,"bitcoinjs-lib":58}],356:[function(require,module,exports){
+},{"./helpers":351,"assert":118,"bitcoinjs-lib":58}],354:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyRing;
@@ -47709,12 +43433,11 @@ KeyRing.prototype.toJSON = function (){
   return cacheJSON;
 };
 
-},{"./helpers":353,"./keychain":355,"assert":118,"bitcoinjs-lib":58}],357:[function(require,module,exports){
+},{"./helpers":351,"./keychain":353,"assert":118,"bitcoinjs-lib":58}],355:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
 var Bitcoin       = require('bitcoinjs-lib');
-var q             = require('q');
 var MyWallet      = require('./wallet');
 var WalletCrypto  = require('./wallet-crypto');
 var Transaction   = require('./transaction');
@@ -47818,14 +43541,14 @@ Payment.prototype.publish = function() {
 ////////////////////////////////////////////////////////////////////////////////
 Payment.return = function(payment) {
   var p = payment ? payment : {}
-  return q(p);
+  return Promise.resolve(p);
 };
 
 // myFunction :: payment -> ()
 Payment.sideEffect = function(myFunction) {
   return function(payment) {
     myFunction(payment);
-    return q(payment);
+    return Promise.resolve(payment);
   };
 };
 
@@ -47860,14 +43583,14 @@ Payment.to = function(destinations) {
   } // fi switch
   return function(payment) {
     payment.to = formatDest;
-    return q(payment);
+    return Promise.resolve(payment);
   };
 };
 
 Payment.listener = function(listener) {
   return function(payment) {
     payment.listener = listener
-    return q(payment);
+    return Promise.resolve(payment);
   };
 };
 
@@ -47875,7 +43598,7 @@ Payment.sweep = function(amount) {
   return function(payment) {
     payment.amounts = payment.sweepAmount ? [payment.sweepAmount] : undefined;
     payment.forcedFee = payment.sweepFee;
-    return q(payment);
+    return Promise.resolve(payment);
   };
 };
 
@@ -47883,7 +43606,7 @@ Payment.note = function(note) {
   var publicNote = Helpers.isString(note) ? note : null;
   return function(payment) {
     payment.note = publicNote;
-    return q(payment);
+    return Promise.resolve(payment);
   };
 };
 
@@ -47891,7 +43614,7 @@ Payment.fee = function(amount) {
   var forcedFee = Helpers.isNumber(amount) ? amount : null;
   return function(payment) {
     payment.forcedFee = forcedFee;
-    return q(payment);
+    return Promise.resolve(payment);
   };
 };
 
@@ -47913,7 +43636,7 @@ Payment.amount = function(amounts) {
   } // fi switch
   return function(payment) {
     payment.amounts = formatAmo;
-    return q(payment);
+    return Promise.resolve(payment);
   };
 };
 
@@ -47970,31 +43693,29 @@ Payment.from = function(origin) {
       console.log("No origin set.")
   } // fi switch
   return function(payment) {
-    var defer = q.defer();
     payment.from           = addresses;
     payment.change         = change;
     payment.wifKeys        = wifs;
     payment.fromAccountIdx = fromAccId;
 
-    getUnspentCoins(addresses).then(
-      function(coins) {
+    return getUnspentCoins(addresses).then(
+      function (coins) {
         var sweep = computeSuggestedSweep(coins);
         payment.sweepAmount = sweep[0];
         payment.sweepFee    = sweep[1];
         payment.coins       = coins;
-        defer.resolve(payment);
+        return payment;
       }
     ).catch(
       // this could fail for network issues or no-balance
-      function(error) {
+      function (error) {
         console.log(error);
         payment.sweepAmount = 0;
         payment.sweepFee    = 0;
         payment.coins       = [];
-        defer.resolve(payment);
+        return payment;
       }
     );
-    return defer.promise;
   };
 };
 
@@ -48009,25 +43730,23 @@ Payment.build = function() {
     } catch (err) {
       console.log("Error Building: " + err);
     }
-    return q(payment);
+    return Promise.resolve(payment);
   };
 };
 
 Payment.buildbeta = function() {
   // I should check for all the payment needed fields and reject with the wrong payment
   // then the frontend can show the error and recreate the payment with the same state
-  return function(payment) {
-    var defer = q.defer();
+  return function (payment) {
     try {
       payment.transaction = new Transaction(payment.coins, payment.to,
                                             payment.amounts, payment.forcedFee,
                                             payment.change, payment.listener);
       payment.fee = payment.transaction.fee;
-      defer.resolve(payment);
+      return Promise.resolve(payment);
     } catch (e) {
-      defer.reject({"error": e, "payment": payment});
+      return Promise.reject({ error: e, payment: payment });
     }
-    return defer.promise;
   };
 };
 
@@ -48042,21 +43761,21 @@ Payment.sign = function(password) {
     payment.transaction.addPrivateKeys(getPrivateKeys(password, payment));
     payment.transaction.sortBIP69();
     payment.transaction = payment.transaction.sign();
-    return q(payment);
+    return Promise.resolve(payment);
   };
 };
 
 Payment.publish = function() {
-  return function(payment) {
-    var defer = q.defer();
+  return function (payment) {
 
-    var success = function(tx_hash) {
+    var success = function (tx_hash) {
       console.log("published");
       payment.txid = tx_hash;
-      defer.resolve(payment);
+      return payment;
     };
-    var error = function(e) {
-      defer.reject(e.message || e.responseText);
+
+    var handleError = function (e) {
+      throw e.message || e.responseText;
     };
 
     var getValue = function(coin) {return coin.value;};
@@ -48065,8 +43784,8 @@ Payment.publish = function() {
     if(anySmall && payment.note !== undefined && payment.note !== null)
       {throw "There is an output too small to publish a note";}
 
-    API.pushTx(payment.transaction, payment.note).then(success).catch(error);
-    return defer.promise;
+    return API.pushTx(payment.transaction, payment.note)
+      .then(success).catch(handleError);
   };
 };
 ////////////////////////////////////////////////////////////////////////////////
@@ -48221,7 +43940,7 @@ function computeSuggestedSweep(coins){
 //   .catch(error)
 
 }).call(this,require("buffer").Buffer)
-},{"./api":347,"./helpers":353,"./keyring":356,"./transaction":359,"./wallet":365,"./wallet-crypto":360,"bitcoinjs-lib":58,"buffer":120,"q":339}],358:[function(require,module,exports){
+},{"./api":345,"./helpers":351,"./keyring":354,"./transaction":357,"./wallet":364,"./wallet-crypto":358,"bitcoinjs-lib":58,"buffer":120}],356:[function(require,module,exports){
 var satoshi = 100000000; //One satoshi
 var symbol_btc = {code : "BTC", symbol : "BTC", name : "Bitcoin",  conversion : satoshi, symbolAppearsAfter : true, local : false}; //Default BTC Currency Symbol object
 var symbol_local = {"conversion":0,"symbol":"$","name":"U.S. dollar","symbolAppearsAfter":false,"local":true,"code":"USD"}; //Users local currency object
@@ -48420,7 +44139,7 @@ function convert(x, conversion) {
   return (x / conversion).toFixed(2).toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
 }
 
-},{}],359:[function(require,module,exports){
+},{}],357:[function(require,module,exports){
 'use strict';
 
 var assert      = require('assert');
@@ -48617,7 +44336,7 @@ function sortUnspentOutputs(unspentOutputs) {
 
 module.exports = Transaction;
 
-},{"./helpers":353,"./wallet":365,"assert":118,"bitcoinjs-lib":58,"buffer":120,"randombytes":340}],360:[function(require,module,exports){
+},{"./helpers":351,"./wallet":364,"assert":118,"bitcoinjs-lib":58,"buffer":120,"randombytes":339}],358:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -48920,7 +44639,131 @@ module.exports = {
   decryptAes: decryptAes
 };
 
-},{"assert":118,"crypto-js":91,"sjcl":342}],361:[function(require,module,exports){
+},{"assert":118,"crypto-js":91,"sjcl":340}],359:[function(require,module,exports){
+'use strict';
+
+var API = require('./api');
+
+function generateUUIDs(count) {
+
+  var data = {
+    format: 'json',
+    n: count,
+    api_code: API.API_CODE
+  };
+
+  var extractUUIDs = function (data) {
+    if (!data.uuids || data.uuids.length != count)
+      throw 'Could not generate uuids';
+    return data.uuids;
+  };
+
+  return API.retry(API.request.bind(API, 'GET', 'uuid-generator', data))
+    .then(extractUUIDs);
+};
+
+/**
+ * Fetch information on wallet identfier with resend code set to true
+ * @param {string} user_guid User GUID.
+ */
+// used in the frontend
+function resendTwoFactorSms(user_guid) {
+
+  var data = {
+    format : 'json',
+    resend_code : true,
+    ct : Date.now(),
+    api_code : API.API_CODE
+  };
+
+  var handleError = function (e) {
+    var errMsg = e.responseJSON && e.responseJSON.initial_error ?
+      e.responseJSON.initial_error : e || 'Could not resend two factor sms';
+    throw errMsg;
+  };
+
+  return API.request('GET', 'wallet/' + user_guid, data, true, false)
+    .catch(handleError);
+};
+
+/**
+ * Trigger an email with the users wallet guid(s)
+ * @param {string} user_email Registered mail address.
+ * @param {string} captcha Spam protection
+ */
+// used in the frontend
+function recoverGuid(user_email, captcha) {
+
+  var data = {
+    method: 'recover-wallet',
+    email : user_email,
+    captcha: captcha,
+    ct : Date.now(),
+    api_code : API.API_CODE
+  };
+
+  var handleResponse = function (obj) {
+    if (obj.success) return obj.message;
+    else throw obj.message;
+  };
+
+  var handleError = function (e) {
+    var errMsg = e.responseJSON && e.responseJSON.initial_error ?
+      e.responseJSON.initial_error : e || 'Could not send recovery email';
+    throw errMsg;
+  };
+
+  return API.request('POST', 'wallet', data, true)
+    .then(handleResponse).catch(handleError);
+};
+
+/**
+ * Trigger the 2FA reset process
+ * @param {string} user_guid User GUID.
+ * @param {string} user_email Registered email address.
+ * @param {string} user_new_email Optional new email address.
+ * @param {string} secret
+ * @param {string} message
+ * @param {string} captcha Spam protection
+ */
+// used in the frontend
+function requestTwoFactorReset(
+  user_guid,
+  user_email,
+  user_new_email,
+  secret,
+  message,
+  captcha) {
+
+  var data = {
+    method: 'reset-two-factor-form',
+    guid: user_guid,
+    email: user_email,
+    contact_email: user_new_email,
+    secret_phrase: secret,
+    message: message,
+    kaptcha: captcha,
+    ct : Date.now(),
+    api_code : API.API_CODE
+  };
+
+  var handleResponse = function (obj) {
+    if (obj.success) return obj.message;
+    else throw obj.message;
+  };
+
+  return API.request('POST', 'wallet', data, true)
+    .then(handleResponse);
+};
+
+module.exports = {
+  generateUUIDs: generateUUIDs,
+  resendTwoFactorSms: resendTwoFactorSms,
+  recoverGuid: recoverGuid,
+  requestTwoFactorReset: requestTwoFactorReset
+};
+
+},{"./api":345}],360:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -48929,9 +44772,9 @@ var CryptoJS = require('crypto-js');
 var MyWallet = require('./wallet');
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
-var API = require('./api');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
+var WalletNetwork = require('./wallet-network')
 
 // Save the javascript wallet to the remote server
 function insertWallet(guid, sharedKey, password, extra, successcallback, errorcallback, decryptWalletProgress) {
@@ -48996,34 +44839,10 @@ function insertWallet(guid, sharedKey, password, extra, successcallback, errorca
   }
 }
 
-function generateUUIDs(n, success, error) {
-
-  var succ = function(data) {
-    if (data.uuids && data.uuids.length == n) {
-      success(data.uuids);
-    } else {
-      error('Unknown Error');
-    }
-  };
-  var err = function(data) {
-    error(data);
-  };
-
-  var data = {
-      format: 'json'
-    , n: n
-    , api_code : API.API_CODE
-  };
-
-  API.retry(API.request.bind(API, "GET", "uuid-generator", data))
-    .then(succ)
-    .catch(err);
-};
-
 function generateNewWallet(password, email, firstAccountName, success, error, isHD, generateUUIDProgress, decryptWalletProgress) {
   isHD = Helpers.isBoolean(isHD) ? isHD : true;
   generateUUIDProgress && generateUUIDProgress();
-  this.generateUUIDs(2, function(uuids) {
+  WalletNetwork.generateUUIDs(2).then(function(uuids) {
     var guid = uuids[0];
     var sharedKey = uuids[1];
 
@@ -49052,15 +44871,14 @@ function generateNewWallet(password, email, firstAccountName, success, error, is
 
     Wallet.new(guid, sharedKey, firstAccountName, saveWallet, isHD);
 
-  }, error);
+  }).catch(error);
 };
 
 module.exports = {
-  generateUUIDs: generateUUIDs,
   generateNewWallet: generateNewWallet
 };
 
-},{"./api":347,"./blockchain-wallet":350,"./helpers":353,"./wallet":365,"./wallet-crypto":360,"./wallet-store":362,"assert":118,"crypto-js":91}],362:[function(require,module,exports){
+},{"./blockchain-wallet":348,"./helpers":351,"./wallet":364,"./wallet-crypto":358,"./wallet-network":359,"./wallet-store":361,"assert":118,"crypto-js":91}],361:[function(require,module,exports){
 'use strict';
 
 var CryptoJS = require('crypto-js');
@@ -49344,90 +45162,72 @@ var WalletStore = (function() {
 
 module.exports = WalletStore;
 
-},{"./wallet":365,"./wallet-crypto":360,"crypto-js":91}],363:[function(require,module,exports){
+},{"./wallet":364,"./wallet-crypto":358,"crypto-js":91}],362:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
 
 var API = require('./api');
 var Helpers = require('./helpers');
-var Q = require('q')
 
 function postTokenEndpoint(method, token, extraParams) {
   assert(token, "Token required");
   assert(extraParams, "Extra params dictionary required");
 
-  var defer = Q.defer();
+  var handleResponse = function (res) {
+    if (res && res.success !== undefined)
+      return res.success ? res : Promise.reject(res);
+    else
+      return Promise.reject({ error: 'TOKEN_ENDPOINT_UNEXPECTED_RESPONSE' });
+  };
 
-  var success = function(res) {
-    if(res && res.success !== undefined) {
-      if(res.success) {
-        defer.resolve(res);
-      } else {
-        defer.reject(res);
-      }
-    } else {
-      defer.reject({error: 'TOKEN_ENDPOINT_UNEXPECTED_RESPONSE'});
-    }
-  }
+  var params = {
+    token: token,
+    method : method,
+    api_code : API.API_CODE
+  };
 
-  var error = function (err) {
-    defer.reject(err);
-  }
-
-  var params = { token: token, method : method, api_code : API.API_CODE};
-
-  for(var k in extraParams) {
+  for (var k in extraParams) {
     params[k] = extraParams[k];
   }
 
-  API.request("POST", 'wallet', params, false).then(success).catch(error);
-
-  return defer.promise;
+  return API.request('POST', 'wallet', params, false)
+    .then(handleResponse);
 }
 
 function verifyEmail(token) {
-  return this.postTokenEndpoint('verify-email-token', token, {})
+  return this.postTokenEndpoint('verify-email-token', token, {});
 }
 
 function unsubscribe(token) {
-  return this.postTokenEndpoint('unsubscribe', token, {})
+  return this.postTokenEndpoint('unsubscribe', token, {});
 }
 
 function authorizeApprove(token, differentBrowserCallback, differentBrowserApproved) {
   assert(Helpers.isBoolean(differentBrowserApproved) || differentBrowserApproved == null, "differentBrowserApproved must be null, false or true");
 
-  var defer = Q.defer();
-
-  var success = function(res) {
-    defer.resolve(res);
-  }
-
-  var error = function (res) {
+  var handleError = function (res) {
     if (res.success === null) {
       differentBrowserCallback(res);
+      return res;
     } else if (res.success === false && res["request-denied"]) {
-      defer.resolve(res);
+      return res;
     } else {
-      defer.reject(res);
+      return Promise.reject(res);
     }
-  }
+  };
 
   var extraParams = {}
-
-  if(differentBrowserApproved !== null) {
+  if (differentBrowserApproved !== null) {
     extraParams.confirm_approval = differentBrowserApproved;
   }
 
-  this.postTokenEndpoint('authorize-approve', token, extraParams)
-    .then(success)
-    .catch(error)
-
-  return defer.promise;
+  return this.postTokenEndpoint('authorize-approve', token, extraParams)
+    .catch(handleError);
 }
 
 function resetTwoFactor(token) {
-  return this.postTokenEndpoint('reset-two-factor-token', token, {})
+  return this.postTokenEndpoint('reset-two-factor-token', token, {});
 }
 
 module.exports = {
@@ -49438,7 +45238,7 @@ module.exports = {
   postTokenEndpoint: postTokenEndpoint // For tests
 };
 
-},{"./api":347,"./helpers":353,"assert":118,"q":339}],364:[function(require,module,exports){
+},{"./api":345,"./helpers":351,"assert":118}],363:[function(require,module,exports){
 'use strict';
 
 module.exports = Tx;
@@ -49640,7 +45440,7 @@ Tx.factory = function(o){
   else { return o; };
 };
 
-},{"./helpers":353,"./wallet":365,"./wallet-store":362}],365:[function(require,module,exports){
+},{"./helpers":351,"./wallet":364,"./wallet-store":361}],364:[function(require,module,exports){
 'use strict';
 
 var MyWallet = module.exports = {};
@@ -49654,7 +45454,6 @@ var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
 var BIP39 = require('bip39');
-var Q = require('q')
 
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
@@ -50432,117 +46231,6 @@ MyWallet.makePairingCode = function(success, error) {
   }
 };
 
-/**
- * Fetch information on wallet identfier with resend code set to true
- * @param {string} user_guid User GUID.
- * @param {function()} success Success callback function.
- * @param {function()} error Error callback function.
- */
-// used in the frontend
-MyWallet.resendTwoFactorSms = function(user_guid, success, error) {
-
-  var data = {
-    format : 'json',
-    resend_code : true,
-    ct : (new Date()).getTime(),
-    api_code : API.API_CODE
-  }
-  var s = function(obj) { success(); }
-  var e = function(e) {
-    if(e.responseJSON && e.responseJSON.initial_error) {
-      error(e.responseJSON.initial_error);
-    } else {
-      error();
-    }
-  }
-  API.request("GET", 'wallet/'+user_guid, data, true, false).then(s).catch(e);
-};
-
-/**
- * Trigger an email with the users wallet guid(s)
- * @param {string} user_email Registered mail address.
- * @param {string} captcha Spam protection
- * @param {function()} success Success callback function.
- * @param {function()} error Error callback function.
- */
-// used in the frontend
-MyWallet.recoverGuid = function(user_email, captcha) {
-  var defer = Q.defer();
-
-  var data = {
-    method: 'recover-wallet',
-    email : user_email,
-    captcha: captcha,
-    ct : (new Date()).getTime(),
-    api_code : API.API_CODE
-  }
-  var s = function(obj) {
-    if(obj.success) {
-      defer.resolve(obj.message);
-    } else {
-      defer.reject(obj.message);
-    }
-  }
-  var e = function(e) {
-    if(e.responseJSON && e.responseJSON.initial_error) {
-      defer.reject(e.responseJSON.initial_error);
-    } else {
-      defer.reject();
-    }
-  }
-  API.request("POST", 'wallet', data, true).then(s).catch(e);
-
-  return defer.promise;
-};
-
-/**
- * Trigger the 2FA reset process
- * @param {string} user_guid User GUID.
- * @param {string} user_email Registered email address.
- * @param {string} user_new_email Optional new email address.
- * @param {string} secret
- * @param {string} message
- * @param {string} captcha Spam protection
- * @param {function()} success Success callback function.
- * @param {function()} error Error callback function.
- */
-// used in the frontend
-MyWallet.requestTwoFactorReset = function(
-  user_guid,
-  user_email,
-  user_new_email,
-  secret,
-  message,
-  captcha) {
-
-  var defer = Q.defer();
-
-  var data = {
-    method: 'reset-two-factor-form',
-    guid: user_guid,
-    email: user_email,
-    contact_email: user_new_email,
-    secret_phrase: secret,
-    message: message,
-    kaptcha: captcha,
-    ct : (new Date()).getTime(),
-    api_code : API.API_CODE
-  }
-  var s = function(obj) {
-    if(obj.success) {
-      defer.resolve(obj.message);
-    } else {
-      defer.reject(obj.message);
-    }
-  }
-  var e = function(e) {
-    defer.reject(e);
-  }
-  API.request("POST", 'wallet', data, true).then(s).catch(e);
-
-  return defer.promise;
-};
-
 ////////////////////////////////////////////////////////////////////////////////
 MyWallet.login = function ( user_guid
                           , shared_key
@@ -51078,5 +46766,5 @@ MyWallet.precisionToSatoshiBN = function(x) {
   return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, shared.sShift(shared.getBTCSymbol())).toString()));
 };
 
-},{"./api":347,"./blockchain-socket":349,"./blockchain-wallet":350,"./hd-account":351,"./hd-wallet":352,"./helpers":353,"./import-export":354,"./shared":358,"./transaction":359,"./wallet-crypto":360,"./wallet-signup":361,"./wallet-store":362,"assert":118,"bigi":4,"bip39":6,"bitcoinjs-lib":58,"bs58":67,"buffer":120,"crypto-js":91,"q":339,"xregexp":345}]},{},[1])(1)
+},{"./api":345,"./blockchain-socket":347,"./blockchain-wallet":348,"./hd-account":349,"./hd-wallet":350,"./helpers":351,"./import-export":352,"./shared":356,"./transaction":357,"./wallet-crypto":358,"./wallet-signup":360,"./wallet-store":361,"assert":118,"bigi":4,"bip39":6,"bitcoinjs-lib":58,"bs58":67,"buffer":120,"crypto-js":91,"xregexp":343}]},{},[1])(1)
 });
