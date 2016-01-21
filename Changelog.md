@@ -2,7 +2,7 @@ __Blockchain Wallet V3__
 
 _Recent changes_
 
-#   (2016-01-15)
+#   (2016-01-21)
 
 
 
@@ -10,29 +10,23 @@ _Recent changes_
 
 ## Bug Fixes
 
-- **Address:** avoid circular dependency
-  ([508feb59](https://github.com/blockchain/My-Wallet-V3/commit/508feb59a471e37ed3d6937e1048d1ca35f478eb))
-- **test:** mock Address in BlockchainWallet specs
-  ([a7d2a19d](https://github.com/blockchain/My-Wallet-V3/commit/a7d2a19dd6fbc68fda96523c5a2701e7408acc2b))
+- **Websocket:** ws subdomain no longer needed
+  ([d52cd16f](https://github.com/blockchain/My-Wallet-V3/commit/d52cd16f9d6eeb6a97804e396fd090e0d9fd8a7e))
+- **importLegacy:** catch import errors within closure
+  ([b84b30ba](https://github.com/blockchain/My-Wallet-V3/commit/b84b30bad680189e9640e8570010a55fb4ca0b8b))
+- **isBitcoinAddress:** cleaned code.
+  ([ab137abe](https://github.com/blockchain/My-Wallet-V3/commit/ab137abe92960a323cc418b5c8e60039fbd96b56))
 
 
-## Refactor
+## Features
 
-- **WalletNetwork:** move methods out of MyWallet and add tests
-- **promises:**
-  - remove dependency on Q
-  - remove dependency on RSVP
+- **btc addr:** excluded testnet addresses from isBitcoinAddress check.
+  ([5fd1cd4d](https://github.com/blockchain/My-Wallet-V3/commit/5fd1cd4db40e97794ee2da254797b7ecfe2c631a))
 
 
 ## Test
 
-- **Promise:** make sure tests can fail & use jasmine-s6-promise-matchers
-- **WalletNetwork:** move to top of Karma because of global variable issue
-
-
-## Chore
-
-- **Release:** 3.6.0
+- **Coverage:** use Coveralls
 
 
 
