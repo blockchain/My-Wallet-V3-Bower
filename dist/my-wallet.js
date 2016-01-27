@@ -9661,18 +9661,18 @@ var createHash = require('create-hash')
 
 // SHA256(SHA256(buffer))
 function sha256x2 (buffer) {
-  buffer = createHash('sha256').update(buffer).digest()
-  return createHash('sha256').update(buffer).digest()
+  var tmp = createHash('sha256').update(buffer).digest()
+  return createHash('sha256').update(tmp).digest()
 }
 
 // Encode a buffer as a base58-check encoded string
 function encode (payload) {
-  var checksum = sha256x2(payload).slice(0, 4)
+  var checksum = sha256x2(payload)
 
   return base58.encode(Buffer.concat([
     payload,
     checksum
-  ]))
+  ], payload.length + 4))
 }
 
 // Decode a base58-check encoded string to a buffer
@@ -9681,13 +9681,12 @@ function decode (string) {
 
   var payload = buffer.slice(0, -4)
   var checksum = buffer.slice(-4)
-  var newChecksum = sha256x2(payload).slice(0, 4)
+  var newChecksum = sha256x2(payload)
 
-  for (var i = 0; i < newChecksum.length; ++i) {
-    if (newChecksum[i] === checksum[i]) continue
-
-    throw new Error('Invalid checksum')
-  }
+  if (checksum[0] ^ newChecksum[0] |
+      checksum[1] ^ newChecksum[1] |
+      checksum[2] ^ newChecksum[2] |
+      checksum[3] ^ newChecksum[3]) throw new Error('Invalid checksum')
 
   return payload
 }
@@ -19900,6 +19899,7 @@ Decipher.prototype._final = function () {
 }
 Decipher.prototype.setAutoPadding = function (setTo) {
   this._autopadding = !!setTo
+  return this
 }
 function Splitter () {
   if (!(this instanceof Splitter)) {
@@ -20041,6 +20041,7 @@ Cipher.prototype._final = function () {
 }
 Cipher.prototype.setAutoPadding = function (setTo) {
   this._autopadding = !!setTo
+  return this
 }
 
 function Splitter () {
@@ -22129,8 +22130,19 @@ exports['1.3.132.0.35'] = 'p521'
   };
 
   BN.prototype.toNumber = function toNumber () {
-    assert(this.bitLength() <= 53, 'Number can only safely store up to 53 bits');
-    return parseInt(this.toString(), 10);
+    var length = this.bitLength();
+    var ret;
+    if (length <= 26) {
+      ret = this.words[0];
+    } else if (length <= 52) {
+      ret = (this.words[1] * 0x4000000) + this.words[0];
+    } else if (length === 53) {
+      // NOTE: at this stage it is known that the top bit is set
+      ret = 0x10000000000000 + (this.words[1] * 0x4000000) + this.words[0];
+    } else {
+      assert(false, 'Number can only safely store up to 53 bits');
+    }
+    return (this.negative !== 0) ? -ret : ret;
   };
 
   BN.prototype.toJSON = function toJSON () {
@@ -22270,21 +22282,34 @@ exports['1.3.132.0.35'] = 'p521'
     return Math.ceil(this.bitLength() / 8);
   };
 
+  BN.prototype.toTwos = function toTwos (width) {
+    if (this.negative !== 0) {
+      return this.abs().inotn(width).iaddn(1);
+    }
+    return this.clone();
+  };
+
+  BN.prototype.fromTwos = function fromTwos (width) {
+    if (this.testn(width - 1)) {
+      return this.notn(width).iaddn(1).ineg();
+    }
+    return this.clone();
+  };
+
   BN.prototype.isNeg = function isNeg () {
     return this.negative !== 0;
   };
 
   // Return negative clone of `this`
   BN.prototype.neg = function neg () {
-    if (this.isZero()) return this.clone();
-
-    var r = this.clone();
-    r.negative = this.negative ^ 1;
-    return r;
+    return this.clone().ineg();
   };
 
   BN.prototype.ineg = function ineg () {
-    this.negative ^= 1;
+    if (!this.isZero()) {
+      this.negative ^= 1;
+    }
+
     return this;
   };
 
@@ -22709,6 +22734,7 @@ exports['1.3.132.0.35'] = 'p521'
     var bl9 = b9 & 0x1fff;
     var bh9 = b9 >>> 13;
 
+    out.negative = self.negative ^ num.negative;
     out.length = 19;
     /* k = 0 */
     lo = Math.imul(al0, bl0);
@@ -23944,8 +23970,8 @@ exports['1.3.132.0.35'] = 'p521'
 
       if (mode !== 'div') {
         mod = res.mod.neg();
-        if (positive && mod.neg) {
-          mod = mod.add(num);
+        if (positive && mod.negative !== 0) {
+          mod.iadd(num);
         }
       }
 
@@ -23970,8 +23996,8 @@ exports['1.3.132.0.35'] = 'p521'
 
       if (mode !== 'div') {
         mod = res.mod.neg();
-        if (positive && mod.neg) {
-          mod = mod.isub(num);
+        if (positive && mod.negative !== 0) {
+          mod.isub(num);
         }
       }
 
@@ -24376,6 +24402,46 @@ exports['1.3.132.0.35'] = 'p521'
     return res;
   };
 
+  BN.prototype.gtn = function gtn (num) {
+    return this.cmpn(num) === 1;
+  };
+
+  BN.prototype.gt = function gt (num) {
+    return this.cmp(num) === 1;
+  };
+
+  BN.prototype.gten = function gten (num) {
+    return this.cmpn(num) >= 0;
+  };
+
+  BN.prototype.gte = function gte (num) {
+    return this.cmp(num) >= 0;
+  };
+
+  BN.prototype.ltn = function ltn (num) {
+    return this.cmpn(num) === -1;
+  };
+
+  BN.prototype.lt = function lt (num) {
+    return this.cmp(num) === -1;
+  };
+
+  BN.prototype.lten = function lten (num) {
+    return this.cmpn(num) <= 0;
+  };
+
+  BN.prototype.lte = function lte (num) {
+    return this.cmp(num) <= 0;
+  };
+
+  BN.prototype.eqn = function eqn (num) {
+    return this.cmpn(num) === 0;
+  };
+
+  BN.prototype.eq = function eq (num) {
+    return this.cmp(num) === 0;
+  };
+
   //
   // A reduce context, could be using montgomery or something better, depending
   // on the `m` itself.
@@ -24696,9 +24762,11 @@ exports['1.3.132.0.35'] = 'p521'
   };
 
   Red.prototype.neg = function neg (a) {
-    var r = a.clone();
-    r.negative ^= 1;
-    return r.iadd(this.m)._forceRed(this);
+    if (a.isZero()) {
+      return a.clone();
+    }
+
+    return this.m.sub(a)._forceRed(this);
   };
 
   Red.prototype.add = function add (a, b) {
@@ -24757,7 +24825,7 @@ exports['1.3.132.0.35'] = 'p521'
   };
 
   Red.prototype.isqr = function isqr (a) {
-    return this.imul(a, a);
+    return this.imul(a, a.clone());
   };
 
   Red.prototype.sqr = function sqr (a) {
@@ -25444,7 +25512,11 @@ EdwardsCurve.prototype.pointFromX = function pointFromX(x, odd) {
   var rhs = this.c2.redSub(this.a.redMul(x2));
   var lhs = this.one.redSub(this.c2.redMul(this.d).redMul(x2));
 
-  var y = rhs.redMul(lhs.redInvm()).redSqrt();
+  var y2 = rhs.redMul(lhs.redInvm());
+  var y = y2.redSqrt();
+  if (y.redSqr().redSub(y2).cmp(this.zero) !== 0)
+    throw new Error('invalid point');
+
   var isOdd = y.fromRed().isOdd();
   if (odd && !isOdd || !odd && isOdd)
     y = y.redNeg();
@@ -26175,6 +26247,8 @@ ShortCurve.prototype.pointFromX = function pointFromX(x, odd) {
 
   var y2 = x.redSqr().redMul(x).redIAdd(x.redMul(this.a)).redIAdd(this.b);
   var y = y2.redSqrt();
+  if (y.redSqr().redSub(y2).cmp(this.zero) !== 0)
+    throw new Error('invalid point');
 
   // XXX Is there any way to tell if the number is odd without converting it
   // to non-red form?
@@ -27204,7 +27278,9 @@ EC.prototype.sign = function sign(msg, key, enc, options) {
   var drbg = new elliptic.hmacDRBG({
     hash: this.hash,
     entropy: bkey,
-    nonce: nonce
+    nonce: nonce,
+    pers: options.pers,
+    persEnc: options.persEnc
   });
 
   // Number of bytes to generate
@@ -27305,7 +27381,12 @@ EC.prototype.getKeyRecoveryParam = function(e, signature, Q, enc) {
     return signature.recoveryParam;
 
   for (var i = 0; i < 4; i++) {
-    var Qprime = this.recoverPubKey(e, signature, i);
+    var Qprime;
+    try {
+      Qprime = this.recoverPubKey(e, signature, i);
+    } catch (e) {
+      continue;
+    }
 
     if (Qprime.eq(Q))
       return i;
@@ -27441,10 +27522,10 @@ function Signature(options, enc) {
   assert(options.r && options.s, 'Signature without r or s');
   this.r = new BN(options.r, 16);
   this.s = new BN(options.s, 16);
-  if (options.recoveryParam !== null)
-    this.recoveryParam = options.recoveryParam;
-  else
+  if (options.recoveryParam === undefined)
     this.recoveryParam = null;
+  else
+    this.recoveryParam = options.recoveryParam;
 }
 module.exports = Signature;
 
@@ -30111,7 +30192,7 @@ exports.shr64_lo = shr64_lo;
 },{"inherits":316}],182:[function(require,module,exports){
 module.exports={
   "name": "elliptic",
-  "version": "6.1.0",
+  "version": "6.2.2",
   "description": "EC cryptography",
   "main": "lib/elliptic.js",
   "files": [
@@ -30155,19 +30236,19 @@ module.exports={
     "hash.js": "^1.0.0",
     "inherits": "^2.0.1"
   },
-  "gitHead": "b465fea90447f3b6c0b3f55e5fd6ecdedc1282f2",
-  "_id": "elliptic@6.1.0",
-  "_shasum": "68130e03823b4ce024955ad1be195e148099d654",
+  "gitHead": "628eb61186a7f1c81247cf991d808dc9ead83645",
+  "_id": "elliptic@6.2.2",
+  "_shasum": "806bfa651a5aa4996a1e79c92b573761ea7d7574",
   "_from": "elliptic@>=6.0.0 <7.0.0",
   "_npmVersion": "3.3.12",
-  "_nodeVersion": "5.2.0",
+  "_nodeVersion": "5.4.1",
   "_npmUser": {
     "name": "indutny",
     "email": "fedor@indutny.com"
   },
   "dist": {
-    "shasum": "68130e03823b4ce024955ad1be195e148099d654",
-    "tarball": "http://registry.npmjs.org/elliptic/-/elliptic-6.1.0.tgz"
+    "shasum": "806bfa651a5aa4996a1e79c92b573761ea7d7574",
+    "tarball": "http://registry.npmjs.org/elliptic/-/elliptic-6.2.2.tgz"
   },
   "maintainers": [
     {
@@ -30176,7 +30257,7 @@ module.exports={
     }
   ],
   "directories": {},
-  "_resolved": "https://registry.npmjs.org/elliptic/-/elliptic-6.1.0.tgz",
+  "_resolved": "https://registry.npmjs.org/elliptic/-/elliptic-6.2.2.tgz",
   "readme": "ERROR: No README data found!"
 }
 
@@ -32685,7 +32766,7 @@ arguments[4][22][0].apply(exports,arguments)
 },{"buffer":120,"create-hash/browser":248,"dup":22,"inherits":316,"stream":331}],262:[function(require,module,exports){
 (function (Buffer){
 var generatePrime = require('./lib/generatePrime')
-var primes = require('./lib/primes')
+var primes = require('./lib/primes.json')
 
 var DH = require('./lib/dh')
 
@@ -32728,7 +32809,7 @@ exports.DiffieHellmanGroup = exports.createDiffieHellmanGroup = exports.getDiffi
 exports.createDiffieHellman = exports.DiffieHellman = createDiffieHellman
 
 }).call(this,require("buffer").Buffer)
-},{"./lib/dh":263,"./lib/generatePrime":264,"./lib/primes":265,"buffer":120}],263:[function(require,module,exports){
+},{"./lib/dh":263,"./lib/generatePrime":264,"./lib/primes.json":265,"buffer":120}],263:[function(require,module,exports){
 (function (Buffer){
 var BN = require('bn.js');
 var MillerRabin = require('miller-rabin');
@@ -46082,12 +46163,7 @@ MyWallet.listenToHDWalletAccounts = function() {
  // TODO: This should be a helper
  // used on wallet-store, frontend and iOS,
 MyWallet.isValidAddress = function(candidate) {
-  try {
-    Bitcoin.Address.fromBase58Check(candidate);
-    return true;
-  } catch (e) {
-    return false;
-  }
+  return Helpers.isBitcoinAddress(candidate);
 };
 
 /**
