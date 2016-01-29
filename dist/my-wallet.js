@@ -48,7 +48,7 @@ module.exports = {
   // BIP39: require('bip39')
 };
 
-},{"./src/api":345,"./src/blockchain-settings-api":346,"./src/helpers":351,"./src/import-export":352,"./src/payment":355,"./src/shared":356,"./src/wallet":364,"./src/wallet-crypto":358,"./src/wallet-network":359,"./src/wallet-store":361,"./src/wallet-token-endpoints":362,"./src/wallet-transaction":363,"buffer":120,"crypto-js":91,"es6-promise":117,"isomorphic-fetch":337}],2:[function(require,module,exports){
+},{"./src/api":346,"./src/blockchain-settings-api":347,"./src/helpers":352,"./src/import-export":353,"./src/payment":356,"./src/shared":357,"./src/wallet":365,"./src/wallet-crypto":359,"./src/wallet-network":360,"./src/wallet-store":362,"./src/wallet-token-endpoints":363,"./src/wallet-transaction":364,"buffer":120,"crypto-js":91,"es6-promise":117,"isomorphic-fetch":337}],2:[function(require,module,exports){
 // (public) Constructor
 function BigInteger(a, b, c) {
   if (!(this instanceof BigInteger))
@@ -1755,8 +1755,7 @@ module.exports={
     "tarball": "http://registry.npmjs.org/bigi/-/bigi-1.4.1.tgz"
   },
   "directories": {},
-  "_resolved": "https://registry.npmjs.org/bigi/-/bigi-1.4.1.tgz",
-  "readme": "ERROR: No README data found!"
+  "_resolved": "https://registry.npmjs.org/bigi/-/bigi-1.4.1.tgz"
 }
 
 },{}],6:[function(require,module,exports){
@@ -21705,6 +21704,12 @@ exports['1.3.132.0.35'] = 'p521'
   BN.BN = BN;
   BN.wordSize = 26;
 
+  var Buffer;
+  try {
+    Buffer = require('buffer').Buffer;
+  } catch (e) {
+  }
+
   BN.max = function max (left, right) {
     if (left.cmp(right) > 0) return left;
     return right;
@@ -22147,6 +22152,11 @@ exports['1.3.132.0.35'] = 'p521'
 
   BN.prototype.toJSON = function toJSON () {
     return this.toString(16);
+  };
+
+  BN.prototype.toBuffer = function toBuffer (endian, length) {
+    assert(typeof Buffer !== 'undefined');
+    return new Buffer(this.toArray(endian, length));
   };
 
   BN.prototype.toArray = function toArray (endian, length) {
@@ -25039,7 +25049,7 @@ exports['1.3.132.0.35'] = 'p521'
   };
 })(typeof module === 'undefined' || module, this);
 
-},{}],158:[function(require,module,exports){
+},{"buffer":119}],158:[function(require,module,exports){
 (function (Buffer){
 var bn = require('bn.js');
 var randomBytes = require('randombytes');
@@ -27372,7 +27382,7 @@ EC.prototype.recoverPubKey = function(msg, signature, j, enc) {
   // 1.6.1 Compute Q = r^-1 (sR -  eG)
   //               Q = r^-1 (sR + -eG)
   var rInv = signature.r.invm(n);
-  return r.mul(s).add(this.g.mul(eNeg)).mul(rInv);
+  return this.g.mulAdd(eNeg, r, s).mul(rInv);
 };
 
 EC.prototype.getKeyRecoveryParam = function(e, signature, Q, enc) {
@@ -30192,15 +30202,20 @@ exports.shr64_lo = shr64_lo;
 },{"inherits":316}],182:[function(require,module,exports){
 module.exports={
   "name": "elliptic",
-  "version": "6.2.2",
+  "version": "6.2.3",
   "description": "EC cryptography",
   "main": "lib/elliptic.js",
   "files": [
     "lib"
   ],
   "scripts": {
-    "test": "make lint && istanbul test _mocha --reporter=spec test/*-test.js",
-    "coveralls": "cat ./coverage/lcov.info | coveralls"
+    "coverage": "npm run unit --coverage",
+    "coveralls": "npm run coverage && cat ./coverage/lcov.info | coveralls",
+    "jscs": "jscs benchmarks/*.js lib/*.js lib/**/*.js lib/**/**/*.js test/*.js",
+    "jshint": "jscs benchmarks/*.js lib/*.js lib/**/*.js lib/**/**/*.js test/*.js",
+    "lint": "npm run jscs && npm run jshint",
+    "test": "npm run lint && npm run unit",
+    "unit": "istanbul test _mocha --reporter=spec test/*-test.js"
   },
   "repository": {
     "type": "git",
@@ -30222,13 +30237,11 @@ module.exports={
   },
   "homepage": "https://github.com/indutny/elliptic",
   "devDependencies": {
-    "browserify": "^3.44.2",
     "coveralls": "^2.11.3",
-    "istanbul": "^0.3.17",
-    "jscs": "^1.11.3",
+    "istanbul": "^0.4.2",
+    "jscs": "^2.9.0",
     "jshint": "^2.6.0",
-    "mocha": "^2.1.0",
-    "uglify-js": "^2.4.13"
+    "mocha": "^2.1.0"
   },
   "dependencies": {
     "bn.js": "^4.0.0",
@@ -30236,9 +30249,9 @@ module.exports={
     "hash.js": "^1.0.0",
     "inherits": "^2.0.1"
   },
-  "gitHead": "628eb61186a7f1c81247cf991d808dc9ead83645",
-  "_id": "elliptic@6.2.2",
-  "_shasum": "806bfa651a5aa4996a1e79c92b573761ea7d7574",
+  "gitHead": "c32f20b22b420eb6af3c6dda28963deb7facf823",
+  "_id": "elliptic@6.2.3",
+  "_shasum": "18e46d7306b0951275a2d42063270a14b74ebe99",
   "_from": "elliptic@>=6.0.0 <7.0.0",
   "_npmVersion": "3.3.12",
   "_nodeVersion": "5.4.1",
@@ -30247,8 +30260,8 @@ module.exports={
     "email": "fedor@indutny.com"
   },
   "dist": {
-    "shasum": "806bfa651a5aa4996a1e79c92b573761ea7d7574",
-    "tarball": "http://registry.npmjs.org/elliptic/-/elliptic-6.2.2.tgz"
+    "shasum": "18e46d7306b0951275a2d42063270a14b74ebe99",
+    "tarball": "http://registry.npmjs.org/elliptic/-/elliptic-6.2.3.tgz"
   },
   "maintainers": [
     {
@@ -30257,7 +30270,7 @@ module.exports={
     }
   ],
   "directories": {},
-  "_resolved": "https://registry.npmjs.org/elliptic/-/elliptic-6.2.2.tgz",
+  "_resolved": "https://registry.npmjs.org/elliptic/-/elliptic-6.2.3.tgz",
   "readme": "ERROR: No README data found!"
 }
 
@@ -32687,7 +32700,7 @@ function formatReturnValue(bn, enc, len) {
 }).call(this,require("buffer").Buffer)
 },{"bn.js":223,"buffer":120,"elliptic":224}],223:[function(require,module,exports){
 arguments[4][157][0].apply(exports,arguments)
-},{"dup":157}],224:[function(require,module,exports){
+},{"buffer":119,"dup":157}],224:[function(require,module,exports){
 arguments[4][159][0].apply(exports,arguments)
 },{"../package.json":247,"./elliptic/curve":227,"./elliptic/curves":230,"./elliptic/ec":231,"./elliptic/eddsa":234,"./elliptic/hmac-drbg":237,"./elliptic/utils":239,"brorand":240,"dup":159}],225:[function(require,module,exports){
 arguments[4][160][0].apply(exports,arguments)
@@ -33121,7 +33134,7 @@ module.exports={
 }
 },{}],266:[function(require,module,exports){
 arguments[4][157][0].apply(exports,arguments)
-},{"dup":157}],267:[function(require,module,exports){
+},{"buffer":119,"dup":157}],267:[function(require,module,exports){
 var bn = require('bn.js');
 var brorand = require('brorand');
 
@@ -33272,7 +33285,7 @@ function i2ops(c) {
 }).call(this,require("buffer").Buffer)
 },{"buffer":120,"create-hash":248}],272:[function(require,module,exports){
 arguments[4][157][0].apply(exports,arguments)
-},{"dup":157}],273:[function(require,module,exports){
+},{"buffer":119,"dup":157}],273:[function(require,module,exports){
 arguments[4][158][0].apply(exports,arguments)
 },{"bn.js":272,"buffer":120,"dup":158,"randombytes":339}],274:[function(require,module,exports){
 arguments[4][183][0].apply(exports,arguments)
@@ -40539,7 +40552,54 @@ Address.prototype.persist = function(){
   return this;
 };
 
-},{"./helpers":351,"./shared":356,"./wallet":364,"bitcoinjs-lib":58,"bs58":67}],345:[function(require,module,exports){
+},{"./helpers":352,"./shared":357,"./wallet":365,"bitcoinjs-lib":58,"bs58":67}],345:[function(require,module,exports){
+'use strict';
+
+var assert = require('assert');
+
+var API = require('./api');
+var CryptoJS = require('crypto-js');
+
+// If there is a problem with the analytics endpoint, the application should
+// just proceed. Therefor we're not returning a promise in the methods below.
+
+function postEvent(name, guid) {
+  assert(name, "Event name required");
+  assert(guid, "Wallet identifier required");
+
+  var fail = function() {
+    console.log("Unable to post to analytics endpoint.");
+  }
+
+  var handleResponse = function (res) {
+    if (!res || !res.success)
+      fail();
+  };
+
+  var params = {
+    name: name,
+    hashed_guid: CryptoJS.SHA256(guid).toString()
+  };
+
+  API.request('POST', 'wallet-event', params, false)
+    .then(handleResponse).catch(fail);
+}
+
+function walletCreated(guid) {
+  this.postEvent('create_v3', guid);
+}
+
+function walletUpgraded(guid) {
+  this.postEvent('upgrade_v3', guid);
+}
+
+module.exports = {
+  postEvent: postEvent, // For tests
+  walletCreated: walletCreated,
+  walletUpgraded: walletUpgraded
+};
+
+},{"./api":346,"assert":118,"crypto-js":91}],346:[function(require,module,exports){
 'use strict';
 
 module.exports = new API();
@@ -40807,7 +40867,7 @@ API.prototype.pushTx = function (tx, note){
 //   }
 // };
 
-},{"./helpers":351,"./wallet":364,"./wallet-store":361,"assert":118,"buffer":120,"crypto-js":91}],346:[function(require,module,exports){
+},{"./helpers":352,"./wallet":365,"./wallet-store":362,"assert":118,"buffer":120,"crypto-js":91}],347:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -41127,7 +41187,7 @@ module.exports = {
   disableAllNotifications: disableAllNotifications
 };
 
-},{"./api":345,"./wallet-store.js":361,"./wallet.js":364,"assert":118}],347:[function(require,module,exports){
+},{"./api":346,"./wallet-store.js":362,"./wallet.js":365,"assert":118}],348:[function(require,module,exports){
 
 var WebSocket = require('ws');
 
@@ -41185,7 +41245,7 @@ BlockchainSocket.prototype.send = function (message) {
 
 module.exports = BlockchainSocket;
 
-},{"ws":342}],348:[function(require,module,exports){
+},{"ws":342}],349:[function(require,module,exports){
 'use strict';
 
 module.exports = Wallet;
@@ -41213,6 +41273,7 @@ var Tx = require('./wallet-transaction');
 var shared = require('./shared');
 var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var KeyRing  = require('./keyring');
+var Analytics = require('./analytics');
 
 ////////////////////////////////////////////////////////////////////////////////
 // Wallet
@@ -41927,7 +41988,12 @@ Wallet.prototype.newHDWallet = function(firstAccountLabel, pw, success, error){
   this._hd_wallets.push(newHDwallet);
   var label = firstAccountLabel ? firstAccountLabel : "My Bitcoin Wallet";
   var account = this.newAccount(label, pw, this._hd_wallets.length-1, true);
-  MyWallet.syncWallet(success, error);
+  var guid = this.guid;
+  MyWallet.syncWallet(function(res) {
+    Analytics.walletUpgraded(guid);
+    success();
+  }, error);
+
   return newHDwallet;
 };
 
@@ -42025,7 +42091,7 @@ Wallet.prototype._getPrivateKey = function(accountIndex, path, secondPassword) {
   return kr.privateKeyFromPath(path).toWIF();
 };
 
-},{"./address":344,"./api":345,"./blockchain-settings-api":346,"./hd-account":349,"./hd-wallet":350,"./helpers":351,"./import-export":352,"./keyring":354,"./shared":356,"./wallet":364,"./wallet-crypto":358,"./wallet-store":361,"./wallet-transaction":363,"assert":118,"bigi":4,"bip39":6,"bitcoinjs-lib":58,"bs58":67,"buffer":120}],349:[function(require,module,exports){
+},{"./address":344,"./analytics":345,"./api":346,"./blockchain-settings-api":347,"./hd-account":350,"./hd-wallet":351,"./helpers":352,"./import-export":353,"./keyring":355,"./shared":357,"./wallet":365,"./wallet-crypto":359,"./wallet-store":362,"./wallet-transaction":364,"assert":118,"bigi":4,"bip39":6,"bitcoinjs-lib":58,"bs58":67,"buffer":120}],350:[function(require,module,exports){
 'use strict';
 
 module.exports = HDAccount;
@@ -42368,7 +42434,7 @@ HDAccount.prototype.persist = function(){
   return this;
 };
 
-},{"./helpers":351,"./keyring":354,"./wallet":364,"./wallet-crypto":358,"assert":118,"bitcoinjs-lib":58}],350:[function(require,module,exports){
+},{"./helpers":352,"./keyring":355,"./wallet":365,"./wallet-crypto":359,"assert":118,"bitcoinjs-lib":58}],351:[function(require,module,exports){
 'use strict';
 
 module.exports = HDWallet;
@@ -42675,7 +42741,7 @@ HDWallet.prototype.isValidAccountIndex = function(index){
   return Helpers.isNumber(index) && index >= 0 && index < this._accounts.length;
 };
 
-},{"./hd-account":349,"./helpers":351,"./wallet":364,"./wallet-crypto":358,"assert":118,"bip39":6,"bitcoinjs-lib":58}],351:[function(require,module,exports){
+},{"./hd-account":350,"./helpers":352,"./wallet":365,"./wallet-crypto":359,"assert":118,"bip39":6,"bitcoinjs-lib":58}],352:[function(require,module,exports){
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -42938,7 +43004,7 @@ Helpers.scorePassword = function (password){
 
 module.exports = Helpers;
 
-},{"bitcoinjs-lib":58}],352:[function(require,module,exports){
+},{"bitcoinjs-lib":58}],353:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -43407,7 +43473,7 @@ var ImportExport = new function() {
 module.exports = ImportExport;
 
 }).call(this,require("buffer").Buffer)
-},{"assert":118,"bigi":4,"bitcoinjs-lib":58,"bs58":67,"buffer":120,"crypto-js":91,"unorm":341}],353:[function(require,module,exports){
+},{"assert":118,"bigi":4,"bitcoinjs-lib":58,"bs58":67,"buffer":120,"crypto-js":91,"unorm":341}],354:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyChain;
@@ -43463,7 +43529,7 @@ KeyChain.prototype.getPrivateKey = function(index) {
   return key ? key : null;
 };
 
-},{"./helpers":351,"assert":118,"bitcoinjs-lib":58}],354:[function(require,module,exports){
+},{"./helpers":352,"assert":118,"bitcoinjs-lib":58}],355:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyRing;
@@ -43527,7 +43593,7 @@ KeyRing.prototype.toJSON = function (){
   return cacheJSON;
 };
 
-},{"./helpers":351,"./keychain":353,"assert":118,"bitcoinjs-lib":58}],355:[function(require,module,exports){
+},{"./helpers":352,"./keychain":354,"assert":118,"bitcoinjs-lib":58}],356:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -44034,7 +44100,7 @@ function computeSuggestedSweep(coins){
 //   .catch(error)
 
 }).call(this,require("buffer").Buffer)
-},{"./api":345,"./helpers":351,"./keyring":354,"./transaction":357,"./wallet":364,"./wallet-crypto":358,"bitcoinjs-lib":58,"buffer":120}],356:[function(require,module,exports){
+},{"./api":346,"./helpers":352,"./keyring":355,"./transaction":358,"./wallet":365,"./wallet-crypto":359,"bitcoinjs-lib":58,"buffer":120}],357:[function(require,module,exports){
 var satoshi = 100000000; //One satoshi
 var symbol_btc = {code : "BTC", symbol : "BTC", name : "Bitcoin",  conversion : satoshi, symbolAppearsAfter : true, local : false}; //Default BTC Currency Symbol object
 var symbol_local = {"conversion":0,"symbol":"$","name":"U.S. dollar","symbolAppearsAfter":false,"local":true,"code":"USD"}; //Users local currency object
@@ -44233,7 +44299,7 @@ function convert(x, conversion) {
   return (x / conversion).toFixed(2).toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
 }
 
-},{}],357:[function(require,module,exports){
+},{}],358:[function(require,module,exports){
 'use strict';
 
 var assert      = require('assert');
@@ -44430,7 +44496,7 @@ function sortUnspentOutputs(unspentOutputs) {
 
 module.exports = Transaction;
 
-},{"./helpers":351,"./wallet":364,"assert":118,"bitcoinjs-lib":58,"buffer":120,"randombytes":339}],358:[function(require,module,exports){
+},{"./helpers":352,"./wallet":365,"assert":118,"bitcoinjs-lib":58,"buffer":120,"randombytes":339}],359:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -44733,7 +44799,7 @@ module.exports = {
   decryptAes: decryptAes
 };
 
-},{"assert":118,"crypto-js":91,"sjcl":340}],359:[function(require,module,exports){
+},{"assert":118,"crypto-js":91,"sjcl":340}],360:[function(require,module,exports){
 'use strict';
 
 var API = require('./api');
@@ -44760,7 +44826,7 @@ function generateUUIDs(count) {
  * Fetch information on wallet identfier with resend code set to true
  * @param {string} user_guid User GUID.
  */
-// used in the frontend
+// used in the frontend and in iOS
 function resendTwoFactorSms(user_guid) {
 
   var data = {
@@ -44857,7 +44923,7 @@ module.exports = {
   requestTwoFactorReset: requestTwoFactorReset
 };
 
-},{"./api":345}],360:[function(require,module,exports){
+},{"./api":346}],361:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -44972,7 +45038,7 @@ module.exports = {
   generateNewWallet: generateNewWallet
 };
 
-},{"./blockchain-wallet":348,"./helpers":351,"./wallet":364,"./wallet-crypto":358,"./wallet-network":359,"./wallet-store":361,"assert":118,"crypto-js":91}],361:[function(require,module,exports){
+},{"./blockchain-wallet":349,"./helpers":352,"./wallet":365,"./wallet-crypto":359,"./wallet-network":360,"./wallet-store":362,"assert":118,"crypto-js":91}],362:[function(require,module,exports){
 'use strict';
 
 var CryptoJS = require('crypto-js');
@@ -45256,7 +45322,7 @@ var WalletStore = (function() {
 
 module.exports = WalletStore;
 
-},{"./wallet":364,"./wallet-crypto":358,"crypto-js":91}],362:[function(require,module,exports){
+},{"./wallet":365,"./wallet-crypto":359,"crypto-js":91}],363:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -45332,7 +45398,7 @@ module.exports = {
   postTokenEndpoint: postTokenEndpoint // For tests
 };
 
-},{"./api":345,"./helpers":351,"assert":118}],363:[function(require,module,exports){
+},{"./api":346,"./helpers":352,"assert":118}],364:[function(require,module,exports){
 'use strict';
 
 module.exports = Tx;
@@ -45534,7 +45600,7 @@ Tx.factory = function(o){
   else { return o; };
 };
 
-},{"./helpers":351,"./wallet":364,"./wallet-store":361}],364:[function(require,module,exports){
+},{"./helpers":352,"./wallet":365,"./wallet-store":362}],365:[function(require,module,exports){
 'use strict';
 
 var MyWallet = module.exports = {};
@@ -45561,6 +45627,7 @@ var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
 var shared = require('./shared');
 var BlockchainSocket = require('./blockchain-socket');
+var Analytics = require('./analytics');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -46712,6 +46779,11 @@ MyWallet.createNewWallet = function(inputedEmail, inputedPassword, firstAccountN
 
     WalletStore.unsafeSetPassword(createdPassword);
 
+    var isHD = Helpers.isBoolean(isHD) ? isHD : true;
+    if (isHD) {
+      Analytics.walletCreated(createdGuid);
+    }
+
     success(createdGuid, createdSharedKey, createdPassword);
   }, function (e) {
     error(e);
@@ -46855,5 +46927,5 @@ MyWallet.precisionToSatoshiBN = function(x) {
   return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, shared.sShift(shared.getBTCSymbol())).toString()));
 };
 
-},{"./api":345,"./blockchain-socket":347,"./blockchain-wallet":348,"./hd-account":349,"./hd-wallet":350,"./helpers":351,"./import-export":352,"./shared":356,"./transaction":357,"./wallet-crypto":358,"./wallet-signup":360,"./wallet-store":361,"assert":118,"bigi":4,"bip39":6,"bitcoinjs-lib":58,"bs58":67,"buffer":120,"crypto-js":91,"xregexp":343}]},{},[1])(1)
+},{"./analytics":345,"./api":346,"./blockchain-socket":348,"./blockchain-wallet":349,"./hd-account":350,"./hd-wallet":351,"./helpers":352,"./import-export":353,"./shared":357,"./transaction":358,"./wallet-crypto":359,"./wallet-signup":361,"./wallet-store":362,"assert":118,"bigi":4,"bip39":6,"bitcoinjs-lib":58,"bs58":67,"buffer":120,"crypto-js":91,"xregexp":343}]},{},[1])(1)
 });

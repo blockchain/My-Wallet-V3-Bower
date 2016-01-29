@@ -2,16 +2,16 @@ __Blockchain Wallet V3__
 
 _Recent changes_
 
-#   (2016-01-27)
+#   (2016-01-29)
 
 
 
 ---
 
-## Bug Fixes
+## Features
 
-- **isValidAddress:** use helper to catch testnet addresses
-  ([76e8a19e](https://github.com/blockchain/My-Wallet-V3/commit/76e8a19e150171b67ba301b7cf54e8f06f285e55))
+- **Analytics:** track wallet creation and upgrades
+  ([3b12c3e5](https://github.com/blockchain/My-Wallet-V3/commit/3b12c3e57fe822fcb0de4f75ffe2bc03166c4e5f))
 
 
 
