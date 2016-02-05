@@ -47,7 +47,7 @@ module.exports = {
   // BIP39: require('bip39')
 };
 
-},{"./src/api":311,"./src/blockchain-settings-api":312,"./src/helpers":317,"./src/import-export":318,"./src/payment":321,"./src/shared":323,"./src/wallet":332,"./src/wallet-crypto":326,"./src/wallet-network":327,"./src/wallet-store":329,"./src/wallet-token-endpoints":330,"./src/wallet-transaction":331,"buffer":86,"es6-promise":83,"isomorphic-fetch":303}],2:[function(require,module,exports){
+},{"./src/api":310,"./src/blockchain-settings-api":311,"./src/helpers":316,"./src/import-export":317,"./src/payment":320,"./src/shared":322,"./src/wallet":331,"./src/wallet-crypto":325,"./src/wallet-network":326,"./src/wallet-store":328,"./src/wallet-token-endpoints":329,"./src/wallet-transaction":330,"buffer":86,"es6-promise":83,"isomorphic-fetch":303}],2:[function(require,module,exports){
 // (public) Constructor
 function BigInteger(a, b, c) {
   if (!(this instanceof BigInteger))
@@ -1754,8 +1754,7 @@ module.exports={
     "tarball": "http://registry.npmjs.org/bigi/-/bigi-1.4.1.tgz"
   },
   "directories": {},
-  "_resolved": "https://registry.npmjs.org/bigi/-/bigi-1.4.1.tgz",
-  "readme": "ERROR: No README data found!"
+  "_resolved": "https://registry.npmjs.org/bigi/-/bigi-1.4.1.tgz"
 }
 
 },{}],6:[function(require,module,exports){
@@ -5975,18 +5974,23 @@ var inherits = require('inherits')
 
 function TfTypeError (type, value) {
   this.tfError = Error.call(this)
-  this.tfType = type
-  this.tfValue = value
 
-  var message
-  Object.defineProperty(this, 'message', {
-    get: function () {
-      if (message) return message
-      message = tfErrorString(type, value)
+  if (arguments.length === 1 && typeof type === 'string') {
+    this.message = type
+  } else {
+    this.tfType = type
+    this.tfValue = value
 
-      return message
-    }
-  })
+    var message
+    Object.defineProperty(this, 'message', {
+      get: function () {
+        if (message) return message
+        message = tfErrorString(type, value)
+
+        return message
+      }
+    })
+  }
 }
 
 inherits(TfTypeError, Error)
@@ -6195,7 +6199,7 @@ var otherTypes = {
   },
 
   quacksLike: function quacksLike (type) {
-    function quacksLike (value, strict) {
+    function quacksLike (value) {
       return type === getValueTypeName(value)
     }
     quacksLike.toJSON = function () { return type }
@@ -16961,6 +16965,7 @@ exports['1.3.132.0.35'] = 'p521'
 
   BN.prototype.imuln = function imuln (num) {
     assert(typeof num === 'number');
+    assert(num < 0x4000000);
 
     // Carry
     var carry = 0;
@@ -17192,6 +17197,7 @@ exports['1.3.132.0.35'] = 'p521'
   // Add plain number `num` to `this`
   BN.prototype.iaddn = function iaddn (num) {
     assert(typeof num === 'number');
+    assert(num < 0x4000000);
     if (num < 0) return this.isubn(-num);
 
     // Possible sign change
@@ -17232,6 +17238,7 @@ exports['1.3.132.0.35'] = 'p521'
   // Subtract plain number `num` from `this`
   BN.prototype.isubn = function isubn (num) {
     assert(typeof num === 'number');
+    assert(num < 0x4000000);
     if (num < 0) return this.iaddn(-num);
 
     if (this.negative !== 0) {
@@ -18077,8 +18084,13 @@ exports['1.3.132.0.35'] = 'p521'
       input.words[i - 10] = ((next & mask) << 4) | (prev >>> 22);
       prev = next;
     }
-    input.words[i - 10] = prev >>> 22;
-    input.length -= 9;
+    prev >>>= 22;
+    input.words[i - 10] = prev;
+    if (prev === 0 && input.length > 10) {
+      input.length -= 10;
+    } else {
+      input.length -= 9;
+    }
   };
 
   K256.prototype.imulK = function imulK (num) {
@@ -24176,6 +24188,7 @@ base.Node = require('./node');
 },{"./buffer":155,"./node":157,"./reporter":158}],157:[function(require,module,exports){
 var Reporter = require('../base').Reporter;
 var EncoderBuffer = require('../base').EncoderBuffer;
+var DecoderBuffer = require('../base').DecoderBuffer;
 var assert = require('minimalistic-assert');
 
 // Supported tags
@@ -24188,7 +24201,7 @@ var tags = [
 // Public methods list
 var methods = [
   'key', 'obj', 'use', 'optional', 'explicit', 'implicit', 'def', 'choice',
-  'any'
+  'any', 'contains'
 ].concat(tags);
 
 // Overrided methods list
@@ -24224,6 +24237,7 @@ function Node(enc, parent) {
   state['default'] = null;
   state.explicit = null;
   state.implicit = null;
+  state.contains = null;
 
   // Should create new instance on each method
   if (!state.parent) {
@@ -24428,6 +24442,15 @@ Node.prototype.choice = function choice(obj) {
   return this;
 };
 
+Node.prototype.contains = function contains(item) {
+  var state = this._baseState;
+
+  assert(state.use === null);
+  state.contains = item;
+
+  return this;
+};
+
 //
 // Decoding
 //
@@ -24529,6 +24552,12 @@ Node.prototype._decode = function decode(input) {
       });
       if (fail)
         return err;
+    }
+
+    // Decode contained/encoded by schema, only in bit or octet strings
+    if (state.contains && (state.tag === 'octstr' || state.tag === 'bitstr')) {
+      var data = new DecoderBuffer(result);
+      result = this._getUse(state.contains, input._reporterState.obj)._decode(data);
     }
   }
 
@@ -24673,6 +24702,9 @@ Node.prototype._encodeValue = function encode(data, reporter, parent) {
     result = this._createEncoderBuffer(data);
   } else if (state.choice) {
     result = this._encodeChoice(data, reporter);
+  } else if (state.contains) {
+    content = this._getUse(state.contains, parent)._encode(data, reporter);
+    primitive = true;
   } else if (state.children) {
     content = state.children.map(function(child) {
       if (child._baseState.tag === 'null_')
@@ -24692,7 +24724,6 @@ Node.prototype._encodeValue = function encode(data, reporter, parent) {
     }, this).filter(function(child) {
       return child;
     });
-
     content = this._createEncoderBuffer(content);
   } else {
     if (state.tag === 'seqof' || state.tag === 'setof') {
@@ -24785,6 +24816,7 @@ Node.prototype._isNumstr = function isNumstr(str) {
 Node.prototype._isPrintstr = function isPrintstr(str) {
   return /^[A-Za-z0-9 '\(\)\+,\-\.\/:=\?]*$/.test(str);
 };
+
 },{"../base":156,"minimalistic-assert":167}],158:[function(require,module,exports){
 var inherits = require('inherits');
 
@@ -31703,54 +31735,7 @@ Address.prototype.persist = function(){
   return this;
 };
 
-},{"./helpers":317,"./import-export":318,"./rng":322,"./shared":323,"./wallet":332,"bitcoinjs-lib":58,"bs58":67}],310:[function(require,module,exports){
-'use strict';
-
-var assert = require('assert');
-
-var API = require('./api');
-var WalletCrypto = require('./wallet-crypto');
-
-// If there is a problem with the analytics endpoint, the application should
-// just proceed. Therefor we're not returning a promise in the methods below.
-
-function postEvent(name, guid) {
-  assert(name, "Event name required");
-  assert(guid, "Wallet identifier required");
-
-  var fail = function() {
-    console.log("Unable to post to analytics endpoint.");
-  }
-
-  var handleResponse = function (res) {
-    if (!res || !res.success)
-      fail();
-  };
-
-  var params = {
-    name: name,
-    hashed_guid: WalletCrypto.sha256(guid).toString('hex')
-  };
-
-  API.request('POST', 'wallet-event', params, false)
-    .then(handleResponse).catch(fail);
-}
-
-function walletCreated(guid) {
-  this.postEvent('create_v3', guid);
-}
-
-function walletUpgraded(guid) {
-  this.postEvent('upgrade_v3', guid);
-}
-
-module.exports = {
-  postEvent: postEvent, // For tests
-  walletCreated: walletCreated,
-  walletUpgraded: walletUpgraded
-};
-
-},{"./api":311,"./wallet-crypto":326,"assert":84}],311:[function(require,module,exports){
+},{"./helpers":316,"./import-export":317,"./rng":321,"./shared":322,"./wallet":331,"bitcoinjs-lib":58,"bs58":67}],310:[function(require,module,exports){
 'use strict';
 
 module.exports = new API();
@@ -32018,7 +32003,7 @@ API.prototype.pushTx = function (tx, note){
 //   }
 // };
 
-},{"./helpers":317,"./wallet":332,"./wallet-crypto":326,"./wallet-store":329,"assert":84,"buffer":86}],312:[function(require,module,exports){
+},{"./helpers":316,"./wallet":331,"./wallet-crypto":325,"./wallet-store":328,"assert":84,"buffer":86}],311:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -32338,9 +32323,10 @@ module.exports = {
   disableAllNotifications: disableAllNotifications
 };
 
-},{"./api":311,"./wallet-store.js":329,"./wallet.js":332,"assert":84}],313:[function(require,module,exports){
+},{"./api":310,"./wallet-store.js":328,"./wallet.js":331,"assert":84}],312:[function(require,module,exports){
 
 var WebSocket = require('ws');
+var Helpers   = require('./helpers');
 
 function BlockchainSocket() {
   this.wsUrl = 'wss://blockchain.info/inv';
@@ -32370,6 +32356,7 @@ if (!(typeof window === 'undefined')) {
 
 
 BlockchainSocket.prototype.connect = function (onOpen, onMessage, onClose) {
+  if(Helpers.tor()) return;
 
   this.reconnect = function () {
     var connect = this.connectOnce.bind(this, onOpen, onMessage, onClose);
@@ -32393,6 +32380,8 @@ BlockchainSocket.prototype.connectOnce = function (onOpen, onMessage, onClose) {
 };
 
 BlockchainSocket.prototype.send = function (message) {
+  if(Helpers.tor()) return;
+
   this.reconnect();
   var send = function() {this.socket.send(message); }.bind(this);
   if (this.socket && this.socket.readyState === 1) { send();}
@@ -32400,7 +32389,7 @@ BlockchainSocket.prototype.send = function (message) {
 
 module.exports = BlockchainSocket;
 
-},{"ws":308}],314:[function(require,module,exports){
+},{"./helpers":316,"ws":308}],313:[function(require,module,exports){
 'use strict';
 
 module.exports = Wallet;
@@ -32428,7 +32417,6 @@ var Tx = require('./wallet-transaction');
 var shared = require('./shared');
 var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var KeyRing  = require('./keyring');
-var Analytics = require('./analytics');
 var TxList = require('./transaction-list');
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -33160,7 +33148,6 @@ Wallet.prototype.newHDWallet = function(firstAccountLabel, pw, success, error){
   var account = this.newAccount(label, pw, this._hd_wallets.length-1, true);
   var guid = this.guid;
   MyWallet.syncWallet(function(res) {
-    Analytics.walletUpgraded(guid);
     success();
   }, error);
 
@@ -33261,7 +33248,7 @@ Wallet.prototype._getPrivateKey = function(accountIndex, path, secondPassword) {
   return kr.privateKeyFromPath(path).toWIF();
 };
 
-},{"./address":309,"./analytics":310,"./api":311,"./blockchain-settings-api":312,"./hd-account":315,"./hd-wallet":316,"./helpers":317,"./import-export":318,"./keyring":320,"./shared":323,"./transaction-list":324,"./wallet":332,"./wallet-crypto":326,"./wallet-store":329,"./wallet-transaction":331,"assert":84,"bigi":4,"bip39":6,"bitcoinjs-lib":58,"bs58":67,"buffer":86}],315:[function(require,module,exports){
+},{"./address":309,"./api":310,"./blockchain-settings-api":311,"./hd-account":314,"./hd-wallet":315,"./helpers":316,"./import-export":317,"./keyring":319,"./shared":322,"./transaction-list":323,"./wallet":331,"./wallet-crypto":325,"./wallet-store":328,"./wallet-transaction":330,"assert":84,"bigi":4,"bip39":6,"bitcoinjs-lib":58,"bs58":67,"buffer":86}],314:[function(require,module,exports){
 'use strict';
 
 module.exports = HDAccount;
@@ -33604,7 +33591,7 @@ HDAccount.prototype.persist = function(){
   return this;
 };
 
-},{"./helpers":317,"./keyring":320,"./wallet":332,"./wallet-crypto":326,"assert":84,"bitcoinjs-lib":58}],316:[function(require,module,exports){
+},{"./helpers":316,"./keyring":319,"./wallet":331,"./wallet-crypto":325,"assert":84,"bitcoinjs-lib":58}],315:[function(require,module,exports){
 'use strict';
 
 module.exports = HDWallet;
@@ -33912,7 +33899,7 @@ HDWallet.prototype.isValidAccountIndex = function(index){
   return Helpers.isNumber(index) && index >= 0 && index < this._accounts.length;
 };
 
-},{"./hd-account":315,"./helpers":317,"./rng":322,"./wallet":332,"./wallet-crypto":326,"assert":84,"bip39":6,"bitcoinjs-lib":58}],317:[function(require,module,exports){
+},{"./hd-account":314,"./helpers":316,"./rng":321,"./wallet":331,"./wallet-crypto":325,"assert":84,"bip39":6,"bitcoinjs-lib":58}],316:[function(require,module,exports){
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -33986,6 +33973,9 @@ Helpers.add = function (x,y){
 };
 Helpers.and = function (x,y){
   return x && y;
+};
+Helpers.or = function (x,y){
+  return x || y;
 };
 Helpers.i = function (pred1,pred2){
   return function (element) {
@@ -34170,12 +34160,33 @@ Helpers.scorePassword = function (password){
   return entropyWeighted(password);
 
 };
+
+Helpers.getHostName = function() {
+  if ((typeof window === 'undefined')) {
+    return null;
+  }
+
+  if (typeof window.location === 'undefined' || window.location.hostname === 'undefined') {
+    return null;
+  }
+
+  return window.location.hostname;
+}
+
+Helpers.tor = function () {
+  var hostname = Helpers.getHostName()
+
+  // NodeJS TOR detection not supported:
+  if(hostname === null) return null
+
+  return hostname.indexOf(".onion") > -1
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 
 module.exports = Helpers;
 
-},{"bitcoinjs-lib":58}],318:[function(require,module,exports){
+},{"bitcoinjs-lib":58}],317:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -34563,7 +34574,7 @@ var ImportExport = new function() {
 module.exports = ImportExport;
 
 }).call(this,require("buffer").Buffer)
-},{"./wallet-crypto":326,"assert":84,"bigi":4,"bitcoinjs-lib":58,"bs58":67,"buffer":86,"unorm":307}],319:[function(require,module,exports){
+},{"./wallet-crypto":325,"assert":84,"bigi":4,"bitcoinjs-lib":58,"bs58":67,"buffer":86,"unorm":307}],318:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyChain;
@@ -34619,7 +34630,7 @@ KeyChain.prototype.getPrivateKey = function(index) {
   return key ? key : null;
 };
 
-},{"./helpers":317,"assert":84,"bitcoinjs-lib":58}],320:[function(require,module,exports){
+},{"./helpers":316,"assert":84,"bitcoinjs-lib":58}],319:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyRing;
@@ -34683,7 +34694,7 @@ KeyRing.prototype.toJSON = function (){
   return cacheJSON;
 };
 
-},{"./helpers":317,"./keychain":319,"assert":84,"bitcoinjs-lib":58}],321:[function(require,module,exports){
+},{"./helpers":316,"./keychain":318,"assert":84,"bitcoinjs-lib":58}],320:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -35190,89 +35201,117 @@ function computeSuggestedSweep(coins){
 //   .catch(error)
 
 }).call(this,require("buffer").Buffer)
-},{"./api":311,"./helpers":317,"./keyring":320,"./transaction":325,"./wallet":332,"./wallet-crypto":326,"bitcoinjs-lib":58,"buffer":86}],322:[function(require,module,exports){
+},{"./api":310,"./helpers":316,"./keyring":319,"./transaction":324,"./wallet":331,"./wallet-crypto":325,"bitcoinjs-lib":58,"buffer":86}],321:[function(require,module,exports){
 'use strict';
 
 module.exports = new RNG();
-////////////////////////////////////////////////////////////////////////////////
+
 var randomBytes = require('randombytes');
-// var Q           = require('q');
 var API         = require('./api');
 var Buffer      = require('buffer').Buffer;
 var assert      = require('assert');
-var Helpers = require('./helpers');
-////////////////////////////////////////////////////////////////////////////////
-// API class
-function RNG(){
-  this.ACTION    = "GET";
-  this.URL       = "https://api.blockchain.info/v2/randombytes";
+var Helpers     = require('./helpers');
+
+function RNG() {
+  this.ACTION    = 'GET';
+  this.URL       = 'https://api.blockchain.info/v2/randombytes';
   this.FORMAT    = 'hex';  // raw, hex, base64
   this.BYTES     = 32;
-  }
-
-
-RNG.prototype.xor = function (a, b) {
-  if (!Buffer.isBuffer(a)) a = new Buffer(a)
-  if (!Buffer.isBuffer(b)) b = new Buffer(b)
-  var res = []
-  if (a.length > b.length) {
-    for (var i = 0; i < b.length; i++) {
-      res.push(a[i] ^ b[i])
-    }
-  } else {
-    for (var i = 0; i < a.length; i++) {
-      res.push(a[i] ^ b[i])
-    }
-  }
-  return new Buffer(res);
 }
 
-// run :: Int -> Fun -> Buffer
-RNG.prototype.run = function (sizeBytes, callback) {
-  try {
-    var b = sizeBytes ? sizeBytes : this.BYTES;
-    var serverH = this.getServerEntropy(b);
-    // in iOS, every() cannot be called on a Buffer object, so use Array.prototype.every.call(sizeBytes, f)
-    assert(!Array.prototype.every.call(serverH, function(byte){return byte === serverH[0]}), 'The server entropy should not be the same byte repeated.');
-    var localH = randomBytes(b, callback);
-    assert(!Array.prototype.every.call(localH, function(byte){return byte === localH[0]}), 'The browser entropy should not be the same byte repeated.');
-    assert(serverH.byteLength === localH.byteLength, 'Error: both entropies should be same of the length.');
-    var combinedH = this.xor(localH, serverH);
-    assert(!Array.prototype.every.call(combinedH, function(byte){return byte === combinedH[0]}), 'The combined entropy should not be the same byte repeated.');
-    assert(combinedH.byteLength === b, 'Error: combined entropy should be of requested length.');
-    var zero = new Buffer(serverH.byteLength);
-    assert(Buffer.compare(combinedH, zero) !== 0, 'Error: zero array entropy not allowed.');
-  } catch (e) {
-    console.log("Error: RNG.run");
-    console.log(e);
-    throw "Error generating the entropy";
+
+// xor :: Buffer -> Buffer -> Buffer
+RNG.prototype.xor = function (a, b) {
+  assert(
+    Buffer.isBuffer(a) && Buffer.isBuffer(b),
+    'Expected arguments to be buffers'
+  );
+
+  var length = Math.min(a.length, b.length);
+  var buffer = new Buffer(length);
+
+  for (var i = 0; i < length; ++i) {
+    buffer[i] = a[i] ^ b[i];
   }
-  return combinedH;
+
+  return buffer;
+};
+
+// run :: Int -> Buffer
+RNG.prototype.run = function (nBytes) {
+  try {
+    nBytes = !isNaN(nBytes) && nBytes > 0 ? nBytes : this.BYTES;
+    var serverH = this.getServerEntropy(nBytes);
+    var localH = randomBytes(nBytes);
+    var combinedH = this.xor(localH, serverH);
+
+    assert(
+      !Array.prototype.every.call(serverH, function (b) { return b === serverH[0] }),
+      'The server entropy should not be the same byte repeated.'
+    );
+    assert(
+      !Array.prototype.every.call(localH, function (b) { return b === localH[0] }),
+      'The browser entropy should not be the same byte repeated.'
+    );
+    assert(
+      serverH.byteLength === localH.byteLength,
+      'Both entropies should be same of the length.'
+    );
+    assert(
+      !Array.prototype.every.call(combinedH, function (b) { return b === combinedH[0] }),
+      'The combined entropy should not be the same byte repeated.'
+    );
+    assert(
+      combinedH.byteLength === nBytes,
+      'Combined entropy should be of requested length.'
+    );
+
+    return combinedH;
+
+  } catch (e) {
+    console.log('Error: RNG.run');
+    console.log(e);
+    throw 'Error generating the entropy';
+  }
 };
 
 // getServerEntropy :: int -> Buffer
-RNG.prototype.getServerEntropy = function (sizeBytes) {
+RNG.prototype.getServerEntropy = function (nBytes) {
+  assert(
+    this.FORMAT === 'hex',
+    'Only supported hex format.'
+  );
 
+  nBytes = !isNaN(nBytes) && nBytes > 0 ? nBytes : this.BYTES;
   var request = new XMLHttpRequest();
-  assert(this.FORMAT === 'hex', "Only supported hex format.")
-  var b = sizeBytes ? sizeBytes : this.BYTES;
-  var data = { bytes: b, format: this.FORMAT };
-  var url = this.URL +  '?' + API.encodeFormData(data);
-  request.open(this.ACTION, url , false);
+  var data = { bytes: nBytes, format: this.FORMAT };
+  var url = this.URL + '?' + API.encodeFormData(data);
+
+  request.open(this.ACTION, url, false);
   request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
   request.send(null);
+
   if (request.status === 200) {
-    assert(Helpers.isHex(request.responseText), 'Error: non-hex server entropy answer.');
+    assert(
+      Helpers.isHex(request.responseText),
+      'Non-hex server entropy answer.'
+    );
+
     var B = new Buffer(request.responseText, this.FORMAT);
-    assert(B.byteLength === b, 'Error: different entropy length requested.');
+
+    assert(
+      B.byteLength === nBytes,
+      'Different entropy length requested.'
+    );
+
     return B;
   }
-  else{
-    throw "network connection error";
+  else {
+    throw 'Received not ok status: ' + request.status;
   }
 }
 
-},{"./api":311,"./helpers":317,"assert":84,"buffer":86,"randombytes":305}],323:[function(require,module,exports){
+},{"./api":310,"./helpers":316,"assert":84,"buffer":86,"randombytes":305}],322:[function(require,module,exports){
 var satoshi = 100000000; //One satoshi
 var symbol_btc = {code : "BTC", symbol : "BTC", name : "Bitcoin",  conversion : satoshi, symbolAppearsAfter : true, local : false}; //Default BTC Currency Symbol object
 var symbol_local = {"conversion":0,"symbol":"$","name":"U.S. dollar","symbolAppearsAfter":false,"local":true,"code":"USD"}; //Users local currency object
@@ -35471,7 +35510,7 @@ function convert(x, conversion) {
   return (x / conversion).toFixed(2).toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
 }
 
-},{}],324:[function(require,module,exports){
+},{}],323:[function(require,module,exports){
 'use strict';
 
 var assert  = require('assert')
@@ -35550,7 +35589,7 @@ TransactionList.prototype.subscribe = function (listener) {
 
 module.exports = TransactionList;
 
-},{"./api":311,"./helpers":317,"./wallet-transaction":331,"assert":84,"events":281}],325:[function(require,module,exports){
+},{"./api":310,"./helpers":316,"./wallet-transaction":330,"assert":84,"events":281}],324:[function(require,module,exports){
 'use strict';
 
 var assert      = require('assert');
@@ -35747,7 +35786,7 @@ function sortUnspentOutputs(unspentOutputs) {
 
 module.exports = Transaction;
 
-},{"./helpers":317,"./wallet":332,"assert":84,"bitcoinjs-lib":58,"buffer":86,"randombytes":305}],326:[function(require,module,exports){
+},{"./helpers":316,"./wallet":331,"assert":84,"bitcoinjs-lib":58,"buffer":86,"randombytes":305}],325:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -35852,7 +35891,7 @@ var AES = {
     var cipher = crypto.createCipheriv(options.mode || AES.CBC, key, salt || '');
     cipher.setAutoPadding(!options.padding);
 
-    if (options.padding) dataBytes = options.padding.pad(dataBytes, KEY_BIT_LEN);
+    if (options.padding) dataBytes = options.padding.pad(dataBytes, KEY_BIT_LEN / 8);
     var encryptedBytes = Buffer.concat([ cipher.update(dataBytes), cipher.final() ]);
 
     return encryptedBytes;
@@ -36092,7 +36131,7 @@ module.exports = {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"assert":84,"buffer":86,"crypto":90,"sjcl":306}],327:[function(require,module,exports){
+},{"assert":84,"buffer":86,"crypto":90,"sjcl":306}],326:[function(require,module,exports){
 'use strict';
 
 var API = require('./api');
@@ -36216,7 +36255,7 @@ module.exports = {
   requestTwoFactorReset: requestTwoFactorReset
 };
 
-},{"./api":311}],328:[function(require,module,exports){
+},{"./api":310}],327:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -36330,7 +36369,7 @@ module.exports = {
   generateNewWallet: generateNewWallet
 };
 
-},{"./blockchain-wallet":314,"./helpers":317,"./wallet":332,"./wallet-crypto":326,"./wallet-network":327,"./wallet-store":329,"assert":84}],329:[function(require,module,exports){
+},{"./blockchain-wallet":313,"./helpers":316,"./wallet":331,"./wallet-crypto":325,"./wallet-network":326,"./wallet-store":328,"assert":84}],328:[function(require,module,exports){
 'use strict';
 
 var MyWallet = require('./wallet');
@@ -36613,7 +36652,7 @@ var WalletStore = (function() {
 
 module.exports = WalletStore;
 
-},{"./wallet":332,"./wallet-crypto":326}],330:[function(require,module,exports){
+},{"./wallet":331,"./wallet-crypto":325}],329:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -36689,7 +36728,7 @@ module.exports = {
   postTokenEndpoint: postTokenEndpoint // For tests
 };
 
-},{"./api":311,"./helpers":317,"assert":84}],331:[function(require,module,exports){
+},{"./api":310,"./helpers":316,"assert":84}],330:[function(require,module,exports){
 'use strict';
 
 module.exports = Tx;
@@ -36842,7 +36881,19 @@ Object.defineProperties(Tx.prototype, {
       return this.processedInputs.concat(this.processedOutputs)
         .some(function (processed) { return processed.identity == identity; });
     }
-  }
+  },
+  "fromWatchOnly": {
+    configurable: false,
+    get: function() {
+      return this._processed_ins.some(function (o) { return o.isWatchOnly; });
+    }
+  },
+  "toWatchOnly": {
+    configurable: false,
+    get: function() {
+      return this._processed_outs.some(function (o) { return o.isWatchOnly; });
+    }
+  },
 });
 
 function isAccount(x) {
@@ -36881,12 +36932,15 @@ function tagCoin(x) {
   var change = false;
   var id;
   var label = null;
+  var isWatchOnly = null;
 
   switch (true) {
     case isLegacy(x):
       coinType = "legacy";
       id = 'imported';
-      label = address(x).label;
+      var addr = address(x);
+      label = addr.label;
+      isWatchOnly = addr.isWatchOnly;
       break;
     case isAccount(x):
       coinType = accountPath(x);
@@ -36897,7 +36951,15 @@ function tagCoin(x) {
     default:
       coinType = "external";
   }
-  return {address: ad, amount: am, coinType: coinType, change: change, label: label, identity: id};
+  return {
+    address: ad,
+    amount: am,
+    coinType: coinType,
+    change: change,
+    label: label,
+    identity: id,
+    isWatchOnly: isWatchOnly
+  };
 };
 
 function unpackInput(input) {
@@ -36911,7 +36973,7 @@ Tx.factory = function(o){
   else { return o; };
 };
 
-},{"./helpers":317,"./wallet":332,"./wallet-store":329}],332:[function(require,module,exports){
+},{"./helpers":316,"./wallet":331,"./wallet-store":328}],331:[function(require,module,exports){
 'use strict';
 
 var MyWallet = module.exports = {};
@@ -36936,7 +36998,6 @@ var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
 var shared = require('./shared');
 var BlockchainSocket = require('./blockchain-socket');
-var Analytics = require('./analytics');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -38091,11 +38152,6 @@ MyWallet.createNewWallet = function(inputedEmail, inputedPassword, firstAccountN
 
     WalletStore.unsafeSetPassword(createdPassword);
 
-    var isHD = Helpers.isBoolean(isHD) ? isHD : true;
-    if (isHD) {
-      Analytics.walletCreated(createdGuid);
-    }
-
     success(createdGuid, createdSharedKey, createdPassword);
   }, function (e) {
     error(e);
@@ -38239,5 +38295,5 @@ MyWallet.precisionToSatoshiBN = function(x) {
   return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, shared.sShift(shared.getBTCSymbol())).toString()));
 };
 
-},{"./analytics":310,"./api":311,"./blockchain-socket":313,"./blockchain-wallet":314,"./hd-account":315,"./hd-wallet":316,"./helpers":317,"./import-export":318,"./shared":323,"./transaction":325,"./wallet-crypto":326,"./wallet-signup":328,"./wallet-store":329,"assert":84,"bigi":4,"bip39":6,"bitcoinjs-lib":58,"bs58":67,"buffer":86}]},{},[1])(1)
+},{"./api":310,"./blockchain-socket":312,"./blockchain-wallet":313,"./hd-account":314,"./hd-wallet":315,"./helpers":316,"./import-export":317,"./shared":322,"./transaction":324,"./wallet-crypto":325,"./wallet-signup":327,"./wallet-store":328,"assert":84,"bigi":4,"bip39":6,"bitcoinjs-lib":58,"bs58":67,"buffer":86}]},{},[1])(1)
 });

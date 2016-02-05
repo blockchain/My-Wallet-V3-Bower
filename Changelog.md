@@ -2,7 +2,7 @@ __Blockchain Wallet V3__
 
 _Recent changes_
 
-#   (2016-02-04)
+#   (2016-02-05)
 
 
 
@@ -10,69 +10,34 @@ _Recent changes_
 
 ## Bug Fixes
 
-- **Dependencies:** update whitelist and cleanup script
-  ([6426c864](https://github.com/blockchain/My-Wallet-V3/commit/6426c86421d25335a102bba25e91234c8c604a05))
-- **RNG:** remove src/index.js
-  ([10dd1038](https://github.com/blockchain/My-Wallet-V3/commit/10dd1038497daa1bdb0c90342a61ff700a92cc79))
-- **TransactionList:** remove es6 arrow function
-  ([f80c889a](https://github.com/blockchain/My-Wallet-V3/commit/f80c889a1c2797d340dca2f965e35689523430c6))
-- **TxList:** compatibility with front end
-  ([ce539d4d](https://github.com/blockchain/My-Wallet-V3/commit/ce539d4d0b84dad4984a3f5ee8acb46fba8ae7c0))
-- **address.fromString:** write the expected error message.
-  ([2c9cc8a2](https://github.com/blockchain/My-Wallet-V3/commit/2c9cc8a2bcfb802e575edb630cc1481490705ce8))
-- **websocket:** catch error if websocket fails to connect
-  ([c2ae19e8](https://github.com/blockchain/My-Wallet-V3/commit/c2ae19e80c38a82e6db9b11153e338c47e519ddc))
+- **WalletCrypto:** use correct key block size when padding with Iso10126
+  ([1b97b5c7](https://github.com/blockchain/My-Wallet-V3/commit/1b97b5c7ff17289779639e4b5f6fdc60c46178a5))
+- **WalletTransaction:** use some instead of map/reduce
+  ([91d84044](https://github.com/blockchain/My-Wallet-V3/commit/91d84044f24749593e864cca2efd17d657ae35a3))
 
 
 ## Features
 
-- **RNG class:**
-  - added some checks on entropy
-  ([f1fe52ae](https://github.com/blockchain/My-Wallet-V3/commit/f1fe52ae2c657bb8f8805688321638baf0ef94b4))
-  - add and mnemo gen uses new rng
-  ([dd8aaecb](https://github.com/blockchain/My-Wallet-V3/commit/dd8aaecb09896db79ebe390557c3678eef14bb84))
-  - combine local and server ent
-  ([a7b43062](https://github.com/blockchain/My-Wallet-V3/commit/a7b43062d94bebb619db089c139e94412c8d44ea))
-  - added server side entropy.
-  ([81a49738](https://github.com/blockchain/My-Wallet-V3/commit/81a49738261db6521210fd7be768a0a687a17a3f))
-- **TxList:**
-  - use all xpubs and addresses, find tx by hash prop
-  ([de5d3ea2](https://github.com/blockchain/My-Wallet-V3/commit/de5d3ea2bfa77152bf2672765f2508a9e3bdbf27))
-  - use events api to emit updates
-  ([e93f01a9](https://github.com/blockchain/My-Wallet-V3/commit/e93f01a96a7ad9d55b9a0cc0d1fa1a0179fa935c))
-  - allow subscribing to tx changes
-  ([6bb947e7](https://github.com/blockchain/My-Wallet-V3/commit/6bb947e73ad8f50e6a7c270314602b1ece85289c))
-  - add TransactionList class for storing txs
-  ([f4b9b068](https://github.com/blockchain/My-Wallet-V3/commit/f4b9b06883d2d640470ce8916c2a6c3d4c7c4596))
-- **add-key:** add private key to watch only.
-  ([f4fd92db](https://github.com/blockchain/My-Wallet-V3/commit/f4fd92db7826a2eb7a054ee09a21bbba4ea5bd70))
-- **tests:** added Blockchain-wallet tests for wallet creation in case of rng failure.
-  ([99035ccf](https://github.com/blockchain/My-Wallet-V3/commit/99035ccf2a0b2c8795a77e2cbe79e933466088d1))
+- **Analytics:** remove
+  ([f957a8e6](https://github.com/blockchain/My-Wallet-V3/commit/f957a8e6bb7e230d65773ef6e309fb018af0ec95))
+- **TOR:** don't use web sockets
+  ([e0347d5e](https://github.com/blockchain/My-Wallet-V3/commit/e0347d5e54cd21e5b527b628fa2625b6bdf31ede))
+- **WalletTransaction:** detect sent to/from watch-only
+  ([cd68349f](https://github.com/blockchain/My-Wallet-V3/commit/cd68349f0ef7ba711811120ee3a593b0ec6fecb8))
 
 
 ## Refactor
 
-- **crypto:** remove deprecated CryptoJS dependency
-- **tests:** delete old files.
+- **rng:**
+  - clean up getServerEntropy function
+  - use crypto-browserify implementation of xor
+  - move entropy code to top of function
+  - remove unused callback and unnecessary assert
 
 
 ## Test
 
-- **Address:**
-  - RNG tests
-  - Address.new() tests
-- **BlockchainWallet:** newHDWallet and more tests for Wallet.new
-- **RNG:**
-  - XOR length, run() and getServerEntropy()
-  - added xor test
-- **TransactionList:** add tests for TransactionList class
-- **Travis:** use modern Chrome
-- **hdwallet.new:** fix rng mock.
-
-
-## Chore
-
-- **Release:** 3.7.0
+- **BlockchainSocket:** basic tests
 
 
 
