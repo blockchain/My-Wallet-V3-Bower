@@ -32867,7 +32867,17 @@ Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bi
   var modifyAddress = function (newKey) {
     var watchOnlyKey = this._addresses[addr];
     if (newKey.address !== watchOnlyKey.address) {
-      throw 'addressDoesNotMatchWithTheKey'
+      if (!this.containsLegacyAddress(newKey.address)) {
+        console.log(newKey)
+        return this.importLegacyAddress(privateKey, null, secPass, bipPass);
+      } else {
+         if (this.key(newKey.address).isWatchOnly) {
+           watchOnlyKey = this._addresses[newKey.address];
+         }  else {
+          throw 'privateKeyOfAnotherNonWatchOnlyAddress'
+         }
+      }
+
     }
     watchOnlyKey._priv = newKey._priv;
     if (this.isDoubleEncrypted) {
@@ -35796,7 +35806,8 @@ var crypto  = require('crypto')
 
 var SUPPORTED_ENCRYPTION_VERSION = 3
   , SALT_BYTES = 16
-  , KEY_BIT_LEN = 256;
+  , KEY_BIT_LEN = 256
+  , BLOCK_BIT_LEN = 128;
 
 var ALGO = {
   SHA1    : 'sha1',
@@ -35891,7 +35902,7 @@ var AES = {
     var cipher = crypto.createCipheriv(options.mode || AES.CBC, key, salt || '');
     cipher.setAutoPadding(!options.padding);
 
-    if (options.padding) dataBytes = options.padding.pad(dataBytes, KEY_BIT_LEN / 8);
+    if (options.padding) dataBytes = options.padding.pad(dataBytes, BLOCK_BIT_LEN / 8);
     var encryptedBytes = Buffer.concat([ cipher.update(dataBytes), cipher.final() ]);
 
     return encryptedBytes;
