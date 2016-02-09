@@ -34,7 +34,8 @@ module.exports = {
   Tx: require('./src/wallet-transaction'),
   Shared: require('./src/shared'),
   WalletTokenEndpoints: require('./src/wallet-token-endpoints'),
-  WalletNetwork: require('./src/wallet-network')
+  WalletNetwork: require('./src/wallet-network'),
+  RNG: require('./src/rng')
   // Wallet: require('./blockchain-wallet'),
   // Address: require('./address'),
   // HDAccount: require('./hd-account'),
@@ -47,7 +48,7 @@ module.exports = {
   // BIP39: require('bip39')
 };
 
-},{"./src/api":310,"./src/blockchain-settings-api":311,"./src/helpers":316,"./src/import-export":317,"./src/payment":320,"./src/shared":322,"./src/wallet":331,"./src/wallet-crypto":325,"./src/wallet-network":326,"./src/wallet-store":328,"./src/wallet-token-endpoints":329,"./src/wallet-transaction":330,"buffer":86,"es6-promise":83,"isomorphic-fetch":303}],2:[function(require,module,exports){
+},{"./src/api":310,"./src/blockchain-settings-api":311,"./src/helpers":316,"./src/import-export":317,"./src/payment":320,"./src/rng":321,"./src/shared":322,"./src/wallet":331,"./src/wallet-crypto":325,"./src/wallet-network":326,"./src/wallet-store":328,"./src/wallet-token-endpoints":329,"./src/wallet-transaction":330,"buffer":86,"es6-promise":83,"isomorphic-fetch":303}],2:[function(require,module,exports){
 // (public) Constructor
 function BigInteger(a, b, c) {
   if (!(this instanceof BigInteger))
@@ -1754,7 +1755,8 @@ module.exports={
     "tarball": "http://registry.npmjs.org/bigi/-/bigi-1.4.1.tgz"
   },
   "directories": {},
-  "_resolved": "https://registry.npmjs.org/bigi/-/bigi-1.4.1.tgz"
+  "_resolved": "https://registry.npmjs.org/bigi/-/bigi-1.4.1.tgz",
+  "readme": "ERROR: No README data found!"
 }
 
 },{}],6:[function(require,module,exports){
@@ -17400,11 +17402,25 @@ exports['1.3.132.0.35'] = 'p521'
       a.iushrn(shift);
     }
 
-    return { div: q || null, mod: a };
+    return {
+      div: q || null,
+      mod: a
+    };
   };
 
+  // NOTE: 1) `mode` can be set to `mod` to request mod only,
+  //       to `div` to request div only, or be absent to
+  //       request both div & mod
+  //       2) `positive` is true if unsigned mod is requested
   BN.prototype.divmod = function divmod (num, mode, positive) {
     assert(!num.isZero());
+
+    if (this.isZero()) {
+      return {
+        div: new BN(0),
+        mod: new BN(0)
+      };
+    }
 
     var div, mod, res;
     if (this.negative !== 0 && num.negative === 0) {
@@ -17434,7 +17450,10 @@ exports['1.3.132.0.35'] = 'p521'
         div = res.div.neg();
       }
 
-      return { div: div, mod: res.mod };
+      return {
+        div: div,
+        mod: res.mod
+      };
     }
 
     if ((this.negative & num.negative) !== 0) {
@@ -17457,17 +17476,26 @@ exports['1.3.132.0.35'] = 'p521'
 
     // Strip both numbers to approximate shift value
     if (num.length > this.length || this.cmp(num) < 0) {
-      return { div: new BN(0), mod: this };
+      return {
+        div: new BN(0),
+        mod: this
+      };
     }
 
     // Very short reduction
     if (num.length === 1) {
       if (mode === 'div') {
-        return { div: this.divn(num.words[0]), mod: null };
+        return {
+          div: this.divn(num.words[0]),
+          mod: null
+        };
       }
 
       if (mode === 'mod') {
-        return { div: null, mod: new BN(this.modn(num.words[0])) };
+        return {
+          div: null,
+          mod: new BN(this.modn(num.words[0]))
+        };
       }
 
       return {
@@ -17692,8 +17720,8 @@ exports['1.3.132.0.35'] = 'p521'
   };
 
   BN.prototype.gcd = function gcd (num) {
-    if (this.isZero()) return num.clone();
-    if (num.isZero()) return this.clone();
+    if (this.isZero()) return num.abs();
+    if (num.isZero()) return this.abs();
 
     var a = this.clone();
     var b = num.clone();
@@ -33044,7 +33072,7 @@ function isAccountNonUsed (account, progress) {
 
 Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, startedRestoreHDWallet, progress){
   // wallet restoration
-  startedRestoreHDWallet && startedRestoreHDWallet;
+  startedRestoreHDWallet && startedRestoreHDWallet();
   var self = this;
   var seedHex = BIP39.mnemonicToEntropy(mnemonic);
   var pass39  = Helpers.isString(bip39Password) ? bip39Password : "";
@@ -37762,7 +37790,9 @@ function decryptAndInitializeWallet(success, error, decrypt_success, build_hd_su
 MyWallet.makePairingCode = function(success, error) {
   try {
     MyWallet.securePost('wallet', { method : 'pairing-encryption-password' }, function(encryption_phrase) {
-      success('1|' + MyWallet.wallet.guid + '|' + WalletCrypto.encrypt(MyWallet.wallet.sharedKey + '|' + WalletStore.getPassword(), encryption_phrase, 10));
+      var pwHex = new Buffer(WalletStore.getPassword()).toString('hex');
+      var encrypted = WalletCrypto.encrypt(MyWallet.wallet.sharedKey + '|' + pwHex, encryption_phrase, 10);
+      success('1|' + MyWallet.wallet.guid + '|' + encrypted);
     }, function(e) {
       error(e);
     });
