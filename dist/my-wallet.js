@@ -4,7 +4,7 @@
 require('es6-promise').polyfill();
 require('isomorphic-fetch');
 
-var Buffer = require('buffer').Buffer
+var Buffer = require('buffer').Buffer;
 
 // This fixes a bug with Safari < 8 and the Browserify Buffer shim used in Crypto-browserify/randombytes
 // See: https://github.com/feross/buffer/issues/63
@@ -1755,8 +1755,7 @@ module.exports={
     "tarball": "http://registry.npmjs.org/bigi/-/bigi-1.4.1.tgz"
   },
   "directories": {},
-  "_resolved": "https://registry.npmjs.org/bigi/-/bigi-1.4.1.tgz",
-  "readme": "ERROR: No README data found!"
+  "_resolved": "https://registry.npmjs.org/bigi/-/bigi-1.4.1.tgz"
 }
 
 },{}],6:[function(require,module,exports){
@@ -31634,7 +31633,7 @@ Object.defineProperties(Address.prototype, {
         MyWallet.syncWallet();
       }
       else
-        { throw 'Error: address.archived must be a boolean';};
+        { throw 'Error: address.archived must be a boolean';}
     }
   },
   "active": {
@@ -31650,7 +31649,7 @@ Address.factory = function(o,a){
   }
   else {
     o[a.addr] = a;
-  };
+  }
   return o;
 };
 
@@ -31673,13 +31672,13 @@ Address.import = function(key, label){
       object.priv = Base58.encode(key.d.toBuffer(32));
       break;
     case Helpers.isBitcoinPrivateKey(key):
-      key = Bitcoin.ECKey.fromWIF(key)
+      key = Bitcoin.ECKey.fromWIF(key);
       object.addr = key.pub.getAddress().toString();
       object.priv = Base58.encode(key.d.toBuffer(32));
       break;
     default:
       throw 'Error: address import format not supported';
-  };
+  }
 
   //initialization
   var address = new Address(object);
@@ -31713,9 +31712,9 @@ Address.fromString = function(keyOrAddr, label, bipPass){
       }
       else { reject('unknown key format'); }
     }
-  }
+  };
   return new Promise(asyncParse);
-}
+};
 
 Address.new = function(label){
   var key = Bitcoin.ECKey.makeRandom(true, RNG.run.bind(RNG));
@@ -31743,7 +31742,7 @@ Address.prototype.toJSON = function(){
 Address.prototype.encrypt = function(cipher){
   if (!this._priv) return this;
   var priv = cipher ? cipher(this._priv) : this._priv;
-  if (!priv) { throw 'Error Encoding key'; };
+  if (!priv) { throw 'Error Encoding key'; }
   this._temporal_priv = priv;
   return this;
 };
@@ -31751,7 +31750,7 @@ Address.prototype.encrypt = function(cipher){
 Address.prototype.decrypt = function(cipher){
   if (!this._priv) return this;
   var priv = cipher ? cipher(this._priv) : this._priv;
-  if (!priv) { throw 'Error Decoding key'; };
+  if (!priv) { throw 'Error Decoding key'; }
   this._temporal_priv = priv;
   return this;
 };
@@ -31773,7 +31772,6 @@ var Helpers       = require('./helpers');
 var WalletStore   = require('./wallet-store');
 var WalletCrypto  = require('./wallet-crypto');
 var MyWallet      = require('./wallet');
-var Buffer        = require('buffer').Buffer;
 
 ////////////////////////////////////////////////////////////////////////////////
 // API class
@@ -31790,7 +31788,7 @@ function API(){
 API.prototype.encodeFormData = function (data) {
   if (!data) return "";
   var encoded = Object.keys(data).map(function(k) {
-      return encodeURIComponent(k) + '=' + encodeURIComponent(data[k])
+      return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]);
   }).join('&');
   return encoded;
 };
@@ -31822,7 +31820,7 @@ API.prototype.request = function(action, method, data, withCred) {
       ) {
         return response.json();
       } else if (data.format === 'json') {
-        return response.json()
+        return response.json();
       } else {
         return response.text();
 
@@ -31841,7 +31839,7 @@ API.prototype.request = function(action, method, data, withCred) {
     .catch(handleNetworkError)
     .then(checkStatus)
     .then(handleResponse);
-}
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 API.prototype.retry = function(f, n) {
@@ -31854,7 +31852,7 @@ API.prototype.retry = function(f, n) {
     );
   } else {
     return f();
-  };
+  }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -31946,7 +31944,7 @@ API.prototype.securePost = function (url, data){
   if (!Helpers.isValidGUID(data.guid)) { clone.guid = MyWallet.wallet.guid; }
   if (!data.sharedKey) {
     var sharedKey = MyWallet.wallet ? MyWallet.wallet.sharedKey : undefined;
-    if (!Helpers.isValidSharedKey(sharedKey)) throw 'Shared key is invalid'
+    if (!Helpers.isValidSharedKey(sharedKey)) throw 'Shared key is invalid';
     //Rather than sending the shared key plain text
     //send a hash using a totp scheme
     var now = new Date().getTime();
@@ -31966,7 +31964,7 @@ API.prototype.securePost = function (url, data){
     clone.sKDebugOriginalClientTime = now;
     clone.sKDebugOriginalSharedKey  = sharedKey;
   }
-  clone.api_code                  = this.API_CODE
+  clone.api_code                  = this.API_CODE;
   clone.format                    = data.format ? data.format : 'plain';
 
   return this.retry(this.request.bind(this, "POST", url, clone, true));
@@ -31991,7 +31989,7 @@ API.prototype.pushTx = function (tx, note){
       { return tx_hash;}
     else
       { return responseText;}
-  }
+  };
 
   return this.request("POST", "pushtx", data).then(responseTXHASH);
 };
@@ -32031,7 +32029,7 @@ API.prototype.pushTx = function (tx, note){
 //   }
 // };
 
-},{"./helpers":316,"./wallet":331,"./wallet-crypto":325,"./wallet-store":328,"assert":84,"buffer":86}],311:[function(require,module,exports){
+},{"./helpers":316,"./wallet":331,"./wallet-crypto":325,"./wallet-store":328,"assert":84}],311:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -32052,7 +32050,7 @@ function get_account_info(success, error) {
 
     typeof(error) === "function" &&  error();
   });
-};
+}
 
 function updateKV(txt, method, value, success, error, extra) {
   if(typeof value == "string") {
@@ -32074,7 +32072,7 @@ function updateKV(txt, method, value, success, error, extra) {
 
 function update_API_access(enabled, success, error) {
   updateKV('Updating Api Access', 'update-api-access-enabled', enabled ? 1 : 0, success, error);
-};
+}
 
 /**
  * @param {string} ips Multiple ip addresses should be comma separated. Use % as a wildcard. For example 127.0.0.% to whitelist 127.0.0.1-127.0.0.254.
@@ -32083,27 +32081,27 @@ function update_API_access(enabled, success, error) {
  */
 function update_IP_lock(ips, success, error) {
   updateKV('Updating Locked Ip Addresses', 'update-ip-lock', ips, success, error);
-};
+}
 
 function update_IP_lock_on(enabled, success, error) {
   updateKV('Updating IP Lock', 'update-ip-lock-on', enabled ? true : false, success, error);
-};
+}
 
 function change_language(language, success, error) {
   updateKV('Updating Language', 'update-language', language, success, error);
-};
+}
 
 function change_local_currency(code, success, error) {
   updateKV('Updating Local Currency', 'update-currency', code, success, error);
-};
+}
 
 function change_btc_currency(code, success, error) {
   updateKV('Updating BTC Currency', 'update-btc-currency', code, success, error);
-};
+}
 
 function update_tor_ip_block(enabled, success, error) {
   updateKV('Updating TOR ip block', 'update-block-tor-ips', enabled, success, error);
-};
+}
 
 function update_password_hint1(value, success, error) {
   switch (true) {
@@ -32118,8 +32116,8 @@ function update_password_hint1(value, success, error) {
       break;
     default:
       updateKV('Updating Main Password Hint', 'update-password-hint1', value, success, error);
-  };
-};
+  }
+}
 
 function update_password_hint2(value, success, error) {
   switch (true) {
@@ -32134,16 +32132,16 @@ function update_password_hint2(value, success, error) {
       break;
     default:
       updateKV('Updating Logging Level', 'update-password-hint2', value, success, error);
-  };
-};
+  }
+}
 
 function change_email(email, success, error) {
   updateKV('Updating Email', 'update-email', email, success, error);
-};
+}
 
 function changeMobileNumber(val, success, error) {
   updateKV('Updating Cell Number', 'update-sms', val, success, error);
-};
+}
 
 // Logging levels:
 // 0 - Logging disabled
@@ -32151,11 +32149,11 @@ function changeMobileNumber(val, success, error) {
 // 2 - Log actions with IP addresses and user agents
 function updateLoggingLevel(val, success, error) {
   updateKV('Updating Logging Level', 'update-logging-level', val, success, error);
-};
+}
 
 function toggleSave2FA(val, success, error) {
   updateKV('Updating Save 2FA', 'update-never-save-auth-type', val ? true : false, success, error);
-};
+}
 
 function updateAuthType(val, success, error) {
   updateKV('Updating Two Factor Authentication', 'update-auth-type', val, function() {
@@ -32166,11 +32164,11 @@ function updateAuthType(val, success, error) {
 
 function unsetTwoFactor(success, error) {
   updateAuthType(0, success, error);
-};
+}
 
 function setTwoFactorSMS(success, error) {
   updateAuthType(5, success, error);
-};
+}
 
 function setTwoFactorYubiKey(code, success, error) {
   assert(code, "Activation code required");
@@ -32189,11 +32187,11 @@ function setTwoFactorYubiKey(code, success, error) {
       error("Failed to configure Yubikey");
     }
   );
-};
+}
 
 function setTwoFactorEmail(success, error) {
   updateAuthType(2, success, error);
-};
+}
 
 function setTwoFactorGoogleAuthenticator(success, error) {
   MyWallet.securePost("wallet", { method : 'generate-google-secret' }, function(google_secret_url) {
@@ -32202,14 +32200,14 @@ function setTwoFactorGoogleAuthenticator(success, error) {
     WalletStore.sendEvent("msg", {type: "error", message: data.responseText});
     typeof(error) === "function" &&  error(data.responseText);
   });
-};
+}
 
 function confirmTwoFactorGoogleAuthenticator(code, success, error) {
   updateKV('Updating Two Factor Authentication', 'update-auth-type', 4, function() {
     WalletStore.setRealAuthType(4);
     typeof(success) === "function" && success();
   }, error, '?code='+code);
-};
+}
 
 /**
  * Resend email with verfication code.
@@ -32219,7 +32217,7 @@ function confirmTwoFactorGoogleAuthenticator(code, success, error) {
  */
 function resendEmailConfirmation(email, success, error) {
   updateKV('Resend Email Confirmation', 'update-email', email, success, error);
-};
+}
 
 /**
  * Verify email with code.
@@ -32234,7 +32232,7 @@ function verifyEmail(code, success, error) {
   }, function(data) {
     typeof(error) === "function" &&  error();
   });
-};
+}
 
 /**
  * Verify mobile with code.
@@ -32250,7 +32248,7 @@ function verifyMobile(code, success, error) {
     WalletStore.sendEvent("msg", {type: "error", message: data});
     typeof(error) === "function" &&  error();
   });
-};
+}
 
 function getActivityLogs(success, error) {
   MyWallet.securePost("wallet", {method : 'list-logs', format : 'json'}, function(data) {
@@ -32260,7 +32258,7 @@ function getActivityLogs(success, error) {
     WalletStore.sendEvent("msg", {type: "error", message: response});
     typeof(error) === "function" &&  error();
   });
-};
+}
 
 function enableEmailNotifications(success, error) {
   API.securePost("wallet", {
@@ -32426,20 +32424,14 @@ module.exports = Wallet;
 // dependencies
 var assert = require('assert');
 var Bitcoin = require('bitcoinjs-lib');
-var ECKey = Bitcoin.ECKey;
-var BigInteger = require('bigi');
-var Buffer = require('buffer').Buffer;
-var Base58 = require('bs58');
 var BIP39 = require('bip39');
 
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var HDWallet = require('./hd-wallet');
-var HDAccount = require('./hd-account');
 var Address = require('./address');
 var Helpers = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
-var ImportExport = require('./import-export');
 var API = require('./api');
 var Tx = require('./wallet-transaction');
 var shared = require('./shared');
@@ -32477,7 +32469,7 @@ function Wallet(object) {
   if (this.isUpgradedToHD){
     Helpers.merge(this._paidTo, this.hdwallet._paidTo); // move paidTo from the wrong place
     delete this.hdwallet._paidTo;
-  };
+  }
 
   // address book list
   // address book in json is [{address: "address1", label: "label1"} , ... ]
@@ -32545,7 +32537,7 @@ Object.defineProperties(Wallet.prototype, {
         default:
           this._fee_per_kb = value;
           MyWallet.syncWallet();
-      };
+      }
     }
   },
   "pbkdf2_iterations": {
@@ -32763,7 +32755,7 @@ Wallet.prototype._updateWalletInfo = function(obj) {
     this.numberTxTotal   = 0;
     this.numberTxFetched = 0;
     return true;
-  };
+  }
 
   this.totalSent     = obj.wallet.total_sent;
   this.totalReceived = obj.wallet.total_received;
@@ -32783,15 +32775,15 @@ Wallet.prototype._updateWalletInfo = function(obj) {
 
         if (account.getLabelForReceivingAddress(account.receiveIndex)) {
           account.incrementReceiveIndex();
-        };
-      };
+        }
+      }
     }
     var address = this.activeKey(e.address);
     if (address){
       address.balance       = e.final_balance;
       address.totalReceived = e.total_received;
       address.totalSent     = e.total_sent;
-    };
+    }
   };
 
   obj.addresses.forEach(updateAccountAndAddressesInfo.bind(this));
@@ -32832,7 +32824,7 @@ Wallet.prototype.fetchMoreTransactions = function(didFetchOldestTransaction) {
     this.numberTxFetched += pTx.length;
     if (pTx.length < this.txPerScroll) { didFetchOldestTransaction(); }
     return pTx;
-  };
+  }
   return txListP.then(processTxs.bind(this));
 };
 
@@ -32866,7 +32858,7 @@ Wallet.prototype.toJSON = function(){
   function addressBookToJSON (addressBook) {
     return Object.keys(addressBook)
              .map(function(a){ return {addr: a, label: addressBook[a]};});
-  };
+  }
 
   var wallet = {
     guid              : this.guid,
@@ -32896,7 +32888,7 @@ Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bi
     var watchOnlyKey = this._addresses[addr];
     if (newKey.address !== watchOnlyKey.address) {
       if (!this.containsLegacyAddress(newKey.address)) {
-        console.log(newKey)
+        console.log(newKey);
         return this.importLegacyAddress(privateKey, null, secPass, bipPass);
       } else {
          if (this.key(newKey.address).isWatchOnly) {
@@ -32951,7 +32943,7 @@ Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) 
 Wallet.prototype.containsLegacyAddress = function(address) {
   if(Helpers.isInstanceOf(address, Address)) address = address.address;
   return this._addresses.hasOwnProperty(address);
-}
+};
 
 Wallet.prototype.newLegacyAddress = function(label, pw, success, error){
   try {
@@ -32965,7 +32957,7 @@ Wallet.prototype.newLegacyAddress = function(label, pw, success, error){
     assert(pw, "Error: second password needed");
     var cipher = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
     ad.encrypt(cipher).persist();
-  };
+  }
   this._addresses[ad.address] = ad;
   MyWallet.syncWallet(success, error);
   return ad;
@@ -33007,13 +32999,13 @@ Wallet.prototype.encrypt = function(pw, success, error, encrypting, syncing){
     else {
       // already encrypted
       return this;
-    };
+    }
   }
   catch (e){
     console.log("wallet encryption failure");
     error && error(e);
     return false;
-  };
+  }
   // if encryption finished well, then save
   this._dpasswordhash = WalletCrypto.hashNTimes(this._sharedKey + pw, this._pbkdf2_iterations);
   this._double_encryption = true;
@@ -33038,13 +33030,13 @@ Wallet.prototype.decrypt = function(pw, success, error, decrypting, syncing){
     else {
       // already decrypted
       return this;
-    };
+    }
   }
   catch (e){
     console.log("wallet decryption failure");
     error && error(e);
     return false;
-  };
+  }
   // if encryption finished well, then save
   this._dpasswordhash     = undefined;
   this._double_encryption = false;
@@ -33053,14 +33045,14 @@ Wallet.prototype.decrypt = function(pw, success, error, decrypting, syncing){
   this._hd_wallets.forEach(p);
   syncing && syncing();
   if (success) { MyWallet.syncWallet(success.bind(undefined, this));}
-  else {MyWallet.syncWallet();};
+  else {MyWallet.syncWallet();}
   return this;
 };
 
 Wallet.reviver = function(k,v){
   if (k === '') return new Wallet(v);
   return v;
-}
+};
 
 function isAccountNonUsed (account, progress) {
   var isNonUsed = function(obj){
@@ -33068,7 +33060,7 @@ function isAccountNonUsed (account, progress) {
     return obj.addresses[0].account_index === 0 && obj.addresses[0].change_index === 0;
   };
   return API.getHistory([account.extendedPublicKey], 0, 0, 50).then(isNonUsed);
-};
+}
 
 Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, startedRestoreHDWallet, progress){
   // wallet restoration
@@ -33087,7 +33079,7 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, started
   var untilNEmptyAccounts = function(n){
     var go = function(nonused) {
       if (nonused) { return untilNEmptyAccounts(n-1);}
-      else { return untilNEmptyAccounts(AccountsGap);};
+      else { return untilNEmptyAccounts(AccountsGap);}
     };
     if (n === 0) {
       self.hdwallet._accounts.splice(-AccountsGap);
@@ -33096,7 +33088,7 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, started
       accountIndex++;
       account = self.newAccount("My Bitcoin Wallet " + accountIndex.toString(), pw, 0, undefined, true);
       return isAccountNonUsed(account, progress).then(go);
-    };
+    }
   };
 
   var saveAndReturn = function (){
@@ -33124,7 +33116,7 @@ Wallet.prototype.enableNotifications = function(success, error) {
       error();
     }
   )
-}
+};
 
 Wallet.prototype.disableNotifications = function(success, error) {
   assert(success, "Success callback required");
@@ -33141,7 +33133,7 @@ Wallet.prototype.disableNotifications = function(success, error) {
     }
   );
 
-}
+};
 
 // creating a new wallet object
 Wallet.new = function(guid, sharedKey, firstAccountLabel, success, error, isHD){
@@ -33170,7 +33162,7 @@ Wallet.new = function(guid, sharedKey, firstAccountLabel, success, error, isHD){
       // legacy wallet (generate address)
       var ad = Address.new(label);
       MyWallet.wallet._addresses[ad.address] = ad;
-    };
+    }
   } catch (e) { error(e); return; }
   success(MyWallet.wallet);
 };
@@ -33198,7 +33190,7 @@ Wallet.prototype.newAccount = function(label, pw, hdwalletIndex, success, nosave
   var cipher = undefined;
   if (this.isDoubleEncrypted) {
     cipher = WalletCrypto.cipherFunction.bind(undefined, pw, this._sharedKey, this._pbkdf2_iterations);
-  };
+  }
   var newAccount = this._hd_wallets[index].newAccount(label, cipher).lastAccount;
   MyWallet.listenToHDWalletAccount(newAccount.extendedPublicKey);
   if(!(nosave === true)) MyWallet.syncWallet();
@@ -33259,8 +33251,8 @@ Wallet.prototype.changePbkdf2Iterations = function(newIterations, password){
       this._pbkdf2_iterations = newIterations;        // sec pass iterations
       WalletStore.setPbkdf2Iterations(newIterations); // main pass iterations
       MyWallet.syncWallet();
-    };
-  };
+    }
+  }
   return true;
 };
 
@@ -33271,7 +33263,7 @@ Wallet.prototype.getPrivateKeyForAddress = function(address, secondPassword) {
     pk = this.isDoubleEncrypted ?
       WalletCrypto.decryptSecretWithSecondPassword(
         address.priv, secondPassword, this.sharedKey, this.pbkdf2_iterations) : address.priv;
-  };
+  }
   return pk;
 };
 
@@ -33286,7 +33278,7 @@ Wallet.prototype._getPrivateKey = function(accountIndex, path, secondPassword) {
   return kr.privateKeyFromPath(path).toWIF();
 };
 
-},{"./address":309,"./api":310,"./blockchain-settings-api":311,"./hd-account":314,"./hd-wallet":315,"./helpers":316,"./import-export":317,"./keyring":319,"./shared":322,"./transaction-list":323,"./wallet":331,"./wallet-crypto":325,"./wallet-store":328,"./wallet-transaction":330,"assert":84,"bigi":4,"bip39":6,"bitcoinjs-lib":58,"bs58":67,"buffer":86}],314:[function(require,module,exports){
+},{"./address":309,"./api":310,"./blockchain-settings-api":311,"./hd-wallet":315,"./helpers":316,"./keyring":319,"./shared":322,"./transaction-list":323,"./wallet":331,"./wallet-crypto":325,"./wallet-store":328,"./wallet-transaction":330,"assert":84,"bip39":6,"bitcoinjs-lib":58}],314:[function(require,module,exports){
 'use strict';
 
 module.exports = HDAccount;
@@ -33294,7 +33286,6 @@ module.exports = HDAccount;
 var Bitcoin = require('bitcoinjs-lib');
 var assert  = require('assert');
 var Helpers = require('./helpers');
-var WalletCrypto = require('./wallet-crypto');
 var KeyRing  = require('./keyring');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 ////////////////////////////////////////////////////////////////////////////////
@@ -33341,7 +33332,7 @@ Object.defineProperties(HDAccount.prototype, {
         MyWallet.syncWallet();
       }else{
         throw 'Error: account.label must be an alphanumeric string';
-      };
+      }
     }
   },
   "balance": {
@@ -33533,7 +33524,7 @@ HDAccount.factory = function(o){
   if (o instanceof Object && !(o instanceof HDAccount)) {
     return new HDAccount(o);
   }
-  else { return o; };
+  else { return o; }
 };
 ////////////////////////////////////////////////////////////////////////////////
 // JSON SERIALIZER
@@ -33556,7 +33547,7 @@ HDAccount.prototype.toJSON = function(){
 HDAccount.reviver = function(k,v){
   if (k === '') return new HDAccount(v);
   return v;
-}
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -33567,7 +33558,7 @@ HDAccount.prototype.incrementReceiveIndex = function() {
 HDAccount.prototype.incrementReceiveIndexIfLast = function(index) {
   if (this._receiveIndex === index){
     this.incrementReceiveIndex();
-  };
+  }
   return this;
 };
 ////////////////////////////////////////////////////////////////////////////////
@@ -33609,7 +33600,7 @@ HDAccount.prototype.receiveAddressAtIndex = function(index) {
 HDAccount.prototype.encrypt = function(cipher){
   if(!this._xpriv) return this;
   var xpriv = cipher? cipher(this._xpriv) : this._xpriv;
-  if (!xpriv) { throw 'Error Encoding account extended private key'; };
+  if (!xpriv) { throw 'Error Encoding account extended private key'; }
   this._temporal_xpriv = xpriv;
   return this;
 };
@@ -33617,7 +33608,7 @@ HDAccount.prototype.encrypt = function(cipher){
 HDAccount.prototype.decrypt = function(cipher){
   if(!this._xpriv) return this;
   var xpriv = cipher? cipher(this._xpriv) : this._xpriv;
-  if (!xpriv) { throw 'Error Decoding account extended private key'; };
+  if (!xpriv) { throw 'Error Decoding account extended private key'; }
   this._temporal_xpriv = xpriv;
   return this;
 };
@@ -33629,7 +33620,7 @@ HDAccount.prototype.persist = function(){
   return this;
 };
 
-},{"./helpers":316,"./keyring":319,"./wallet":331,"./wallet-crypto":325,"assert":84,"bitcoinjs-lib":58}],315:[function(require,module,exports){
+},{"./helpers":316,"./keyring":319,"./wallet":331,"assert":84,"bitcoinjs-lib":58}],315:[function(require,module,exports){
 'use strict';
 
 module.exports = HDWallet;
@@ -33638,7 +33629,6 @@ var Bitcoin = require('bitcoinjs-lib');
 var assert  = require('assert');
 var Helpers = require('./helpers');
 var HDAccount = require('./hd-account');
-var WalletCrypto = require('./wallet-crypto');
 var BIP39 = require('bip39');
 var RNG = require('./rng');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
@@ -33649,7 +33639,7 @@ function HDWallet(object){
   function addAccount (o, index){
     o.index = index;
     return HDAccount.factory(o);
-  };
+  }
 
   // private members
   var obj      = object || {};
@@ -33687,7 +33677,7 @@ Object.defineProperties(HDWallet.prototype, {
       }
       else{
         throw 'Error: unvalid default index account';
-      };
+      }
     }
   },
   "defaultAccount": {
@@ -33721,7 +33711,7 @@ Object.defineProperties(HDWallet.prototype, {
   "balanceActiveAccounts":{
     configurable: false,
     get: function() {
-      var balances = this.activeAccounts.map(function(k){return k.balance;})
+      var balances = this.activeAccounts.map(function(k){return k.balance;});
       if (balances.some(Helpers.isNotNumber)) return null;
       return balances.reduce(Helpers.add, 0);
     }
@@ -33759,24 +33749,24 @@ function decryptMnemonic (seedHex, cipher){
       return BIP39.entropyToMnemonic(seedHex);
     } else {
       throw "Decryption function needed to get the mnemonic";
-    };
-  };
-};
+    }
+  }
+}
 
 function decryptPassphrase (bip39Password, cipher){
-  if (bip39Password === "") {return bip39Password};
+  if (bip39Password === "") {return bip39Password}
   if (cipher) {
     return cipher(bip39Password);
   } else {
     return bip39Password;
-  };
-};
+  }
+}
 
 function getMasterHex (seedHex, bip39Password, cipher){
   var mnemonic   = decryptMnemonic(seedHex, cipher);
   var passphrase = decryptPassphrase(bip39Password, cipher);
   return BIP39.mnemonicToSeed(mnemonic, passphrase);
-};
+}
 ////////////////////////////////////////////////////////////////////////////////
 // Constructors
 
@@ -33805,7 +33795,7 @@ HDWallet.restore = function(seedHex, bip39Password, cipher){
   var newHDwallet = new HDWallet(hdwallet);
   if (cipher) {
     newHDwallet.encrypt(cipher).persist();
-  };
+  }
   return newHDwallet;
 };
 
@@ -33813,7 +33803,7 @@ HDWallet.factory = function(o){
   if (o instanceof Object && !(o instanceof HDWallet)) {
     return new HDWallet(o);
   }
-  else { return o; };
+  else { return o; }
 };
 
 HDWallet.prototype.newAccount = function(label, cipher){
@@ -33825,7 +33815,7 @@ HDWallet.prototype.newAccount = function(label, cipher){
   if (cipher) {
     dec    = cipher("dec");
     enc    = cipher("enc");
-  };
+  }
 
   var masterhex = getMasterHex(this._seedHex, this._bip39Password, dec);
   var network   = Bitcoin.networks.bitcoin;
@@ -33867,7 +33857,7 @@ HDWallet.prototype.verifyMnemonic = function(){
 
 HDWallet.prototype.account = function(xpub){
   var f = this._accounts
-            .filter(function(a){return a.extendedPublicKey === xpub})
+            .filter(function(a){return a.extendedPublicKey === xpub});
   var r = f.length === 0 ? null : f[0];
   return r;
 };
@@ -33882,7 +33872,7 @@ HDWallet.prototype.activeAccount = function(xpub){
 // account managment
 
 HDWallet.prototype.encrypt = function(cipher){
-  function f(acc) {acc.encrypt(cipher);};
+  function f(acc) {acc.encrypt(cipher);}
   this._accounts.forEach(f);
   this._temporal_seedHex = cipher(this._seedHex);
   this._temporal_bip39Password = this._bip39Password === ""
@@ -33892,7 +33882,7 @@ HDWallet.prototype.encrypt = function(cipher){
 };
 
 HDWallet.prototype.decrypt = function(cipher){
-  function f(acc) {acc.decrypt(cipher);};
+  function f(acc) {acc.decrypt(cipher);}
   this._accounts.forEach(f);
   this._temporal_seedHex = cipher(this._seedHex);
   this._temporal_bip39Password = this._bip39Password === ""
@@ -33903,12 +33893,12 @@ HDWallet.prototype.decrypt = function(cipher){
 
 HDWallet.prototype.persist = function(){
   if (this._temporal_seedHex === undefined || this._temporal_bip39Password === undefined)
-    {return this;};
+    {return this;}
   this._seedHex = this._temporal_seedHex;
   this._bip39Password = this._temporal_bip39Password;
   delete this._temporal_seedHex;
   delete this._temporal_bip39Password;
-  function f(acc) {acc.persist();};
+  function f(acc) {acc.persist();}
   this._accounts.forEach(f);
   return this;
 };
@@ -33928,7 +33918,7 @@ HDWallet.prototype.forEachPaidTo = function(f) {
   // f is a function taking (txHash, paidToElement)
   for (var txHash in this._paidTo) {
     f(txHash, this._paidTo[txHash]);
-  };
+  }
   return this;
 };
 ////////////////////////////////////////////////////////////////////////////////
@@ -33937,7 +33927,7 @@ HDWallet.prototype.isValidAccountIndex = function(index){
   return Helpers.isNumber(index) && index >= 0 && index < this._accounts.length;
 };
 
-},{"./hd-account":314,"./helpers":316,"./rng":321,"./wallet":331,"./wallet-crypto":325,"assert":84,"bip39":6,"bitcoinjs-lib":58}],316:[function(require,module,exports){
+},{"./hd-account":314,"./helpers":316,"./rng":321,"./wallet":331,"assert":84,"bip39":6,"bitcoinjs-lib":58}],316:[function(require,module,exports){
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -34209,7 +34199,7 @@ Helpers.getHostName = function() {
   }
 
   return window.location.hostname;
-}
+};
 
 Helpers.tor = function () {
   var hostname = Helpers.getHostName()
@@ -34218,7 +34208,7 @@ Helpers.tor = function () {
   if(hostname === null) return null
 
   return hostname.indexOf(".onion") > -1
-}
+};
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -34630,10 +34620,10 @@ function KeyChain(extendedKey, index, cache) {
   // this function should be part of the instance because it is memoized
   this._getKey = Helpers.memoize(function(index) {
     assert(typeof(index) === "number" && index >= 0, "Key index must be integer >= 0");
-    assert(this._chainRoot, "KeyChain is not initialized.")
+    assert(this._chainRoot, "KeyChain is not initialized.");
     return this._chainRoot.derive(index);
   });
-};
+}
 
 Object.defineProperties(KeyChain.prototype, {
   "xpub": {
@@ -34653,7 +34643,7 @@ KeyChain.prototype.init = function(extendedKey, index, cache) {
   else {
     this._chainRoot = extendedKey && Helpers.isNumber(index) && index >= 0
       ? Bitcoin.HDNode.fromBase58(extendedKey).derive(index) : undefined;
-  };
+  }
   return this;
 };
 
@@ -34673,9 +34663,7 @@ KeyChain.prototype.getPrivateKey = function(index) {
 
 module.exports = KeyRing;
 ////////////////////////////////////////////////////////////////////////////////
-var Bitcoin = require('bitcoinjs-lib');
 var assert  = require('assert');
-var Helpers = require('./helpers');
 var KeyChain = require('./keychain');
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -34685,7 +34673,7 @@ function KeyRing(extendedKey, cache) {
   this._receiveChain = null;
   this._changeChain  = null;
   this.init(extendedKey, cache);
-};
+}
 
 Object.defineProperties(KeyRing.prototype, {
   "receive": {
@@ -34728,11 +34716,11 @@ KeyRing.prototype.toJSON = function (){
   var cacheJSON = {
     receiveAccount : this._receiveChain.xpub,
     changeAccount  : this._changeChain.xpub
-  }
+  };
   return cacheJSON;
 };
 
-},{"./helpers":316,"./keychain":318,"assert":84,"bitcoinjs-lib":58}],320:[function(require,module,exports){
+},{"./keychain":318,"assert":84}],320:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -35347,7 +35335,7 @@ RNG.prototype.getServerEntropy = function (nBytes) {
   else {
     throw 'Received not ok status: ' + request.status;
   }
-}
+};
 
 },{"./api":310,"./helpers":316,"assert":84,"buffer":86,"randombytes":305}],322:[function(require,module,exports){
 var satoshi = 100000000; //One satoshi
@@ -35377,7 +35365,7 @@ module.exports = {
   BlockFromJSON: BlockFromJSON
 };
 
-function myprint (x) {console.log(x);};
+function myprint (x) {console.log(x);}
 
 function setLocalSymbol(new_symbol) {
   if (!new_symbol) return;
@@ -35417,7 +35405,7 @@ function playSound(id) {
 
     _sounds[id].play();
   } catch (e) { }
-};
+}
 
 //Ignore Console
 try {
@@ -35711,7 +35699,7 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
 
   if (accum < subTotal) {
    throw { error: 500, message: 'Insufficient funds. Value Needed ' +  subTotal / 100000000 + 'BTC' +'. Available amount ' + accum / 100000000 + 'BTC'};
-  };
+  }
 
   this.transaction = transaction;
 };
@@ -35743,7 +35731,7 @@ Transaction.prototype.randomizeOutputs = function () {
   function shuffle(o){
     for(var j, x, i = o.length; i > 1; j = randomNumberBetweenZeroAnd(i), x = o[--i], o[i] = o[j], o[j] = x);
     return o;
-  };
+  }
   shuffle(this.transaction.outs);
 };
 
@@ -35756,8 +35744,8 @@ Transaction.prototype.sortBIP69 = function (){
   var compareInputs = function(a, b) {
     var hasha = new Buffer(a[0].hash);
     var hashb = new Buffer(b[0].hash);
-    var x = [].reverse.call(hasha)
-    var y = [].reverse.call(hashb)
+    var x = [].reverse.call(hasha);
+    var y = [].reverse.call(hashb);
     return x.compare(y) || a[0].index - b[0].index
   };
   var compareOutputs = function(a, b) {
@@ -36191,7 +36179,7 @@ function generateUUIDs(count) {
 
   return API.retry(API.request.bind(API, 'GET', 'uuid-generator', data))
     .then(extractUUIDs);
-};
+}
 
 /**
  * Fetch information on wallet identfier with resend code set to true
@@ -36215,7 +36203,7 @@ function resendTwoFactorSms(user_guid) {
 
   return API.request('GET', 'wallet/' + user_guid, data, true, false)
     .catch(handleError);
-};
+}
 
 /**
  * Trigger an email with the users wallet guid(s)
@@ -36246,7 +36234,7 @@ function recoverGuid(user_email, captcha) {
 
   return API.request('POST', 'wallet', data, true)
     .then(handleResponse).catch(handleError);
-};
+}
 
 /**
  * Trigger the 2FA reset process
@@ -36285,7 +36273,7 @@ function requestTwoFactorReset(
 
   return API.request('POST', 'wallet', data, true)
     .then(handleResponse);
-};
+}
 
 module.exports = {
   generateUUIDs: generateUUIDs,
@@ -36300,7 +36288,6 @@ module.exports = {
 var assert = require('assert');
 
 var MyWallet = require('./wallet');
-var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
@@ -36402,18 +36389,17 @@ function generateNewWallet(password, email, firstAccountName, success, error, is
     Wallet.new(guid, sharedKey, firstAccountName, saveWallet, error, isHD);
 
   }).catch(error);
-};
+}
 
 module.exports = {
   generateNewWallet: generateNewWallet
 };
 
-},{"./blockchain-wallet":313,"./helpers":316,"./wallet":331,"./wallet-crypto":325,"./wallet-network":326,"./wallet-store":328,"assert":84}],328:[function(require,module,exports){
+},{"./blockchain-wallet":313,"./helpers":316,"./wallet":331,"./wallet-crypto":325,"./wallet-network":326,"assert":84}],328:[function(require,module,exports){
 'use strict';
 
 var MyWallet = require('./wallet');
 var WalletCrypto = require('./wallet-crypto');
-var hasProp = {}.hasOwnProperty;
 
 var WalletStore = (function() {
 
@@ -36746,7 +36732,7 @@ function authorizeApprove(token, differentBrowserCallback, differentBrowserAppro
     }
   };
 
-  var extraParams = {}
+  var extraParams = {};
   if (differentBrowserApproved !== null) {
     extraParams.confirm_approval = differentBrowserApproved;
   }
@@ -36900,13 +36886,13 @@ Object.defineProperties(Tx.prototype, {
       var impactNoFee = this.result + this.fee;
       switch (true) {
         case impactNoFee === 0:
-          v = "transfer"
+          v = "transfer";
           break;
         case impactNoFee < 0:
-          v = "sent"
+          v = "sent";
           break;
         case impactNoFee > 0:
-          v = "received"
+          v = "received";
           break;
         default:
           v = "complex"
@@ -36932,37 +36918,37 @@ Object.defineProperties(Tx.prototype, {
     get: function() {
       return this._processed_outs.some(function (o) { return o.isWatchOnly; });
     }
-  },
+  }
 });
 
 function isAccount(x) {
   if (x.xpub) { return true;}
   else {return false;}
-};
+}
 
 function isLegacy(x) {
   return MyWallet.wallet.containsLegacyAddress(x.addr);
-};
+}
 
 function isInternal(x) {
   return (isAccount(x) || isLegacy(x));
-};
+}
 
 function isAccountChange(x) {
   return (isAccount(x) && x.xpub.path.split('/')[1] === '1');
-};
+}
 
 function accountPath(x){
   return account(x).index + x.xpub.path.substr(1);
-};
+}
 
 function account(x) {
   return MyWallet.wallet.hdwallet.account(x.xpub.m);
-};
+}
 
 function address(x) {
   return MyWallet.wallet.key(x.addr);
-};
+}
 
 function tagCoin(x) {
   var ad = x.addr;
@@ -36999,17 +36985,17 @@ function tagCoin(x) {
     identity: id,
     isWatchOnly: isWatchOnly
   };
-};
+}
 
 function unpackInput(input) {
   return input.prev_out;
-};
+}
 
 Tx.factory = function(o){
   if (o instanceof Object && !(o instanceof Tx)) {
     return new Tx(o);
   }
-  else { return o; };
+  else { return o; }
 };
 
 },{"./helpers":316,"./wallet":331,"./wallet-store":328}],331:[function(require,module,exports){
@@ -37028,10 +37014,6 @@ var BIP39 = require('bip39');
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var WalletSignup = require('./wallet-signup');
-var ImportExport = require('./import-export');
-var HDWallet = require('./hd-wallet');
-var HDAccount = require('./hd-account');
-var Transaction = require('./transaction');
 var API = require('./api');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
@@ -37233,7 +37215,7 @@ function socketConnect() {
           }
           if (addresses.some(function(a){return a === account.receiveAddress})){
             account.incrementReceiveIndex();
-          };
+          }
         }
       }
 
@@ -37259,7 +37241,7 @@ function socketConnect() {
       WalletStore.setLatestBlock(shared.BlockFromJSON(obj.x));
       WalletStore.sendEvent('on_block');
     }
-  };
+  }
 
   function onOpen() {
     WalletStore.sendEvent('ws_on_open');
@@ -37282,11 +37264,11 @@ function socketConnect() {
     }
 
     MyWallet.ws.send(msg);
-  };
+  }
 
   function onClose() {
     WalletStore.sendEvent('ws_on_close');
-  };
+  }
 }
 
 // used in walletstore and locally wallet.js
@@ -37401,7 +37383,7 @@ MyWallet.processTransaction = function(tx) {
         transaction.to.email = { email: paidToItem.email, redeemedAt: paidToItem.redeemedAt };
       } else if (paidToItem.mobile) {
         transaction.to.mobile = { number: paidToItem.mobile, redeemedAt: paidToItem.redeemedAt };
-      };
+      }
       transaction.intraWallet = false;
     }else {
       var toAccountSet = false;
@@ -37591,7 +37573,7 @@ MyWallet.getBalanceForRedeemCode = function(privatekey, successCallback, errorCa
     return Object.keys(data)
                  .map(function(a){ return data[a].final_balance;})
                  .reduce(Helpers.add, 0);
-  };
+  }
 
   API.getBalances([from_address_compressed, from_address_uncompressed])
     .then(totalBalance)
@@ -37776,7 +37758,7 @@ function decryptAndInitializeWallet(success, error, decrypt_success, build_hd_su
       }
       if (MyWallet.wallet.isUpgradedToHD === false) {
         WalletStore.sendEvent('hd_wallets_does_not_exist');
-      };
+      }
       setIsInitialized();
       success();
     },
@@ -37848,7 +37830,7 @@ MyWallet.login = function ( user_guid
         return;
       }
       successCallback(obj)
-    }
+    };
 
     var error = function(e) {
        console.log(e);
@@ -37868,9 +37850,9 @@ MyWallet.login = function ( user_guid
        if (obj.initial_error) {
          WalletStore.sendEvent("msg", {type: "error", message: obj.initial_error});
        }
-    }
+    };
     API.request("GET", 'wallet/' + guid, data, true, false).then(success).catch(error);
-  }
+  };
 
   var tryToFetchWalletWith2FA = function (guid, two_factor_auth_key, successCallback) {
 
@@ -37889,15 +37871,15 @@ MyWallet.login = function ( user_guid
      }
      if (data != 'Not modified') { WalletStore.setEncryptedWalletData(data); }
      successCallback(data);
-    }
+    };
     var error = function (response) {
      WalletStore.setRestoringWallet(false);
      wrong_two_factor_code(response);
-    }
+    };
 
     var myData = { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : API.API_CODE};
     API.request("POST", 'wallet', myData, true, false).then(success).catch(error);
-  }
+  };
 
   var didFetchWalletJSON = function(obj) {
 
@@ -37998,7 +37980,7 @@ function setIsInitialized() {
   if (isInitialized) return;
   socketConnect();
   isInitialized = true;
-};
+}
 
 // used on iOS
 MyWallet.connectWebSocket = function() {
@@ -38112,7 +38094,7 @@ function syncWallet (successcallback, errorcallback) {
       } catch (e) {
         _errorcallback(e);
         WalletStore.enableLogout();
-      };
+      }
     },
                                function(e) {
                                  console.log(e);
@@ -38123,10 +38105,10 @@ function syncWallet (successcallback, errorcallback) {
     WalletStore.enableLogout();
   }
 
-};
+}
 MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function(){
   console.log("SAVE CALLED...");
-  WalletStore.setIsSynchronizedWithServer(false)
+  WalletStore.setIsSynchronizedWithServer(false);
 });
 ////////////////////////////////////////////////////////////////////////////////
 // used mainly on blockchain API
@@ -38205,13 +38187,13 @@ function nKeys(obj) {
     size++;
   }
   return size;
-};
+}
 
 // used on frontend
 MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryMnemonic, bip39Password, success, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
   var walletSuccess = function(guid, sharedKey, password) {
     WalletStore.unsafeSetPassword(password);
-    var runSuccess = function () {success({ guid: guid, sharedKey: sharedKey, password: password});}
+    var runSuccess = function () {success({ guid: guid, sharedKey: sharedKey, password: password});};
     MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password, undefined, startedRestoreHDWallet, accountProgress).then(runSuccess).catch(error);
   };
   WalletSignup.generateNewWallet(inputedPassword, inputedEmail, null, walletSuccess, error, true, generateUUIDProgress, decryptWalletProgress);
@@ -38226,7 +38208,7 @@ MyWallet.logout = function(force) {
       console.log(e);
     }
   };
-  var data = {format : 'plain', api_code : API.API_CODE}
+  var data = {format : 'plain', api_code : API.API_CODE};
   WalletStore.sendEvent('logging_out');
   API.request("GET", 'wallet/logout', data, true, false).then(reload).catch(reload);
 };
@@ -38336,5 +38318,5 @@ MyWallet.precisionToSatoshiBN = function(x) {
   return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, shared.sShift(shared.getBTCSymbol())).toString()));
 };
 
-},{"./api":310,"./blockchain-socket":312,"./blockchain-wallet":313,"./hd-account":314,"./hd-wallet":315,"./helpers":316,"./import-export":317,"./shared":322,"./transaction":324,"./wallet-crypto":325,"./wallet-signup":327,"./wallet-store":328,"assert":84,"bigi":4,"bip39":6,"bitcoinjs-lib":58,"bs58":67,"buffer":86}]},{},[1])(1)
+},{"./api":310,"./blockchain-socket":312,"./blockchain-wallet":313,"./helpers":316,"./shared":322,"./wallet-crypto":325,"./wallet-signup":327,"./wallet-store":328,"assert":84,"bigi":4,"bip39":6,"bitcoinjs-lib":58,"bs58":67,"buffer":86}]},{},[1])(1)
 });
