@@ -2,7 +2,7 @@ __Blockchain Wallet V3__
 
 _Recent changes_
 
-#   (2016-02-18)
+#   (2016-02-19)
 
 
 
@@ -10,35 +10,41 @@ _Recent changes_
 
 ## Bug Fixes
 
-- **Transactions:**
-  - prevent duplicate transactions in txlist
-  ([23d174fe](https://github.com/blockchain/My-Wallet-V3/commit/23d174fec1dcefc20c548e2e4ef6a5733b624417))
-  - check for duplicates
-  ([dbe8036c](https://github.com/blockchain/My-Wallet-V3/commit/dbe8036c56459f5615aede7a4e1f60b4f2ca5565))
-- **getTransaction:** idiomatic change.
-  ([fb9227d2](https://github.com/blockchain/My-Wallet-V3/commit/fb9227d2bf84574ab8f30419eeef765514bf1537))
-- **import:**
-  - right key imported.
-  ([6c3b86ba](https://github.com/blockchain/My-Wallet-V3/commit/6c3b86ba646b59008b4481b3ca769265b344024c))
-  - add key when already exists and it is watchonly.
-  ([dfda7ba3](https://github.com/blockchain/My-Wallet-V3/commit/dfda7ba361b669fa7953f1df36385aa5a320e32a))
+- **confirmations:**
+  - tx conf are now static.
+  ([44a0efbd](https://github.com/blockchain/My-Wallet-V3/commit/44a0efbdd5960275ad2894c70f157208dc86b777))
+  - conf are computed on ask based on latest-block.
+  ([7898adb0](https://github.com/blockchain/My-Wallet-V3/commit/7898adb0a671052f9477382598ec083850de7ec6))
+- **transactions:** wipe transactions after call to get history
+  ([9cd832db](https://github.com/blockchain/My-Wallet-V3/commit/9cd832db68964c02da19619c8c9386f0d5ee217f))
+- **utx:** added on_tx_received event for ios request.
+  ([cc2f15b7](https://github.com/blockchain/My-Wallet-V3/commit/cc2f15b7d8841485e64343bb640b99e72da26fda))
+- **ws:**
+  - send on_tx and on_block messages after getHistory
+  ([53bb39b7](https://github.com/blockchain/My-Wallet-V3/commit/53bb39b76ffe84e6b87790f6ed49558ad488ed89))
+  - send ping op instead of ping_block
+  ([510bd875](https://github.com/blockchain/My-Wallet-V3/commit/510bd875d9b93c24b9e57e29b78bf5bb90afabd6))
 
 
 ## Features
 
-- **TxList:** enable tx list refresh
-  ([25ff401b](https://github.com/blockchain/My-Wallet-V3/commit/25ff401bd37fc72f7965277010626fe2aba280c4))
-- **WatchOnly:**
-  - maintain label when adding private key to watch only address
-  ([39e9c91f](https://github.com/blockchain/My-Wallet-V3/commit/39e9c91fcce4ce25f5cff7f294e1e224c4f3b51b))
-  - Add private key to watch only address in importLegacyAddress
-  ([fcaef625](https://github.com/blockchain/My-Wallet-V3/commit/fcaef625ef9d5bd348ccbc05259bcd01cc0f21c5))
+- **txlist:** added a digested txlist for iOS.
+  ([0cfe53e5](https://github.com/blockchain/My-Wallet-V3/commit/0cfe53e5752f242509a6e9c25e5f6ba7ee8f9ff6))
+
+
+## Refactor
+
+- **txlist:** clean some code.
 
 
 ## Test
 
-- **TransactionList:** test that duplication transactions are prevented in 23d174fec1
-- **WalletStore:** added tests and removed unneeded fix from dbe8036c5645
+- removed tests for removed code.
+
+
+## Chore
+
+- **Whitelist:** bump es6-promise
 
 
 

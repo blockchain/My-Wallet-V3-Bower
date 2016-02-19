@@ -32376,7 +32376,7 @@ BlockchainSocket.prototype.connect = function (onOpen, onMessage, onClose) {
     var connect = this.connectOnce.bind(this, onOpen, onMessage, onClose);
     if (!this.socket || this.socket.readyState === 3) connect();
   }.bind(this);
-  var pingSocket = function () { this.send('{"op":"ping_block"}'); }.bind(this);
+  var pingSocket = function () { this.send('{"op":"ping"}'); }.bind(this);
   this.reconnect();
   this.reconnectInterval = setInterval(this.reconnect, 20000);
   this.pingInterval = setInterval(pingSocket, 30013);
@@ -32483,15 +32483,7 @@ function Wallet(object) {
   this._totalReceived   = 0;
   this._finalBalance    = 0;
   this._numberTxTotal   = 0;
-  this._numberTxFetched = 0;
-  this._txPerScroll     = 50;
-
-  var getWalletContext = function () {
-    var xpubs = this.hdwallet && this.hdwallet.xpubs;
-    return this.addresses.concat(xpubs || []);
-  }.bind(this);
-
-  this._txList = new TxList(getWalletContext, this._txPerScroll);
+  this._txList = new TxList();
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -32502,6 +32494,13 @@ Object.defineProperties(Wallet.prototype, {
   "sharedKey": {
     configurable: false,
     get: function() { return this._sharedKey;}
+  },
+  "context": {
+    configurable: false,
+    get: function() {
+      var xpubs = this.hdwallet && this.hdwallet.xpubs;
+      return this.addresses.concat(xpubs || []);
+    }
   },
   "isDoubleEncrypted": {
     configurable: false,
@@ -32575,20 +32574,6 @@ Object.defineProperties(Wallet.prototype, {
       else
         throw 'Error: wallet.numberTx must be a number';
     }
-  },
-  "numberTxFetched": {
-    configurable: false,
-    get: function() { return this._numberTxFetched;},
-    set: function(value) {
-      if(Helpers.isNumber(value))
-        this._numberTxFetched = value;
-      else
-        throw 'Error: wallet.numberTxFetched must be a number';
-    }
-  },
-  "txPerScroll": {
-    configurable: false,
-    get: function() { return this._txPerScroll;}
   },
   "addresses": {
     configurable: false,
@@ -32723,10 +32708,6 @@ Object.defineProperties(Wallet.prototype, {
 // update-wallet-balances after multiaddr call
 Wallet.prototype._updateWalletInfo = function(obj) {
 
-  // delete all transactions stored
-  var transactions = WalletStore.getTransactions();
-  transactions.length = 0;
-
   if (obj.info) {
     if (obj.info.symbol_local)
       shared.setLocalSymbol(obj.info.symbol_local);
@@ -32741,7 +32722,6 @@ Wallet.prototype._updateWalletInfo = function(obj) {
     this.totalReceived   = 0;
     this.finalBalance    = 0;
     this.numberTxTotal   = 0;
-    this.numberTxFetched = 0;
     return true;
   }
 
@@ -32758,9 +32738,7 @@ Wallet.prototype._updateWalletInfo = function(obj) {
         account.n_tx         = e.n_tx;
         account.lastUsedReceiveIndex = e.account_index;
         account.receiveIndex = Math.max(account.lastUsedReceiveIndex, account.maxLabeledReceiveIndex);
-
         account.changeIndex  = e.change_index;
-
         if (account.getLabelForReceivingAddress(account.receiveIndex)) {
           account.incrementReceiveIndex();
         }
@@ -32774,53 +32752,26 @@ Wallet.prototype._updateWalletInfo = function(obj) {
     }
   };
 
-  obj.addresses.forEach(updateAccountAndAddressesInfo.bind(this));
-
-  this.numberTxFetched += obj.txs.length;
-  for (var i = 0; i < obj.txs.length; ++i) {
-    var tx = shared.TransactionFromJSON(obj.txs[i]);
-    WalletStore.pushTransaction(tx);
-  }
-
   if (obj.info.latest_block)
     WalletStore.setLatestBlock(obj.info.latest_block);
 
+  obj.addresses.forEach(updateAccountAndAddressesInfo.bind(this));
+  this.txList.pushTxs(obj.txs);
+
   WalletStore.sendEvent('did_multiaddr');
 
-  return true;
+  return obj.txs.length;
 };
 
-// equivalent to MyWallet.get_history(success, error) but returning a promise
 Wallet.prototype.getHistory = function() {
-  var allAddresses = this.activeAddresses;
-  if (this.isUpgradedToHD) {
-    this.hdwallet.accounts.forEach(
-      function(account){ allAddresses.push(account.extendedPublicKey);}
-    );
-  }
-  // TODO: obtain paidTo addresses too
-  var promise = API.getHistory(allAddresses, 0 ,0, 50).then(this._updateWalletInfo.bind(this));
-  return promise;
+  return API.getHistory(this.context, 0, 0, this.txList.loadNumber)
+    .then(function (obj) { this.txList.wipe(); return obj; }.bind(this))
+    .then(this._updateWalletInfo.bind(this));
 };
 
-Wallet.prototype.fetchMoreTransactions = function(didFetchOldestTransaction) {
-  var xpubs = this.isUpgradedToHD ? this.hdwallet.activeXpubs : [];
-  var list = this.activeAddresses.concat(xpubs);
-  var txListP = API.getHistory(list, null, this.numberTxFetched, this.txPerScroll);
-  function processTxs(data) {
-    var pTx = data.txs.map(MyWallet.processTransaction.compose(shared.TransactionFromJSON));
-    this.numberTxFetched += pTx.length;
-    if (pTx.length < this.txPerScroll) { didFetchOldestTransaction(); }
-    return pTx;
-  }
-  return txListP.then(processTxs.bind(this));
-};
-
-Wallet.prototype.ask100TxTest = function(){
-  var context = this.activeAddresses.concat(this.hdwallet.activeXpubs);
-  var txListP = API.getHistory(context, null, 0, 100);
-  function processTxs(data) { return data.txs.map(Tx.factory);};
-  return txListP.then(processTxs);
+Wallet.prototype.fetchTransactions = function() {
+  return API.getHistory(this.context, 0, this.txList.fetched, this.txList.loadNumber)
+    .then(this._updateWalletInfo.bind(this));
 };
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -35352,8 +35303,6 @@ module.exports = {
   setBTCSymbol: setBTCSymbol,
   playSound: playSound,
   sShift: sShift,
-  webSocketConnect: webSocketConnect,
-  TransactionFromJSON: TransactionFromJSON,
   BlockFromJSON: BlockFromJSON
 };
 
@@ -35417,47 +35366,6 @@ function sShift(symbol) {
   return (satoshi / symbol.conversion).toString().length-1;
 }
 
-var ws;
-var reconnectInterval;
-function webSocketConnect(success) {
-  try {
-    function reallyConnect() {
-      try {
-        var url = "wss://blockchain.info/inv";
-
-        console.log('Connect ' + url);
-
-        ws = new WebSocket(url);
-
-        if (!ws) {
-          return;
-        }
-
-        if (success)
-          success(ws);
-      } catch (e) {
-        console.log(e);
-      }
-    }
-
-    //Updates time last block was received and check for websocket connectivity
-    function reconnectTimer () {
-      if (!ws || ws.readyState == WebSocket.CLOSED) {
-        reallyConnect();
-      }
-    }
-
-    if (window.WebSocket) {
-      reallyConnect();
-
-      if (!reconnectInterval)
-        reconnectInterval = setInterval(reconnectTimer, 20000);
-    }
-  } catch (e) {
-    console.log(e);
-  }
-}
-
 function BlockFromJSON(json) {
   return {
     hash : json.hash,
@@ -35468,27 +35376,6 @@ function BlockFromJSON(json) {
     totalBTCSent : json.totalBTCSent,
     foundBy : json.foundBy,
     size : json.size
-  };
-}
-
-function TransactionFromJSON(json) {
-  return {
-    hash : json.hash,
-    size : json.size,
-    txIndex : json.tx_index,
-    time : json.time,
-    inputs : json.inputs,
-    out : json.out,
-    blockIndex : json.block_index,
-    // result : json.result,
-    blockHeight : json.block_height,
-    balance : json.balance,
-    double_spend : json.double_spend,
-    note : json.note,
-    account_indexes : [], // should be filled later
-    setConfirmations : function(n_confirmations) {
-      this.confirmations = n_confirmations;
-    }
   };
 }
 
@@ -35534,16 +35421,12 @@ function convert(x, conversion) {
 var assert  = require('assert')
   , EventEmitter  = require('events')
   , Helpers = require('./helpers')
-  , API     = require('./api')
   , Tx      = require('./wallet-transaction');
 
-var TransactionList = function (getContext, loadNumber) {
+var TransactionList = function (loadNumber) {
   var DEFAULT_TX_LOAD = 50;
   this._loadNumber    = loadNumber || DEFAULT_TX_LOAD;
-  this._getContext    = getContext;
-  this._context       = getContext();
   this._transactions  = [];
-  this._txsFetched    = 0;
   this._events        = new EventEmitter();
 };
 
@@ -35558,6 +35441,12 @@ Object.defineProperties(TransactionList.prototype, {
         });
     }
   },
+  'transactionsForIOS': {
+    configurable: false,
+    get: function () {
+      return this._transactions.map(Tx.IOSfactory);
+    }
+  },
   'transaction': {
     configurable: false,
     value: function (hash) {
@@ -35569,22 +35458,15 @@ Object.defineProperties(TransactionList.prototype, {
   'loadNumber': {
     configurable: false,
     get: function () { return this._loadNumber; }
+  },
+  'fetched': {
+    configurable: false,
+    get: function () { return this._transactions.length; }
   }
 });
 
-TransactionList.prototype.fetchTxs = function (amount, refresh) {
-  var refresh = this._getContext().join() !== this._context.join() || refresh
-    , context = this._context = refresh ? this._getContext() : this._context
-    , txIndex = refresh ? 0 : this._txsFetched
-    , amount  = amount || this.loadNumber
-    , txListP = API.getHistory(context, null, txIndex, amount);
-  var processTxs = (function (data) {
-    if (refresh) { this._transactions = []; this._txsFetched = 0; }
-    this.pushTxs(data.txs);
-    this._txsFetched += data.txs.length;
-    return data.txs.length;
-  }).bind(this);
-  return txListP.then(processTxs);
+TransactionList.prototype.wipe = function () {
+  this._transactions = [];
 };
 
 TransactionList.prototype.pushTxs = function (txs) {
@@ -35592,14 +35474,6 @@ TransactionList.prototype.pushTxs = function (txs) {
     return !this.transaction(tx.hash);
   }.bind(this));
   this._transactions = this._transactions.concat(txs);
-  this._events.emit('update');
-};
-
-TransactionList.prototype.shiftTxs = function (txs) {
-  txs = Helpers.toArrayFormat(txs).map(Tx.factory).filter(function (tx) {
-    return !this.transaction(tx.hash);
-  }.bind(this));
-  this._transactions = txs.concat(this._transactions);
   this._events.emit('update');
 };
 
@@ -35611,7 +35485,7 @@ TransactionList.prototype.subscribe = function (listener) {
 
 module.exports = TransactionList;
 
-},{"./api":310,"./helpers":316,"./wallet-transaction":330,"assert":84,"events":281}],324:[function(require,module,exports){
+},{"./helpers":316,"./wallet-transaction":330,"assert":84,"events":281}],324:[function(require,module,exports){
 'use strict';
 
 var assert      = require('assert');
@@ -36452,7 +36326,6 @@ var WalletStore = (function() {
   var password; //Password
   var guid; //Wallet identifier
   var language = 'en';
-  var transactions = [];
   var pbkdf2_iterations = 5000; // pbkdf2_interations of the main password (to encrypt the full payload)
   var disable_logout = false;
   var mixer_fee = 0.5;
@@ -36495,18 +36368,6 @@ var WalletStore = (function() {
     getCurrencies: function() {
       return currencyCodeToCurrency;
     },
-    getTransaction: function(hash) {
-      return transactions.filter(function(tx){return tx.hash === hash})[0]
-    },
-    getTransactions: function() {
-      return transactions;
-    },
-    pushTransaction: function(tx) {
-      transactions.push(tx);
-    },
-    getAllTransactions: function() {
-      return transactions.map(MyWallet.processTransaction);
-    },
     disableLogout: function() {
       disable_logout = true;
     },
@@ -36520,14 +36381,8 @@ var WalletStore = (function() {
       return latest_block;
     },
     setLatestBlock: function(block) {
-      var i, len, ref, tx;
       if (block != null) {
         latest_block = block;
-        ref = this.getTransactions();
-        for (i = 0, len = ref.length; i < len; i++) {
-          tx = ref[i];
-          tx.setConfirmations(MyWallet.getConfirmationsForTx(latest_block, tx));
-        }
         this.sendEvent('did_set_latest_block');
       }
     },
@@ -36764,6 +36619,15 @@ var WalletStore = require('./wallet-store');
 function Tx(object){
   var obj = object || {};
   // original properties
+  var setConfirmations = function(tx_block_height) {
+    var lastBlock = WalletStore.getLatestBlock();
+    var conf = 0;
+    if (lastBlock && tx_block_height != null && tx_block_height > 0) {
+      conf = lastBlock.height - tx_block_height + 1;
+    }
+    return conf;
+  }
+
   this.balance          = obj.balance;
   this.block_height     = obj.block_height;
   this.hash             = obj.hash;
@@ -36781,23 +36645,13 @@ function Tx(object){
   this.double_spend     = obj.double_spend;
   this.publicNote       = obj.note;
   this.note             = MyWallet.wallet.getNote(this.hash);
+  this.confirmations    = setConfirmations(this.block_height);
   // computed properties
   this._processed_ins    = this.inputs.map(tagCoin.compose(unpackInput));
   this._processed_outs   = this.out.map(tagCoin);
 }
 
 Object.defineProperties(Tx.prototype, {
-  "confirmations": {
-    configurable: false,
-    get: function() {
-      var lastBlock = WalletStore.getLatestBlock();
-      var conf = 0;
-      if (lastBlock && this.block_height != null && this.block_height > 0) {
-        conf = lastBlock.height - this.block_height + 1;
-      }
-      return conf;
-    }
-  },
   "processedInputs": {
     configurable: false,
     get: function() { return this._processed_ins.map(function(x){return x;});}
@@ -36997,6 +36851,17 @@ Tx.factory = function(o){
   else { return o; }
 };
 
+Tx.IOSfactory = function(tx){
+  return {
+    time          : tx.time,
+    result        : tx.result,
+    confirmations : tx.confirmations,
+    myHash        : tx.hash,
+    txType        : tx.txType,
+    block_height  : tx.block_height,
+  };
+};
+
 },{"./helpers":316,"./wallet":331,"./wallet-store":328}],331:[function(require,module,exports){
 'use strict';
 
@@ -37173,8 +37038,6 @@ function socketConnect() {
       return;
     }
 
-    var transactions = WalletStore.getTransactions();
-
     if (obj.op == 'on_change') {
       var old_checksum = WalletStore.generatePayloadChecksum();
       var new_checksum = obj.checksum;
@@ -37186,59 +37049,16 @@ function socketConnect() {
       }
 
     } else if (obj.op == 'utx') {
-      var tx = shared.TransactionFromJSON(obj.x);
-      var tx_processed = MyWallet.processTransaction(tx);
-      var tx_account = tx_processed.to.accounts[0];
 
-      // Adds raw tx to txList, processing done by txList
-      MyWallet.wallet.txList.shiftTxs(obj.x);
-
-      //Check if this is a duplicate
-      //Maybe should have a map_prev to check for possible double spends
-      for (var key in transactions) {
-        if (transactions[key].txIndex == tx.txIndex) return;
-      }
-
-      MyWallet.wallet.finalBalance += tx_processed.result;
-      MyWallet.wallet.getHistory();
-
-      if (tx_account) {
-        var account = MyWallet.wallet.hdwallet.accounts[tx_account.index];
-        account.balance += tx_processed.result;
-
-        // Increase receive address index if this was an incoming transaction using the highest index:
-        if((tx_processed.result > 0 || tx_processed.intraWallet)) {
-          var addresses = [];
-          for(i in tx.out) {
-            addresses.push(tx.out[i].addr);
-          }
-          if (addresses.some(function(a){return a === account.receiveAddress})){
-            account.incrementReceiveIndex();
-          }
-        }
-      }
-
-      MyWallet.wallet.numberTxTotal   += 1;
-      MyWallet.wallet.numberTxFetched += 1;
-      tx.setConfirmations(0);
-      WalletStore.pushTransaction(tx);
-      shared.playSound('beep');
-      WalletStore.sendEvent('on_tx');
+      WalletStore.sendEvent('on_tx_received');
+      var sendOnTx = WalletStore.sendEvent.bind(null, 'on_tx');
+      MyWallet.wallet.getHistory().then(sendOnTx);
 
     }  else if (obj.op == 'block') {
-      //Check any transactions included in this block, if the match one our ours then set the block index
-      for (var i = 0; i < obj.x.txIndexes.length; ++i) {
-        for (var ii = 0; ii < transactions.length; ++ii) {
-          if (transactions[ii].txIndex == obj.x.txIndexes[i]) {
-            if (transactions[ii].blockHeight == null || transactions[ii].blockHeight == 0) {
-              transactions[ii].blockHeight = obj.x.height;
-              break;
-            }
-          }
-        }
-      }
+
+      var sendOnBlock = WalletStore.sendEvent.bind(null, 'on_block');
+      MyWallet.wallet.getHistory().then(sendOnBlock);
       WalletStore.setLatestBlock(shared.BlockFromJSON(obj.x));
-      WalletStore.sendEvent('on_block');
     }
   }
 
@@ -37270,286 +37090,10 @@ function socketConnect() {
   }
 }
 
-// used in walletstore and locally wallet.js
-MyWallet.processTransaction = function(tx) {
-
-  var transaction = {
-    from: {account: null, legacyAddresses: null, externalAddresses: null},
-    to: {accounts: [], legacyAddresses: null, externalAddresses: null, email: null, mobile: null},
-    fee: 0,
-    intraWallet: null
-  };
-
-
-  var legacyAddressWithLargestOutput = undefined;
-  var externalAddressWithLargestOutput = undefined;
-  var amountFromLegacyAddresses = 0;
-  var amountFromExternalAddresses = 0;
-  var legacyAddressWithLargestOutputAmount = 0;
-  var externalAddressWithLargestOutputAmount = 0;
-  var fromAccountIndex = undefined;
-  var amountFromAccount = 0;
-
-  for (var i = 0; i < tx.inputs.length; ++i) {
-    var isOrigin = false;
-    var output = tx.inputs[i].prev_out;
-    if (!output || !output.addr)
-      continue;
-    if (MyWallet.wallet.activeKey(output.addr)) {
-      isOrigin = true;
-      if (transaction.from.legacyAddresses == null)
-        transaction.from.legacyAddresses = [];
-      transaction.from.legacyAddresses.push({address: output.addr, amount: output.value});
-      transaction.fee += output.value;
-    } else {
-      if (MyWallet.wallet.isUpgradedToHD) {
-        for (var j in MyWallet.wallet.hdwallet.accounts) {
-          var account = MyWallet.wallet.hdwallet.accounts[j];
-          if (account.active && output.xpub != null && account.extendedPublicKey === output.xpub.m) {
-            amountFromAccount += output.value;
-
-            if (! isOrigin) {
-              isOrigin = true;
-              fromAccountIndex = parseInt(j);
-
-              transaction.fee += output.value;
-            } else {
-              if ( output.value > legacyAddressWithLargestOutputAmount ) {
-                legacyAddressWithLargestOutput = output.addr;
-                legacyAddressWithLargestOutputAmount = output.value;
-              }
-              amountFromLegacyAddresses += output.value;
-              transaction.fee += output.value;
-            }
-            break;
-          }
-        }
-      }
-
-      if (! isOrigin) {
-        if ( output.value > externalAddressWithLargestOutputAmount ) {
-          externalAddressWithLargestOutput = output.addr;
-          externalAddressWithLargestOutputAmount = output.value;
-        }
-        amountFromExternalAddresses += output.value;
-        transaction.fee += output.value;
-        transaction.intraWallet = false;
-      }
-    }
-
-    if(transaction.intraWallet == null) {
-      transaction.intraWallet = true;
-    }
-  }
-
-  if(amountFromExternalAddresses > 0) {
-    transaction.from.externalAddresses = {addressWithLargestOutput: externalAddressWithLargestOutput, amount: amountFromExternalAddresses};
-  }
-
-  if(amountFromLegacyAddresses > 0) {
-    transaction.from.legacyAddresses = {addressWithLargestOutput: legacyAddressWithLargestOutput, amount: amountFromLegacyAddresses};
-  }
-
-  if(amountFromAccount > 0) {
-    transaction.from.account = {index: fromAccountIndex, amount: amountFromAccount};
-
-  }
-
-  for (var i = 0; i < tx.out.length; ++i) {
-    var output = tx.out[i];
-    if (!output || !output.addr)
-      continue;
-
-    if (MyWallet.wallet.activeKey(output.addr)) {
-      if (transaction.to.legacyAddresses == null)
-        transaction.to.legacyAddresses = [];
-
-      var isFromLegacyAddresses = false;
-      for (var j in transaction.from.legacyAddresses) {
-        var addressAmount = transaction.from.legacyAddresses[j];
-        if (addressAmount.address == output.addr) {
-          addressAmount.amount -= output.value;
-          isFromLegacyAddresses = true;
-        }
-      }
-      if (! isFromLegacyAddresses) {
-        transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
-      }
-      transaction.fee -= output.value;
-    } else if (MyWallet.wallet.getPaidTo(tx.hash) && MyWallet.wallet.getPaidTo(tx.hash).address == output.addr) {
-      var paidToItem = MyWallet.wallet.getPaidTo(tx.hash);
-      if(paidToItem.email) {
-        transaction.to.email = { email: paidToItem.email, redeemedAt: paidToItem.redeemedAt };
-      } else if (paidToItem.mobile) {
-        transaction.to.mobile = { number: paidToItem.mobile, redeemedAt: paidToItem.redeemedAt };
-      }
-      transaction.intraWallet = false;
-    }else {
-      var toAccountSet = false;
-      if (MyWallet.wallet.isUpgradedToHD) {
-        for (var j in MyWallet.wallet.hdwallet.accounts) {
-          var account = MyWallet.wallet.hdwallet.accounts[j];
-          if (account.active && output.xpub != null && account.extendedPublicKey == output.xpub.m) {
-            if (! toAccountSet) {
-              if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
-                transaction.from.account.amount -= output.value;
-              } else {
-                transaction.to.accounts.push({index: parseInt(j), amount: output.value});
-              }
-              toAccountSet = true;
-              transaction.fee -= output.value;
-            } else {
-              if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
-                transaction.from.account.amount -= output.value;
-              } else if ((transaction.from.account != null || transaction.from.legacyAddresses != null)) {
-                  if (transaction.to.externalAddresses == null)
-                      transaction.to.externalAddresses = [];
-                  transaction.to.externalAddresses.push({address: output.addr, amount: output.value});
-              }
-              transaction.fee -= output.value;
-            }
-            break;
-          }
-        }
-      }
-      if (! toAccountSet) {
-        if ((transaction.from.account != null || transaction.from.legacyAddresses != null)) {
-          if (transaction.to.externalAddresses == null)
-              transaction.to.externalAddresses = [];
-          transaction.to.externalAddresses.push({address: output.addr, amount: output.value});
-        }
-        transaction.fee -= output.value;
-        transaction.intraWallet = false;
-      }
-    }
-  }
-
-
-  if (transaction.to.accounts.length == 0 &&
-      (transaction.to.legacyAddresses == null || transaction.to.legacyAddresses.length === 0) &&
-      transaction.to.externalAddresses == null &&
-      MyWallet.wallet.activeKey(output.addr)) {
-    var output = tx.out[0];
-    transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
-  }
-
-  if (transaction.from.account == null && transaction.from.legacyAddresses == null && transaction.from.externalAddresses != null) {
-    var fromAmount = 0;
-    for (var i in transaction.to.accounts) {
-      fromAmount += transaction.to.accounts[i].amount;
-    }
-    for (var i in transaction.to.legacyAddresses) {
-      var addressAmount = transaction.to.legacyAddresses[i];
-      fromAmount += addressAmount.amount;
-    }
-    transaction.from.externalAddresses.amount = fromAmount;
-  }
-
-  transaction.hash = tx.hash;
-
-  /* Typically processTransaction() is called directly after transactions
-   have been downloaded from the server. In that case you could simply
-   reuse tx.confirmations. However processTransaction() can also be
-   called at a later time, e.g. if the user keeps their wallet open
-   while waiting for a confirmation. */
-  transaction.confirmations = MyWallet.getConfirmationsForTx(WalletStore.getLatestBlock(), tx);
-
-  transaction.txTime = tx.time;
-  transaction.publicNote = tx.note || null;
-  transaction.note = MyWallet.wallet.getNote(tx.hash);
-  // TODO: review tags
-  // transaction.tags = WalletStore.getTags(tx.hash);
-  transaction.size = tx.size;
-  transaction.tx_index = tx.txIndex;
-  transaction.block_height = tx.blockHeight;
-
-  transaction.result = MyWallet.calculateTransactionResult(transaction);
-
-  // Check if fee is frugal (incomplete):
-  transaction.frugal = transaction.fee < 10000
-
-  transaction.double_spend = tx.double_spend == null ? false : tx.double_spend
-
-  return transaction;
-};
-// used once on this file
-MyWallet.calculateTransactionResult = function(transaction) {
-
-  var totalOurs = function(toOrFrom) {
-    var result = 0;
-
-    if(toOrFrom.account || (toOrFrom.accounts && toOrFrom.accounts.length > 0)) {
-      if(toOrFrom.account) {
-        result = toOrFrom.account.amount;
-      } else if (toOrFrom.accounts) {
-        for(var i in toOrFrom.accounts) {
-          result += toOrFrom.accounts[i].amount;
-        }
-      }
-    } else if (toOrFrom.legacyAddresses && toOrFrom.legacyAddresses.length > 0) {
-      for(var i in toOrFrom.legacyAddresses) {
-        var legacyAddress = toOrFrom.legacyAddresses[i];
-        result += legacyAddress.amount;
-      }
-    }
-
-    return result;
-  };
-
-  var result = 0;
-
-  if (transaction.intraWallet) {
-    result = totalOurs(transaction.to);
-  } else {
-    result = totalOurs(transaction.to) - totalOurs(transaction.from);
-  }
-
-  return result;
-};
-
 // used on wallet-spender and locally
 MyWallet.getBaseFee = function() {
   var network = Bitcoin.networks.bitcoin;
   return network.feePerKb;
-};
-
-/**
- * @param {function(Array)} successCallback success callback function with transaction array
- * @param {function()} errorCallback error callback function
- * @param {function()} didFetchOldestTransaction callback is called when all transanctions for the specified account has been fetched
- */
- // used only on the frontend
-
-MyWallet.fetchMoreTransactionsForAll = function(success, error, didFetchOldestTransaction) {
-
-  console.log("deprecated use of MyWallet.fetchMoreTransactionsForAll --> Wallet.prototype.fetchMoreTransactions");
-  var p = MyWallet.wallet.fetchMoreTransactions(didFetchOldestTransaction);
-  if (success) { p.then(success);};
-  if (error)   { p.catch(error); };
-};
-
-/**
- * @param {function(Array)} successCallback success callback function with transaction array
- * @param {function()} errorCallback error callback function
- * @param {function()} didFetchOldestTransaction callback is called when all transanctions for the specified account has been fetched
- */
- // used only on the frontend
-
-MyWallet.fetchMoreTransactionsForAccounts = function(success, error, didFetchOldestTransaction) {
-  console.log("MyWallet.fetchMoreTransactionsForAccounts");
-  MyWallet.fetchMoreTransactionsForAll(success, error, didFetchOldestTransaction);
-};
-
-/**
- * @param {number} accountIdx idx of account
- * @param {function(Array)} successCallback success callback function with transaction array
- * @param {function()} errorCallback error callback function
- * @param {function()} didFetchOldestTransaction callback is called when all transanctions for the specified account has been fetched
- */
- // used once locally and in the frontend
-MyWallet.fetchMoreTransactionsForAccount = function(accountIdx, success, error, didFetchOldestTransaction) {
-  console.log("deprecated use of MyWallet.fetchMoreTransactionsForAccount ");
-  MyWallet.fetchMoreTransactionsForAll(success, error, didFetchOldestTransaction);
 };
 
 /**
@@ -37578,17 +37122,6 @@ MyWallet.getBalanceForRedeemCode = function(privatekey, successCallback, errorCa
     .then(totalBalance)
     .then(successCallback)
     .catch(errorCallback);
-};
-
-/**
- * @param {function():Array} successCallback success callback function with transaction array
- * @param {function()} errorCallback callback function
- * @param {function()} didFetchOldestTransaction callback is called when all transanctions for legacy addresses have been fetched
- */
- // used on the frontend
-MyWallet.fetchMoreTransactionsForLegacyAddresses = function(success, error, didFetchOldestTransaction) {
-  console.log("deprecated use of MyWallet.fetchMoreTransactionsForLegacyAddresses");
-  MyWallet.fetchMoreTransactionsForAll(success, error, didFetchOldestTransaction);
 };
 
 /**
@@ -37643,23 +37176,6 @@ MyWallet.isValidPrivateKey = function(candidate) {
   }
 };
 
-// used on myWallet and iOS
-MyWallet.get_history = function(success, error) {
-  console.log("deprecated use of MyWallet.get_history()!!");
-  var p = MyWallet.wallet.getHistory();
-  if (success) { p.then(success);};
-  if (error) {p.catch(error);};
-};
-// used on wallet-store and locally (wallet.js)
-MyWallet.getConfirmationsForTx = function(latest_block, tx) {
-  if (latest_block && tx.blockHeight != null && tx.blockHeight > 0) {
-    return latest_block.height - tx.blockHeight + 1;
-  } else {
-    tx.setConfirmations(0);
-    return 0;
-  }
-};
-
 // used two times
 function didDecryptWallet(success) {
 
@@ -37668,19 +37184,6 @@ function didDecryptWallet(success) {
   WalletStore.resetLogoutTimeout();
   success();
 }
-
-/**
- * Get the list of transactions from the http API.
- * Needs to be called by client in the success callback of fetchWalletJson and after MyWallet.initializeHDWallet
- * @param {function()=} success Success callback function.
- */
- // used in the frontend and iOS
-MyWallet.getHistoryAndParseMultiAddressJSON = function(success, error) {
-  console.log("deprecated use of getHistoryAndParseMultiAddressJSON");
-  var p = MyWallet.wallet.getHistory();
-  if (success) { p.then(success);};
-  if (error) { p.catch(error);};
-};
 
 // used once
 function checkWalletChecksum(payload_checksum, success, error) {
