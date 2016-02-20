@@ -2,7 +2,7 @@ __Blockchain Wallet V3__
 
 _Recent changes_
 
-#   (2016-02-19)
+#   (2016-02-20)
 
 
 
@@ -10,41 +10,34 @@ _Recent changes_
 
 ## Bug Fixes
 
-- **confirmations:**
-  - tx conf are now static.
-  ([44a0efbd](https://github.com/blockchain/My-Wallet-V3/commit/44a0efbdd5960275ad2894c70f157208dc86b777))
-  - conf are computed on ask based on latest-block.
-  ([7898adb0](https://github.com/blockchain/My-Wallet-V3/commit/7898adb0a671052f9477382598ec083850de7ec6))
-- **transactions:** wipe transactions after call to get history
-  ([9cd832db](https://github.com/blockchain/My-Wallet-V3/commit/9cd832db68964c02da19619c8c9386f0d5ee217f))
-- **utx:** added on_tx_received event for ios request.
-  ([cc2f15b7](https://github.com/blockchain/My-Wallet-V3/commit/cc2f15b7d8841485e64343bb640b99e72da26fda))
-- **ws:**
-  - send on_tx and on_block messages after getHistory
-  ([53bb39b7](https://github.com/blockchain/My-Wallet-V3/commit/53bb39b76ffe84e6b87790f6ed49558ad488ed89))
-  - send ping op instead of ping_block
-  ([510bd875](https://github.com/blockchain/My-Wallet-V3/commit/510bd875d9b93c24b9e57e29b78bf5bb90afabd6))
-
-
-## Features
-
-- **txlist:** added a digested txlist for iOS.
-  ([0cfe53e5](https://github.com/blockchain/My-Wallet-V3/commit/0cfe53e5752f242509a6e9c25e5f6ba7ee8f9ff6))
-
-
-## Refactor
-
-- **txlist:** clean some code.
+- **Cosmetic:** fixed indents in HDWallet tests
+  ([98bc62da](https://github.com/blockchain/My-Wallet-V3/commit/98bc62daf048a6c7c75e4f35f823cff99994520a))
+- **Helper:** TOR detection could send false positives
+  ([b7e7bf25](https://github.com/blockchain/My-Wallet-V3/commit/b7e7bf258db41e91463b5ea89d0f7d384cd536f8))
+- **Helpers:** replace endsWith with slice for browser compatibility
+  ([52962766](https://github.com/blockchain/My-Wallet-V3/commit/52962766594f898f4d8bb902b5dc2d534c2a0405))
+- **Transactions:** only call multiaddr with active addresses and xpubs
+  ([d7d79f94](https://github.com/blockchain/My-Wallet-V3/commit/d7d79f9428395d23b366762e775fb9b3df968063))
+- **key:** only 40-44 chars len base58 keys can be used.
+  ([a1576618](https://github.com/blockchain/My-Wallet-V3/commit/a157661839cd80d3ad302be2e5150f829f5245f9))
+- **keys:** keys shorter than 32 bytes are now usable
+  ([2617c1f6](https://github.com/blockchain/My-Wallet-V3/commit/2617c1f6e2ad0193b24e0b82d5e8e98beb0d522a))
 
 
 ## Test
 
-- removed tests for removed code.
-
-
-## Chore
-
-- **Whitelist:** bump es6-promise
+- **Address:**
+  - Added more tests to Address
+  - more tests for Address
+  - added more tests to Address
+- **HDAccount:** added more tests to HDAccount
+- **Helper:** added tests for some helper functions
+- **RNG:** RNG now covered at 100%
+- **TransactionList:** two more small tests for TxList
+- **WalletCrypto:** test cipherFunction behaviour with invalid parameters
+- **blockchain-wallet:**
+  - More tests for encryption, decryption and getPrivateKeyForAddress
+  - added watch-omly and archived keys to the test wallet
 
 
 

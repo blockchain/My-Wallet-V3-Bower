@@ -35,9 +35,9 @@ module.exports = {
   Shared: require('./src/shared'),
   WalletTokenEndpoints: require('./src/wallet-token-endpoints'),
   WalletNetwork: require('./src/wallet-network'),
-  RNG: require('./src/rng')
+  RNG: require('./src/rng'),
   // Wallet: require('./blockchain-wallet'),
-  // Address: require('./address'),
+  Address: require('./src/address')
   // HDAccount: require('./hd-account'),
   // HDWallet: require('./hd-wallet'),
   // KeyChain: require('./keychain'),
@@ -48,7 +48,7 @@ module.exports = {
   // BIP39: require('bip39')
 };
 
-},{"./src/api":310,"./src/blockchain-settings-api":311,"./src/helpers":316,"./src/import-export":317,"./src/payment":320,"./src/rng":321,"./src/shared":322,"./src/wallet":331,"./src/wallet-crypto":325,"./src/wallet-network":326,"./src/wallet-store":328,"./src/wallet-token-endpoints":329,"./src/wallet-transaction":330,"buffer":86,"es6-promise":83,"isomorphic-fetch":303}],2:[function(require,module,exports){
+},{"./src/address":309,"./src/api":310,"./src/blockchain-settings-api":311,"./src/helpers":316,"./src/import-export":317,"./src/payment":320,"./src/rng":321,"./src/shared":322,"./src/wallet":331,"./src/wallet-crypto":325,"./src/wallet-network":326,"./src/wallet-store":328,"./src/wallet-token-endpoints":329,"./src/wallet-transaction":330,"buffer":86,"es6-promise":83,"isomorphic-fetch":303}],2:[function(require,module,exports){
 // (public) Constructor
 function BigInteger(a, b, c) {
   if (!(this instanceof BigInteger))
@@ -1755,8 +1755,7 @@ module.exports={
     "tarball": "http://registry.npmjs.org/bigi/-/bigi-1.4.1.tgz"
   },
   "directories": {},
-  "_resolved": "https://registry.npmjs.org/bigi/-/bigi-1.4.1.tgz",
-  "readme": "ERROR: No README data found!"
+  "_resolved": "https://registry.npmjs.org/bigi/-/bigi-1.4.1.tgz"
 }
 
 },{}],6:[function(require,module,exports){
@@ -24208,9 +24207,10 @@ var assert = require('minimalistic-assert');
 
 // Supported tags
 var tags = [
-  'seq', 'seqof', 'set', 'setof', 'octstr', 'bitstr', 'objid', 'bool',
-  'gentime', 'utctime', 'null_', 'enum', 'int', 'ia5str', 'utf8str', 'bmpstr',
-  'numstr', 'printstr'
+  'seq', 'seqof', 'set', 'setof', 'objid', 'bool',
+  'gentime', 'utctime', 'null_', 'enum', 'int',
+  'bitstr', 'bmpstr', 'charstr', 'genstr', 'graphstr', 'ia5str', 'iso646str',
+  'numstr', 'octstr', 'printstr', 't61str', 'unistr', 'utf8str', 'videostr'
 ];
 
 // Public methods list
@@ -24594,11 +24594,7 @@ Node.prototype._decodeGeneric = function decodeGeneric(tag, input) {
     return null;
   if (tag === 'seqof' || tag === 'setof')
     return this._decodeList(input, tag, state.args[0]);
-  else if (tag === 'octstr' || tag === 'bitstr')
-    return this._decodeStr(input, tag);
-  else if (tag === 'ia5str' || tag === 'utf8str' || tag === 'bmpstr')
-    return this._decodeStr(input, tag);
-  else if (tag === 'numstr' || tag === 'printstr')
+  else if (/str$/.test(tag))
     return this._decodeStr(input, tag);
   else if (tag === 'objid' && state.args)
     return this._decodeObjid(input, state.args[0], state.args[1]);
@@ -24802,11 +24798,7 @@ Node.prototype._encodeChoice = function encodeChoice(data, reporter) {
 Node.prototype._encodePrimitive = function encodePrimitive(tag, data) {
   var state = this._baseState;
 
-  if (tag === 'octstr' || tag === 'bitstr' || tag === 'ia5str')
-    return this._encodeStr(data, tag);
-  else if (tag === 'utf8str' || tag === 'bmpstr')
-    return this._encodeStr(data, tag);
-  else if (tag === 'numstr' || tag === 'printstr')
+  if (/str$/.test(tag))
     return this._encodeStr(data, tag);
   else if (tag === 'objid' && state.args)
     return this._encodeObjid(data, state.reverseArgs[0], state.args[1]);
@@ -25127,33 +25119,12 @@ DERNode.prototype._decodeList = function decodeList(buffer, tag, decoder) {
 };
 
 DERNode.prototype._decodeStr = function decodeStr(buffer, tag) {
-  if (tag === 'octstr') {
-    return buffer.raw();
-  } else if (tag === 'bitstr') {
+  if (tag === 'bitstr') {
     var unused = buffer.readUInt8();
     if (buffer.isError(unused))
       return unused;
-
     return { unused: unused, data: buffer.raw() };
-  } else if (tag === 'ia5str' || tag === 'utf8str') {
-    return buffer.raw().toString();
-  } else if(tag === 'numstr') {
-    var numstr = buffer.raw().toString('ascii');
-    if (!this._isNumstr(numstr)) {
-      return buffer.error('Decoding of string type: ' +
-                          'numstr unsupported characters');
-    }
-
-    return numstr;
-  } else if (tag === 'printstr') {
-    var printstr = buffer.raw().toString('ascii');
-    if (!this._isPrintstr(printstr)) {
-      return buffer.error('Decoding of string type: ' +
-                          'printstr unsupported characters');
-    }
-
-    return printstr;
-  } else if(tag === 'bmpstr') {
+  } else if (tag === 'bmpstr') {
     var raw = buffer.raw();
     if (raw.length % 2 === 1)
       return buffer.error('Decoding of string type: bmpstr length mismatch');
@@ -25163,6 +25134,24 @@ DERNode.prototype._decodeStr = function decodeStr(buffer, tag) {
       str += String.fromCharCode(raw.readUInt16BE(i * 2));
     }
     return str;
+  } else if (tag === 'numstr') {
+    var numstr = buffer.raw().toString('ascii');
+    if (!this._isNumstr(numstr)) {
+      return buffer.error('Decoding of string type: ' +
+                          'numstr unsupported characters');
+    }
+    return numstr;
+  } else if (tag === 'octstr') {
+    return buffer.raw();
+  } else if (tag === 'printstr') {
+    var printstr = buffer.raw().toString('ascii');
+    if (!this._isPrintstr(printstr)) {
+      return buffer.error('Decoding of string type: ' +
+                          'printstr unsupported characters');
+    }
+    return printstr;
+  } else if (/str$/.test(tag)) {
+    return buffer.raw().toString();
   } else {
     return buffer.error('Decoding of string type: ' + tag + ' unsupported');
   }
@@ -25448,12 +25437,8 @@ DERNode.prototype._encodeComposite = function encodeComposite(tag,
 };
 
 DERNode.prototype._encodeStr = function encodeStr(str, tag) {
-  if (tag === 'octstr') {
-    return this._createEncoderBuffer(str);
-  } else if (tag === 'bitstr') {
+  if (tag === 'bitstr') {
     return this._createEncoderBuffer([ str.unused | 0, str.data ]);
-  } else if (tag === 'ia5str' || tag === 'utf8str') {
-    return this._createEncoderBuffer(str);
   } else if (tag === 'bmpstr') {
     var buf = new Buffer(str.length * 2);
     for (var i = 0; i < str.length; i++) {
@@ -25465,7 +25450,6 @@ DERNode.prototype._encodeStr = function encodeStr(str, tag) {
       return this.reporter.error('Encoding of string type: numstr supports ' +
                                  'only digits and space');
     }
-
     return this._createEncoderBuffer(str);
   } else if (tag === 'printstr') {
     if (!this._isPrintstr(str)) {
@@ -25476,7 +25460,8 @@ DERNode.prototype._encodeStr = function encodeStr(str, tag) {
                                  'dot, slash, colon, equal sign, ' +
                                  'question mark');
     }
-
+    return this._createEncoderBuffer(str);
+  } else if (/str$/.test(tag)) {
     return this._createEncoderBuffer(str);
   } else {
     return this.reporter.error('Encoding of string type: ' + tag +
@@ -32498,8 +32483,8 @@ Object.defineProperties(Wallet.prototype, {
   "context": {
     configurable: false,
     get: function() {
-      var xpubs = this.hdwallet && this.hdwallet.xpubs;
-      return this.addresses.concat(xpubs || []);
+      var xpubs = this.hdwallet && this.hdwallet.activeXpubs;
+      return this.activeAddresses.concat(xpubs || []);
     }
   },
   "isDoubleEncrypted": {
@@ -33901,10 +33886,8 @@ Helpers.isBitcoinPrivateKey = function(candidate) {
   }
   catch (e) { return false; };
 };
-Helpers.isBase58Key = function(k) {
-  return Helpers.isString(k) &&
-         (/^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{44}$/.test(k) ||
-         /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{43}$/.test(k))
+Helpers.isBase58Key = function(str) {
+  return Helpers.isString(str) && /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{40,44}$/.test(str);
 };
 Helpers.isXprivKey = function(k) {
   return Helpers.isString(k) && k.substring(0, 4) === "xprv";
@@ -34145,12 +34128,12 @@ Helpers.getHostName = function() {
 };
 
 Helpers.tor = function () {
-  var hostname = Helpers.getHostName()
+  var hostname = Helpers.getHostName();
 
   // NodeJS TOR detection not supported:
-  if(hostname === null) return null
+  if ('string' !== typeof hostname) return null;
 
-  return hostname.indexOf(".onion") > -1
+  return hostname.slice(-6) === '.onion';
 };
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -37734,8 +37717,8 @@ MyWallet.detectPrivateKeyFormat = function(key) {
   if (/^[LK][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/.test(key))
     return 'compsipa';
 
-  // 52 characters base58
-  if (/^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{44}$/.test(key) || /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{43}$/.test(key))
+  // 40-44 characters base58
+  if (/^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{40,44}$/.test(key))
     return 'base58';
 
   if (/^[A-Fa-f0-9]{64}$/.test(key))
@@ -37794,9 +37777,6 @@ MyWallet.privateKeyStringToKey = function(value, format) {
   } else {
     throw 'Unsupported Key Format';
   }
-
-  if (key_bytes.length != 32 && key_bytes.length != 33)
-    throw 'Result not 32 or 33 bytes in length';
 
   return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format !== 'sipa'));
 };
