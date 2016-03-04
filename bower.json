@@ -15,13 +15,13 @@
   ],
   "license": "",
   "private": false,
-  "repository" : {
-    "type" : "git",
-    "url" : "git://github.com/blockchain/My-Wallet-V3-Bower.git"
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/blockchain/My-Wallet-V3-Bower.git"
   },
-  "ignore": [
-  ],
+  "ignore": [],
   "scripts": {},
   "dependencies": {},
-  "devDependencies": {}
+  "devDependencies": {},
+  "version": "3.10.2"
 }
