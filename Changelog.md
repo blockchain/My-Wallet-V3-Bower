@@ -10,8 +10,11 @@ _Recent changes_
 
 ## Bug Fixes
 
-- **Release:** include bower version
-  ([4e0c3abb](https://github.com/blockchain/My-Wallet-V3/commit/4e0c3abb58c12bca1df77ddf9f8ea82ba556ffab))
+- **restoring:**
+  - some comments added.
+  ([db90b1ce](https://github.com/blockchain/My-Wallet-V3/commit/db90b1ce10dcc5857a8e1630b3ebbb868cde5b4a))
+  - restoring from mnemonic fixed.
+  ([a2dc4394](https://github.com/blockchain/My-Wallet-V3/commit/a2dc43945575de396a7aeebddad2fff010f277cf))
 
 
 
