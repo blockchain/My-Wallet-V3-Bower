@@ -2,7 +2,7 @@ __Blockchain Wallet V3__
 
 _Recent changes_
 
-#   (2016-03-04)
+#   (2016-03-05)
 
 
 
@@ -10,11 +10,13 @@ _Recent changes_
 
 ## Bug Fixes
 
-- **restoring:**
-  - some comments added.
-  ([db90b1ce](https://github.com/blockchain/My-Wallet-V3/commit/db90b1ce10dcc5857a8e1630b3ebbb868cde5b4a))
-  - restoring from mnemonic fixed.
-  ([a2dc4394](https://github.com/blockchain/My-Wallet-V3/commit/a2dc43945575de396a7aeebddad2fff010f277cf))
+- **Deploy:** git add dist files
+  ([1ddb38a2](https://github.com/blockchain/My-Wallet-V3/commit/1ddb38a2287dd810b40eeac06789334202f6b875))
+
+
+## Chore
+
+- **Whitelist:** bump base58check version
 
 
 
