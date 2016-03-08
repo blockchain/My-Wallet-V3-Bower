@@ -2,7 +2,7 @@ __Blockchain Wallet V3__
 
 _Recent changes_
 
-#   (2016-03-05)
+#   (2016-03-08)
 
 
 
@@ -10,13 +10,8 @@ _Recent changes_
 
 ## Bug Fixes
 
-- **Deploy:** git add dist files
-  ([1ddb38a2](https://github.com/blockchain/My-Wallet-V3/commit/1ddb38a2287dd810b40eeac06789334202f6b875))
-
-
-## Chore
-
-- **Whitelist:** bump base58check version
+- **sweep:** sweep for empty accounts must be zero.
+  ([a6a78bc4](https://github.com/blockchain/My-Wallet-V3/commit/a6a78bc407afab80fe0721f2a9e485126468af85))
 
 
 
