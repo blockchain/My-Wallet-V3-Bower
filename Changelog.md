@@ -2,7 +2,7 @@ __Blockchain Wallet V3__
 
 _Recent changes_
 
-#   (2016-03-10)
+#   (2016-03-18)
 
 
 
@@ -10,28 +10,39 @@ _Recent changes_
 
 ## Bug Fixes
 
-- **Transaction:** add transaction amount to iOS factory
-  ([e1f798ac](https://github.com/blockchain/My-Wallet-V3/commit/e1f798ac00731c276896ef097f30b0dd3229e8c2))
-- **sweep:** sweep for empty accounts must be zero.
-  ([f0eb99ed](https://github.com/blockchain/My-Wallet-V3/commit/f0eb99ed9d8802115b3f8c4512e727dc38406de2))
+- **Dep:** update grunt-browserify which uses browserify 13
+  ([bcc48e49](https://github.com/blockchain/My-Wallet-V3/commit/bcc48e4991102330b91d01bfdb2f87343113aa9d))
+- **Jenkins:**
+  - remove special case
+  ([83403b81](https://github.com/blockchain/My-Wallet-V3/commit/83403b813ccdcc531a26971e48ad12ab6665b444))
+  - use node 5.8 and skip test phase
+  ([c04ee249](https://github.com/blockchain/My-Wallet-V3/commit/c04ee24976636019685225b65daa57c749473caf))
 
 
 ## Features
 
-- **Transaction:** localizable error messages
-  ([5b0512af](https://github.com/blockchain/My-Wallet-V3/commit/5b0512afb2942d0b81d3f0f4933c28a31a03bdf5))
+- **BitcoinJS** update to 2.1
+- **Karma:** switch to PhantomJS 2
+  ([b5d75660](https://github.com/blockchain/My-Wallet-V3/commit/b5d75660247b51164eb1a9d1eece9d0b40a8a3d0))
+- **Release:** use Makefile and simply
+  ([0ae9b274](https://github.com/blockchain/My-Wallet-V3/commit/0ae9b27404b473b72d7de60a422db5fb63cb84e4))
+
+
+## Refactor
+
+- **NPM:** test with node v5.7.1 (npm v3.8.0)
 
 
 ## Test
 
-- **Helpers:**
-  - tests for isValidPrivateKey
-  - Tests for privateKeyCorrespondsToAddress
-  - Added tests for isValidBIP39Mnemonic
-  - tests for guessFee and guessSize
-- **Payment:**
-  - More tests for computeSuggestedSweep
-  - computeSuggestedSweep
+- **BitcoinJS2:** repaired tests
+- **Browser:** remove Meego test; doesn't work in PhantomJS
+- **RNG:** support PhantomJS
+
+
+## Chore
+
+- **Release:** Pre-release 3.12.0
 
 
 
