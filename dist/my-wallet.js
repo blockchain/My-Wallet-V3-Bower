@@ -2118,17 +2118,12 @@ var revLookup = []
 var Arr = typeof Uint8Array !== 'undefined' ? Uint8Array : Array
 
 function init () {
-  var i
   var code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-  var len = code.length
-
-  for (i = 0; i < len; i++) {
+  for (var i = 0, len = code.length; i < len; ++i) {
     lookup[i] = code[i]
-  }
-
-  for (i = 0; i < len; ++i) {
     revLookup[code.charCodeAt(i)] = i
   }
+
   revLookup['-'.charCodeAt(0)] = 62
   revLookup['_'.charCodeAt(0)] = 63
 }
@@ -2160,8 +2155,8 @@ function toByteArray (b64) {
 
   for (i = 0, j = 0; i < l; i += 4, j += 3) {
     tmp = (revLookup[b64.charCodeAt(i)] << 18) | (revLookup[b64.charCodeAt(i + 1)] << 12) | (revLookup[b64.charCodeAt(i + 2)] << 6) | revLookup[b64.charCodeAt(i + 3)]
-    arr[L++] = (tmp & 0xFF0000) >> 16
-    arr[L++] = (tmp & 0xFF00) >> 8
+    arr[L++] = (tmp >> 16) & 0xFF
+    arr[L++] = (tmp >> 8) & 0xFF
     arr[L++] = tmp & 0xFF
   }
 
@@ -3843,7 +3838,7 @@ module.exports={
   "_args": [
     [
       "bigi@1.4.*",
-      "/Users/sjors/dev/My-Wallet-V3"
+      "/var/lib/jenkins/jobs/My Wallet V3/workspace"
     ]
   ],
   "_from": "bigi@>=1.4.0 <1.5.0",
@@ -3875,7 +3870,7 @@ module.exports={
   "_shasum": "726e8ab08d1fe1dfb8aa6bb6309bffecf93a21b7",
   "_shrinkwrap": null,
   "_spec": "bigi@1.4.*",
-  "_where": "/Users/sjors/dev/My-Wallet-V3",
+  "_where": "/var/lib/jenkins/jobs/My Wallet V3/workspace",
   "bugs": {
     "url": "https://github.com/cryptocoinjs/bigi/issues"
   },
@@ -14599,17 +14594,12 @@ Buffer.compare = function compare (a, b) {
   var x = a.length
   var y = b.length
 
-  var i = 0
-  var len = Math.min(x, y)
-  while (i < len) {
-    if (a[i] !== b[i]) break
-
-    ++i
-  }
-
-  if (i !== len) {
-    x = a[i]
-    y = b[i]
+  for (var i = 0, len = Math.min(x, y); i < len; ++i) {
+    if (a[i] !== b[i]) {
+      x = a[i]
+      y = b[i]
+      break
+    }
   }
 
   if (x < y) return -1
@@ -14770,7 +14760,6 @@ Buffer.prototype.inspect = function inspect () {
 
 Buffer.prototype.compare = function compare (b) {
   if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
-  if (this === b) return 0
   return Buffer.compare(this, b)
 }
 
@@ -21902,7 +21891,7 @@ module.exports={
   "_args": [
     [
       "elliptic@^6.0.0",
-      "/Users/sjors/dev/My-Wallet-V3/node_modules/browserify-sign"
+      "/var/lib/jenkins/jobs/My Wallet V3/workspace/node_modules/browserify-sign"
     ]
   ],
   "_from": "elliptic@>=6.0.0 <7.0.0",
@@ -21933,7 +21922,7 @@ module.exports={
   "_shasum": "18e46d7306b0951275a2d42063270a14b74ebe99",
   "_shrinkwrap": null,
   "_spec": "elliptic@^6.0.0",
-  "_where": "/Users/sjors/dev/My-Wallet-V3/node_modules/browserify-sign",
+  "_where": "/var/lib/jenkins/jobs/My Wallet V3/workspace/node_modules/browserify-sign",
   "author": {
     "email": "fedor@indutny.com",
     "name": "Fedor Indutny"
