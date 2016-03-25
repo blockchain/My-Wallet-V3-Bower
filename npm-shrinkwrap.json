@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.12.0",
+  "version": "3.13.0",
   "dependencies": {
     "abbrev": {
       "version": "1.0.7",
@@ -685,9 +685,9 @@
       "resolved": "https://registry.npmjs.org/core-util-is/-/core-util-is-1.0.2.tgz"
     },
     "coveralls": {
-      "version": "2.11.8",
+      "version": "2.11.9",
       "from": "coveralls@>=2.10.0 <3.0.0",
-      "resolved": "https://registry.npmjs.org/coveralls/-/coveralls-2.11.8.tgz",
+      "resolved": "https://registry.npmjs.org/coveralls/-/coveralls-2.11.9.tgz",
       "dependencies": {
         "argparse": {
           "version": "0.1.16",

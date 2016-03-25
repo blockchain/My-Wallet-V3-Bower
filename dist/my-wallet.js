@@ -36,19 +36,20 @@ module.exports = {
   WalletTokenEndpoints: require('./src/wallet-token-endpoints'),
   WalletNetwork: require('./src/wallet-network'),
   RNG: require('./src/rng'),
+  Transaction: require('./src/transaction'),
   // Wallet: require('./blockchain-wallet'),
-  Address: require('./src/address')
+  Address: require('./src/address'),
   // HDAccount: require('./hd-account'),
   // HDWallet: require('./hd-wallet'),
   // KeyChain: require('./keychain'),
   // KeyRing: require('./keyring'),
-  // Bitcoin: require('bitcoinjs-lib'),
+  Bitcoin: require('bitcoinjs-lib')
   // Base58: require('bs58'),
   // BigInteger: require('bigi'),
   // BIP39: require('bip39')
 };
 
-},{"./src/address":177,"./src/api":178,"./src/blockchain-settings-api":180,"./src/helpers":185,"./src/import-export":186,"./src/payment":189,"./src/rng":190,"./src/shared":191,"./src/wallet":200,"./src/wallet-crypto":194,"./src/wallet-network":195,"./src/wallet-store":197,"./src/wallet-token-endpoints":198,"./src/wallet-transaction":199,"buffer":73,"es6-promise":115,"isomorphic-fetch":128}],2:[function(require,module,exports){
+},{"./src/address":177,"./src/api":178,"./src/blockchain-settings-api":180,"./src/helpers":185,"./src/import-export":186,"./src/payment":189,"./src/rng":190,"./src/shared":191,"./src/transaction":193,"./src/wallet":200,"./src/wallet-crypto":194,"./src/wallet-network":195,"./src/wallet-store":197,"./src/wallet-token-endpoints":198,"./src/wallet-transaction":199,"bitcoinjs-lib":33,"buffer":73,"es6-promise":115,"isomorphic-fetch":128}],2:[function(require,module,exports){
 var asn1 = exports;
 
 asn1.bignum = require('bn.js');
@@ -31121,7 +31122,7 @@ API.prototype.getTicker = function (){
 API.prototype.getUnspent = function (fromAddresses, confirmations){
   var data = {
       active : fromAddresses.join('|')
-    , confirmations : Helpers.isPositiveNumber(confirmations) ? confirmations : 0
+    , confirmations : Helpers.isPositiveNumber(confirmations) ? confirmations : -1
     , format: 'json'
     , api_code : this.API_CODE
   };
@@ -31197,7 +31198,10 @@ API.prototype.pushTx = function (txHex, note){
   var data = {
       tx : txHex
     , api_code : this.API_CODE
+    , format : 'plain'
   };
+
+  if (note) data.note = note;
 
   var responseTXHASH = function (responseText) {
     if (responseText.indexOf('Transaction Submitted') > -1)
@@ -31207,6 +31211,25 @@ API.prototype.pushTx = function (txHex, note){
   };
 
   return this.request('POST', 'pushtx', data).then(responseTXHASH);
+};
+
+API.prototype.getFees = function () {
+
+  var handleNetworkError = function () {
+    return Promise.reject({ initial_error: 'Connectivity error, failed to send network request' });
+  };
+
+  var checkStatus = function (response) {
+    if (response.status >= 200 && response.status < 300) {
+        return response.json();
+    } else {
+      return response.text().then(Promise.reject.bind(Promise));
+    }
+  };
+
+  return fetch(this.API_ROOT_URL + "fees")
+            .then(checkStatus)
+            .catch(handleNetworkError);
 };
 
 // OLD FUNCTIONS COPIED: Must rewrite this ones (email ,sms)
@@ -34123,49 +34146,119 @@ var Transaction   = require('./transaction');
 var API           = require('./api');
 var Helpers       = require('./helpers');
 var KeyRing       = require('./keyring');
+var EventEmitter  = require('events');
+var util          = require('util');
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Payment Class
 ////////////////////////////////////////////////////////////////////////////////
 
 function Payment (payment) {
-  this.payment = Payment.return(payment);
-  // type definitions
-  // payment.from           :: [bitcoin address || xpub]
+  EventEmitter.call(this);
+
+  var serverFeeFallback ={
+     "default":{
+        "fee":35000.00,
+        "surge":false,
+        "ok":true
+     },
+     "estimate":[
+        {
+           "fee":45000.0,
+           "surge":false,
+           "ok":true
+        },
+        {
+           "fee":35000.00,
+           "surge":false,
+           "ok":true
+        },
+        {
+           "fee":22000.0,
+           "surge":false,
+           "ok":true
+        },
+        {
+           "fee":19000.0,
+           "surge":false,
+           "ok":true
+        },
+        {
+           "fee":15000.0,
+           "surge":false,
+           "ok":true
+        },
+        {
+           "fee":12000.0,
+           "surge":false,
+           "ok":true
+        }
+     ]
+  };
+
+  var initialState = {
+    fees: serverFeeFallback,  // fallback for fee-service
+    coins: [],  // original set of unspents (set by .from)
+    selectedCoins: [], // set of coins that are going to be passed to new Transaction
+    from: null, // origin
+    amounts: [], // list of amounts to spend entered in the form
+    to: [], // list of destinations entered in the form
+    feePerKb: serverFeeFallback.default.fee, // default fee-per-kb used in basic send
+    extraFeeConsumption: 0, // if there is change consumption to fee will be reflected here
+    sweepFee: 0,  // computed fee to sweep an account in basic send (depends on fee-per-kb)
+    sweepAmount: 0, // computed max spendable amount depending on fee-per-kb
+    balance: 0, // sum of all unspents values with any filtering     [ payment.sumOfCoins ]
+    finalFee: 0, // final absolute fee that it is going to be used no matter how was obtained (advanced or regular send)
+    changeAmount: 0, // final change
+    absoluteFeeBounds: [0,0,0,0,0,0], // fee bounds (absolute) per fixed amount
+    sweepFees: [0,0,0,0,0,0], // sweep absolute fee per each fee per kb (1,2,3,4,5,6)
+    maxSpendableAmounts: [0,0,0,0,0,0],  // max amount per each fee-per-kb
+    confEstimation: "unknown",
+    txSize: 0 // transaciton size
+  };
+
+  var p = payment ? payment : initialState;
+  this.payment = Payment.return(p);
+  this.updateFees();
+
+  // more definitions
+  // payment.from           :: [bitcoin address || xpub || privateKey]
   // payment.change         :: [bitcoin address]
   // payment.wifKeys        :: [WIF]
   // payment.fromAccountIdx :: Integer
-  // payment.sweepAmount    :: Integer
-  // payment.sweepFee       :: Integer
-  // payment.forcedFee      :: Integer
-  // payment.feePerKb       :: Integer
-  // payment.coins          :: [coins]
-  // payment.to             :: [bitcoin address]
-  // payment.amounts        :: [Integer]
   // payment.fromWatchOnly  :: Boolean
   // payment.transaction    :: Transaction
   // payment.note           :: String
-  // payment.listener       :: {Functions}
 }
+util.inherits(Payment, EventEmitter);
 ////////////////////////////////////////////////////////////////////////////////
 // Payment instance methods (can be chained)
 Payment.prototype.to = function (destinations) {
   this.payment = this.payment.then(Payment.to(destinations));
+  this.sideEffect(this.emit.bind(this, 'update'));
   return this;
 };
 
-Payment.prototype.from = function (origin) {
-  this.payment = this.payment.then(Payment.from(origin));
+Payment.prototype.from = function (origin, absoluteFee) {
+  this.payment = this.payment.then(Payment.from(origin, absoluteFee));
+  this.then(Payment.prebuild(absoluteFee));
   return this;
 };
 
-Payment.prototype.amount = function (amounts) {
-  this.payment = this.payment.then(Payment.amount(amounts));
+Payment.prototype.fee = function (absoluteFee) {
+  this.then(Payment.prebuild(absoluteFee));
+  return this;
+};
+
+Payment.prototype.amount = function (amounts, absoluteFee) {
+  this.payment = this.payment.then(Payment.amount(amounts, absoluteFee));
+  this.then(Payment.prebuild(absoluteFee));
   return this;
 };
 
 Payment.prototype.then = function (myFunction) {
   this.payment = this.payment.then(myFunction);
+  this.sideEffect(this.emit.bind(this, 'update'));
   return this;
 };
 
@@ -34179,50 +34272,55 @@ Payment.prototype.sideEffect = function (myFunction) {
   return this;
 };
 
-Payment.prototype.listener = function (listener) {
-  this.payment = this.payment.then(Payment.listener(listener));
+Payment.prototype.useAll = function (absoluteFee) {
+  this.payment = this.payment.then(Payment.useAll(absoluteFee));
+  this.then(Payment.prebuild(absoluteFee));
+  // this.sideEffect(this.emit.bind(this, 'update'));
   return this;
 };
 
-Payment.prototype.sweep = function () {
-  this.payment = this.payment.then(Payment.sweep());
-  return this;
-};
-
-Payment.prototype.fee = function (fee) {
-  this.payment = this.payment.then(Payment.fee(fee));
-  return this;
-};
-
-Payment.prototype.feePerKb = function (feePerKb) {
-  this.payment = this.payment.then(Payment.feePerKb(feePerKb));
+Payment.prototype.updateFees = function () {
+  this.payment = this.payment.then(Payment.updateFees());
+  this.sideEffect(this.emit.bind(this, 'update'));
   return this;
 };
 
 Payment.prototype.note = function (note) {
   this.payment = this.payment.then(Payment.note(note));
+  this.sideEffect(this.emit.bind(this, 'update'));
+  return this;
+};
+
+Payment.prototype.prebuild = function (absoluteFee) {
+  this.payment = this.payment.then(Payment.prebuild(absoluteFee));
+  this.sideEffect(this.emit.bind(this, 'update'));
   return this;
 };
 
 Payment.prototype.build = function () {
-  this.payment = this.payment.then(Payment.build());
-  return this;
-};
-
-Payment.prototype.buildbeta = function () {
-  this.payment = this.payment.then(Payment.buildbeta());
+  this.payment = this.payment.then(Payment.build.bind(this)());
+  this.sideEffect(this.emit.bind(this, 'update'));
   return this;
 };
 
 Payment.prototype.sign = function (password) {
   this.payment = this.payment.then(Payment.sign(password));
+  this.sideEffect(this.emit.bind(this, 'update'));
   return this;
 };
 
 Payment.prototype.publish = function () {
   this.payment = this.payment.then(Payment.publish());
+  this.sideEffect(this.emit.bind(this, 'update'));
   return this;
 };
+
+Payment.prototype.printJSON = function () {
+  var printJSON = function(p) {console.log(JSON.stringify(p, null, 2));}
+  this.sideEffect(printJSON);
+  return this;
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 Payment.return = function (payment) {
@@ -34273,17 +34371,14 @@ Payment.to = function (destinations) {
   };
 };
 
-Payment.listener = function (listener) {
+Payment.useAll = function (absoluteFee) {
   return function (payment) {
-    payment.listener = listener
-    return Promise.resolve(payment);
-  };
-};
-
-Payment.sweep = function () {
-  return function (payment) {
-    payment.amounts = payment.sweepAmount ? [payment.sweepAmount] : undefined;
-    payment.forcedFee = payment.sweepFee;
+    if (Helpers.isPositiveNumber(absoluteFee)) {
+      var balance       = payment.balance ? payment.balance : 0;
+      payment.amounts   = (balance - absoluteFee) > 0 ? [balance - absoluteFee] : [];
+    } else {
+      payment.amounts = payment.sweepAmount ? [payment.sweepAmount] : [];
+    }
     return Promise.resolve(payment);
   };
 };
@@ -34296,26 +34391,7 @@ Payment.note = function (note) {
   };
 };
 
-Payment.fee = function (amount) {
-  var forcedFee = Helpers.isPositiveNumber(amount) ? amount : null;
-  return function (payment) {
-    payment.forcedFee = forcedFee;
-    return Promise.resolve(payment);
-  };
-};
-
-Payment.feePerKb = function (amount) {
-  var feePerKb = Helpers.isPositiveNumber(amount) ? amount : null;
-  return function(payment) {
-    payment.feePerKb = feePerKb;
-    var sweep = Payment.computeSuggestedSweep(payment.coins, payment.feePerKb);
-    payment.sweepAmount = sweep[0];
-    payment.sweepFee    = sweep[1];
-    return Promise.resolve(payment);
-  };
-};
-
-Payment.amount = function (amounts) {
+Payment.amount = function (amounts, absoluteFee) {
   var formatAmo = null;
   switch (true) {
     // single output
@@ -34329,11 +34405,10 @@ Payment.amount = function (amounts) {
       formatAmo = amounts;
       break;
     default:
-      console.log('No amounts set.')
+      console.log('No amounts set.');
   } // fi switch
   return function (payment) {
     payment.amounts = formatAmo;
-    payment.forcedFee = null;
     return Promise.resolve(payment);
   };
 };
@@ -34409,61 +34484,117 @@ Payment.from = function (origin) {
     payment.change         = change;
     payment.wifKeys        = wifs;
     payment.fromAccountIdx = fromAccId;
-    payment.forcedFee      = null;
     payment.fromWatchOnly  = watchOnly;
 
     return getUnspentCoins(addresses).then(
       function (coins) {
-        var sweep = Payment.computeSuggestedSweep(coins, payment.feePerKb);
-        payment.sweepAmount = sweep[0];
-        payment.sweepFee    = sweep[1];
-        payment.coins       = coins;
+        payment.coins = coins;
         return payment;
       }
     ).catch(
       // this could fail for network issues or no-balance
       function (error) {
         console.log(error);
-        payment.sweepAmount = 0;
-        payment.sweepFee    = 0;
-        payment.coins       = [];
+        // TODO:: Better failure handling here
+        // payment.sweepAmount = 0;
+        // payment.sweepFee    = 0;
+        // payment.coins       = [];
         return payment;
       }
     );
   };
 };
 
-Payment.build = function () {
+Payment.updateFees = function () {
+  return function (payment) {
+    return API.getFees().then(
+          function (fees){
+            payment.fees = fees;
+            payment.feePerKb = fees.default.fee;
+            return payment;
+          }
+        ).catch(
+          // this could fail for network issues - fallback default fee
+          function (error) {
+            console.log(error);
+            return payment;
+          }
+        );
+  };
+};
+
+Payment.prebuild = function (absoluteFee) {
 
   return function (payment) {
-    try {
-      payment.transaction = new Transaction(payment.coins, payment.to,
-                                            payment.amounts, payment.forcedFee,
-                                            payment.feePerKb, payment.change,
-                                            payment.listener);
-      payment.fee = payment.transaction.fee;
-    } catch (err) {
-      console.log('Error Building: ' + err);
+
+    var totalFee      = null;
+    var selectedCoins = [];
+    var txSize        = 0;
+    var dust          = Bitcoin.networks.bitcoin.dustThreshold;
+
+    var usableCoins   = Transaction.filterUsableCoins(payment.coins, payment.feePerKb);
+    var max = Transaction.maxAvailableAmount(usableCoins, payment.feePerKb);
+    payment.sweepAmount = max.amount;
+    payment.sweepFee    = max.fee;
+    payment.balance     = Transaction.sumOfCoins(payment.coins);
+
+    // compute max spendable limits per each fee-per-kb
+    var maxSpendablesPerFeePerKb = function(e){
+      var c = Transaction.filterUsableCoins(payment.coins, e.fee);
+      var s = Transaction.maxAvailableAmount(c, e.fee);
+      return s.amount;
     }
+    payment.maxSpendableAmounts = payment.fees.estimate.map(maxSpendablesPerFeePerKb);
+    payment.sweepFees = payment.maxSpendableAmounts.map(function(v){return payment.balance - v;});
+
+    // if amounts defined refresh computations
+    if (Array.isArray(payment.amounts) && payment.amounts.length > 0) {
+
+      // coin selection
+      if (Helpers.isPositiveNumber(absoluteFee)) {
+        var s = Transaction.selectCoins(payment.coins, payment.amounts, absoluteFee, true);
+      } else {
+        var s = Transaction.selectCoins(usableCoins, payment.amounts, payment.feePerKb, false);
+      }
+      payment.finalFee      = s.fee;
+      payment.selectedCoins = s.coins;
+      payment.txSize = Transaction.guessSize(payment.selectedCoins.length, payment.amounts.length +1 );
+      var c = Transaction.sumOfCoins(payment.selectedCoins) - payment.amounts.reduce(Helpers.add, 0) - payment.finalFee;
+      payment.changeAmount = c > 0? c : 0;
+
+      // change consumption
+      if (payment.changeAmount > 0 && payment.changeAmount < dust) {
+        payment.extraFeeConsumption = payment.changeAmount;
+        payment.changeAmount = 0;
+      } else {
+        payment.extraFeeConsumption = 0;
+      }
+
+      // compute absolute fee bounds for 1,2,3,4,5,6 block confirmations
+      var toAbsoluteFee = function(e){
+        var c = Transaction.filterUsableCoins(payment.coins, e.fee);
+        var s = Transaction.selectCoins(c, payment.amounts, e.fee, false);
+        return s.fee;
+      }
+      payment.absoluteFeeBounds = payment.fees.estimate.map(toAbsoluteFee);
+
+      // estimation of confirmation in number of blocks
+      payment.confEstimation = Transaction.confirmationEstimation(payment.absoluteFeeBounds, payment.finalFee);
+    }
+
     return Promise.resolve(payment);
   };
 };
 
-Payment.buildbeta = function () {
-  // I should check for all the payment needed fields and reject with the wrong payment
-  // then the frontend can show the error and recreate the payment with the same state
+Payment.build = function () {
   return function (payment) {
     try {
-      payment.transaction = new Transaction(payment.coins, payment.to,
-                                            payment.amounts, payment.forcedFee,
-                                            payment.feePerKb, payment.change,
-                                            payment.listener);
-      payment.fee = payment.transaction.fee;
+      payment.transaction = new Transaction(payment, this);
       return Promise.resolve(payment);
     } catch (e) {
       return Promise.reject({ error: e, payment: payment });
     }
-  };
+  }.bind(this);
 };
 
 Payment.sign = function(password) {
@@ -34509,23 +34640,6 @@ Payment.publish = function () {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// computeSuggestedSweep :: [coins] -> [maxSpendeableAmount - fee, fee]
-Payment.computeSuggestedSweep = function(coins, feePerKb) {
-  if (coins == null || coins.length === 0) { return [0,0]; }
-  feePerKb = Helpers.isNumber(feePerKb) ? feePerKb : MyWallet.wallet.fee_per_kb;
-  var getValue = function (coin) { return coin.value; };
-  var sortedCoinValues = coins.map(getValue).sort(function (a, b) { return b - a });
-  var accumulatedValues = sortedCoinValues
-    .map(function (element, index, array) {
-      var fee = Helpers.guessFee(index + 1, 2, feePerKb);
-      return [array.slice(0, index + 1).reduce(Helpers.add, 0) - fee, fee];  //[total-fee, fee]
-    }).sort(function (a, b) { return b[0] - a[0] });
-  // dont return negative max spendable
-  if (accumulatedValues[0][0] < 0) { accumulatedValues[0][0] = 0; }
-  return accumulatedValues[0];
-};
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
 module.exports = Payment;
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -34546,7 +34660,7 @@ function getUnspentCoins (addressList) {
     return obj.unspent_outputs;
   }
 
-  return API.getUnspent(addressList, 0).then(processCoins);
+  return API.getUnspent(addressList, -1).then(processCoins);
 }
 
 function getKey(priv, addr) {
@@ -34610,63 +34724,8 @@ function getPrivateKeys (password, payment) {
   return privateKeys;
 };
 
-
-// example of usage
-
-// 1PHHtxKAgbpwvK3JfwDT1Q5WbGmGrqm8gf
-// 1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN
-//
-//
-// var payment = new Blockchain.Payment();
-// payment
-//   .from('1PHHtxKAgbpwvK3JfwDT1Q5WbGmGrqm8gf')
-//   .from('1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN')
-//   .amount(10000)
-//   .to('1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF')
-//   .build()
-//   .sign('hola')
-//   .payment.then(function (p){console.log( 'result: ' +  JSON.stringify(p, null, 2));})
-//           .catch(function (e){console.log( 'error: ' + e);});
-
-//
-// var error = function (e) {console.log('error: ' + e);}
-// var success = function (p) {console.log('final: '); console.log(p); return p;}
-// var op1Fail = function (p) {throw 'I failed!!';}
-// var op2Good = function (p) {console.log('op'); console.log(p); p.op2 = true; return p;}
-// var op3Good = function (p) {console.log('op'); console.log(p);p.op3 = true; return p;}
-// var print   = function (p) {console.log('from: '+ p.from);}
-//
-// var payment = new Blockchain.Payment();
-// payment
-//   .from('1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN')
-//   .then(op2Good)
-//   .amount(10000)
-//   .sideEffect(print)
-//   .then(op3Good)
-//   .then(op1Fail)
-//   .then(success)
-//   .catch(error)
-//
-// var error        = function (e) {console.log('error: ' + JSON.stringify(e, null, 2));}
-// var buildFailure = function (e) {console.log(e.error); return e.payment;}
-// var success      = function (p) {console.log('final: '); console.log(p); return p;}
-// var print        = function (p) {console.log('promise: '); console.log(p);}
-//
-// var payment = new Blockchain.Payment();
-// payment
-//   .from(1)
-//   .amount([10000,20000,30000])
-//   .to(['13kFBeNZMptwvP9LXEvRdG5W5WWPhc6eaG', 0, 2])
-//   .sideEffect(print)
-//   .buildbeta()
-//   .catch(buildFailure)
-//   .sign()
-//   .publish()
-//   .then(success)
-//   .catch(error)
-
 }).call(this,require("buffer").Buffer)
-},{"./api":178,"./helpers":185,"./keyring":188,"./transaction":193,"./wallet":200,"./wallet-crypto":194,"bitcoinjs-lib":33,"buffer":73}],190:[function(require,module,exports){
+},{"./api":178,"./helpers":185,"./keyring":188,"./transaction":193,"./wallet":200,"./wallet-crypto":194,"bitcoinjs-lib":33,"buffer":73,"events":116,"util":172}],190:[function(require,module,exports){
 'use strict';
 
 module.exports = new RNG();
@@ -34679,7 +34738,7 @@ var Helpers     = require('./helpers');
 
 function RNG () {
   this.ACTION    = 'GET';
-  this.URL       = 'https://api.blockchain.info/v2/randombytes';
+  this.URL       = 'https://api.blockchain.info/v2/randombytes'
   this.FORMAT    = 'hex';  // raw, hex, base64
   this.BYTES     = 32;
 }
@@ -34710,11 +34769,11 @@ RNG.prototype.run = function (nBytes) {
     var localH = randomBytes(nBytes);
 
     assert(
-      localH.byteLength > 0 || localH.length > 0,
+      localH.length > 0,
       'Local entropy should not be empty.'
     );
     assert(
-      serverH.byteLength > 0 || serverH.length > 0,
+      serverH.length > 0,
       'Server entropy should not be empty.'
     );
 
@@ -34727,7 +34786,7 @@ RNG.prototype.run = function (nBytes) {
       'The browser entropy should not be the same byte repeated.'
     );
     assert(
-      serverH.byteLength === localH.byteLength || serverH.length === localH.length,
+      serverH.length === localH.length,
       'Both entropies should be same of the length.'
     );
 
@@ -34738,7 +34797,7 @@ RNG.prototype.run = function (nBytes) {
       'The combined entropy should not be the same byte repeated.'
     );
     assert(
-      combinedH.byteLength === nBytes || combinedH.length === nBytes,
+      combinedH.length === nBytes,
       'Combined entropy should be of requested length.'
     );
 
@@ -34776,7 +34835,7 @@ RNG.prototype.getServerEntropy = function (nBytes) {
     var B = new Buffer(request.responseText, this.FORMAT);
 
     assert(
-      B.byteLength === nBytes || B.length === nBytes,
+      B.length === nBytes,
       'Different entropy length requested.'
     );
 
@@ -34955,24 +35014,29 @@ var Buffer      = require('buffer').Buffer;
 // {error: "NOT_GOOD", some_param: 1}
 // Error messages that should only appear during development can be any string.
 
-var Transaction = function (unspentOutputs, toAddresses, amounts, fee, feePerKb, changeAddress, listener) {
+var Transaction = function (payment, emitter) {
+
+  var unspentOutputs = payment.selectedCoins;
+  var toAddresses    = payment.to;
+  var amounts        = payment.amounts;
+  var fee            = payment.finalFee;
+  var changeAddress  = payment.change;
+  var BITCOIN_DUST   = Bitcoin.networks.bitcoin.dustThreshold;
 
   if (!Array.isArray(toAddresses) && toAddresses != null) {toAddresses = [toAddresses];}
   if (!Array.isArray(amounts) && amounts != null) {amounts = [amounts];}
+
   var network = Bitcoin.networks.bitcoin;
+
   assert(toAddresses, 'Missing destination address');
   assert(amounts,     'Missing amount to pay');
 
-  this.amount = amounts.reduce(function (a, b) {return a + b;},0);
-  this.listener = listener;
+  this.emitter = emitter;
+  this.amount = amounts.reduce(Helpers.add, 0);
   this.addressesOfInputs = [];
   this.privateKeys = null;
   this.addressesOfNeededPrivateKeys = [];
   this.pathsOfNeededPrivateKeys = [];
-  this.fee = 0; // final used fee
-  var BITCOIN_DUST = 5460;
-  var forcedFee = Helpers.isNumber(fee) ? fee : null;
-  feePerKb = Helpers.isNumber(feePerKb) ? feePerKb : 10000;
 
   assert(toAddresses.length == amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
   assert(this.amount > BITCOIN_DUST, {error: 'BELOW_DUST_THRESHOLD', amount: this.amount, threshold: BITCOIN_DUST});
@@ -34983,26 +35047,19 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, feePerKb,
   function addOutput (e, i) {transaction.addOutput(toAddresses[i],amounts[i]);}
   toAddresses.map(addOutput);
 
-  // Choose inputs
-  var unspent = sortUnspentOutputs(unspentOutputs);
-  var accum = 0;
-  var subTotal = 0;
-
-  var nIns = 0;
-  var nOuts = toAddresses.length + 1; // assumed one change output
-
-  for (var i = 0; i < unspent.length; i++) {
-    var output = unspent[i];
+  // add all inputs
+  var total = 0;
+  for (var i = 0; i < unspentOutputs.length; i++) {
+    var output = unspentOutputs[i];
+    total = total + output.value;
     var transactionHashBuffer = Buffer(output.hash, 'hex');
     transaction.addInput(Array.prototype.reverse.call(transactionHashBuffer), output.index);
-    nIns += 1;
-    this.sizeEstimate = Helpers.guessSize(nIns, nOuts);
-    this.fee = Helpers.isPositiveNumber(forcedFee) ? forcedFee : Helpers.guessFee(nIns, nOuts, feePerKb);
 
     // Generate address from output script and add to private list so we can check if the private keys match the inputs later
     var scriptBuffer = Buffer(output.script, "hex");
     assert.notEqual(Bitcoin.script.classifyOutput(scriptBuffer), 'nonstandard', {error: 'STRANGE_SCRIPT'});
     var address = Bitcoin.address.fromOutputScript(scriptBuffer).toString();
+
     assert(address, {error: 'CANNOT_DECODE_OUTPUT_ADDRESS', tx_hash: output.tx_hash});
     this.addressesOfInputs.push(address);
 
@@ -35013,24 +35070,13 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, feePerKb,
     else {
       this.addressesOfNeededPrivateKeys.push(address);
     }
-
-    accum += output.value;
-    subTotal = this.amount + this.fee;
-    if (accum >= subTotal) {
-      var change = accum - subTotal;
-
-      // Consume the change if it would create a very small none standard output
-      if (change > BITCOIN_DUST) {
-        assert(changeAddress, 'No change address specified');
-        transaction.addOutput(changeAddress, change);
-      }
-
-      break;
-    }
   }
 
-  if (accum < subTotal) {
-   throw { error: 500, message: 'Insufficient funds. Value Needed ' +  subTotal / 100000000 + 'BTC' +'. Available amount ' + accum / 100000000 + 'BTC'};
+  // Consume the change if it would create a very small none standard output
+  var changeAmount = total - this.amount - fee;
+  if (changeAmount > BITCOIN_DUST) {
+    assert(changeAddress, 'No change address specified');
+    transaction.addOutput(changeAddress, changeAmount);
   }
 
   this.transaction = transaction;
@@ -35083,24 +35129,18 @@ Transaction.prototype.sign = function () {
     assert.equal(this.addressesOfInputs[i], this.privateKeys[i].getAddress(), 'Private key does not match bitcoin address ' + this.addressesOfInputs[i] + '!=' + this.privateKeys[i].getAddress() + ' while signing input ' + i);
   }
 
-  var listener = this.listener;
-
-  listener && typeof(listener.on_begin_signing) === 'function' && listener.on_begin_signing();
+  this.emitter.emit('on_begin_signing');
 
   var transaction = this.transaction;
 
   for (var i = 0; i < transaction.inputs.length; i++) {
-    listener && typeof(listener.on_sign_progress) === 'function' && listener.on_sign_progress(i+1);
-
+    this.emitter.emit('on_sign_progress', i+1);
     var key = this.privateKeys[i];
-
     transaction.sign(i, key);
-
     assert(transaction.inputs[i].scriptType === 'pubkeyhash', 'Error creating input script');
   }
 
-  listener && typeof(listener.on_finish_signing) === 'function' && listener.on_finish_signing();
-
+  this.emitter.emit('on_finish_signing');
   return transaction;
 };
 
@@ -35122,6 +35162,74 @@ function sortUnspentOutputs (unspentOutputs) {
   return unspent;
 }
 
+Transaction.inputCost = function (feePerKb) {
+  return Math.ceil(feePerKb * 0.148);
+};
+Transaction.guessSize = function (nInputs, nOutputs) {
+  if (nInputs < 1 || nOutputs < 1) { return 0;}
+  return (nInputs*148 + nOutputs*34 + 10);
+};
+
+Transaction.guessFee = function (nInputs, nOutputs, feePerKb) {
+  var sizeBytes  = Transaction.guessSize(nInputs, nOutputs);
+  return Math.ceil(feePerKb * (sizeBytes / 1000));
+};
+
+Transaction.filterUsableCoins = function (coins, feePerKb){
+  var icost = Transaction.inputCost(feePerKb);
+  return coins.filter(function(c) { return c.value >= icost });
+};
+
+Transaction.maxAvailableAmount = function (usableCoins, feePerKb){
+  var len = usableCoins.length;
+  var fee = Transaction.guessFee(len, 2, feePerKb);
+  return {"amount": usableCoins.reduce(function(a,e){a = a + e.value; return a},0) - fee, "fee" : fee};
+};
+
+Transaction.sumOfCoins = function (coins){
+  return coins.reduce(function(a,e){a = a + e.value; return a},0);
+};
+
+Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee){
+  var amount = amounts.reduce(Helpers.add,0);
+  var nouts  = amounts.length;
+  var sorted = usableCoins.sort(function (a, b) { return b.value - a.value });
+  var len = sorted.length;
+  var sel = [];
+  var accAm = 0;
+  var accFee = 0;
+
+  if (isAbsoluteFee) {
+    for (var i = 0; i < len; i++) {
+      var coin = sorted[i];
+      accAm = accAm + coin.value;
+      sel.push(coin);
+      if (accAm >= fee + amount) { return {"coins": sel, "fee": fee}; }
+    }
+  } else {
+    for (var i = 0; i < len; i++) {
+      var coin = sorted[i];
+      accAm = accAm + coin.value;
+      accFee = Transaction.guessFee(i+1, nouts+1, fee);
+      sel.push(coin);
+      if (accAm >= accFee + amount) { return {"coins": sel, "fee": accFee}; }
+    }
+  }
+  return {"coins": [], "fee": 0};
+};
+
+Transaction.confirmationEstimation = function(absoluteFees, fee) {
+  var len = absoluteFees.length;
+  for (var i = 0; i < len; i++) {
+    if (absoluteFees[i] > 0 && fee >= absoluteFees[i]) {
+      return i+1;
+    }
+    else{
+      if (absoluteFees[i] > 0 && (i+1 === len)) { return Infinity; }
+    }
+  }
+  return null;
+}
 module.exports = Transaction;
 
 },{"./helpers":185,"assert":16,"bitcoinjs-lib":33,"buffer":73,"randombytes":144}],194:[function(require,module,exports){
@@ -35404,6 +35512,7 @@ function stretchPassword (password, salt, iterations, keylen) {
   assert(salt, 'salt missing');
   assert(password, 'password missing');
   assert(iterations, 'iterations missing');
+  assert(typeof(sjcl.hash.sha1) === 'function', 'missing sha1, make sure sjcl is configured correctly');
 
   var hmacSHA1 = function (key) {
     var hasher = new sjcl.misc.hmac(key, sjcl.hash.sha1);
