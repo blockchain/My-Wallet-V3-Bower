@@ -11779,7 +11779,7 @@ module.exports = types
 
   BN.prototype.redShl = function redShl (num) {
     assert(this.red, 'redShl works only with red numbers');
-    return this.red.ushl(this, num);
+    return this.red.shl(this, num);
   };
 
   BN.prototype.redMul = function redMul (num) {
