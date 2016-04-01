@@ -1645,16 +1645,9 @@
       "resolved": "https://registry.npmjs.org/fresh-falafel/-/fresh-falafel-1.2.0.tgz"
     },
     "fs-extra": {
-      "version": "0.26.7",
-      "from": "fs-extra@>=0.26.4 <0.27.0",
-      "resolved": "https://registry.npmjs.org/fs-extra/-/fs-extra-0.26.7.tgz",
-      "dependencies": {
-        "graceful-fs": {
-          "version": "4.1.3",
-          "from": "graceful-fs@>=4.1.2 <5.0.0",
-          "resolved": "https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.1.3.tgz"
-        }
-      }
+      "version": "0.18.4",
+      "from": "fs-extra@>=0.18.4 <0.19.0",
+      "resolved": "https://registry.npmjs.org/fs-extra/-/fs-extra-0.18.4.tgz"
     },
     "function-bind": {
       "version": "1.1.0",
@@ -1688,8 +1681,8 @@
     },
     "git-changelog": {
       "version": "0.1.8",
-      "from": "git-changelog@>=0.1.8 <0.2.0",
-      "resolved": "https://registry.npmjs.org/git-changelog/-/git-changelog-0.1.8.tgz"
+      "from": "sjors/git-changelog#patch-1",
+      "resolved": "git://github.com/sjors/git-changelog.git#346b39491923a49a3421f174a566b204d5fc7db9"
     },
     "glob": {
       "version": "5.0.15",
@@ -1733,6 +1726,11 @@
           "from": "glob@>=3.1.21 <3.2.0",
           "resolved": "https://registry.npmjs.org/glob/-/glob-3.1.21.tgz"
         },
+        "graceful-fs": {
+          "version": "1.2.3",
+          "from": "graceful-fs@>=1.2.0 <1.3.0",
+          "resolved": "https://registry.npmjs.org/graceful-fs/-/graceful-fs-1.2.3.tgz"
+        },
         "inherits": {
           "version": "1.0.2",
           "from": "inherits@>=1.0.0 <2.0.0",
@@ -1751,9 +1749,9 @@
       }
     },
     "graceful-fs": {
-      "version": "1.2.3",
-      "from": "graceful-fs@>=1.2.0 <1.3.0",
-      "resolved": "https://registry.npmjs.org/graceful-fs/-/graceful-fs-1.2.3.tgz"
+      "version": "3.0.8",
+      "from": "graceful-fs@>=3.0.5 <4.0.0",
+      "resolved": "https://registry.npmjs.org/graceful-fs/-/graceful-fs-3.0.8.tgz"
     },
     "graceful-readlink": {
       "version": "1.0.1",
@@ -1797,6 +1795,11 @@
           "from": "glob@>=3.1.21 <3.2.0",
           "resolved": "https://registry.npmjs.org/glob/-/glob-3.1.21.tgz"
         },
+        "graceful-fs": {
+          "version": "1.2.3",
+          "from": "graceful-fs@>=1.2.0 <1.3.0",
+          "resolved": "https://registry.npmjs.org/graceful-fs/-/graceful-fs-1.2.3.tgz"
+        },
         "iconv-lite": {
           "version": "0.2.11",
           "from": "iconv-lite@>=0.2.11 <0.3.0",
@@ -1826,6 +1829,11 @@
           "version": "1.0.10",
           "from": "nopt@>=1.0.10 <1.1.0",
           "resolved": "https://registry.npmjs.org/nopt/-/nopt-1.0.10.tgz"
+        },
+        "rimraf": {
+          "version": "2.2.8",
+          "from": "rimraf@>=2.2.8 <2.3.0",
+          "resolved": "https://registry.npmjs.org/rimraf/-/rimraf-2.2.8.tgz"
         },
         "which": {
           "version": "1.0.9",
@@ -1866,7 +1874,14 @@
     "grunt-contrib-clean": {
       "version": "0.6.0",
       "from": "grunt-contrib-clean@>=0.6.0 <0.7.0",
-      "resolved": "https://registry.npmjs.org/grunt-contrib-clean/-/grunt-contrib-clean-0.6.0.tgz"
+      "resolved": "https://registry.npmjs.org/grunt-contrib-clean/-/grunt-contrib-clean-0.6.0.tgz",
+      "dependencies": {
+        "rimraf": {
+          "version": "2.2.8",
+          "from": "rimraf@>=2.2.1 <2.3.0",
+          "resolved": "https://registry.npmjs.org/rimraf/-/rimraf-2.2.8.tgz"
+        }
+      }
     },
     "grunt-contrib-concat": {
       "version": "0.5.1",
@@ -2776,7 +2791,7 @@
     },
     "jsonfile": {
       "version": "2.2.3",
-      "from": "jsonfile@>=2.1.0 <3.0.0",
+      "from": "jsonfile@>=2.0.0 <3.0.0",
       "resolved": "https://registry.npmjs.org/jsonfile/-/jsonfile-2.2.3.tgz"
     },
     "jsonify": {
@@ -2823,11 +2838,6 @@
           "version": "4.1.3",
           "from": "graceful-fs@>=4.1.2 <5.0.0",
           "resolved": "https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.1.3.tgz"
-        },
-        "rimraf": {
-          "version": "2.5.2",
-          "from": "rimraf@>=2.3.3 <3.0.0",
-          "resolved": "https://registry.npmjs.org/rimraf/-/rimraf-2.5.2.tgz"
         },
         "source-map": {
           "version": "0.5.3",
@@ -3734,7 +3744,19 @@
     "phantomjs-prebuilt": {
       "version": "2.1.7",
       "from": "phantomjs-prebuilt@>=2.1.0 <2.2.0",
-      "resolved": "https://registry.npmjs.org/phantomjs-prebuilt/-/phantomjs-prebuilt-2.1.7.tgz"
+      "resolved": "https://registry.npmjs.org/phantomjs-prebuilt/-/phantomjs-prebuilt-2.1.7.tgz",
+      "dependencies": {
+        "fs-extra": {
+          "version": "0.26.7",
+          "from": "fs-extra@>=0.26.4 <0.27.0",
+          "resolved": "https://registry.npmjs.org/fs-extra/-/fs-extra-0.26.7.tgz"
+        },
+        "graceful-fs": {
+          "version": "4.1.3",
+          "from": "graceful-fs@>=4.1.2 <5.0.0",
+          "resolved": "https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.1.3.tgz"
+        }
+      }
     },
     "pify": {
       "version": "2.3.0",
@@ -4174,9 +4196,16 @@
       "resolved": "https://registry.npmjs.org/right-align/-/right-align-0.1.3.tgz"
     },
     "rimraf": {
-      "version": "2.2.8",
-      "from": "rimraf@>=2.2.8 <2.3.0",
-      "resolved": "https://registry.npmjs.org/rimraf/-/rimraf-2.2.8.tgz"
+      "version": "2.5.2",
+      "from": "rimraf@>=2.2.8 <3.0.0",
+      "resolved": "https://registry.npmjs.org/rimraf/-/rimraf-2.5.2.tgz",
+      "dependencies": {
+        "glob": {
+          "version": "7.0.3",
+          "from": "glob@>=7.0.0 <8.0.0",
+          "resolved": "https://registry.npmjs.org/glob/-/glob-7.0.3.tgz"
+        }
+      }
     },
     "ripemd160": {
       "version": "1.0.1",
