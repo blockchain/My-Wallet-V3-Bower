@@ -3887,7 +3887,7 @@ module.exports={
   "directories": {},
   "dist": {
     "shasum": "726e8ab08d1fe1dfb8aa6bb6309bffecf93a21b7",
-    "tarball": "http://registry.npmjs.org/bigi/-/bigi-1.4.1.tgz"
+    "tarball": "https://registry.npmjs.org/bigi/-/bigi-1.4.1.tgz"
   },
   "gitHead": "7d034a1b38ca90f68daa9de472dda2fb813836f1",
   "homepage": "https://github.com/cryptocoinjs/bigi#readme",
@@ -31639,9 +31639,13 @@ function BlockchainSocket () {
   this.wsUrl = 'wss://blockchain.info/inv';
   this.headers = { 'Origin': 'https://blockchain.info' };
   this.socket;
-  this.reconnectInterval;
-  this.pingInterval;
-  this.reconnect;
+  this.reconnect = null;
+  // websocket pings the server every pingInterval
+  this.pingInterval = 15000; // 15 secs
+  this.pingIntervalPID = null;
+  // ping has a timeout of pingTimeout
+  this.pingTimeout = 5000; // 5 secs
+  this.pingTimeoutPID = null;
 }
 
 // hack to browserify websocket library
@@ -31661,37 +31665,49 @@ if (!(typeof window === 'undefined')) {
   };
 }
 
-
 BlockchainSocket.prototype.connect = function (onOpen, onMessage, onClose) {
   if(Helpers.tor()) return;
-
   this.reconnect = function () {
-    var connect = this.connectOnce.bind(this, onOpen, onMessage, onClose);
-    if (!this.socket || this.socket.readyState === 3) connect();
+    var connect = this._initialize.bind(this, onOpen, onMessage, onClose);
+    connect();
   }.bind(this);
-  var pingSocket = function () { this.send(this.msgPing()); }.bind(this);
   this.reconnect();
-  this.reconnectInterval = setInterval(this.reconnect, 20000);
-  this.pingInterval = setInterval(pingSocket, 30013);
 };
 
-BlockchainSocket.prototype.connectOnce = function (onOpen, onMessage, onClose) {
-  try {
-    this.socket = new WebSocket(this.wsUrl, [], { headers: this.headers });
-    this.socket.on('open', onOpen);
-    this.socket.on('message', onMessage);
-    this.socket.on('close', onClose);
-  } catch (e) {
-    console.log('Failed to connect to websocket');
+BlockchainSocket.prototype._initialize = function (onOpen, onMessage, onClose) {
+
+  if (!this.socket || this.socket.readyState === 3) {
+    try {
+      this.pingIntervalPID = setInterval(this.ping.bind(this), this.pingInterval);
+      this.socket = new WebSocket(this.wsUrl, [], { headers: this.headers });
+      this.socket.on('open', onOpen);
+      this.socket.on('message', onMessage);
+      this.socket.on('close', onClose);
+    } catch (e) {
+      console.log('Failed to connect to websocket');
+    }
   }
+};
+
+BlockchainSocket.prototype.ping = function (){
+  this.send(this.msgPing());
+  var connect = this.reconnect.bind(this);
+  var close = this.close.bind(this);
+  this.pingTimeoutPID = setTimeout(connect.compose(close), this.pingTimeout);
+};
+
+BlockchainSocket.prototype.close = function (){
+  if (this.socket) { this.socket.close();}
+  this.socket = null;
+  clearInterval(this.pingIntervalPID);
+  clearTimeout(this.pingTimeoutPID);
 };
 
 BlockchainSocket.prototype.send = function (message) {
   if(Helpers.tor()) return;
-
-  this.reconnect();
-  var send = function () {this.socket.send(message); }.bind(this);
-  if (this.socket && this.socket.readyState === 1) { send();}
+  if (this.socket && this.socket.readyState === 1) {
+    this.socket.send(message);
+  }
 };
 
 BlockchainSocket.prototype.msgWalletSub = function (myGUID) {
@@ -31736,7 +31752,6 @@ BlockchainSocket.prototype.msgOnOpen = function (guid, addresses, xpubs) {
          this.msgAddrSub(addresses) +
          this.msgXPUBSub(xpubs);
 };
-
 
 module.exports = BlockchainSocket;
 
@@ -32860,7 +32875,7 @@ HDAccount.prototype.setLabelForReceivingAddress = function (index, label) {
   if(!Helpers.isValidLabel(label)) {
     return Promise.reject('NOT_ALPHANUMERIC');
     // Error: address label must be alphanumeric
-  } else if (index - this.lastUsedReceiveIndex >= 20) {
+  } else if (index - this.lastUsedReceiveIndex >= 19) {
     // Exceeds BIP 44 unused address gap limit
     return Promise.reject('GAP');
   } else {
@@ -33554,7 +33569,6 @@ Helpers.detectPrivateKeyFormat = function (key) {
     if (testBytes[0] === 0x00 || testBytes[0] === 0x01)
       return 'mini';
   }
-  console.error('Unknown Key Format ' + key);
   return null;
 };
 
@@ -34495,10 +34509,7 @@ Payment.from = function (origin) {
       // this could fail for network issues or no-balance
       function (error) {
         console.log(error);
-        // TODO:: Better failure handling here
-        // payment.sweepAmount = 0;
-        // payment.sweepFee    = 0;
-        // payment.coins       = [];
+        payment.coins = [];
         return payment;
       }
     );
@@ -35041,7 +35052,6 @@ var Transaction = function (payment, emitter) {
   assert(toAddresses.length == amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
   assert(this.amount > BITCOIN_DUST, {error: 'BELOW_DUST_THRESHOLD', amount: this.amount, threshold: BITCOIN_DUST});
   assert(unspentOutputs && unspentOutputs.length > 0, {error: 'NO_UNSPENT_OUTPUTS'});
-
   var transaction = new Bitcoin.TransactionBuilder();
   // add all outputs
   function addOutput (e, i) {transaction.addOutput(toAddresses[i],amounts[i]);}
@@ -35059,7 +35069,6 @@ var Transaction = function (payment, emitter) {
     var scriptBuffer = Buffer(output.script, "hex");
     assert.notEqual(Bitcoin.script.classifyOutput(scriptBuffer), 'nonstandard', {error: 'STRANGE_SCRIPT'});
     var address = Bitcoin.address.fromOutputScript(scriptBuffer).toString();
-
     assert(address, {error: 'CANNOT_DECODE_OUTPUT_ADDRESS', tx_hash: output.tx_hash});
     this.addressesOfInputs.push(address);
 
@@ -35071,7 +35080,6 @@ var Transaction = function (payment, emitter) {
       this.addressesOfNeededPrivateKeys.push(address);
     }
   }
-
   // Consume the change if it would create a very small none standard output
   var changeAmount = total - this.amount - fee;
   if (changeAmount > BITCOIN_DUST) {
@@ -35176,6 +35184,7 @@ Transaction.guessFee = function (nInputs, nOutputs, feePerKb) {
 };
 
 Transaction.filterUsableCoins = function (coins, feePerKb){
+  if (!Array.isArray(coins)) return [];
   var icost = Transaction.inputCost(feePerKb);
   return coins.filter(function(c) { return c.value >= icost });
 };
@@ -36092,133 +36101,84 @@ function Tx (object){
   this.publicNote       = obj.note;
   this.note             = MyWallet.wallet.getNote(this.hash);
   this.confirmations    = setConfirmations(this.block_height);
+
   // computed properties
-  this._processed_outs   = this.out.map(tagCoin); // outputs must be tagged first
-  this._processed_ins    = this.inputs.map(tagCoin.compose(unpackInput.bind(this)));
+  var initialOut = {
+      taggedOuts: []
+    , toWatchOnly: false
+    , totalOut: 0
+    , internalReceive: 0
+    , changeAmount: 0
+  }
+  var pouts = this.out.reduce(procOuts, initialOut);
+  this.processedOutputs = pouts.taggedOuts;
+  this.toWatchOnly = pouts.toWatchOnly;
+  this.totalOut = pouts.totalOut;
+  this.internalReceive = pouts.internalReceive;
+  this.changeAmount = pouts.changeAmount;
+
+  var initialIn = {
+      taggedIns: []
+    , fromWatchOnly: false
+    , totalIn: 0
+    , internalSpend: 0
+  }
+  var pins = this.inputs.reduce(procIns.bind(this), initialIn);
+  this.processedInputs = pins.taggedIns;
+  this.totalIn        = pins.totalIn;
+  this.internalSpend  = pins.internalSpend;
+  this.fromWatchOnly  = pins.fromWatchOnly;
+
+  this.fee = isCoinBase(this.inputs[0]) ? 0 : this.totalIn - this.totalOut;
+  this.result = this._result ? this._result : this.internalReceive - this.internalSpend;
+  this.txType = computeTxType(this);
+  this.amount = computeAmount(this);
 }
 
+Tx.prototype.toString = function () {
+  return this.hash;
+};
+
 Object.defineProperties(Tx.prototype, {
-  'processedInputs': {
-    configurable: false,
-    get: function () { return this._processed_ins.map(function (x){return x;});}
-  },
-  'processedOutputs': {
-    configurable: false,
-    get: function () { return this._processed_outs.map(function (x){return x;});}
-  },
-  'totalIn': {
-    configurable: false,
-    get: function () {
-      return this._processed_ins.map(function (x){return x.amount;})
-                                 .reduce(Helpers.add, 0);
-    }
-  },
-  'totalOut': {
-    configurable: false,
-    get: function () {
-      return this._processed_outs.map(function (x){return x.amount;})
-                                 .reduce(Helpers.add, 0);
-    }
-  },
-  'fee': {
-    configurable: false,
-    get: function () {
-      return isCoinBase(this.inputs[0]) ? 0 : this.totalIn - this.totalOut;
-    }
-  },
-  'internalSpend': {
-    configurable: false,
-    get: function () {
-      return this._processed_ins.filter(function (i){ return i.coinType !== 'external';})
-                                .map(function (i){return i.amount})
-                                .reduce(Helpers.add, 0);
-    }
-  },
-  'internalReceive': {
-    configurable: false,
-    get: function () {
-      return this._processed_outs.filter(function (i){ return i.coinType !== 'external';})
-                                 .map(function (i){return i.amount})
-                                 .reduce(Helpers.add, 0);
-    }
-  },
-  'result': {
-    configurable: false,
-    get: function () {
-      var r = this._result;
-      if(this._result == null) r = this.internalReceive - this.internalSpend;
-      return r;
-    }
-  },
-  'amount': {
-    configurable: false,
-    get: function () {
-      var am = 0;
-      switch (this.txType) {
-        case 'transfer':
-          am = this.internalReceive - this.changeAmount;
-          break;
-        case 'sent':
-          am = this.internalReceive - this.internalSpend;
-          break;
-        case 'received':
-          am = this.internalReceive - this.internalSpend;
-          break;
-        default:
-          am = this.result;
-      }
-      return am;
-    }
-  },
-  'changeAmount': {
-    configurable: false,
-    get: function () {
-      return this._processed_outs.filter(function (i){ return (i.coinType !== 'external') && (i.change === true);})
-                                 .map(function (i){return i.amount})
-                                 .reduce(Helpers.add, 0);
-    }
-  },
-  'txType': {
-    configurable: false,
-    get: function () {
-      var v = null;
-      var impactNoFee = this.result + this.fee;
-      switch (true) {
-        case impactNoFee === 0:
-          v = 'transfer';
-          break;
-        case impactNoFee < 0:
-          v = 'sent';
-          break;
-        case impactNoFee > 0:
-          v = 'received';
-          break;
-        default:
-          v = 'complex'
-      }
-      return v;
-    }
-  },
   'belongsTo': {
     configurable: false,
-    value: function (identity) {
-      return this.processedInputs.concat(this.processedOutputs)
-        .some(function (processed) { return processed.identity == identity; });
-    }
-  },
-  'fromWatchOnly': {
-    configurable: false,
-    get: function () {
-      return this._processed_ins.some(function (o) { return o.isWatchOnly; });
-    }
-  },
-  'toWatchOnly': {
-    configurable: false,
-    get: function () {
-      return this._processed_outs.some(function (o) { return o.isWatchOnly; });
-    }
+    value: function (identity) { return belongsTo(this, identity); }
   }
 });
+
+function procOuts(acc, output) {
+  var tagOut = tagCoin(output);
+  acc.taggedOuts.push(tagOut);
+  if (tagOut.isWatchOnly) {
+    acc.toWatchOnly = true;
+  }
+  acc.toWatchOnly = acc.toWatchOnly || tagOut.isWatchOnly || false;
+  if (tagOut.coinType !== 'external') {
+    acc.internalReceive = acc.internalReceive + tagOut.amount;
+    if (tagOut.change === true) {
+      acc.changeAmount = acc.changeAmount + tagOut.amount;
+    }
+  }
+  acc.totalOut = acc.totalOut + tagOut.amount;
+  return acc;
+}
+
+function procIns(acc, input) {
+  var f = tagCoin.compose(unpackInput.bind(this));
+  var tagIn = f(input);
+  acc.taggedIns.push(tagIn);
+  acc.fromWatchOnly =  acc.fromWatchOnly || tagIn.isWatchOnly || false;
+  if (tagIn.coinType !== 'external') {
+    acc.internalSpend = acc.internalSpend + tagIn.amount;
+  }
+  acc.totalIn = acc.totalIn + tagIn.amount;
+  return acc;
+}
+
+function belongsTo(tx, id) {
+  return tx.processedInputs.concat(tx.processedOutputs).some(function (p) { return p.identity == id; });
+}
+// var memoizedBelongsTo = Helpers.memoize(belongsTo);
 
 function isAccount (x) {
   return !!x.xpub;
@@ -36287,6 +36247,43 @@ function unpackInput (input) {
   } else {
     return input.prev_out;
   }
+}
+
+function computeAmount(Tx) {
+  var am = 0;
+  switch (Tx.txType) {
+    case 'transfer':
+      am = Tx.internalReceive - Tx.changeAmount;
+      break;
+    case 'sent':
+      am = Tx.internalReceive - Tx.internalSpend;
+      break;
+    case 'received':
+      am = Tx.internalReceive - Tx.internalSpend;
+      break;
+    default:
+      am = Tx.result;
+  }
+  return am;
+}
+
+function computeTxType(Tx) {
+  var v = null;
+  var impactNoFee = Tx.result + Tx.fee;
+  switch (true) {
+    case impactNoFee === 0:
+      v = 'transfer';
+      break;
+    case impactNoFee < 0:
+      v = 'sent';
+      break;
+    case impactNoFee > 0:
+      v = 'received';
+      break;
+    default:
+      v = 'complex'
+  }
+  return v;
 }
 
 function isCoinBase (input) {
@@ -36377,6 +36374,9 @@ function socketConnect () {
       var sendOnBlock = WalletStore.sendEvent.bind(null, 'on_block');
       MyWallet.wallet.getHistory().then(sendOnBlock);
       MyWallet.wallet.latestBlock = obj.x;
+
+    }  else if (obj.op == 'pong') {
+      clearTimeout(MyWallet.ws.pingTimeoutPID);
     }
   }
 

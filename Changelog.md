@@ -2,7 +2,7 @@ __Blockchain Wallet V3__
 
 _Recent changes_
 
-#   (2016-03-30)
+#   (2016-04-01)
 
 
 
