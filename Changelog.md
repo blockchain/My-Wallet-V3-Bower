@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2016-04-01)
+#   (2016-04-05)
 
 
 
@@ -14,4 +14,4 @@ __Blockchain Wallet V3__
 
 
 ---
-<sub><sup>*Generated with [git-changelog](https://github.com/rafinskipg/git-changelog). If you have any problem or suggestion, create an issue.* :) **Thanks** </sub></sup>
+<sub><sup>*Generated with [git-changelog](https://github.com/rafinskipg/git-changelog). If you have any problems or suggestions, create an issue.* :) **Thanks** </sub></sup>
