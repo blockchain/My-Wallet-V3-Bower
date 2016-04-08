@@ -670,9 +670,9 @@
       "resolved": "https://registry.npmjs.org/cookie-signature/-/cookie-signature-0.0.1.tgz"
     },
     "core-js": {
-      "version": "2.2.1",
+      "version": "2.2.2",
       "from": "core-js@>=2.1.0 <3.0.0",
-      "resolved": "https://registry.npmjs.org/core-js/-/core-js-2.2.1.tgz"
+      "resolved": "https://registry.npmjs.org/core-js/-/core-js-2.2.2.tgz"
     },
     "core-util-is": {
       "version": "1.0.2",
@@ -3494,9 +3494,9 @@
       "resolved": "https://registry.npmjs.org/negotiator/-/negotiator-0.4.9.tgz"
     },
     "node-fetch": {
-      "version": "1.4.1",
+      "version": "1.5.0",
       "from": "node-fetch@>=1.0.1 <2.0.0",
-      "resolved": "https://registry.npmjs.org/node-fetch/-/node-fetch-1.4.1.tgz"
+      "resolved": "https://registry.npmjs.org/node-fetch/-/node-fetch-1.5.0.tgz"
     },
     "node-osx-notifier": {
       "version": "0.1.0",
@@ -4456,9 +4456,9 @@
       "resolved": "https://registry.npmjs.org/spdx-expression-parse/-/spdx-expression-parse-1.0.2.tgz"
     },
     "spdx-license-ids": {
-      "version": "1.2.0",
+      "version": "1.2.1",
       "from": "spdx-license-ids@>=1.0.2 <2.0.0",
-      "resolved": "https://registry.npmjs.org/spdx-license-ids/-/spdx-license-ids-1.2.0.tgz"
+      "resolved": "https://registry.npmjs.org/spdx-license-ids/-/spdx-license-ids-1.2.1.tgz"
     },
     "sprintf-js": {
       "version": "1.0.3",

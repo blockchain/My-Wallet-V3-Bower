@@ -21948,7 +21948,7 @@ module.exports={
   "directories": {},
   "dist": {
     "shasum": "18e46d7306b0951275a2d42063270a14b74ebe99",
-    "tarball": "http://registry.npmjs.org/elliptic/-/elliptic-6.2.3.tgz"
+    "tarball": "https://registry.npmjs.org/elliptic/-/elliptic-6.2.3.tgz"
   },
   "files": [
     "lib"
@@ -30719,6 +30719,7 @@ var Helpers  = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 var shared   = require('./shared');
 var ImportExport = require('./import-export');
+var WalletCrypto = require('./wallet-crypto');
 ////////////////////////////////////////////////////////////////////////////////
 // Address class
 function Address (object){
@@ -30940,6 +30941,21 @@ Address.prototype.toJSON = function (){
   return address;
 };
 
+Address.prototype.signMessage = function (message, secondPassword) {
+  if (!Helpers.isString(message)) throw 'Expected message to be a string';
+  if (this.isWatchOnly) throw 'Private key needed for message signing';
+  if (this.isEncrypted && secondPassword == null) throw 'Second password needed to decrypt key';
+
+  var getDecrypted = WalletCrypto.decryptSecretWithSecondPassword.bind(null,
+    this.priv, secondPassword, MyWallet.wallet.sharedKey, MyWallet.wallet.pbkdf2_iterations);
+
+  var priv = this.isEncrypted ? getDecrypted() : this.priv;
+  var keyPair = Helpers.privateKeyStringToKey(priv, 'base58');
+
+  if (keyPair.getAddress() !== this.address) keyPair.compressed = false;
+  return Bitcoin.message.sign(keyPair, message).toString('base64');
+};
+
 Address.prototype.encrypt = function (cipher){
   if (!this._priv) return this;
   var priv = cipher ? cipher(this._priv) : this._priv;
@@ -30963,7 +30979,7 @@ Address.prototype.persist = function (){
   return this;
 };
 
-},{"./helpers":185,"./import-export":186,"./rng":190,"./shared":191,"./wallet":200,"bitcoinjs-lib":33,"bs58":68}],178:[function(require,module,exports){
+},{"./helpers":185,"./import-export":186,"./rng":190,"./shared":191,"./wallet":200,"./wallet-crypto":194,"bitcoinjs-lib":33,"bs58":68}],178:[function(require,module,exports){
 'use strict';
 
 module.exports = new API();
@@ -34749,7 +34765,8 @@ var Helpers     = require('./helpers');
 
 function RNG () {
   this.ACTION    = 'GET';
-  this.URL       = 'https://api.blockchain.info/v2/randombytes'
+  // API is undefined at this point
+  // this.URL       = API.API_ROOT_URL + 'v2/randombytes'
   this.FORMAT    = 'hex';  // raw, hex, base64
   this.BYTES     = 32;
 }
@@ -34831,7 +34848,8 @@ RNG.prototype.getServerEntropy = function (nBytes) {
   nBytes = Helpers.isPositiveInteger(nBytes) ? nBytes : this.BYTES;
   var request = new XMLHttpRequest();
   var data = { bytes: nBytes, format: this.FORMAT };
-  var url = this.URL + '?' + API.encodeFormData(data);
+  var url = API.API_ROOT_URL + 'v2/randombytes'
+ + '?' + API.encodeFormData(data);
 
   request.open(this.ACTION, url, false);
   request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
@@ -35829,8 +35847,6 @@ var WalletStore = (function () {
   var isPolling = false;
   var isRestoringWallet = false;
   var counter = 0;
-  var logout_timeout; //setTimeout return value for the automatic logout
-  var logout_ticker;
   var sync_pubkeys = false;
   var isSynchronizedWithServer = true;
   var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
@@ -35924,20 +35940,6 @@ var WalletStore = (function () {
     getCounter: function () {
       return counter;
     },
-    getLogoutTimeout: function () {
-      return logout_timeout;
-    },
-    setLogoutTimeout: function (value) {
-      if (!logout_ticker) {
-        logout_ticker = setInterval(function () {
-          if (Date.now() > logout_timeout) {
-            clearInterval(logout_ticker);
-            MyWallet.logout();
-          }
-        }, 20000);
-      }
-      logout_timeout = value;
-    },
     setSyncPubKeys: function (bool){
       sync_pubkeys = bool;
     },
@@ -35976,10 +35978,6 @@ var WalletStore = (function () {
     },
     setLogoutTime: function (logout_time) {
       MyWallet.wallet.logoutTime = logout_time;
-      this.resetLogoutTimeout();
-    },
-    resetLogoutTimeout: function () {
-      this.setLogoutTimeout(Date.now() + this.getLogoutTime());
     }
   };
 })();
@@ -36397,7 +36395,6 @@ function didDecryptWallet (success) {
 
   //We need to check if the wallet has changed
   MyWallet.getWallet();
-  WalletStore.resetLogoutTimeout();
   success();
 }
 
@@ -36797,7 +36794,6 @@ function syncWallet (successcallback, errorcallback) {
                 , function () {
                     WalletStore.setIsSynchronizedWithServer(true);
                     WalletStore.enableLogout();
-                    WalletStore.resetLogoutTimeout();
                     WalletStore.sendEvent('on_backup_wallet_success');
                     successcallback && successcallback();
                     }
