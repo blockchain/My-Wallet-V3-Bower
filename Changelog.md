@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2016-04-08)
+#   (2016-04-22)
 
 
 
@@ -8,30 +8,18 @@ __Blockchain Wallet V3__
 
 ## Bug Fixes
 
-- **RNG:** don't hard-code URL
-  ([86665fe8](https://github.com/blockchain/My-Wallet-V3/commit/86665fe8f62f735871616e1676ae09b64768cf87))
-- **SignMessage:**
-  - allow message signing with uncompressed addresses
-  ([6be77fef](https://github.com/blockchain/My-Wallet-V3/commit/6be77fef8e78df2a4000c3eed98794f0c0b1e042))
-  - encode message as base64
-  ([9d2afde9](https://github.com/blockchain/My-Wallet-V3/commit/9d2afde9a85baa104d5088cc5178bc00f9afd95e))
+- **TransactionList:** fix test
+  ([7340f56c](https://github.com/blockchain/My-Wallet-V3/commit/7340f56cb956d3b48a6b277240edf1cea4afc713))
+- **Tx:** treat coins associated with archived addresses as external
+  ([df3d8af6](https://github.com/blockchain/My-Wallet-V3/commit/df3d8af6b408b73d6714d8a06419eb511d13fb78))
 
 
 ## Features
 
-- **SignMessage:** implement signMessage in Address class
-  ([33ac7bbe](https://github.com/blockchain/My-Wallet-V3/commit/33ac7bbefb65be6ca6e06bac64ea6a4241f50b9f))
-
-
-## Refactor
-
-- **WalletStore:** remove logout timer logic
-
-
-## Test
-
-- **Address:** test that signMessage outputs base64 and tries uncomp format
-- **RNG:** fix failing test in rng module
+- **TransactionList:** allow filtering for iOS
+  ([6ed8cfe0](https://github.com/blockchain/My-Wallet-V3/commit/6ed8cfe0effe3bea3bf64ade396da99357a4ab47))
+- **VerifyMessage:** add verify message function to helpers module
+  ([f0c175e4](https://github.com/blockchain/My-Wallet-V3/commit/f0c175e4989f1b4bf2d8ba6ec7c8547a32bdfaf2))
 
 
 
