@@ -100,6 +100,7 @@ Entity.prototype._createNamed = function createNamed(base) {
 };
 
 Entity.prototype._getDecoder = function _getDecoder(enc) {
+  enc = enc || 'der';
   // Lazily create decoder
   if (!this.decoders.hasOwnProperty(enc))
     this.decoders[enc] = this._createNamed(asn1.decoders[enc]);
@@ -111,6 +112,7 @@ Entity.prototype.decode = function decode(data, enc, options) {
 };
 
 Entity.prototype._getEncoder = function _getEncoder(enc) {
+  enc = enc || 'der';
   // Lazily create encoder
   if (!this.encoders.hasOwnProperty(enc))
     this.encoders[enc] = this._createNamed(asn1.encoders[enc]);
@@ -658,8 +660,6 @@ Node.prototype._decodeGeneric = function decodeGeneric(tag, input) {
     return this._getUse(state.use, input._reporterState.obj)._decode(input);
   else
     return input.error('unknown tag: ' + tag);
-
-  return null;
 };
 
 Node.prototype._getUse = function _getUse(entity, obj) {
@@ -735,7 +735,6 @@ Node.prototype._encodeValue = function encode(data, reporter, parent) {
     return state.children[0]._encode(data, reporter || new Reporter());
 
   var result = null;
-  var present = true;
 
   // Set reporter to share it with a child class
   this.reporter = reporter;
@@ -747,9 +746,6 @@ Node.prototype._encodeValue = function encode(data, reporter, parent) {
     else
       return;
   }
-
-  // For error reporting
-  var prevKey;
 
   // Encode children first
   var content = null;
@@ -1372,7 +1368,6 @@ decoders.pem = require('./pem');
 var inherits = require('inherits');
 var Buffer = require('buffer').Buffer;
 
-var asn1 = require('../../asn1');
 var DERDecoder = require('./der');
 
 function PEMDecoder(entity) {
@@ -1420,13 +1415,12 @@ PEMDecoder.prototype.decode = function decode(data, options) {
   return DERDecoder.prototype.decode.call(this, input, options);
 };
 
-},{"../../asn1":2,"./der":10,"buffer":73,"inherits":126}],13:[function(require,module,exports){
+},{"./der":10,"buffer":73,"inherits":126}],13:[function(require,module,exports){
 var inherits = require('inherits');
 var Buffer = require('buffer').Buffer;
 
 var asn1 = require('../../asn1');
 var base = asn1.base;
-var bignum = asn1.bignum;
 
 // Import DER constants
 var der = asn1.constants.der;
@@ -1724,9 +1718,7 @@ encoders.pem = require('./pem');
 
 },{"./der":13,"./pem":15}],15:[function(require,module,exports){
 var inherits = require('inherits');
-var Buffer = require('buffer').Buffer;
 
-var asn1 = require('../../asn1');
 var DEREncoder = require('./der');
 
 function PEMEncoder(entity) {
@@ -1747,7 +1739,7 @@ PEMEncoder.prototype.encode = function encode(data, options) {
   return out.join('\n');
 };
 
-},{"../../asn1":2,"./der":13,"buffer":73,"inherits":126}],16:[function(require,module,exports){
+},{"./der":13,"inherits":126}],16:[function(require,module,exports){
 // http://wiki.commonjs.org/wiki/Unit_Testing/1.0
 //
 // THIS IS NOT TESTED NOR LIKELY TO WORK OUTSIDE V8!
@@ -30479,6 +30471,21 @@ exports.createContext = Script.createContext = function (context) {
     return
   }
 
+  var support = {
+    searchParams: 'URLSearchParams' in self,
+    iterable: 'Symbol' in self && 'iterator' in Symbol,
+    blob: 'FileReader' in self && 'Blob' in self && (function() {
+      try {
+        new Blob()
+        return true
+      } catch(e) {
+        return false
+      }
+    })(),
+    formData: 'FormData' in self,
+    arrayBuffer: 'ArrayBuffer' in self
+  }
+
   function normalizeName(name) {
     if (typeof name !== 'string') {
       name = String(name)
@@ -30494,6 +30501,24 @@ exports.createContext = Script.createContext = function (context) {
       value = String(value)
     }
     return value
+  }
+
+  // Build a destructive iterator for the value list
+  function iteratorFor(items) {
+    var iterator = {
+      next: function() {
+        var value = items.shift()
+        return {done: value === undefined, value: value}
+      }
+    }
+
+    if (support.iterable) {
+      iterator[Symbol.iterator] = function() {
+        return iterator
+      }
+    }
+
+    return iterator
   }
 
   function Headers(headers) {
@@ -30551,6 +30576,28 @@ exports.createContext = Script.createContext = function (context) {
     }, this)
   }
 
+  Headers.prototype.keys = function() {
+    var items = []
+    this.forEach(function(value, name) { items.push(name) })
+    return iteratorFor(items)
+  }
+
+  Headers.prototype.values = function() {
+    var items = []
+    this.forEach(function(value) { items.push(value) })
+    return iteratorFor(items)
+  }
+
+  Headers.prototype.entries = function() {
+    var items = []
+    this.forEach(function(value, name) { items.push([name, value]) })
+    return iteratorFor(items)
+  }
+
+  if (support.iterable) {
+    Headers.prototype[Symbol.iterator] = Headers.prototype.entries
+  }
+
   function consumed(body) {
     if (body.bodyUsed) {
       return Promise.reject(new TypeError('Already read'))
@@ -30581,22 +30628,8 @@ exports.createContext = Script.createContext = function (context) {
     return fileReaderReady(reader)
   }
 
-  var support = {
-    blob: 'FileReader' in self && 'Blob' in self && (function() {
-      try {
-        new Blob();
-        return true
-      } catch(e) {
-        return false
-      }
-    })(),
-    formData: 'FormData' in self,
-    arrayBuffer: 'ArrayBuffer' in self
-  }
-
   function Body() {
     this.bodyUsed = false
-
 
     this._initBody = function(body) {
       this._bodyInit = body
@@ -30606,6 +30639,8 @@ exports.createContext = Script.createContext = function (context) {
         this._bodyBlob = body
       } else if (support.formData && FormData.prototype.isPrototypeOf(body)) {
         this._bodyFormData = body
+      } else if (support.searchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
+        this._bodyText = body.toString()
       } else if (!body) {
         this._bodyText = ''
       } else if (support.arrayBuffer && ArrayBuffer.prototype.isPrototypeOf(body)) {
@@ -30620,6 +30655,8 @@ exports.createContext = Script.createContext = function (context) {
           this.headers.set('content-type', 'text/plain;charset=UTF-8')
         } else if (this._bodyBlob && this._bodyBlob.type) {
           this.headers.set('content-type', this._bodyBlob.type)
+        } else if (support.searchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
+          this.headers.set('content-type', 'application/x-www-form-urlencoded;charset=UTF-8')
         }
       }
     }
@@ -30741,7 +30778,7 @@ exports.createContext = Script.createContext = function (context) {
 
   function headers(xhr) {
     var head = new Headers()
-    var pairs = xhr.getAllResponseHeaders().trim().split('\n')
+    var pairs = (xhr.getAllResponseHeaders() || '').trim().split('\n')
     pairs.forEach(function(header) {
       var split = header.trim().split(':')
       var key = split.shift().trim()
@@ -30794,9 +30831,9 @@ exports.createContext = Script.createContext = function (context) {
     return new Response(null, {status: status, headers: {location: url}})
   }
 
-  self.Headers = Headers;
-  self.Request = Request;
-  self.Response = Response;
+  self.Headers = Headers
+  self.Request = Request
+  self.Response = Response
 
   self.fetch = function(input, init) {
     return new Promise(function(resolve, reject) {
@@ -30819,26 +30856,25 @@ exports.createContext = Script.createContext = function (context) {
           return xhr.getResponseHeader('X-Request-URL')
         }
 
-        return;
+        return
       }
 
       xhr.onload = function() {
-        var status = (xhr.status === 1223) ? 204 : xhr.status
-        if (status < 100 || status > 599) {
-          reject(new TypeError('Network request failed'))
-          return
-        }
         var options = {
-          status: status,
+          status: xhr.status,
           statusText: xhr.statusText,
           headers: headers(xhr),
           url: responseURL()
         }
-        var body = 'response' in xhr ? xhr.response : xhr.responseText;
+        var body = 'response' in xhr ? xhr.response : xhr.responseText
         resolve(new Response(body, options))
       }
 
       xhr.onerror = function() {
+        reject(new TypeError('Network request failed'))
+      }
+
+      xhr.ontimeout = function() {
         reject(new TypeError('Network request failed'))
       }
 
@@ -34519,7 +34555,6 @@ function Payment (payment) {
   // payment.fromAccountIdx :: Integer
   // payment.fromWatchOnly  :: Boolean
   // payment.transaction    :: Transaction
-  // payment.note           :: String
 }
 util.inherits(Payment, EventEmitter);
 ////////////////////////////////////////////////////////////////////////////////
@@ -34531,7 +34566,7 @@ Payment.prototype.to = function (destinations) {
 };
 
 Payment.prototype.from = function (origin, absoluteFee) {
-  this.payment = this.payment.then(Payment.from(origin, absoluteFee));
+  this.payment = this.payment.then(Payment.from.bind(this, origin, absoluteFee)());
   this.then(Payment.prebuild(absoluteFee));
   return this;
 };
@@ -34572,12 +34607,6 @@ Payment.prototype.useAll = function (absoluteFee) {
 
 Payment.prototype.updateFees = function () {
   this.payment = this.payment.then(Payment.updateFees());
-  this.sideEffect(this.emit.bind(this, 'update'));
-  return this;
-};
-
-Payment.prototype.note = function (note) {
-  this.payment = this.payment.then(Payment.note(note));
   this.sideEffect(this.emit.bind(this, 'update'));
   return this;
 };
@@ -34674,14 +34703,6 @@ Payment.useAll = function (absoluteFee) {
   };
 };
 
-Payment.note = function (note) {
-  var publicNote = Helpers.isString(note) ? note : null;
-  return function (payment) {
-    payment.note = publicNote;
-    return Promise.resolve(payment);
-  };
-};
-
 Payment.amount = function (amounts, absoluteFee) {
   var formatAmo = null;
   switch (true) {
@@ -34705,6 +34726,7 @@ Payment.amount = function (amounts, absoluteFee) {
 };
 
 Payment.from = function (origin) {
+  var that       = this;
   var addresses  = null;
   var change     = null;
   var pkFormat   = Helpers.detectPrivateKeyFormat(origin);
@@ -34785,6 +34807,9 @@ Payment.from = function (origin) {
     ).catch(
       // this could fail for network issues or no-balance
       function (error) {
+        if (error !== 'No free outputs to spend') {
+          that.emit('error', {error:'ERR_FETCH_UNSPENT' });
+        }
         console.log(error);
         payment.coins = [];
         return payment;
@@ -34914,15 +34939,9 @@ Payment.publish = function () {
       throw e.message || e.responseText || e;
     };
 
-    var getValue = function(coin) {return coin.value;};
-    var isSmall = function(value) {return value < 500000;};
-    var anySmall = payment.transaction.tx.outs.map(getValue).some(isSmall);
-    if(anySmall && payment.note !== undefined && payment.note !== null)
-      {throw 'There is an output too small to publish a note';}
-
     payment.transaction = payment.transaction.build();
 
-    return API.pushTx(payment.transaction.toHex(), payment.note)
+    return API.pushTx(payment.transaction.toHex())
       .then(success).catch(handleError);
   };
 };
@@ -36681,7 +36700,11 @@ MyWallet.getWallet = function (success, error) {
 
       if (success) success();
     }, function () {
-      if (error) error();
+      // When re-fetching the wallet after a remote update, if we can't decrypt
+      // it, logout for safety.
+      MyWallet.logout(true);
+      if (error) error(
+      );
     });
   }, function (e) {
     if (error) error();

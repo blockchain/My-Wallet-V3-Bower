@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2016-04-22)
+#   (2016-04-29)
 
 
 
@@ -8,18 +8,20 @@ __Blockchain Wallet V3__
 
 ## Bug Fixes
 
-- **TransactionList:** fix test
-  ([7340f56c](https://github.com/blockchain/My-Wallet-V3/commit/7340f56cb956d3b48a6b277240edf1cea4afc713))
-- **Tx:** treat coins associated with archived addresses as external
-  ([df3d8af6](https://github.com/blockchain/My-Wallet-V3/commit/df3d8af6b408b73d6714d8a06419eb511d13fb78))
+- **MyWallet:** if wallet is updated remotely and decrypt fails, logout.
+  ([16bf33e6](https://github.com/blockchain/My-Wallet-V3/commit/16bf33e6e38b92ffd4191cab786138ddfcf77766))
+- **payment:** error emitted when unspents fail.
+  ([fbca9262](https://github.com/blockchain/My-Wallet-V3/commit/fbca9262f269fb6e20e55172240396190f8dae9d))
 
 
-## Features
+## Refactor
 
-- **TransactionList:** allow filtering for iOS
-  ([6ed8cfe0](https://github.com/blockchain/My-Wallet-V3/commit/6ed8cfe0effe3bea3bf64ade396da99357a4ab47))
-- **VerifyMessage:** add verify message function to helpers module
-  ([f0c175e4](https://github.com/blockchain/My-Wallet-V3/commit/f0c175e4989f1b4bf2d8ba6ec7c8547a32bdfaf2))
+- **Payment:** remove public note feature
+
+
+## Chore
+
+- **Release:** v3.14.2
 
 
 
