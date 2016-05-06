@@ -14,7 +14,7 @@ try {
     var versionStart = navigator.userAgent.toLowerCase().indexOf('applewebkit') + 12;
     var version = navigator.userAgent.substr(versionStart, 1);
 
-    if (version && typeof(parseInt(version)) === 'number' && parseInt(version) < 6) {
+    if (version && typeof (parseInt(version, 10)) === 'number' && parseInt(version, 10) < 6) {
       Buffer.TYPED_ARRAY_SUPPORT = true;
     }
   }
@@ -49,7 +49,7 @@ module.exports = {
   // BIP39: require('bip39')
 };
 
-},{"./src/address":177,"./src/api":178,"./src/blockchain-settings-api":180,"./src/helpers":185,"./src/import-export":186,"./src/payment":189,"./src/rng":190,"./src/shared":191,"./src/transaction":193,"./src/wallet":200,"./src/wallet-crypto":194,"./src/wallet-network":195,"./src/wallet-store":197,"./src/wallet-token-endpoints":198,"./src/wallet-transaction":199,"bitcoinjs-lib":33,"buffer":73,"es6-promise":115,"isomorphic-fetch":128}],2:[function(require,module,exports){
+},{"./src/address":176,"./src/api":177,"./src/blockchain-settings-api":179,"./src/helpers":184,"./src/import-export":185,"./src/payment":188,"./src/rng":189,"./src/shared":190,"./src/transaction":192,"./src/wallet":199,"./src/wallet-crypto":193,"./src/wallet-network":194,"./src/wallet-store":196,"./src/wallet-token-endpoints":197,"./src/wallet-transaction":198,"bitcoinjs-lib":33,"buffer":73,"es6-promise":115,"isomorphic-fetch":128}],2:[function(require,module,exports){
 var asn1 = exports;
 
 asn1.bignum = require('bn.js');
@@ -25340,15 +25340,38 @@ if (!process.version ||
   module.exports = process.nextTick;
 }
 
-function nextTick(fn) {
-  var args = new Array(arguments.length - 1);
-  var i = 0;
-  while (i < args.length) {
-    args[i++] = arguments[i];
+function nextTick(fn, arg1, arg2, arg3) {
+  if (typeof fn !== 'function') {
+    throw new TypeError('"callback" argument must be a function');
   }
-  process.nextTick(function afterTick() {
-    fn.apply(null, args);
-  });
+  var len = arguments.length;
+  var args, i;
+  switch (len) {
+  case 0:
+  case 1:
+    return process.nextTick(fn);
+  case 2:
+    return process.nextTick(function afterTickOne() {
+      fn.call(null, arg1);
+    });
+  case 3:
+    return process.nextTick(function afterTickTwo() {
+      fn.call(null, arg1, arg2);
+    });
+  case 4:
+    return process.nextTick(function afterTickThree() {
+      fn.call(null, arg1, arg2, arg3);
+    });
+  default:
+    args = new Array(len - 1);
+    i = 0;
+    while (i < args.length) {
+      args[i++] = arguments[i];
+    }
+    return process.nextTick(function afterTick() {
+      fn.apply(null, args);
+    });
+  }
 }
 
 }).call(this,require('_process'))
@@ -30959,166 +30982,124 @@ module.exports = {
 
 }).call(this,require("buffer").Buffer)
 },{"bs58check":69,"buffer":73}],176:[function(require,module,exports){
-
-/**
- * Module dependencies.
- */
-
-var global = (function() { return this; })();
-
-/**
- * WebSocket constructor.
- */
-
-var WebSocket = global.WebSocket || global.MozWebSocket;
-
-/**
- * Module exports.
- */
-
-module.exports = WebSocket ? ws : null;
-
-/**
- * WebSocket constructor.
- *
- * The third `opts` options object gets ignored in web browsers, since it's
- * non-standard, and throws a TypeError if passed to the constructor.
- * See: https://github.com/einaros/ws/issues/227
- *
- * @param {String} uri
- * @param {Array} protocols (optional)
- * @param {Object) opts (optional)
- * @api public
- */
-
-function ws(uri, protocols, opts) {
-  var instance;
-  if (protocols) {
-    instance = new WebSocket(uri, protocols);
-  } else {
-    instance = new WebSocket(uri);
-  }
-  return instance;
-}
-
-if (WebSocket) ws.prototype = WebSocket.prototype;
-
-},{}],177:[function(require,module,exports){
 'use strict';
 
 module.exports = Address;
-////////////////////////////////////////////////////////////////////////////////
-var Base58   = require('bs58');
-var RNG      = require('./rng');
-var Bitcoin  = require('bitcoinjs-lib');
-var Helpers  = require('./helpers');
+
+var Base58 = require('bs58');
+var RNG = require('./rng');
+var Bitcoin = require('bitcoinjs-lib');
+var Helpers = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
-var shared   = require('./shared');
+var shared = require('./shared');
 var ImportExport = require('./import-export');
 var WalletCrypto = require('./wallet-crypto');
-////////////////////////////////////////////////////////////////////////////////
+
 // Address class
-function Address (object){
+function Address (object) {
   // private members
   var obj = object || {};
-  this._addr  = obj.addr;
-  this._priv  = obj.priv;
+  this._addr = obj.addr;
+  this._priv = obj.priv;
   this._label = obj.label;
-  this._tag   = obj.tag || 0;  //default is non-archived
-  this._created_time            = obj.created_time;
-  this._created_device_name     = obj.created_device_name;
-  this._created_device_version  = obj.created_device_version;
+  this._tag = obj.tag || 0;  // default is non-archived
+  this._created_time = obj.created_time;
+  this._created_device_name = obj.created_device_name;
+  this._created_device_version = obj.created_device_version;
   // non saved properties
-  this._balance                 = null; // updated from the server
-  this._totalSent               = null;
-  this._totalReceived           = null;
+  this._balance = null; // updated from the server
+  this._totalSent = null;
+  this._totalReceived = null;
 }
 
 // public members
 Object.defineProperties(Address.prototype, {
   'address': {
     configurable: false,
-    get: function () { return this._addr;}
+    get: function () { return this._addr; }
   },
   'priv': {
     configurable: false,
-    get: function () { return this._priv;}
+    get: function () { return this._priv; }
   },
   'tag': {
     configurable: false,
-    get: function () { return this._tag;}
+    get: function () { return this._tag; }
   },
   'label': {
     configurable: false,
-    get: function () { return this._label;},
+    get: function () { return this._label; },
     set: function (str) {
-      if(Helpers.isValidLabel(str) || str == null) {
-        this._label = str === ''? undefined : str;
+      if (Helpers.isValidLabel(str) || str == null) {
+        this._label = str === '' ? undefined : str;
         MyWallet.syncWallet();
+      } else {
+        throw 'Error: address.label must be an alphanumeric string';
       }
-      else
-        { throw 'Error: address.label must be an alphanumeric string'; }
     }
   },
   'created_time': {
     configurable: false,
-    get: function () {return this._created_time;}
+    get: function () { return this._created_time; }
   },
   'created_device_name': {
     configurable: false,
-    get: function () {return this._created_device_name;}
+    get: function () { return this._created_device_name; }
   },
   'created_device_version': {
     configurable: false,
-    get: function () {return this._created_device_version;}
+    get: function () { return this._created_device_version; }
   },
   'balance': {
     configurable: false,
-    get: function () { return this._balance;},
+    get: function () { return this._balance; },
     set: function (num) {
-      if(Helpers.isPositiveNumber(num))
+      if (Helpers.isPositiveNumber(num)) {
         this._balance = num;
-      else
+      } else {
         throw 'Error: address.balance must be a positive number';
+      }
     }
   },
   'totalSent': {
     configurable: false,
-    get: function () { return this._totalSent;},
+    get: function () { return this._totalSent; },
     set: function (num) {
-      if(Helpers.isPositiveNumber(num))
+      if (Helpers.isPositiveNumber(num)) {
         this._totalSent = num;
-      else
+      } else {
         throw 'Error: address.totalSent must be a positive number';
+      }
     }
   },
   'totalReceived': {
     configurable: false,
-    get: function () { return this._totalReceived;},
+    get: function () { return this._totalReceived; },
     set: function (num) {
-      if(Helpers.isPositiveNumber(num))
+      if (Helpers.isPositiveNumber(num)) {
         this._totalReceived = num;
-      else
+      } else {
         throw 'Error: address.totalReceived must be a positive number';
+      }
     }
   },
   'isWatchOnly': {
     configurable: false,
-    get: function () { return this._priv == null;}
+    get: function () { return this._priv == null; }
   },
   'isEncrypted': {
     configurable: false,
-    get: function () { return Helpers.isBase64(this._priv) && !Helpers.isBase58Key(this._priv);}
+    get: function () { return Helpers.isBase64(this._priv) && !Helpers.isBase58Key(this._priv); }
   },
   'isUnEncrypted': {
     configurable: false,
-    get: function () { return Helpers.isBase58Key(this._priv);}
+    get: function () { return Helpers.isBase58Key(this._priv); }
   },
   'archived': {
     configurable: false,
-    get: function () { return this._tag === 2;},
+    get: function () { return this._tag === 2; },
     set: function (value) {
-      if(Helpers.isBoolean(value)) {
+      if (Helpers.isBoolean(value)) {
         if (value) { // Archive:
           this._tag = 2;
         } else { // Unarchive:
@@ -31126,38 +31107,37 @@ Object.defineProperties(Address.prototype, {
           MyWallet.wallet.getHistory();
         }
         MyWallet.syncWallet();
+      } else {
+        throw 'Error: address.archived must be a boolean';
       }
-      else
-        { throw 'Error: address.archived must be a boolean';}
     }
   },
   'active': {
     configurable: false,
-    get: function () { return !this.archived;},
+    get: function () { return !this.archived; },
     set: function (value) { this.archived = !value; }
   }
 });
 
-Address.factory = function (o,a){
+Address.factory = function (o, a) {
   if (a instanceof Object && !(a instanceof Address)) {
     o[a.addr] = new Address(a);
-  }
-  else {
+  } else {
     o[a.address] = a;
   }
   return o;
 };
 
-Address.import = function (key, label){
+Address.import = function (key, label) {
   var object = {
-    addr                   : null,
-    priv                   : null,
-    created_time           : Date.now(),
-    created_device_name    : shared.APP_NAME,
-    created_device_version : shared.APP_VERSION
+    addr: null,
+    priv: null,
+    created_time: Date.now(),
+    created_device_name: shared.APP_NAME,
+    created_device_version: shared.APP_VERSION
   };
 
-  switch (true){
+  switch (true) {
     case Helpers.isBitcoinAddress(key):
       object.addr = key;
       object.priv = null;
@@ -31175,43 +31155,41 @@ Address.import = function (key, label){
       throw 'Error: address import format not supported';
   }
 
-  //initialization
+  // initialization
   var address = new Address(object);
   address._label = label;
-  address._tag   = 0; // non-archived
+  address._tag = 0; // non-archived
   return address;
 };
 
-Address.fromString = function (keyOrAddr, label, bipPass){
+Address.fromString = function (keyOrAddr, label, bipPass) {
   var asyncParse = function (resolve, reject) {
     if (Helpers.isBitcoinAddress(keyOrAddr)) {
       return resolve(Address.import(keyOrAddr, label));
     } else {
       // Import private key
-      var format    = Helpers.detectPrivateKeyFormat(keyOrAddr)
-        , okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
+      var format = Helpers.detectPrivateKeyFormat(keyOrAddr);
+      var okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
 
       if (format === 'bip38') {
         if (bipPass == undefined || bipPass === '') {
           return reject('needsBip38');
         }
         ImportExport.parseBIP38toECPair(keyOrAddr, bipPass,
-          function (key) { resolve(Address.import(key, label));},
-          function ()    { reject('wrongBipPass'); },
-          function ()    { reject('importError');}
+          function (key) { resolve(Address.import(key, label)); },
+          function () { reject('wrongBipPass'); },
+          function () { reject('importError'); }
         );
-      }
-      else if (okFormats.indexOf(format) > -1) {
+      } else if (okFormats.indexOf(format) > -1) {
         var k = Helpers.privateKeyStringToKey(keyOrAddr, format);
         return resolve(Address.import(k, label));
-      }
-      else { reject('unknown key format'); }
+      } else { reject('unknown key format'); }
     }
   };
   return new Promise(asyncParse);
 };
 
-Address.new = function(label){
+Address.new = function (label) {
   var key = Bitcoin.ECPair.makeRandom({
     rng: RNG.run.bind(RNG),
     compressed: true
@@ -31219,20 +31197,20 @@ Address.new = function(label){
   return Address.import(key, label);
 };
 
-Address.reviver = function (k,v){
+Address.reviver = function (k, v) {
   if (k === '') return new Address(v);
   return v;
 };
 
-Address.prototype.toJSON = function (){
+Address.prototype.toJSON = function () {
   var address = {
-    addr   : this.address,
-    priv   : this.priv,
-    tag    : this.tag,
-    label  : this.label,
-    created_time           : this.created_time,
-    created_device_name    : this.created_device_name,
-    created_device_version : this.created_device_version
+    addr: this.address,
+    priv: this.priv,
+    tag: this.tag,
+    label: this.label,
+    created_time: this.created_time,
+    created_device_name: this.created_device_name,
+    created_device_version: this.created_device_version
   };
   return address;
 };
@@ -31252,7 +31230,7 @@ Address.prototype.signMessage = function (message, secondPassword) {
   return Bitcoin.message.sign(keyPair, message).toString('base64');
 };
 
-Address.prototype.encrypt = function (cipher){
+Address.prototype.encrypt = function (cipher) {
   if (!this._priv) return this;
   var priv = cipher ? cipher(this._priv) : this._priv;
   if (!priv) { throw 'Error Encoding key'; }
@@ -31260,7 +31238,7 @@ Address.prototype.encrypt = function (cipher){
   return this;
 };
 
-Address.prototype.decrypt = function (cipher){
+Address.prototype.decrypt = function (cipher) {
   if (!this._priv) return this;
   var priv = cipher ? cipher(this._priv) : this._priv;
   if (!priv) { throw 'Error Decoding key'; }
@@ -31268,54 +31246,54 @@ Address.prototype.decrypt = function (cipher){
   return this;
 };
 
-Address.prototype.persist = function (){
+Address.prototype.persist = function () {
   if (!this._temporal_priv) return this;
   this._priv = this._temporal_priv;
   delete this._temporal_priv;
   return this;
 };
 
-},{"./helpers":185,"./import-export":186,"./rng":190,"./shared":191,"./wallet":200,"./wallet-crypto":194,"bitcoinjs-lib":33,"bs58":68}],178:[function(require,module,exports){
+},{"./helpers":184,"./import-export":185,"./rng":189,"./shared":190,"./wallet":199,"./wallet-crypto":193,"bitcoinjs-lib":33,"bs58":68}],177:[function(require,module,exports){
 'use strict';
 
 module.exports = new API();
-////////////////////////////////////////////////////////////////////////////////
-var assert        = require('assert');
-var Helpers       = require('./helpers');
-var WalletStore   = require('./wallet-store');
-var WalletCrypto  = require('./wallet-crypto');
-var MyWallet      = require('./wallet');
+
+var assert = require('assert');
+var Helpers = require('./helpers');
+var WalletStore = require('./wallet-store');
+var WalletCrypto = require('./wallet-crypto');
+var MyWallet = require('./wallet');
 var Bitcoin = require('bitcoinjs-lib');
-////////////////////////////////////////////////////////////////////////////////
+var ECPair = Bitcoin.ECPair;
+
 // API class
-function API (){
+function API () {
   // private members
-  this.ROOT_URL           = 'https://blockchain.info/';
+  this.ROOT_URL = 'https://blockchain.info/';
   this.AJAX_RETRY_DEFAULT = 2;
-  this.API_CODE           = '1770d5d9-bcea-4d28-ad21-6cbd5be018a8';
+  this.API_CODE = '1770d5d9-bcea-4d28-ad21-6cbd5be018a8';
   this.SERVER_TIME_OFFSET = null;
-  this.AJAX_TIMEOUT       = 60000;
+  this.AJAX_TIMEOUT = 60000;
 }
 
 // encodeFormData :: Object -> url encoded params
 API.prototype.encodeFormData = function (data) {
   if (!data) return '';
   var encoded = Object.keys(data).map(function (k) {
-      return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]);
+    return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]);
   }).join('&');
   return encoded;
 };
 
-////////////////////////////////////////////////////////////////////////////////
 API.prototype.request = function (action, method, data, withCred) {
-  var url   = this.ROOT_URL + method
-    , body  = this.encodeFormData(data)
-    , time  = (new Date()).getTime();
+  var url = this.ROOT_URL + method;
+  var body = this.encodeFormData(data);
+  var time = (new Date()).getTime();
 
   var options = {
-    method      : action,
-    headers     : { 'Content-Type': 'application/x-www-form-urlencoded' },
-    credentials : withCred ? 'include' : 'omit'
+    method: action,
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    credentials: withCred ? 'include' : 'omit'
   };
 
   if (action === 'GET') url += '?' + body;
@@ -31327,7 +31305,7 @@ API.prototype.request = function (action, method, data, withCred) {
 
   var checkStatus = function (response) {
     if (response.status >= 200 && response.status < 300) {
-      if(
+      if (
         response.headers.get('content-type') &&
         response.headers.get('content-type').indexOf('application/json') > -1
       ) {
@@ -31336,7 +31314,6 @@ API.prototype.request = function (action, method, data, withCred) {
         return response.json();
       } else {
         return response.text();
-
       }
     } else {
       return response.text().then(Promise.reject.bind(Promise));
@@ -31354,7 +31331,6 @@ API.prototype.request = function (action, method, data, withCred) {
     .then(handleResponse);
 };
 
-////////////////////////////////////////////////////////////////////////////////
 API.prototype.retry = function (f, n) {
   var self = this;
   var i = n === null || n === undefined ? this.AJAX_RETRY_DEFAULT : n;
@@ -31368,10 +31344,9 @@ API.prototype.retry = function (f, n) {
   }
 };
 
-////////////////////////////////////////////////////////////////////////////////
 // sync clocks with network time protocol
 API.prototype.handleNTPResponse = function (obj, clientTime) {
-  //Calculate serverTimeOffset using NTP algo
+  // Calculate serverTimeOffset using NTP algo
   var nowTime = (new Date()).getTime();
   if (obj.clientTimeDiff && obj.serverTime) {
     var serverClientResponseDiffTime = nowTime - obj.serverTime;
@@ -31386,114 +31361,109 @@ API.prototype.handleNTPResponse = function (obj, clientTime) {
   }
 };
 
-////////////////////////////////////////////////////////////////////////////////
 // Definition of API
-API.prototype.getBalances = function (addresses){
+API.prototype.getBalances = function (addresses) {
   var data = {
-      active : addresses.join('|')
-    , simple: true
-    , format: 'json'
-    , api_code : this.API_CODE
+    active: addresses.join('|'),
+    simple: true,
+    format: 'json',
+    api_code: this.API_CODE
   };
   return this.retry(this.request.bind(this, 'POST', 'multiaddr', data));
 };
 
-API.prototype.getBalanceForRedeemCode = function (privatekey){
-
+API.prototype.getBalanceForRedeemCode = function (privatekey) {
   var format = Helpers.detectPrivateKeyFormat(privatekey);
-  if(format == null) { return Promise.reject('Unknown private key format'); }
+  if (format == null) { return Promise.reject('Unknown private key format'); }
   var privateKeyToSweep = Helpers.privateKeyStringToKey(privatekey, format);
   var aC = new ECPair(privateKeyToSweep.d, null, {compressed: true}).getAddress();
   var aU = new ECPair(privateKeyToSweep.d, null, {compressed: false}).getAddress();
   var totalBalance = function (data) {
     return Object.keys(data)
-                 .map(function (a){ return data[a].final_balance;})
+                 .map(function (a) { return data[a].final_balance; })
                  .reduce(Helpers.add, 0);
-  }
-  return API.getBalances([aC, aU]).then(totalBalance)
+  };
+  return API.getBalances([aC, aU]).then(totalBalance);
 };
 
-API.prototype.getFiatAtTime = function (time, value, currencyCode){
+API.prototype.getFiatAtTime = function (time, value, currencyCode) {
   var data = {
-      value : value
-    , currency: currencyCode
-    , time: time
-    , textual: false
-    , nosavecurrency: true
-    , api_code : this.API_CODE
+    value: value,
+    currency: currencyCode,
+    time: time,
+    textual: false,
+    nosavecurrency: true,
+    api_code: this.API_CODE
   };
   return this.retry(this.request.bind(this, 'GET', 'frombtc', data));
 };
 
-API.prototype.getTicker = function (){
-  var data = { format: 'json' , api_code : this.API_CODE};
+API.prototype.getTicker = function () {
+  var data = { format: 'json', api_code: this.API_CODE };
   // return this.request('GET', 'ticker', data);
   return this.retry(this.request.bind(this, 'GET', 'ticker', data));
 };
 
-API.prototype.getUnspent = function (fromAddresses, confirmations){
+API.prototype.getUnspent = function (fromAddresses, confirmations) {
   var data = {
-      active : fromAddresses.join('|')
-    , confirmations : Helpers.isPositiveNumber(confirmations) ? confirmations : -1
-    , format: 'json'
-    , api_code : this.API_CODE
+    active: fromAddresses.join('|'),
+    confirmations: Helpers.isPositiveNumber(confirmations) ? confirmations : -1,
+    format: 'json',
+    api_code: this.API_CODE
   };
   return this.retry(this.request.bind(this, 'POST', 'unspent', data));
 };
 
 API.prototype.getHistory = function (addresses, tx_filter, offset, n, syncBool) {
-
   var clientTime = (new Date()).getTime();
   offset = offset || 0;
   n = n || 0;
 
   var data = {
-      active : addresses.join('|')
-    , format: 'json'
-    , offset: offset
-    , no_compact: true
-    , ct : clientTime
-    , n : n
-    , language : WalletStore.getLanguage()
-    , no_buttons : true
-    , api_code : this.API_CODE
+    active: addresses.join('|'),
+    format: 'json',
+    offset: offset,
+    no_compact: true,
+    ct: clientTime,
+    n: n,
+    language: WalletStore.getLanguage(),
+    no_buttons: true,
+    api_code: this.API_CODE
   };
 
   if (tx_filter !== undefined && tx_filter !== null) {
     data.filter = tx_filter;
   }
-
   return this.retry(this.request.bind(this, 'POST', 'multiaddr', data, null, syncBool));
 };
 
-API.prototype.securePost = function (url, data){
-
+API.prototype.securePost = function (url, data) {
   var clone = Helpers.merge({}, data);
   if (!Helpers.isValidGUID(data.guid)) { clone.guid = MyWallet.wallet.guid; }
   if (!data.sharedKey) {
     var sharedKey = MyWallet.wallet ? MyWallet.wallet.sharedKey : undefined;
     if (!Helpers.isValidSharedKey(sharedKey)) throw 'Shared key is invalid';
-    //Rather than sending the shared key plain text
-    //send a hash using a totp scheme
+    // Rather than sending the shared key plain text
+    // send a hash using a totp scheme
     var now = new Date().getTime();
-    var timestamp = parseInt((now - this.SERVER_TIME_OFFSET) / 10000);
+    var timestamp = parseInt((now - this.SERVER_TIME_OFFSET) / 10000, 10);
     var SKHashHex = WalletCrypto.sha256(sharedKey.toLowerCase() + timestamp).toString('hex');
     var i = 0;
-    var tSKUID = SKHashHex.substring(i, i+=8)+'-'+
-                 SKHashHex.substring(i, i+=4)+'-'+
-                 SKHashHex.substring(i, i+=4)+'-'+
-                 SKHashHex.substring(i, i+=4)+'-'+
-                 SKHashHex.substring(i, i+=12);
+    var tSKUID = SKHashHex.substring(i, i += 8) + '-' +
+                 SKHashHex.substring(i, i += 4) + '-' +
+                 SKHashHex.substring(i, i += 4) + '-' +
+                 SKHashHex.substring(i, i += 4) + '-' +
+                 SKHashHex.substring(i, i += 12);
 
-    clone.sharedKey                 = tSKUID;
-    clone.sKTimestamp               = timestamp;
-    clone.sKDebugHexHash            = SKHashHex;
-    clone.sKDebugTimeOffset         = this.SERVER_TIME_OFFSET;
+    clone.sharedKey = tSKUID;
+    clone.sKTimestamp = timestamp;
+    clone.sKDebugHexHash = SKHashHex;
+    clone.sKDebugTimeOffset = this.SERVER_TIME_OFFSET;
     clone.sKDebugOriginalClientTime = now;
-    clone.sKDebugOriginalSharedKey  = sharedKey;
+    clone.sKDebugOriginalSharedKey = sharedKey;
   }
-  clone.api_code                  = this.API_CODE;
-  clone.format                    = data.format ? data.format : 'plain';
+  clone.api_code = this.API_CODE;
+  clone.format = data.format ? data.format : 'plain';
 
   return this.retry(this.request.bind(this, 'POST', url, clone, true));
 };
@@ -31502,44 +31472,43 @@ API.prototype.securePostCallbacks = function (url, data, success, error) {
   this.securePost(url, data).then(success).catch(error);
 };
 
-
-//01000000013e095250cb35129c7dee081b8c89b4bff69f72222a25c45ba9747a704a6d0bcd010000006b4830450221009b4f6619b1499ea19494aec34c36fdeac9146b9f87f010b7ebf1eb8a1b590c6e02202f5d9b0cfa4107d586b5b370494b9932eba1411468af06e431001932c12bf245012103cf91e6b06d1a2432721559a010ee67e98f8ef0421b15cca66dc9717ac1af8d1effffffff0210270000000000001976a91402549a8a872fbe54721a899e5ac2a87daac2358088acf0ba0400000000001976a9148ee77b3dd0e33783c11a6c28473d16e9b63dc38588ac00000000
-API.prototype.pushTx = function (txHex, note){
+// 01000000013e095250cb35129c7dee081b8c89b4bff69f72222a25c45ba9747a704a6d0bcd010000006b4830450221009b4f6619b1499ea19494aec34c36fdeac9146b9f87f010b7ebf1eb8a1b590c6e02202f5d9b0cfa4107d586b5b370494b9932eba1411468af06e431001932c12bf245012103cf91e6b06d1a2432721559a010ee67e98f8ef0421b15cca66dc9717ac1af8d1effffffff0210270000000000001976a91402549a8a872fbe54721a899e5ac2a87daac2358088acf0ba0400000000001976a9148ee77b3dd0e33783c11a6c28473d16e9b63dc38588ac00000000
+API.prototype.pushTx = function (txHex, note) {
   assert(txHex, 'transaction required');
 
   var data = {
-      tx : txHex
-    , api_code : this.API_CODE
-    , format : 'plain'
+    tx: txHex,
+    api_code: this.API_CODE,
+    format: 'plain'
   };
 
   if (note) data.note = note;
 
   var responseTXHASH = function (responseText) {
-    if (responseText.indexOf('Transaction Submitted') > -1)
-      { return true;}
-    else
-      { return responseText;}
+    if (responseText.indexOf('Transaction Submitted') > -1) {
+      return true;
+    } else {
+      return responseText;
+    }
   };
 
   return this.request('POST', 'pushtx', data).then(responseTXHASH);
 };
 
 API.prototype.getFees = function () {
-
   var handleNetworkError = function () {
     return Promise.reject({ initial_error: 'Connectivity error, failed to send network request' });
   };
 
   var checkStatus = function (response) {
     if (response.status >= 200 && response.status < 300) {
-        return response.json();
+      return response.json();
     } else {
       return response.text().then(Promise.reject.bind(Promise));
     }
   };
 
-  return fetch(this.API_ROOT_URL + "fees")
+  return fetch(this.API_ROOT_URL + 'fees')
             .then(checkStatus)
             .catch(handleNetworkError);
 };
@@ -31579,56 +31548,57 @@ API.prototype.getFees = function () {
 //   }
 // };
 
-},{"./helpers":185,"./wallet":200,"./wallet-crypto":194,"./wallet-store":197,"assert":16,"bitcoinjs-lib":33}],179:[function(require,module,exports){
+},{"./helpers":184,"./wallet":199,"./wallet-crypto":193,"./wallet-store":196,"assert":16,"bitcoinjs-lib":33}],178:[function(require,module,exports){
 'use strict';
 
 module.exports = Block;
 
-function Block (object){
+function Block (object) {
   var obj = object || {};
-  this._hash       = obj.hash || 'emptyBlock';
-  this._time       = obj.time || 0;
+  this._hash = obj.hash || 'emptyBlock';
+  this._time = obj.time || 0;
   this._blockIndex = obj.blockIndex || 0;
-  this._height     = obj.height || 0;
+  this._height = obj.height || 0;
 }
 
 Object.defineProperties(Block.prototype, {
   'hash': {
     configurable: false,
-    get: function () { return this._hash;}
+    get: function () { return this._hash; }
   },
   'time': {
     configurable: false,
-    get: function () { return this._time;}
+    get: function () { return this._time; }
   },
   'blockIndex': {
     configurable: false,
-    get: function () { return this._blockIndex;}
+    get: function () { return this._blockIndex; }
   },
   'height': {
     configurable: false,
-    get: function () { return this._height;}
+    get: function () { return this._height; }
   }
 });
 
-Block.prototype.toJSON = function (){
+Block.prototype.toJSON = function () {
   return {
-    hash       : this.hash,
-    time       : this.time,
-    blockIndex : this.blockIndex,
-    height     : this.height
+    hash: this.hash,
+    time: this.time,
+    blockIndex: this.blockIndex,
+    height: this.height
   };
 };
 
 Block.fromJSON = function (json) {
   // block height is the only property we require
-  if (json == null || json.height == null)
+  if (json == null || json.height == null) {
     return null;
-  else
+  } else {
     return new Block(json);
+  }
 };
 
-},{}],180:[function(require,module,exports){
+},{}],179:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -31637,34 +31607,32 @@ var WalletStore = require('./wallet-store.js');
 var MyWallet = require('./wallet.js');
 var API = require('./api');
 
-
 function get_account_info (success, error) {
-  API.securePostCallbacks('wallet', {method : 'get-info', format : 'json'}, function (data) {
-    typeof(success) === 'function' && success(data);
-
+  API.securePostCallbacks('wallet', {method: 'get-info', format: 'json'}, function (data) {
+    typeof (success) === 'function' && success(data);
   }, function (data) {
     var response = data.responseText || 'Error Downloading Account Settings';
     WalletStore.sendEvent('msg', {type: 'error', message: response});
 
-    typeof(error) === 'function' &&  error();
+    typeof (error) === 'function' && error();
   });
 }
 
 function updateKV (method, value, success, error, extra) {
-  if(typeof value == 'string') {
+  if (typeof value == 'string') {
     value = value.trim();
   }
 
   extra = extra || '';
 
-  API.securePostCallbacks('wallet'+extra, { length : (value+'').length, payload : value+'', method : method }, function (data) {
+  API.securePostCallbacks('wallet' + extra, { length: (value + '').length, payload: value + '', method: method }, function (data) {
     WalletStore.sendEvent('msg', {type: 'success', message: method + '-success: ' + data});
 
-    typeof(success) === 'function' && success();
+    typeof (success) === 'function' && success();
   }, function (data) {
     WalletStore.sendEvent('msg', {type: 'error', message: method + '-error: ' + data});
 
-    typeof(error) === 'function' &&  error();
+    typeof (error) === 'function' && error();
   });
 }
 
@@ -31710,18 +31678,17 @@ function isBadPasswordHint (value) {
 }
 
 function update_password_hint1 (value, success, error) {
-  assert(error && typeof(error) === 'function', 'Error callback required');
+  assert(error && typeof (error) === 'function', 'Error callback required');
 
   var isBad = isBadPasswordHint(value);
   isBad ? error(isBad) : updateKV('update-password-hint1', value, success, error);
 }
 
 function update_password_hint2 (value, success, error) {
-  assert(error && typeof(error) === 'function', 'Error callback required');
+  assert(error && typeof (error) === 'function', 'Error callback required');
 
   var isBad = isBadPasswordHint(value);
   isBad ? error(isBad) : updateKV('update-password-hint2', value, success, error);
-
 }
 
 function change_email (email, success, error) {
@@ -31745,9 +31712,9 @@ function toggleSave2FA (val, success, error) {
 }
 
 function updateAuthType (val, success, error) {
-  updateKV('update-auth-type', val, function() {
+  updateKV('update-auth-type', val, function () {
     WalletStore.setRealAuthType(val);
-    typeof(success) === 'function' && success();
+    typeof (success) === 'function' && success();
   }, error);
 }
 
@@ -31782,19 +31749,19 @@ function setTwoFactorEmail (success, error) {
 }
 
 function setTwoFactorGoogleAuthenticator (success, error) {
-  API.securePostCallbacks('wallet', { method : 'generate-google-secret' }, function (google_secret_url) {
-    typeof(success) === 'function' && success(google_secret_url);
+  API.securePostCallbacks('wallet', { method: 'generate-google-secret' }, function (google_secret_url) {
+    typeof (success) === 'function' && success(google_secret_url);
   }, function (data) {
     WalletStore.sendEvent('msg', {type: 'error', message: data.responseText});
-    typeof(error) === 'function' &&  error(data.responseText);
+    typeof (error) === 'function' && error(data.responseText);
   });
 }
 
 function confirmTwoFactorGoogleAuthenticator (code, success, error) {
   updateKV('update-auth-type', 4, function () {
     WalletStore.setRealAuthType(4);
-    typeof(success) === 'function' && success();
-  }, error, '?code='+code);
+    typeof (success) === 'function' && success();
+  }, error, '?code=' + code);
 }
 
 /**
@@ -31814,12 +31781,12 @@ function resendEmailConfirmation (email, success, error) {
  * @param {function ()} error Error callback function.
  */
 function verifyEmail (code, success, error) {
-  API.securePostCallbacks('wallet', { payload:code, length : code.length, method : 'verify-email' }, function (data) {
+  API.securePostCallbacks('wallet', { payload: code, length: code.length, method: 'verify-email' }, function (data) {
     WalletStore.sendEvent('msg', {type: 'success', message: data});
-    typeof(success) === 'function' && success(data);
+    typeof (success) === 'function' && success(data);
   }, function (data) {
     WalletStore.sendEvent('msg', {type: 'error', message: data});
-    typeof(error) === 'function' &&  error();
+    typeof (error) === 'function' && error();
   });
 }
 
@@ -31830,74 +31797,74 @@ function verifyEmail (code, success, error) {
  * @param {function ()} error Error callback function.
  */
 function verifyMobile (code, success, error) {
-  API.securePostCallbacks('wallet', { payload:code, length : code.length, method : 'verify-sms' }, function (data) {
+  API.securePostCallbacks('wallet', { payload: code, length: code.length, method: 'verify-sms' }, function (data) {
     WalletStore.sendEvent('msg', {type: 'success', message: data});
-    typeof(success) === 'function' && success(data);
+    typeof (success) === 'function' && success(data);
   }, function (data) {
     WalletStore.sendEvent('msg', {type: 'error', message: data});
-    typeof(error) === 'function' &&  error();
+    typeof (error) === 'function' && error();
   });
 }
 
 function getActivityLogs (success, error) {
-  API.securePostCallbacks('wallet', {method : 'list-logs', format : 'json'}, function (data) {
-    typeof(success) === 'function' && success(data);
+  API.securePostCallbacks('wallet', {method: 'list-logs', format: 'json'}, function (data) {
+    typeof (success) === 'function' && success(data);
   }, function (data) {
     var response = data.responseText || 'Error Downloading Activity Logs';
     WalletStore.sendEvent('msg', {type: 'error', message: response});
-    typeof(error) === 'function' &&  error();
+    typeof (error) === 'function' && error();
   });
 }
 
 function enableEmailNotifications (success, error) {
   API.securePostCallbacks('wallet', {
-    method : 'update-notifications-type',
+    method: 'update-notifications-type',
     length: 1,
     payload: 1
   }, function (data) {
-    typeof(success) === 'function' && success(data);
+    typeof (success) === 'function' && success(data);
   }, function (data) {
     var response = data.responseText || 'Error Enabling Email Notifications';
     WalletStore.sendEvent('msg', {type: 'error', message: response});
-    typeof(error) === 'function' &&  error();
+    typeof (error) === 'function' && error();
   });
 }
 
 function enableReceiveNotifications (success, error) {
   API.securePostCallbacks('wallet', {
-    method : 'update-notifications-on',
+    method: 'update-notifications-on',
     length: 1,
     payload: 2
   }, function (data) {
-    typeof(success) === 'function' && success(data);
+    typeof (success) === 'function' && success(data);
   }, function (data) {
     var response = data.responseText || 'Error Enabling Receive Notifications';
     WalletStore.sendEvent('msg', {type: 'error', message: response});
-    typeof(error) === 'function' &&  error();
+    typeof (error) === 'function' && error();
   });
 }
 
 function enableEmailReceiveNotifications (success, error) {
-  assert(success && typeof(error) === 'function', 'Success callback required');
-  assert(error && typeof(error) === 'function', 'Error callback required');
+  assert(success && typeof (error) === 'function', 'Success callback required');
+  assert(error && typeof (error) === 'function', 'Error callback required');
 
   enableEmailNotifications(
     function () {
       enableReceiveNotifications(
         success,
         error
-      )
+      );
     },
     error
   );
 }
 
 function disableAllNotifications (success, error) {
-  assert(success && typeof(success) === 'function', 'Success callback required');
-  assert(error && typeof(error) === 'function', 'Error callback required');
+  assert(success && typeof (success) === 'function', 'Success callback required');
+  assert(error && typeof (error) === 'function', 'Error callback required');
 
   API.securePostCallbacks('wallet', {
-    method : 'update-notifications-type',
+    method: 'update-notifications-type',
     length: 1,
     payload: 0
   }, function (data) {
@@ -31942,10 +31909,10 @@ module.exports = {
 
 };
 
-},{"./api":178,"./wallet-store.js":197,"./wallet.js":200,"assert":16}],181:[function(require,module,exports){
+},{"./api":177,"./wallet-store.js":196,"./wallet.js":199,"assert":16}],180:[function(require,module,exports){
 
 var WebSocket = require('ws');
-var Helpers   = require('./helpers');
+var Helpers = require('./helpers');
 
 function BlockchainSocket () {
   this.wsUrl = 'wss://blockchain.info/inv';
@@ -31960,25 +31927,8 @@ function BlockchainSocket () {
   this.pingTimeoutPID = null;
 }
 
-// hack to browserify websocket library
-if (!(typeof window === 'undefined')) {
-  WebSocket.prototype.on = function (event, callback) {
-    this['on'+event] = callback;
-  };
-  WebSocket.prototype.once = function (event, callback) {
-      var self = this;
-    this['on'+event] = function () {
-      callback.apply(callback, arguments);
-      self['on'+event] = null;
-    };
-  };
-  WebSocket.prototype.off = function (event, callback) {
-    this['on'+event] = callback;
-  };
-}
-
 BlockchainSocket.prototype.connect = function (onOpen, onMessage, onClose) {
-  if(Helpers.tor()) return;
+  if (Helpers.tor()) return;
   this.reconnect = function () {
     var connect = this._initialize.bind(this, onOpen, onMessage, onClose);
     connect();
@@ -31987,7 +31937,6 @@ BlockchainSocket.prototype.connect = function (onOpen, onMessage, onClose) {
 };
 
 BlockchainSocket.prototype._initialize = function (onOpen, onMessage, onClose) {
-
   if (!this.socket || this.socket.readyState === 3) {
     try {
       this.pingIntervalPID = setInterval(this.ping.bind(this), this.pingInterval);
@@ -32001,60 +31950,60 @@ BlockchainSocket.prototype._initialize = function (onOpen, onMessage, onClose) {
   }
 };
 
-BlockchainSocket.prototype.ping = function (){
+BlockchainSocket.prototype.ping = function () {
   this.send(this.msgPing());
   var connect = this.reconnect.bind(this);
   var close = this.close.bind(this);
   this.pingTimeoutPID = setTimeout(connect.compose(close), this.pingTimeout);
 };
 
-BlockchainSocket.prototype.close = function (){
-  if (this.socket) { this.socket.close();}
+BlockchainSocket.prototype.close = function () {
+  if (this.socket) { this.socket.close(); }
   this.socket = null;
   clearInterval(this.pingIntervalPID);
   clearTimeout(this.pingTimeoutPID);
 };
 
 BlockchainSocket.prototype.send = function (message) {
-  if(Helpers.tor()) return;
+  if (Helpers.tor()) return;
   if (this.socket && this.socket.readyState === 1) {
     this.socket.send(message);
   }
 };
 
 BlockchainSocket.prototype.msgWalletSub = function (myGUID) {
-  if (myGUID == null) { return ""; }
-  var m = { op   : 'wallet_sub', guid : myGUID };
+  if (myGUID == null) { return ''; }
+  var m = { op: 'wallet_sub', guid: myGUID };
   return JSON.stringify(m);
 };
 
 BlockchainSocket.prototype.msgBlockSub = function () {
-  var m = { op   : 'blocks_sub' };
+  var m = { op: 'blocks_sub' };
   return JSON.stringify(m);
 };
 
 BlockchainSocket.prototype.msgAddrSub = function (addresses) {
-  if (addresses == null) { return ""; }
+  if (addresses == null) { return ''; }
   var addressArray = Helpers.toArrayFormat(addresses);
   var toMsg = function (address) {
-    var m = { op   : 'addr_sub', addr : address };
+    var m = { op: 'addr_sub', addr: address };
     return JSON.stringify(m);
-  }
-  return addressArray.map(toMsg).reduce(Helpers.add, "");
+  };
+  return addressArray.map(toMsg).reduce(Helpers.add, '');
 };
 
 BlockchainSocket.prototype.msgXPUBSub = function (xpubs) {
-  if (xpubs == null) { return ""; }
+  if (xpubs == null) { return ''; }
   var xpubsArray = Helpers.toArrayFormat(xpubs);
   var toMsg = function (myxpub) {
-    var m = { op   : 'xpub_sub', xpub : myxpub };
+    var m = { op: 'xpub_sub', xpub: myxpub };
     return JSON.stringify(m);
-  }
-  return xpubsArray.map(toMsg).reduce(Helpers.add, "");
+  };
+  return xpubsArray.map(toMsg).reduce(Helpers.add, '');
 };
 
 BlockchainSocket.prototype.msgPing = function () {
-  var m = { op : 'ping'};
+  var m = { op: 'ping' };
   return JSON.stringify(m);
 };
 
@@ -32067,16 +32016,15 @@ BlockchainSocket.prototype.msgOnOpen = function (guid, addresses, xpubs) {
 
 module.exports = BlockchainSocket;
 
-},{"./helpers":185,"ws":176}],182:[function(require,module,exports){
+},{"./helpers":184,"ws":200}],181:[function(require,module,exports){
 'use strict';
 
 module.exports = Wallet;
 
-////////////////////////////////////////////////////////////////////////////////
 // dependencies
 var assert = require('assert');
-var Bitcoin = require('bitcoinjs-lib');
 var BIP39 = require('bip39');
+var RNG = require('./rng');
 
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
@@ -32087,29 +32035,27 @@ var MyWallet = require('./wallet'); // This cyclic import should be avoided once
 var API = require('./api');
 var shared = require('./shared');
 var BlockchainSettingsAPI = require('./blockchain-settings-api');
-var KeyRing  = require('./keyring');
+var KeyRing = require('./keyring');
 var TxList = require('./transaction-list');
 var Block = require('./bitcoin-block');
 
-////////////////////////////////////////////////////////////////////////////////
 // Wallet
 
 function Wallet (object) {
-
-  var obj        = object || {};
-  obj.options    = obj.options || {};
-  obj.keys       = obj.keys || [];
+  var obj = object || {};
+  obj.options = obj.options || {};
+  obj.keys = obj.keys || [];
   obj.hd_wallets = obj.hd_wallets || [];
 
-  this._guid              = obj.guid;
-  this._sharedKey         = obj.sharedKey;
+  this._guid = obj.guid;
+  this._sharedKey = obj.sharedKey;
   this._double_encryption = obj.double_encryption || false;
-  this._dpasswordhash     = obj.dpasswordhash;
-  //options
-  this._pbkdf2_iterations        = obj.options.pbkdf2_iterations;
-  this._fee_per_kb               = obj.options.fee_per_kb == null ? 10000 : obj.options.fee_per_kb;
-  this._html5_notifications      = obj.options.html5_notifications;
-  this._logout_time              = obj.options.logout_time;
+  this._dpasswordhash = obj.dpasswordhash;
+  // options
+  this._pbkdf2_iterations = obj.options.pbkdf2_iterations;
+  this._fee_per_kb = obj.options.fee_per_kb == null ? 10000 : obj.options.fee_per_kb;
+  this._html5_notifications = obj.options.html5_notifications;
+  this._logout_time = obj.options.logout_time;
 
   // legacy addresses list
   this._addresses = obj.keys ? obj.keys.reduce(Address.factory, {}) : undefined;
@@ -32118,7 +32064,7 @@ function Wallet (object) {
 
   // paidTo dictionary
   this._paidTo = obj.paidTo || {};
-  if (this.isUpgradedToHD){
+  if (this.isUpgradedToHD) {
     Helpers.merge(this._paidTo, this.hdwallet._paidTo); // move paidTo from the wrong place
     delete this.hdwallet._paidTo;
   }
@@ -32126,12 +32072,13 @@ function Wallet (object) {
   // address book list
   // address book in json is [{address: 'address1', label: 'label1'} , ... ]
   // address book in memory is {address1: 'label1', address2: 'label2'}
-  this._address_book = obj.address_book ?
-    obj.address_book.reduce(function (o,a){
-                              var address = a.address || a.addr;
-                              o[address] = a.label;
-                              return o;
-                            }, {}) : {};
+  this._address_book = obj.address_book
+      ? obj.address_book.reduce(function (o, a) {
+        var address = a.address || a.addr;
+        o[address] = a.label;
+        return o;
+      }, {})
+      : {};
 
   // tx_notes dictionary
   this._tx_notes = obj.tx_notes || {};
@@ -32143,22 +32090,22 @@ function Wallet (object) {
   this._tx_names = obj.tx_names || [];
 
   // fetched data from the server
-  this._totalSent       = 0;
-  this._totalReceived   = 0;
-  this._finalBalance    = 0;
-  this._numberTxTotal   = 0;
+  this._totalSent = 0;
+  this._totalReceived = 0;
+  this._finalBalance = 0;
+  this._numberTxTotal = 0;
   this._txList = new TxList();
-  this._latestBlock    = null;
+  this._latestBlock = null;
 }
 
 Object.defineProperties(Wallet.prototype, {
   'guid': {
     configurable: false,
-    get: function () { return this._guid;}
+    get: function () { return this._guid; }
   },
   'sharedKey': {
     configurable: false,
-    get: function () { return this._sharedKey;}
+    get: function () { return this._sharedKey; }
   },
   'context': {
     configurable: false,
@@ -32169,15 +32116,15 @@ Object.defineProperties(Wallet.prototype, {
   },
   'isDoubleEncrypted': {
     configurable: false,
-    get: function () { return this._double_encryption;}
+    get: function () { return this._double_encryption; }
   },
   'dpasswordhash': {
     configurable: false,
-    get: function () { return this._dpasswordhash;}
+    get: function () { return this._dpasswordhash; }
   },
   'fee_per_kb': {
     configurable: false,
-    get: function () { return this._fee_per_kb;},
+    get: function () { return this._fee_per_kb; },
     set: function (value) {
       switch (true) {
         case !Helpers.isPositiveNumber(value):
@@ -32194,36 +32141,39 @@ Object.defineProperties(Wallet.prototype, {
   },
   'pbkdf2_iterations': {
     configurable: false,
-    get: function () { return this._pbkdf2_iterations;}
+    get: function () { return this._pbkdf2_iterations; }
   },
   'totalSent': {
     configurable: false,
-    get: function () { return this._totalSent;},
+    get: function () { return this._totalSent; },
     set: function (value) {
-      if(Helpers.isPositiveNumber(value))
+      if (Helpers.isPositiveNumber(value)) {
         this._totalSent = value;
-      else
+      } else {
         throw 'Error: wallet.totalSent must be a positive number';
+      }
     }
   },
   'totalReceived': {
     configurable: false,
-    get: function () { return this._totalReceived;},
+    get: function () { return this._totalReceived; },
     set: function (value) {
-      if(Helpers.isPositiveNumber(value))
+      if (Helpers.isPositiveNumber(value)) {
         this._totalReceived = value;
-      else
+      } else {
         throw 'Error: wallet.totalReceived must be a positive number';
+      }
     }
   },
   'finalBalance': {
     configurable: false,
-    get: function () { return this._finalBalance;},
+    get: function () { return this._finalBalance; },
     set: function (value) {
-      if(Helpers.isPositiveNumber(value))
+      if (Helpers.isPositiveNumber(value)) {
         this._finalBalance = value;
-      else
+      } else {
         throw 'Error: wallet.finalBalance must be a positive number';
+      }
     }
   },
   'txList': {
@@ -32232,31 +32182,34 @@ Object.defineProperties(Wallet.prototype, {
   },
   'numberTxTotal': {
     configurable: false,
-    get: function () { return this._numberTxTotal;},
+    get: function () { return this._numberTxTotal; },
     set: function (value) {
-      if(Helpers.isPositiveInteger(value))
+      if (Helpers.isPositiveInteger(value)) {
         this._numberTxTotal = value;
-      else
+      } else {
         throw 'Error: wallet.numberTx must be a positive integer';
+      }
     }
   },
   'addresses': {
     configurable: false,
-    get: function (){return Object.keys(this._addresses);}
+    get: function () { return Object.keys(this._addresses); }
   },
   'activeAddresses': {
     configurable: false,
-    get: function (){return this.activeKeys.map(function (k){return k.address;});}
+    get: function () { return this.activeKeys.map(function (k) { return k.address; }); }
   },
   'spendableActiveAddresses': {
     configurable: false,
-    get: function (){return this.activeKeys
-                        .filter(function (k){return !k.isWatchOnly;})
-                          .map(function (k){return k.address;});}
+    get: function () {
+      return this.activeKeys
+          .filter(function (k) { return !k.isWatchOnly; })
+          .map(function (k) { return k.address; });
+    }
   },
   'key': {
     configurable: false,
-    value: function (addr) {return this._addresses[addr];}
+    value: function (addr) { return this._addresses[addr]; }
   },
   'activeKey': {
     configurable: false,
@@ -32270,34 +32223,33 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () {
       var that = this;
-      return that.addresses.map(function (a){return that.key(a)});
+      return that.addresses.map(function (a) { return that.key(a); });
     }
   },
   'activeKeys': {
     configurable: false,
-    get: function (){return this.keys.filter(function (a){return !a.archived;})}
+    get: function () { return this.keys.filter(function (a) { return !a.archived; }); }
   },
   'hdwallet': {
     configurable: false,
-    get: function () {return this._hd_wallets[0];}
+    get: function () { return this._hd_wallets[0]; }
   },
-  'isUpgradedToHD':{
+  'isUpgradedToHD': {
     configurable: false,
     get: function () {
       return !(this._hd_wallets == null || this._hd_wallets.length === 0);
     }
   },
-  'isEncryptionConsistent':{
+  'isEncryptionConsistent': {
     configurable: false,
     get: function () {
-      var operation = undefined;
+      var operation;
       if (this.isDoubleEncrypted) {
-        operation = function (k){return k.isEncrypted;}
+        operation = function (k) { return k.isEncrypted; };
+      } else { // no double encryption activated
+        operation = function (k) { return k.isUnEncrypted; };
       }
-      else { // no double encryption activated
-        operation = function (k){return k.isUnEncrypted;}
-      }
-      var A = this.keys.filter(function (k){return !k.isWatchOnly;})
+      var A = this.keys.filter(function (k) { return !k.isWatchOnly; })
                        .map(operation)
                        .reduce(Helpers.and, true);
       var W = this._hd_wallets.map(operation)
@@ -32305,30 +32257,30 @@ Object.defineProperties(Wallet.prototype, {
       return A && W;
     }
   },
-  'balanceActiveLegacy':{
+  'balanceActiveLegacy': {
     configurable: false,
     get: function () {
       return this.activeKeys
-                 .map(function (k){return k.balance;})
+                 .map(function (k) { return k.balance; })
                  .reduce(Helpers.add, 0);
     }
   },
-  'balanceActiveAccounts':{
+  'balanceActiveAccounts': {
     configurable: false,
     get: function () {
       return this.hdwallet.accounts
-                 .filter(function (a){return !a.archived;})
-                 .map(function (a){return a.balance;})
+                 .filter(function (a) { return !a.archived; })
+                 .map(function (a) { return a.balance; })
                  .reduce(Helpers.add, 0);
     }
   },
-  'balanceActive':{
+  'balanceActive': {
     configurable: false,
     get: function () {
       return this.balanceActiveLegacy + this.balanceActiveAccounts;
     }
   },
-  'balanceSpendableActive':{
+  'balanceSpendableActive': {
     configurable: false,
     get: function () {
       if (this.isUpgradedToHD) {
@@ -32338,38 +32290,37 @@ Object.defineProperties(Wallet.prototype, {
       }
     }
   },
-  'balanceSpendableActiveLegacy':{
+  'balanceSpendableActiveLegacy': {
     configurable: false,
     get: function () {
       return this.activeKeys
-                 .filter(function (k){return !k.isWatchOnly;})
-                 .map(function (k){return k.balance;})
+                 .filter(function (k) { return !k.isWatchOnly; })
+                 .map(function (k) { return k.balance; })
                  .reduce(Helpers.add, 0);
     }
   },
-  'addressBook':{
+  'addressBook': {
     configurable: false,
-    get: function () { return this._address_book;}
+    get: function () { return this._address_book; }
   },
-  'defaultPbkdf2Iterations':{
+  'defaultPbkdf2Iterations': {
     configurable: false,
-    get: function (){return 5000;}
+    get: function () { return 5000; }
   },
   'latestBlock': {
     configurable: false,
-    get: function () { return this._latestBlock;},
+    get: function () { return this._latestBlock; },
     set: function (json) {
-      var b = Block.fromJSON(json)
-      if(b != null) {
+      var b = Block.fromJSON(json);
+      if (b != null) {
         this._latestBlock = b;
         WalletStore.sendEvent('did_set_latest_block');
-      }
-      else {
+      } else {
         throw 'Error: tried to set wrong wallet.latestBlock';
       }
     }
   },
-  'logoutTime':{
+  'logoutTime': {
     configurable: false,
     get: function () { return this._logout_time; },
     set: function (t) {
@@ -32383,51 +32334,52 @@ Object.defineProperties(Wallet.prototype, {
   }
 });
 
-////////////////////////////////////////////////////////////////////////////////
 // update-wallet-balances after multiaddr call
 Wallet.prototype._updateWalletInfo = function (obj) {
-
   if (obj.info) {
-    if (obj.info.symbol_local)
+    if (obj.info.symbol_local) {
       shared.setLocalSymbol(obj.info.symbol_local);
-    if (obj.info.symbol_btc)
+    }
+    if (obj.info.symbol_btc) {
       shared.setBTCSymbol(obj.info.symbol_btc);
-    if (obj.info.notice)
+    }
+    if (obj.info.notice) {
       WalletStore.sendEvent('msg', {type: 'error', message: obj.info.notice});
+    }
   }
 
   if (obj.wallet == null) {
-    this.totalSent       = 0;
-    this.totalReceived   = 0;
-    this.finalBalance    = 0;
-    this.numberTxTotal   = 0;
+    this.totalSent = 0;
+    this.totalReceived = 0;
+    this.finalBalance = 0;
+    this.numberTxTotal = 0;
     return true;
   }
 
-  this.totalSent     = obj.wallet.total_sent;
+  this.totalSent = obj.wallet.total_sent;
   this.totalReceived = obj.wallet.total_received;
-  this.finalBalance  = obj.wallet.final_balance;
+  this.finalBalance = obj.wallet.final_balance;
   this.numberTxTotal = obj.wallet.n_tx;
 
   var updateAccountAndAddressesInfo = function (e) {
     if (this.isUpgradedToHD) {
       var account = this.hdwallet.activeAccount(e.address);
-      if (account){
-        account.balance      = e.final_balance;
-        account.n_tx         = e.n_tx;
+      if (account) {
+        account.balance = e.final_balance;
+        account.n_tx = e.n_tx;
         account.lastUsedReceiveIndex = e.account_index;
         account.receiveIndex = Math.max(account.lastUsedReceiveIndex, account.maxLabeledReceiveIndex);
-        account.changeIndex  = e.change_index;
+        account.changeIndex = e.change_index;
         if (account.getLabelForReceivingAddress(account.receiveIndex)) {
           account.incrementReceiveIndex();
         }
       }
     }
     var address = this.activeKey(e.address);
-    if (address){
-      address.balance       = e.final_balance;
+    if (address) {
+      address.balance = e.final_balance;
       address.totalReceived = e.total_received;
-      address.totalSent     = e.total_sent;
+      address.totalSent = e.total_sent;
     }
   };
   this.latestBlock = obj.info.latest_block;
@@ -32447,10 +32399,9 @@ Wallet.prototype.fetchTransactions = function () {
   return API.getHistory(this.context, 0, this.txList.fetched, this.txList.loadNumber)
     .then(this._updateWalletInfo.bind(this));
 };
-////////////////////////////////////////////////////////////////////////////////
 
 Wallet.prototype.getBalancesForArchived = function () {
-  var updateBalance = function (key){
+  var updateBalance = function (key) {
     if (this.containsLegacyAddress(key.address)) {
       this.key(key.address).balance = key.final_balance;
     }
@@ -32460,42 +32411,40 @@ Wallet.prototype.getBalancesForArchived = function () {
     return obj;
   };
   var archivedAddrs = this.addresses.filter(function (addr) {
-      return MyWallet.wallet.key(addr).archived === true;
+    return MyWallet.wallet.key(addr).archived === true;
   });
 
-  return API.getHistory(archivedAddrs, 0 ,0, 1).then(updateBalances.bind(this));
+  return API.getHistory(archivedAddrs, 0, 0, 1).then(updateBalances.bind(this));
 };
-////////////////////////////////////////////////////////////////////////////////
-Wallet.prototype.toJSON = function (){
 
+Wallet.prototype.toJSON = function () {
   function addressBookToJSON (addressBook) {
     return Object.keys(addressBook)
-             .map(function (a){ return {addr: a, label: addressBook[a]};});
+             .map(function (a) { return {addr: a, label: addressBook[a]}; });
   }
 
   return {
-    guid              : this.guid,
-    sharedKey         : this.sharedKey,
-    double_encryption : this.isDoubleEncrypted,
-    dpasswordhash     : this.dpasswordhash,
-    options           : {
-      pbkdf2_iterations        : this.pbkdf2_iterations,
-      fee_per_kb               : this.fee_per_kb,
-      html5_notifications      : this._html5_notifications,
-      logout_time              : this._logout_time
+    guid: this.guid,
+    sharedKey: this.sharedKey,
+    double_encryption: this.isDoubleEncrypted,
+    dpasswordhash: this.dpasswordhash,
+    options: {
+      pbkdf2_iterations: this.pbkdf2_iterations,
+      fee_per_kb: this.fee_per_kb,
+      html5_notifications: this._html5_notifications,
+      logout_time: this._logout_time
     },
-    address_book      : addressBookToJSON(this._address_book),
-    tx_notes          : this._tx_notes,
+    address_book: addressBookToJSON(this._address_book),
+    tx_notes: this._tx_notes,
     // tx_tags           : this._tx_tags,
-    tx_names          : this._tx_names,
-    keys              : this.keys,
-    paidTo            : this._paidTo,
-    hd_wallets        : Helpers.isEmptyArray(this._hd_wallets) ? undefined : this._hd_wallets
+    tx_names: this._tx_names,
+    keys: this.keys,
+    paidTo: this._paidTo,
+    hd_wallets: Helpers.isEmptyArray(this._hd_wallets) ? undefined : this._hd_wallets
   };
 };
 
 Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bipPass) {
-
   var modifyAddress = function (newKey) {
     var watchOnlyKey = this._addresses[addr];
     if (newKey.address !== watchOnlyKey.address) {
@@ -32503,18 +32452,17 @@ Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bi
         console.log(newKey);
         return this.importLegacyAddress(privateKey, null, secPass, bipPass);
       } else {
-         if (this.key(newKey.address).isWatchOnly) {
-           watchOnlyKey = this._addresses[newKey.address];
-         }  else {
-          throw 'privateKeyOfAnotherNonWatchOnlyAddress'
-         }
+        if (this.key(newKey.address).isWatchOnly) {
+          watchOnlyKey = this._addresses[newKey.address];
+        } else {
+          throw 'privateKeyOfAnotherNonWatchOnlyAddress';
+        }
       }
-
     }
     watchOnlyKey._priv = newKey._priv;
     if (this.isDoubleEncrypted) {
-      if (!secPass) {throw 'Error: second password needed';}
-      if (!this.validateSecondPassword(secPass)) { throw 'Error: wrong second password';}
+      if (!secPass) { throw 'Error: second password needed'; }
+      if (!this.validateSecondPassword(secPass)) { throw 'Error: wrong second password'; }
       var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, 'enc');
       watchOnlyKey.encrypt(cipher).persist();
     }
@@ -32527,7 +32475,7 @@ Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bi
   } else if (!this.key(addr).isWatchOnly) {
     return Promise.reject('addressNotWatchOnly');
   } else {
-    return Address.fromString(privateKey, null, bipPass).then(modifyAddress)
+    return Address.fromString(privateKey, null, bipPass).then(modifyAddress);
   }
 };
 
@@ -32541,8 +32489,8 @@ Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) 
       }
     }
     if (this.isDoubleEncrypted) {
-      if (!secPass) {throw 'Error: second password needed';}
-      if (!this.validateSecondPassword(secPass)) {throw 'Error: wrong second password';}
+      if (!secPass) { throw 'Error: second password needed'; }
+      if (!this.validateSecondPassword(secPass)) { throw 'Error: wrong second password'; }
       var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, 'enc');
       ad.encrypt(cipher).persist();
     }
@@ -32553,15 +32501,15 @@ Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) 
     return ad;
   }.bind(this);
 
-  return Address.fromString(addr, label, bipPass).then(importAddress)
+  return Address.fromString(addr, label, bipPass).then(importAddress);
 };
 
 Wallet.prototype.containsLegacyAddress = function (address) {
-  if(Helpers.isInstanceOf(address, Address)) address = address.address;
+  if (Helpers.isInstanceOf(address, Address)) address = address.address;
   return this._addresses.hasOwnProperty(address);
 };
 
-Wallet.prototype.newLegacyAddress = function (label, pw, success, error){
+Wallet.prototype.newLegacyAddress = function (label, pw, success, error) {
   try {
     // This method might throw if the RNG fails:
     var ad = Address.new(label);
@@ -32579,9 +32527,9 @@ Wallet.prototype.newLegacyAddress = function (label, pw, success, error){
   return ad;
 };
 
-Wallet.prototype.deleteLegacyAddress = function (a){
+Wallet.prototype.deleteLegacyAddress = function (a) {
   assert(a, 'Error: address needed');
-  if (typeof this._addresses === 'object') {
+  if (this.containsLegacyAddress(a)) {
     delete this._addresses[a.address];
     MyWallet.syncWallet();
     return true;
@@ -32589,35 +32537,32 @@ Wallet.prototype.deleteLegacyAddress = function (a){
   return false;
 };
 
-// Wallet.prototype.setDefaultPbkdf2Iterations = function (){
+// Wallet.prototype.setDefaultPbkdf2Iterations = function () {
 //   this._pbkdf2_iterations = 5000;
 //   MyWallet.syncWallet();
 //   return this;
 // };
 
 Wallet.prototype.validateSecondPassword = function (inputString) {
-
   // old wallets default_iterations is 10
   var it = !this._pbkdf2_iterations ? 10 : this._pbkdf2_iterations;
   var password_hash = WalletCrypto.hashNTimes(this._sharedKey + inputString, it);
   return password_hash === this._dpasswordhash;
 };
 
-Wallet.prototype.encrypt = function (pw, success, error, encrypting, syncing){
+Wallet.prototype.encrypt = function (pw, success, error, encrypting, syncing) {
   encrypting && encrypting();
   try {
     if (!this.isDoubleEncrypted) {
       var g = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, 'enc');
-      var f = function (element) {element.encrypt(g);};
+      var f = function (element) { element.encrypt(g); };
       this.keys.forEach(f);
       this._hd_wallets.forEach(f);
-    }
-    else {
+    } else {
       // already encrypted
       return this;
     }
-  }
-  catch (e){
+  } catch (e) {
     console.log('wallet encryption failure');
     error && error(e);
     return false;
@@ -32625,95 +32570,103 @@ Wallet.prototype.encrypt = function (pw, success, error, encrypting, syncing){
   // if encryption finished well, then save
   this._dpasswordhash = WalletCrypto.hashNTimes(this._sharedKey + pw, this._pbkdf2_iterations);
   this._double_encryption = true;
-  var p = function (element) {element.persist();};
+  var p = function (element) { element.persist(); };
   this.keys.forEach(p);
   this._hd_wallets.forEach(p);
   syncing && syncing();
-  if (success) { MyWallet.syncWallet(success.bind(undefined, this));}
-  else {MyWallet.syncWallet();};
+  if (success) {
+    MyWallet.syncWallet(success.bind(undefined, this));
+  } else {
+    MyWallet.syncWallet();
+  }
   return this;
 };
 
-Wallet.prototype.decrypt = function (pw, success, error, decrypting, syncing){
+Wallet.prototype.decrypt = function (pw, success, error, decrypting, syncing) {
   decrypting && decrypting();
   try {
     if (this.isDoubleEncrypted) {
       var g = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, 'dec');
-      var f = function (element) {element.decrypt(g);};
+      var f = function (element) { element.decrypt(g); };
       this.keys.forEach(f);
       this._hd_wallets.forEach(f);
-    }
-    else {
+    } else {
       // already decrypted
       return this;
     }
-  }
-  catch (e){
+  } catch (e) {
     console.log('wallet decryption failure');
     error && error(e);
     return false;
   }
   // if encryption finished well, then save
-  this._dpasswordhash     = undefined;
+  this._dpasswordhash = undefined;
   this._double_encryption = false;
-  var p = function (element) {element.persist();};
+  var p = function (element) { element.persist(); };
   this.keys.forEach(p);
   this._hd_wallets.forEach(p);
   syncing && syncing();
-  if (success) { MyWallet.syncWallet(success.bind(undefined, this));}
-  else {MyWallet.syncWallet();}
+  if (success) {
+    MyWallet.syncWallet(success.bind(undefined, this));
+  } else {
+    MyWallet.syncWallet();
+  }
   return this;
 };
 
-Wallet.reviver = function (k,v){
-  if (k === '') return new Wallet(v);
+Wallet.reviver = function (k, v) {
+  if (k === '') { return new Wallet(v); }
   return v;
 };
 
 function isAccountNonUsed (account, progress) {
-  var isNonUsed = function (obj){
-    if (progress) { progress(obj);}
+  var isNonUsed = function (obj) {
+    if (progress) { progress(obj); }
     return obj.addresses[0].account_index === 0 && obj.addresses[0].change_index === 0;
   };
   return API.getHistory([account.extendedPublicKey], 0, 0, 50).then(isNonUsed);
 }
 
-Wallet.prototype.restoreHDWallet = function (mnemonic, bip39Password, pw, startedRestoreHDWallet, progress){
+Wallet.prototype.restoreHDWallet = function (mnemonic, bip39Password, pw, startedRestoreHDWallet, progress) {
+  assert(mnemonic, "BIP 39 mnemonic required")
   // wallet restoration
   startedRestoreHDWallet && startedRestoreHDWallet();
   var self = this;
   var seedHex = BIP39.mnemonicToEntropy(mnemonic);
-  var pass39  = Helpers.isString(bip39Password) ? bip39Password : '';
+  var pass39 = Helpers.isString(bip39Password) ? bip39Password : '';
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, 'enc');
-  var newHDwallet = HDWallet.restore(seedHex, pass39, encoder);
-  this._hd_wallets[0] = newHDwallet;
+  var hd = HDWallet.restore(seedHex, pass39, encoder);
+  this._hd_wallets[0] = hd;
   var account = this.newAccount('My Bitcoin Wallet 1', pw, 0, undefined, true);
   API.getHistory([account.extendedPublicKey], 0, 0, 50).then(progress);
-  var accountIndex  = 1;
+  var accountIndex = 1;
   var AccountsGap = 10;
 
-  var untilNEmptyAccounts = function (n){
+  var untilNEmptyAccounts = function (n) {
     var go = function (nonused) {
-      if (nonused) { return untilNEmptyAccounts(n-1);}
-      else { return untilNEmptyAccounts(AccountsGap);}
+      if (nonused) {
+        return untilNEmptyAccounts(n - 1);
+      } else {
+        return untilNEmptyAccounts(AccountsGap);
+      }
     };
     if (n === 0) {
       self.hdwallet._accounts.splice(-AccountsGap);
       return true;
-    } else{
+    } else {
       accountIndex++;
       account = self.newAccount('My Bitcoin Wallet ' + accountIndex.toString(), pw, 0, undefined, true);
       return isAccountNonUsed(account, progress).then(go);
     }
   };
 
-  var saveAndReturn = function (){
+  var saveAndReturn = function () {
     return new Promise(MyWallet.syncWallet);
   };
 
-  // it returns a promise of the newHDWallet
+  // it returns a promise of the new HDWallet
   return untilNEmptyAccounts(AccountsGap)
-    .then(saveAndReturn)
+    .then(saveAndReturn);
 };
 
 // Enables email notifications for receiving bitcoins. Only for imported
@@ -32731,7 +32684,7 @@ Wallet.prototype.enableNotifications = function (success, error) {
     function () {
       error();
     }
-  )
+  );
 };
 
 Wallet.prototype.disableNotifications = function (success, error) {
@@ -32748,115 +32701,108 @@ Wallet.prototype.disableNotifications = function (success, error) {
       error();
     }
   );
-
 };
 
 // creating a new wallet object
-Wallet.new = function (guid, sharedKey, firstAccountLabel, success, error, isHD){
-  isHD = Helpers.isBoolean(isHD) ? isHD : true;
+Wallet.new = function (guid, sharedKey, mnemonic, bip39Password, firstAccountLabel, success, error) {
+  assert(mnemonic, "BIP 39 mnemonic required")
+
   var object = {
-    guid              : guid,
-    sharedKey         : sharedKey,
-    double_encryption : false,
+    guid: guid,
+    sharedKey: sharedKey,
+    double_encryption: false,
     options: {
-      pbkdf2_iterations  : 5000,
+      pbkdf2_iterations: 5000,
       html5_notifications: false,
-      fee_per_kb         : 10000,
-      logout_time        : 600000
+      fee_per_kb: 10000,
+      logout_time: 600000
     }
   };
   MyWallet.wallet = new Wallet(object);
-  var label = firstAccountLabel ||  'My Bitcoin Wallet';
+  var label = firstAccountLabel || 'My Bitcoin Wallet';
   try {
-    // wallet or address generation could fail because of the RNG
-    if (isHD) {
-      // hd wallet
-      var newHDwallet = HDWallet.new();
-      MyWallet.wallet._hd_wallets.push(newHDwallet);
-      newHDwallet.newAccount(label);
-    } else {
-      // legacy wallet (generate address)
-      var ad = Address.new(label);
-      MyWallet.wallet._addresses[ad.address] = ad;
-    }
+    var hd = HDWallet.new(mnemonic, bip39Password);
+    MyWallet.wallet._hd_wallets.push(hd);
+    hd.newAccount(label);
   } catch (e) { error(e); return; }
   success(MyWallet.wallet);
 };
 
-// adding and hd wallet to an existing wallet, used by frontend and iOs
-Wallet.prototype.newHDWallet = function (firstAccountLabel, pw, success, error){
+// Adds an HD wallet to an existing wallet, used by frontend and iOs
+Wallet.prototype.upgradeToV3 = function (firstAccountLabel, pw, success, error) {
+
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, 'enc');
   try {
-    var newHDwallet = HDWallet.new(encoder);
+    var mnemonic = BIP39.generateMnemonic(undefined, RNG.run.bind(RNG));
+    var hd = HDWallet.new(mnemonic, undefined, encoder);
   } catch (e) { error(e); return; }
-  this._hd_wallets.push(newHDwallet);
+  this._hd_wallets.push(hd);
   var label = firstAccountLabel ? firstAccountLabel : 'My Bitcoin Wallet';
-  var account = this.newAccount(label, pw, this._hd_wallets.length-1, true);
-  var guid = this.guid;
+  this.newAccount(label, pw, this._hd_wallets.length - 1, true);
   MyWallet.syncWallet(function (res) {
     success();
   }, error);
 
-  return newHDwallet;
+  return hd;
 };
 
-Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosave){
-  if (!this.isUpgradedToHD) { return false; };
+Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosave) {
+  if (!this.isUpgradedToHD) { return false; }
   var index = Helpers.isPositiveInteger(hdwalletIndex) ? hdwalletIndex : 0;
-  var cipher = undefined;
+  var cipher;
   if (this.isDoubleEncrypted) {
     cipher = WalletCrypto.cipherFunction.bind(undefined, pw, this._sharedKey, this._pbkdf2_iterations);
   }
   var newAccount = this._hd_wallets[index].newAccount(label, cipher).lastAccount;
   try { // MyWallet.ws.send can fail when restoring from mnemonic because it is not initialized.
-   MyWallet.ws.send(MyWallet.ws.msgXPUBSub(newAccount.extendedPublicKey));
-  } catch (e){}
-  if(!(nosave === true)) MyWallet.syncWallet();
-  typeof(success) === 'function' && success();
+    MyWallet.ws.send(MyWallet.ws.msgXPUBSub(newAccount.extendedPublicKey));
+  } catch (e) {}
+  if (!(nosave === true)) MyWallet.syncWallet();
+  typeof (success) === 'function' && success();
   return newAccount;
 };
 
-Wallet.prototype.getPaidTo = function (txHash){
+Wallet.prototype.getPaidTo = function (txHash) {
   return this._paidTo[txHash];
 };
 
-Wallet.prototype.getAddressBookLabel = function (address){
+Wallet.prototype.getAddressBookLabel = function (address) {
   return this._address_book[address];
 };
 
-Wallet.prototype.addAddressBookEntry = function (address, label){
+Wallet.prototype.addAddressBookEntry = function (address, label) {
   this._address_book[address] = label;
   MyWallet.syncWallet();
 };
 
-Wallet.prototype.removeAddressBookEntry = function (address){
+Wallet.prototype.removeAddressBookEntry = function (address) {
   delete this._address_book[address];
   MyWallet.syncWallet();
 };
 
-Wallet.prototype.getNote = function (txHash){
+Wallet.prototype.getNote = function (txHash) {
   return this._tx_notes[txHash];
 };
 
-Wallet.prototype.setNote = function (txHash, text){
-  assert(text, 'Error: note must have message text')
+Wallet.prototype.setNote = function (txHash, text) {
+  assert(text, 'Error: note must have message text');
   this._tx_notes[txHash] = text;
   MyWallet.syncWallet();
 };
 
-Wallet.prototype.deleteNote = function (txHash){
+Wallet.prototype.deleteNote = function (txHash) {
   delete this._tx_notes[txHash];
   MyWallet.syncWallet();
 };
 
-Wallet.prototype.getMnemonic = function (password){
-  var seedHex = this.isDoubleEncrypted ?
-    WalletCrypto.decryptSecretWithSecondPassword(
-      this.hdwallet.seedHex, password, this.sharedKey, this.pbkdf2_iterations) : this.hdwallet.seedHex;
+Wallet.prototype.getMnemonic = function (password) {
+  var seedHex = this.isDoubleEncrypted
+      ? WalletCrypto.decryptSecretWithSecondPassword(this.hdwallet.seedHex, password, this.sharedKey, this.pbkdf2_iterations)
+      : this.hdwallet.seedHex;
   return BIP39.entropyToMnemonic(seedHex);
 };
 
-Wallet.prototype.changePbkdf2Iterations = function (newIterations, password){
+Wallet.prototype.changePbkdf2Iterations = function (newIterations, password) {
   assert(Helpers.isPositiveInteger(newIterations), 'wallet.pbkdf2_iterations must be a positive integer');
   if (newIterations !== this._pbkdf2_iterations) {
     if (this.isDoubleEncrypted) {
@@ -32864,8 +32810,7 @@ Wallet.prototype.changePbkdf2Iterations = function (newIterations, password){
       this._pbkdf2_iterations = newIterations;         // sec pass iterations
       WalletStore.setPbkdf2Iterations(newIterations);  // main pass iterations
       this.encrypt(password);
-    }
-    else { // no double encrypted wallet
+    } else { // no double encrypted wallet
       this._pbkdf2_iterations = newIterations;        // sec pass iterations
       WalletStore.setPbkdf2Iterations(newIterations); // main pass iterations
       MyWallet.syncWallet();
@@ -32878,9 +32823,9 @@ Wallet.prototype.getPrivateKeyForAddress = function (address, secondPassword) {
   assert(address, 'Error: address must be defined');
   var pk = null;
   if (!address.isWatchOnly) {
-    pk = this.isDoubleEncrypted ?
-      WalletCrypto.decryptSecretWithSecondPassword(
-        address.priv, secondPassword, this.sharedKey, this.pbkdf2_iterations) : address.priv;
+    pk = this.isDoubleEncrypted
+        ? WalletCrypto.decryptSecretWithSecondPassword(address.priv, secondPassword, this.sharedKey, this.pbkdf2_iterations)
+        : address.priv;
   }
   return pk;
 };
@@ -32889,136 +32834,137 @@ Wallet.prototype._getPrivateKey = function (accountIndex, path, secondPassword) 
   assert(this.hdwallet.isValidAccountIndex(accountIndex), 'Error: account non-existent');
   assert(Helpers.isString(path), 'Error: path must be an string of the form \'M/0/27\'');
   var maybeXpriv = this.hdwallet.accounts[accountIndex].extendedPrivateKey;
-  var xpriv = this.isDoubleEncrypted ?
-    WalletCrypto.decryptSecretWithSecondPassword(
-      maybeXpriv , secondPassword, this.sharedKey, this.pbkdf2_iterations) : maybeXpriv;
+  var xpriv = this.isDoubleEncrypted
+      ? WalletCrypto.decryptSecretWithSecondPassword(maybeXpriv, secondPassword, this.sharedKey, this.pbkdf2_iterations)
+      : maybeXpriv;
   var kr = new KeyRing(xpriv, null);
   return kr.privateKeyFromPath(path).keyPair.toWIF();
 };
 
-},{"./address":177,"./api":178,"./bitcoin-block":179,"./blockchain-settings-api":180,"./hd-wallet":184,"./helpers":185,"./keyring":188,"./shared":191,"./transaction-list":192,"./wallet":200,"./wallet-crypto":194,"./wallet-store":197,"assert":16,"bip39":22,"bitcoinjs-lib":33}],183:[function(require,module,exports){
+},{"./address":176,"./api":177,"./bitcoin-block":178,"./blockchain-settings-api":179,"./hd-wallet":183,"./helpers":184,"./keyring":187,"./rng":189,"./shared":190,"./transaction-list":191,"./wallet":199,"./wallet-crypto":193,"./wallet-store":196,"assert":16,"bip39":22}],182:[function(require,module,exports){
 'use strict';
 
 module.exports = HDAccount;
-////////////////////////////////////////////////////////////////////////////////
+
 var Bitcoin = require('bitcoinjs-lib');
-var assert  = require('assert');
+var assert = require('assert');
 var Helpers = require('./helpers');
-var KeyRing  = require('./keyring');
+var KeyRing = require('./keyring');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
-////////////////////////////////////////////////////////////////////////////////
+
 // HDAccount Class
 
-function HDAccount (object){
-
+function HDAccount (object) {
   var self = this;
   var obj = object || {};
   obj.cache = obj.cache || {};
   obj.address_labels = obj.address_labels || [];
   // serializable data
-  this._label    = obj.label;
+  this._label = obj.label;
   this._archived = obj.archived || false;
-  this._xpriv    = obj.xpriv;
-  this._xpub     = obj.xpub;
-  this._network  = obj.network || Bitcoin.networks.bitcoin;
+  this._xpriv = obj.xpriv;
+  this._xpub = obj.xpub;
+  this._network = obj.network || Bitcoin.networks.bitcoin;
 
   this._address_labels = [];
-  obj.address_labels.map(function (e){self._address_labels[e.index] = e.label;});
+  obj.address_labels.map(function (e) { self._address_labels[e.index] = e.label; });
 
   // computed properties
-  this._keyRing       = new KeyRing(obj.xpub, obj.cache);
-  this._receiveIndex  = 0;
+  this._keyRing = new KeyRing(obj.xpub, obj.cache);
+  this._receiveIndex = 0;
   // The highest receive index with transactions, as returned by the server:
   this._lastUsedReceiveIndex = 0;
-  this._changeIndex   = 0;
-  this._n_tx          = 0;
-  this._balance       = null;
-  this._index         = Helpers.isPositiveInteger(obj.index) ? obj.index : null;
+  this._changeIndex = 0;
+  this._n_tx = 0;
+  this._balance = null;
+  this._index = Helpers.isPositiveInteger(obj.index) ? obj.index : null;
 }
 
-////////////////////////////////////////////////////////////////////////////////
 // PUBLIC PROPERTIES
 
 Object.defineProperties(HDAccount.prototype, {
 
   'label': {
     configurable: false,
-    get: function () { return this._label;},
+    get: function () { return this._label; },
     set: function (str) {
-      if(Helpers.isValidLabel(str)){
+      if (Helpers.isValidLabel(str)) {
         this._label = str;
         MyWallet.syncWallet();
-      }else{
+      } else {
         throw 'Error: account.label must be an alphanumeric string';
       }
     }
   },
   'balance': {
     configurable: false,
-    get: function () { return this._balance;},
+    get: function () { return this._balance; },
     set: function (num) {
-      if(Helpers.isPositiveNumber(num))
+      if (Helpers.isPositiveNumber(num)) {
         this._balance = num;
-      else
+      } else {
         throw 'Error: account.balance must be a positive number';
+      }
     }
   },
   'n_tx': {
-    get: function () { return this._n_tx;},
+    get: function () { return this._n_tx; },
     set: function (num) {
-      if(Helpers.isPositiveInteger(num))
+      if (Helpers.isPositiveInteger(num)) {
         this._n_tx = num;
-      else
+      } else {
         throw 'Error: account.n_tx must be a positive integer';
+      }
     }
   },
   'archived': {
     configurable: false,
-    get: function () { return this._archived;},
+    get: function () { return this._archived; },
     set: function (value) {
-      if(Helpers.isBoolean(value)){
+      if (Helpers.isBoolean(value)) {
         this._archived = value;
         MyWallet.syncWallet();
-        if(!value) { // Unarchive
+        if (!value) { // Unarchive
           // we should define a way to update only the account, not the whole wallet
           MyWallet.wallet.getHistory();
         }
-      }
-      else{
+      } else {
         throw 'Error: account.archived must be a boolean';
       }
     }
   },
   'active': {
     configurable: false,
-    get: function () { return !this.archived;},
+    get: function () { return !this.archived; },
     set: function (value) { this.archived = !value; }
   },
   'receiveIndex': {
     configurable: false,
-    get: function () { return this._receiveIndex;},
+    get: function () { return this._receiveIndex; },
     set: function (value) {
-      if(Helpers.isPositiveInteger(value))
+      if (Helpers.isPositiveInteger(value)) {
         this._receiveIndex = value;
-      else
+      } else {
         throw 'Error: account.receiveIndex must be a number';
+      }
     }
   },
   'lastUsedReceiveIndex': {
     configurable: false,
-    get: function () { return this._lastUsedReceiveIndex;},
+    get: function () { return this._lastUsedReceiveIndex; },
     set: function (value) {
-      if(Helpers.isPositiveInteger(value))
+      if (Helpers.isPositiveInteger(value)) {
         this._lastUsedReceiveIndex = value;
-      else
+      } else {
         throw 'Error: account.lastUsedReceiveIndex must be a number';
+      }
     }
   },
-  'maxLabeledReceiveIndex' : {
+  'maxLabeledReceiveIndex': {
     configurable: false,
     get: function () {
       var keys = Object.keys(this._address_labels).map(function (k) {
-        return parseInt(k);
+        return parseInt(k, 10);
       });
       if (keys.length == 0) {
         return -1;
@@ -33029,12 +32975,13 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'changeIndex': {
     configurable: false,
-    get: function () { return this._changeIndex;},
+    get: function () { return this._changeIndex; },
     set: function (value) {
-      if(Helpers.isPositiveInteger(value))
+      if (Helpers.isPositiveInteger(value)) {
         this._changeIndex = value;
-      else
+      } else {
         throw 'Error: account.changeIndex must be a number';
+      }
     }
   },
   'receivingAddressesLabels': {
@@ -33042,7 +32989,7 @@ Object.defineProperties(HDAccount.prototype, {
     get: function () {
       var denseArray = [];
       this._address_labels
-        .map(function (lab,ind){denseArray.push({'index': ind, 'label': lab})});
+        .map(function (lab, ind) { denseArray.push({'index': ind, 'label': lab}); });
       return denseArray;
     }
   },
@@ -33052,45 +32999,44 @@ Object.defineProperties(HDAccount.prototype, {
       var denseArray = [];
       var outerThis = this;
       this._address_labels
-        .map(function (lab,i){denseArray.push(outerThis.receiveAddressAtIndex(i))});
+        .map(function (lab, i) { denseArray.push(outerThis.receiveAddressAtIndex(i)); });
       return denseArray;
     }
   },
   'extendedPublicKey': {
-     configurable: false,
-     get: function () { return this._xpub;}
-   },
+    configurable: false,
+    get: function () { return this._xpub; }
+  },
   'extendedPrivateKey': {
     configurable: false,
-    get: function () { return this._xpriv;}
+    get: function () { return this._xpriv; }
   },
   'keyRing': {
     configurable: false,
-    get: function () { return this._keyRing;}
+    get: function () { return this._keyRing; }
   },
   'receiveAddress': {
     configurable: false,
-    get: function () { return this._keyRing.receive.getAddress(this._receiveIndex);}
+    get: function () { return this._keyRing.receive.getAddress(this._receiveIndex); }
   },
   'changeAddress': {
     configurable: false,
-    get: function () { return this._keyRing.change.getAddress(this._changeIndex);}
+    get: function () { return this._keyRing.change.getAddress(this._changeIndex); }
   },
   'isEncrypted': {
     configurable: false,
-    get: function () { return Helpers.isBase64(this._xpriv) && !Helpers.isXprivKey(this._xpriv);}
+    get: function () { return Helpers.isBase64(this._xpriv) && !Helpers.isXprivKey(this._xpriv); }
   },
   'isUnEncrypted': {
     configurable: false,
-    get: function () { return Helpers.isXprivKey(this._xpriv);}
+    get: function () { return Helpers.isXprivKey(this._xpriv); }
   },
   'index': {
     configurable: false,
-    get: function () { return this._index;}
+    get: function () { return this._index; }
   }
 });
 
-////////////////////////////////////////////////////////////////////////////////
 // CONSTRUCTORS
 
 /* BIP 44 defines the following 5 levels in BIP32 path:
@@ -33100,91 +33046,84 @@ Object.defineProperties(HDAccount.prototype, {
  * Purpose is a constant set to 44' following the BIP43 recommendation
  * Registered coin types: 0' for Bitcoin
  */
-HDAccount.fromAccountMasterKey = function (accountZero, index, label){
-
+HDAccount.fromAccountMasterKey = function (accountZero, index, label) {
   assert(accountZero, 'Account MasterKey must be given to create an account.');
-  var account    = new HDAccount();
+  var account = new HDAccount();
   account._index = Helpers.isPositiveInteger(index) ? index : null;
-  account._label  = label;
+  account._label = label;
   account._xpriv = accountZero.toBase58();
-  account._xpub  = accountZero.neutered().toBase58();
+  account._xpub = accountZero.neutered().toBase58();
   account._keyRing.init(account._xpub, null);
   return account;
 };
 
 HDAccount.fromWalletMasterKey = function (masterkey, index, label) {
-
   assert(masterkey, 'Wallet MasterKey must be given to create an account.');
   assert(Helpers.isPositiveInteger(index), 'Derivation index must be a positive integer.');
   var accountZero = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(index);
   return HDAccount.fromAccountMasterKey(accountZero, index, label);
 };
 
-HDAccount.fromExtPublicKey = function (extPublicKey, index, label){
+HDAccount.fromExtPublicKey = function (extPublicKey, index, label) {
   // this is creating a read-only account
-  assert(Helpers.isXpubKey(extPublicKey)
-      , 'Extended public key must be given to create an account.');
+  assert(Helpers.isXpubKey(extPublicKey), 'Extended public key must be given to create an account.');
   var accountZero = Bitcoin.HDNode.fromBase58(extPublicKey);
   var a = HDAccount.fromAccountMasterKey(accountZero, index, label);
   a._xpriv = null;
   return a;
 };
 
-HDAccount.fromExtPrivateKey = function (extPrivateKey, index, label){
-
-  assert(Helpers.isXprivKey(extPrivateKey)
-      , 'Extended private key must be given to create an account.');
+HDAccount.fromExtPrivateKey = function (extPrivateKey, index, label) {
+  assert(Helpers.isXprivKey(extPrivateKey), 'Extended private key must be given to create an account.');
   var accountZero = Bitcoin.HDNode.fromBase58(extPrivateKey);
   return HDAccount.fromAccountMasterKey(accountZero, index, label);
 };
 
-HDAccount.factory = function (o){
+HDAccount.factory = function (o) {
   if (o instanceof Object && !(o instanceof HDAccount)) {
     return new HDAccount(o);
+  } else {
+    return o;
   }
-  else { return o; }
 };
-////////////////////////////////////////////////////////////////////////////////
+
 // JSON SERIALIZER
 
-HDAccount.prototype.toJSON = function (){
-
+HDAccount.prototype.toJSON = function () {
   // should we add checks on the serializer too?
   var hdaccount = {
-    label         : this._label,
-    archived      : this._archived,
-    xpriv         : this._xpriv,
-    xpub          : this._xpub,
+    label: this._label,
+    archived: this._archived,
+    xpriv: this._xpriv,
+    xpub: this._xpub,
     address_labels: this.receivingAddressesLabels,
-    cache         : this._keyRing
+    cache: this._keyRing
   };
 
   return hdaccount;
 };
 
-HDAccount.reviver = function (k,v){
+HDAccount.reviver = function (k, v) {
   if (k === '') return new HDAccount(v);
   return v;
 };
-
-////////////////////////////////////////////////////////////////////////////////
 
 HDAccount.prototype.incrementReceiveIndex = function () {
   this._receiveIndex++;
   return this;
 };
 HDAccount.prototype.incrementReceiveIndexIfLast = function (index) {
-  if (this._receiveIndex === index){
+  if (this._receiveIndex === index) {
     this.incrementReceiveIndex();
   }
   return this;
 };
-////////////////////////////////////////////////////////////////////////////////
+
 // address labels
 HDAccount.prototype.setLabelForReceivingAddress = function (index, label) {
   assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
 
-  if(!Helpers.isValidLabel(label)) {
+  if (!Helpers.isValidLabel(label)) {
     return Promise.reject('NOT_ALPHANUMERIC');
     // Error: address label must be alphanumeric
   } else if (index - this.lastUsedReceiveIndex >= 19) {
@@ -33215,121 +33154,118 @@ HDAccount.prototype.receiveAddressAtIndex = function (index) {
   return this._keyRing.receive.getAddress(index);
 };
 
-HDAccount.prototype.encrypt = function (cipher){
-  if(!this._xpriv) return this;
-  var xpriv = cipher? cipher(this._xpriv) : this._xpriv;
+HDAccount.prototype.encrypt = function (cipher) {
+  if (!this._xpriv) return this;
+  var xpriv = cipher ? cipher(this._xpriv) : this._xpriv;
   if (!xpriv) { throw 'Error Encoding account extended private key'; }
   this._temporal_xpriv = xpriv;
   return this;
 };
 
-HDAccount.prototype.decrypt = function (cipher){
-  if(!this._xpriv) return this;
-  var xpriv = cipher? cipher(this._xpriv) : this._xpriv;
+HDAccount.prototype.decrypt = function (cipher) {
+  if (!this._xpriv) return this;
+  var xpriv = cipher ? cipher(this._xpriv) : this._xpriv;
   if (!xpriv) { throw 'Error Decoding account extended private key'; }
   this._temporal_xpriv = xpriv;
   return this;
 };
 
-HDAccount.prototype.persist = function (){
+HDAccount.prototype.persist = function () {
   if (!this._temporal_xpriv) return this;
   this._xpriv = this._temporal_xpriv;
   delete this._temporal_xpriv;
   return this;
 };
 
-},{"./helpers":185,"./keyring":188,"./wallet":200,"assert":16,"bitcoinjs-lib":33}],184:[function(require,module,exports){
+},{"./helpers":184,"./keyring":187,"./wallet":199,"assert":16,"bitcoinjs-lib":33}],183:[function(require,module,exports){
 'use strict';
 
 module.exports = HDWallet;
-////////////////////////////////////////////////////////////////////////////////
+
 var Bitcoin = require('bitcoinjs-lib');
-var assert  = require('assert');
+var assert = require('assert');
 var Helpers = require('./helpers');
 var HDAccount = require('./hd-account');
 var BIP39 = require('bip39');
-var RNG = require('./rng');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
-////////////////////////////////////////////////////////////////////////////////
-// Address class
-function HDWallet (object){
 
-  function addAccount (o, index){
+// Address class
+function HDWallet (object) {
+  function addAccount (o, index) {
     o.index = index;
     return HDAccount.factory(o);
   }
 
   // private members
-  var obj      = object || {};
+  var obj = object || {};
   obj.accounts = obj.accounts || [];
-  obj.paidTo   = obj.paidTo || {};
+  obj.paidTo = obj.paidTo || {};
 
-  this._seedHex             = obj.seed_hex;
-  this._bip39Password       = obj.passphrase;
-  this._mnemonic_verified   = obj.mnemonic_verified;
+  this._seedHex = obj.seed_hex;
+  this._bip39Password = obj.passphrase;
+  this._mnemonic_verified = obj.mnemonic_verified;
   this._default_account_idx = obj.default_account_idx;
   this._accounts = obj.accounts.map(addAccount);
-  this._paidTo              = obj.paidTo;
+  this._paidTo = obj.paidTo;
 }
 
 Object.defineProperties(HDWallet.prototype, {
   'seedHex': {
     configurable: false,
-    get: function () { return this._seedHex;}
+    get: function () { return this._seedHex; }
   },
   'bip39Password': {
     configurable: false,
-    get: function () { return this._bip39Password;}
+    get: function () { return this._bip39Password; }
   },
   'isMnemonicVerified': {
     configurable: false,
-    get: function () { return this._mnemonic_verified;}
+    get: function () { return this._mnemonic_verified; }
   },
   'defaultAccountIndex': {
     configurable: false,
-    get: function () { return this._default_account_idx;},
+    get: function () { return this._default_account_idx; },
     set: function (value) {
-      if(this.isValidAccountIndex(value)){
+      if (this.isValidAccountIndex(value)) {
         this._default_account_idx = value;
         MyWallet.syncWallet();
-      }
-      else{
+      } else {
         throw 'Error: unvalid default index account';
       }
     }
   },
   'defaultAccount': {
     configurable: false,
-    get: function () {return this._accounts[this._default_account_idx];}
+    get: function () { return this._accounts[this._default_account_idx]; }
   },
   'accounts': {
     configurable: false,
     get: function () {
-      return this._accounts.map(function (a){return a});
+      return this._accounts.map(function (a) { return a; });
     }
   },
   'activeAccounts': {
     configurable: false,
     get: function () {
-      return this._accounts.filter(function (a){return !a.archived});
+      return this._accounts.filter(function (a) { return !a.archived; });
     }
   },
-  'xpubs':{
+  'xpubs': {
     configurable: false,
     get: function () {
-      return this._accounts.map(function (a){return (a.extendedPublicKey)});
+      return this._accounts.map(function (a) { return (a.extendedPublicKey); });
     }
   },
-  'activeXpubs':{
+  'activeXpubs': {
     configurable: false,
     get: function () {
-      return this.activeAccounts.map(function (a){return (a.extendedPublicKey)});
+      return this.activeAccounts.map(function (a) { return (a.extendedPublicKey); });
     }
   },
-  'balanceActiveAccounts':{
+  'balanceActiveAccounts': {
     configurable: false,
     get: function () {
-      var balances = this.activeAccounts.map(function (k){return k.balance;});
+      var balances = this.activeAccounts.map(function (k) { return k.balance; });
       if (balances.some(Helpers.isNotNumber)) return null;
       return balances.reduce(Helpers.add, 0);
     }
@@ -33338,7 +33274,7 @@ Object.defineProperties(HDWallet.prototype, {
     configurable: false,
     get: function () {
       var isSeedEnc = Helpers.isBase64(this._seedHex) && !Helpers.isSeedHex(this._seedHex);
-      return isSeedEnc && this._accounts.map(function (a){return a.isEncrypted;})
+      return isSeedEnc && this._accounts.map(function (a) { return a.isEncrypted; })
                                           .reduce(Helpers.and, true);
     }
   },
@@ -33346,20 +33282,20 @@ Object.defineProperties(HDWallet.prototype, {
     configurable: false,
     get: function () {
       var isSeedUnEnc = Helpers.isSeedHex(this._seedHex);
-      return isSeedUnEnc && this._accounts.map(function (a){return a.isUnEncrypted;})
+      return isSeedUnEnc && this._accounts.map(function (a) { return a.isUnEncrypted; })
                              .reduce(Helpers.and, true);
     }
   },
-  'lastAccount':{
+  'lastAccount': {
     configurable: false,
     get: function () {
-      return this._accounts[this._accounts.length-1];
+      return this._accounts[this._accounts.length - 1];
     }
   }
 });
-////////////////////////////////////////////////////////////////////////////////
+
 // non exposed functions
-function decryptMnemonic (seedHex, cipher){
+function decryptMnemonic (seedHex, cipher) {
   if (cipher) {
     return BIP39.entropyToMnemonic(cipher(seedHex));
   } else {
@@ -33371,8 +33307,8 @@ function decryptMnemonic (seedHex, cipher){
   }
 }
 
-function decryptPassphrase (bip39Password, cipher){
-  if (bip39Password === '') {return bip39Password}
+function decryptPassphrase (bip39Password, cipher) {
+  if (bip39Password === '') { return bip39Password; }
   if (cipher) {
     return cipher(bip39Password);
   } else {
@@ -33380,12 +33316,12 @@ function decryptPassphrase (bip39Password, cipher){
   }
 }
 
-function getMasterHex (seedHex, bip39Password, cipher){
-  var mnemonic   = decryptMnemonic(seedHex, cipher);
+function getMasterHex (seedHex, bip39Password, cipher) {
+  var mnemonic = decryptMnemonic(seedHex, cipher);
   var passphrase = decryptPassphrase(bip39Password, cipher);
   return BIP39.mnemonicToSeed(mnemonic, passphrase);
 }
-////////////////////////////////////////////////////////////////////////////////
+
 // Constructors
 
 // we need 3 actions
@@ -33393,104 +33329,100 @@ function getMasterHex (seedHex, bip39Password, cipher){
 // load hdwallet
 // restore hdwallet
 
-HDWallet.new = function (cipher){
-  var mnemonic = BIP39.generateMnemonic(undefined, RNG.run.bind(RNG));
-  var seedHex  = BIP39.mnemonicToEntropy(mnemonic);
+HDWallet.new = function (mnemonic, bip39Password, cipher) {
+  assert(mnemonic, "BIP 39 mnemonic required")
+  var seedHex = BIP39.mnemonicToEntropy(mnemonic);
   return HDWallet.restore(seedHex, '', cipher);
 };
 
-HDWallet.restore = function (seedHex, bip39Password, cipher){
-
+HDWallet.restore = function (seedHex, bip39Password, cipher) {
   assert(Helpers.isSeedHex(seedHex), 'hdwallet.seedHex must exist and be a seed hex');
   if (!Helpers.isString(bip39Password)) bip39Password = '';
   var hdwallet = {
-    seed_hex            : seedHex,
-    passphrase          : bip39Password,
-    mnemonic_verified   : false,
-    default_account_idx : 0,
-    accounts            : []
+    seed_hex: seedHex,
+    passphrase: bip39Password,
+    mnemonic_verified: false,
+    default_account_idx: 0,
+    accounts: []
   };
-  var newHDwallet = new HDWallet(hdwallet);
+  var hd = new HDWallet(hdwallet);
   if (cipher) {
-    newHDwallet.encrypt(cipher).persist();
+    hd.encrypt(cipher).persist();
   }
-  return newHDwallet;
+  return hd;
 };
 
-HDWallet.factory = function (o){
+HDWallet.factory = function (o) {
   if (o instanceof Object && !(o instanceof HDWallet)) {
     return new HDWallet(o);
+  } else {
+    return o;
   }
-  else { return o; }
 };
 
-HDWallet.prototype.newAccount = function (label, cipher){
-
-  var accIndex   = this._accounts.length;
-  var dec = undefined;
-  var enc = undefined;
+HDWallet.prototype.newAccount = function (label, cipher) {
+  var accIndex = this._accounts.length;
+  var dec;
+  var enc;
 
   if (cipher) {
-    dec    = cipher('dec');
-    enc    = cipher('enc');
+    dec = cipher('dec');
+    enc = cipher('enc');
   }
 
   var masterhex = getMasterHex(this._seedHex, this._bip39Password, dec);
-  var network   = Bitcoin.networks.bitcoin;
+  var network = Bitcoin.networks.bitcoin;
   var masterkey = Bitcoin.HDNode.fromSeedBuffer(masterhex, network);
-  var account   = HDAccount.fromWalletMasterKey(masterkey, accIndex, label);
+  var account = HDAccount.fromWalletMasterKey(masterkey, accIndex, label);
   account.encrypt(enc).persist();
   this._accounts.push(account);
   return this;
 };
-////////////////////////////////////////////////////////////////////////////////
+
 // JSON serializer
 
-HDWallet.prototype.toJSON = function (){
-
+HDWallet.prototype.toJSON = function () {
   var hdwallet = {
-    seed_hex            : this._seedHex,
-    passphrase          : this._bip39Password,
-    mnemonic_verified   : this._mnemonic_verified,
-    default_account_idx : this._default_account_idx,
+    seed_hex: this._seedHex,
+    passphrase: this._bip39Password,
+    mnemonic_verified: this._mnemonic_verified,
+    default_account_idx: this._default_account_idx,
     // paidTo              : this._paidTo,
-    accounts            : this._accounts
+    accounts: this._accounts
   };
   return hdwallet;
 };
 
-HDWallet.reviver = function (k,v){
+HDWallet.reviver = function (k, v) {
   if (k === '') return new HDWallet(v);
   return v;
-}
+};
 
-////////////////////////////////////////////////////////////////////////////////
 // methods
 
-HDWallet.prototype.verifyMnemonic = function (){
+HDWallet.prototype.verifyMnemonic = function () {
   this._mnemonic_verified = true;
   MyWallet.syncWallet();
   return this;
 };
 
-HDWallet.prototype.account = function (xpub){
+HDWallet.prototype.account = function (xpub) {
   var f = this._accounts
-            .filter(function (a){return a.extendedPublicKey === xpub});
+            .filter(function (a) { return a.extendedPublicKey === xpub; });
   var r = f.length === 0 ? null : f[0];
   return r;
 };
 
-HDWallet.prototype.activeAccount = function (xpub){
+HDWallet.prototype.activeAccount = function (xpub) {
   var a = this.account(xpub);
   var r = !a || a.archived ? null : a;
   return r;
 };
 
-////////////////////////////////////////////////////////////////////////////////
 // account managment
 
-HDWallet.prototype.encrypt = function (cipher){
-  function f (acc) {acc.encrypt(cipher);}
+HDWallet.prototype.encrypt = function (cipher) {
+  function f (acc) { acc.encrypt(cipher); }
   this._accounts.forEach(f);
   this._temporal_seedHex = cipher(this._seedHex);
   this._temporal_bip39Password = this._bip39Password === ''
@@ -33499,8 +33431,8 @@ HDWallet.prototype.encrypt = function (cipher){
   return this;
 };
 
-HDWallet.prototype.decrypt = function (cipher){
-  function f (acc) {acc.decrypt(cipher);}
+HDWallet.prototype.decrypt = function (cipher) {
+  function f (acc) { acc.decrypt(cipher); }
   this._accounts.forEach(f);
   this._temporal_seedHex = cipher(this._seedHex);
   this._temporal_bip39Password = this._bip39Password === ''
@@ -33509,24 +33441,25 @@ HDWallet.prototype.decrypt = function (cipher){
   return this;
 };
 
-HDWallet.prototype.persist = function (){
-  if (this._temporal_seedHex === undefined || this._temporal_bip39Password === undefined)
-    {return this;}
+HDWallet.prototype.persist = function () {
+  if (this._temporal_seedHex === undefined || this._temporal_bip39Password === undefined) {
+    return this;
+  }
   this._seedHex = this._temporal_seedHex;
   this._bip39Password = this._temporal_bip39Password;
   delete this._temporal_seedHex;
   delete this._temporal_bip39Password;
-  function f (acc) {acc.persist();}
+  function f (acc) { acc.persist(); }
   this._accounts.forEach(f);
   return this;
 };
 
 // checkers
-HDWallet.prototype.isValidAccountIndex = function (index){
+HDWallet.prototype.isValidAccountIndex = function (index) {
   return Helpers.isPositiveInteger(index) && index < this._accounts.length;
 };
 
-},{"./hd-account":183,"./helpers":185,"./rng":190,"./wallet":200,"assert":16,"bip39":22,"bitcoinjs-lib":33}],185:[function(require,module,exports){
+},{"./hd-account":182,"./helpers":184,"./wallet":199,"assert":16,"bip39":22,"bitcoinjs-lib":33}],184:[function(require,module,exports){
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -33538,12 +33471,12 @@ var shared = require('./shared');
 var ImportExport = require('./import-export');
 
 var Helpers = {};
-Math.log2 = function (x) { return Math.log(x) / Math.LN2;};
+Math.log2 = function (x) { return Math.log(x) / Math.LN2; };
 
-Helpers.isString = function (str){
+Helpers.isString = function (str) {
   return typeof str == 'string' || str instanceof String;
 };
-Helpers.isKey = function (bitcoinKey){
+Helpers.isKey = function (bitcoinKey) {
   return Helpers.isInstanceOf(bitcoinKey, Bitcoin.ECPair);
 };
 Helpers.isInstanceOf = function (object, theClass) {
@@ -33553,16 +33486,14 @@ Helpers.isBitcoinAddress = function (candidate) {
   try {
     var d = Bitcoin.address.fromBase58Check(candidate);
     var n = Bitcoin.networks.bitcoin;
-    return d.version === n.pubKeyHash || d.version === n.scriptHash
-  }
-  catch (e) { return false; };
+    return d.version === n.pubKeyHash || d.version === n.scriptHash;
+  } catch (e) { return false; }
 };
 Helpers.isBitcoinPrivateKey = function (candidate) {
   try {
     Bitcoin.ECPair.fromWIF(candidate);
     return true;
-  }
-  catch (e) { return false; };
+  } catch (e) { return false; }
 };
 Helpers.isBase58Key = function (str) {
   return Helpers.isString(str) && /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{40,44}$/.test(str);
@@ -33573,19 +33504,19 @@ Helpers.isXprivKey = function (k) {
 Helpers.isXpubKey = function (k) {
   return Helpers.isString(k) && k.substring(0, 4) === 'xpub';
 };
-Helpers.isAlphaNum = function (str){
+Helpers.isAlphaNum = function (str) {
   return Helpers.isString(str) && /^[\-+,._\w\d\s]+$/.test(str);
 };
-Helpers.isHex = function (str){
+Helpers.isHex = function (str) {
   return Helpers.isString(str) && /^[A-Fa-f0-9]+$/.test(str);
 };
-Helpers.isSeedHex = function (str){
+Helpers.isSeedHex = function (str) {
   return Helpers.isString(str) && /^[A-Fa-f0-9]{32}$/.test(str);
 };
-Helpers.isBase64 = function (str){
+Helpers.isBase64 = function (str) {
   return Helpers.isString(str) && /^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789=+\/]+$/.test(str);
 };
-Helpers.isNumber = function (num){
+Helpers.isNumber = function (num) {
   return typeof num == 'number' && !isNaN(num);
 };
 Helpers.isPositiveNumber = function (num) {
@@ -33594,45 +33525,37 @@ Helpers.isPositiveNumber = function (num) {
 Helpers.isPositiveInteger = function (num) {
   return Helpers.isPositiveNumber(num) && num % 1 == 0;
 };
-Helpers.isNotNumber = function (num){
-  return !Helpers.isNumber(num)
+Helpers.isNotNumber = function (num) {
+  return !Helpers.isNumber(num);
 };
-Helpers.isBoolean = function (value){
-  return typeof(value) === 'boolean';
+Helpers.isBoolean = function (value) {
+  return typeof (value) === 'boolean';
 };
-Helpers.isValidLabel = function (text){
+Helpers.isValidLabel = function (text) {
   return Helpers.isString(text);
 };
-Helpers.isInRange = function (val, min, max){
+Helpers.isInRange = function (val, min, max) {
   return min <= val && val < max;
 };
-Helpers.add = function (x,y){
+Helpers.add = function (x, y) {
   return x + y;
 };
-Helpers.and = function (x,y){
+Helpers.and = function (x, y) {
   return x && y;
 };
-Helpers.or = function (x,y){
-  return x || y;
-};
-Helpers.i = function (pred1,pred2){
-  return function (element) {
-    return pred1(element) && pred2(element);
-  };
-};
-Helpers.o = function (pred1,pred2){
+Helpers.o = function (pred1, pred2) {
   return function (element) {
     return pred1(element) || pred2(element);
   };
 };
-Helpers.isValidSharedKey = function (sharedKey){
+Helpers.isValidSharedKey = function (sharedKey) {
   return Helpers.isString(sharedKey) && sharedKey.length === 36;
 };
-Helpers.isValidGUID = function (guid){
+Helpers.isValidGUID = function (guid) {
   return Helpers.isString(guid);
 };
 // Return a memoized version of function f
-Helpers.memoize = function (f){
+Helpers.memoize = function (f) {
   var cache = {};
   return function () {
     var key = arguments.length + Array.prototype.join.call(arguments, ',');
@@ -33650,31 +33573,30 @@ Helpers.isEmptyArray = function (x) {
 };
 // Return an async version of f that it will run after miliseconds
 // no matter how many times you call the new function, it will run only once
-Helpers.asyncOnce = function (f, milliseconds, before){
+Helpers.asyncOnce = function (f, milliseconds, before) {
   var timer = null;
-  var oldArguments = new Array();
+  var oldArguments = [];
   return function () {
-    before && before()
+    before && before();
     if (timer) {
       clearTimeout(timer);
       timer = null;
-    };
-    var myArgs = new Array();
+    }
+    var myArgs = [];
     // this is needed because arguments is not an 'Array' instance
-    for (var i = 0; i < arguments.length; i++) { myArgs[i] = arguments[i];};
-    var myArgs = Helpers.zipLong(Helpers.maybeCompose, myArgs, oldArguments);
+    for (var i = 0; i < arguments.length; i++) { myArgs[i] = arguments[i]; }
+    myArgs = Helpers.zipLong(Helpers.maybeCompose, myArgs, oldArguments);
     oldArguments = myArgs;
-    timer = setTimeout(function (){
-                         f.apply(this, myArgs);
-                         oldArguments = new Array();
-                       }, milliseconds);
+    timer = setTimeout(function () {
+      f.apply(this, myArgs);
+      oldArguments = [];
+    }, milliseconds);
   };
 };
 
 // merges the properties of two objects
 Helpers.merge = function (o, p) {
-  var prop = undefined;
-  for(prop in p) {
+  for (var prop in p) {
     if (!o.hasOwnProperty(prop)) {
       o[prop] = p[prop];
     }
@@ -33683,107 +33605,102 @@ Helpers.merge = function (o, p) {
 };
 
 Helpers.zipLong = function (f, xs, ys) {
-
-  if (!(f instanceof Function && xs instanceof Array && ys instanceof Array)){
+  if (!(f instanceof Function && xs instanceof Array && ys instanceof Array)) {
     return null;
-  } else{
+  } else {
     var zs = xs.length > ys.length ? xs : ys;
-    return zs.map(function (v,i){return f(xs[i],ys[i]);});
-  };
+    return zs.map(function (v, i) { return f(xs[i], ys[i]); });
+  }
 };
 
 Helpers.zip3 = function (xs, ys, zs) {
-
-  if (!(xs instanceof Array && ys instanceof Array && zs instanceof Array)){
+  if (!(xs instanceof Array && ys instanceof Array && zs instanceof Array)) {
     return null;
-  } else{
-    return xs.map(function (v,i){return [xs[i],ys[i],zs[i]];});
-  };
+  } else {
+    return xs.map(function (v, i) { return [xs[i], ys[i], zs[i]]; });
+  }
 };
 
 Helpers.maybeCompose = function (f, g) {
-  if (f instanceof Function && g instanceof Function){
+  if (f instanceof Function && g instanceof Function) {
     return f.compose(g);
-  } else{
-    if (f instanceof Function) {return f};
-    if (g instanceof Function) {return g};
-    //otherwise
+  } else {
+    if (f instanceof Function) { return f; }
+    if (g instanceof Function) { return g; }
+    // otherwise
     return f;
-  };
+  }
 };
 
 Function.prototype.compose = function (g) {
-     var fn = this;
-     return function () {
-         return fn.call(this, g.apply(this, arguments));
-   };
+  var fn = this;
+  return function () {
+    return fn.call(this, g.apply(this, arguments));
+  };
 };
 
 Helpers.guessSize = function (nInputs, nOutputs) {
-  return (nInputs*148 + nOutputs*34 + 10);
+  return (nInputs * 148 + nOutputs * 34 + 10);
 };
 
 Helpers.guessFee = function (nInputs, nOutputs, feePerKb) {
-  var sizeBytes  = Helpers.guessSize(nInputs, nOutputs);
+  var sizeBytes = Helpers.guessSize(nInputs, nOutputs);
   return Math.ceil(feePerKb * (sizeBytes / 1000));
 };
 
-////////////////////////////////////////////////////////////////////////////////
 // password scorer
-Helpers.scorePassword = function (password){
-
-  if (!Helpers.isString(password)) {return 0};
+Helpers.scorePassword = function (password) {
+  if (!Helpers.isString(password)) { return 0; }
 
   var patternsList = [
-     [0.25, /^[\d\s]+$/]
-    ,[0.25, /^[a-z\s]+\d$/]
-    ,[0.25, /^[A-Z\s]+\d$/]
-    ,[0.5, /^[a-zA-Z\s]+\d$/]
-    ,[0.5, /^[a-z\s]+\d+$/]
-    ,[0.25, /^[a-z\s]+$/]
-    ,[0.25, /^[A-Z\s]+$/]
-    ,[0.25, /^[A-Z][a-z\s]+$/]
-    ,[0.25, /^[A-Z][a-z\s]+\d$/]
-    ,[0.5, /^[A-Z][a-z\s]+\d+$/]
-    ,[0.25, /^[a-z\s]+[._!\- @*#]$/]
-    ,[0.25, /^[A-Z\s]+[._!\- @*#]$/]
-    ,[0.5, /^[a-zA-Z\s]+[._!\- @*#]$/]
-    ,[0.25, /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]+$/]
-    ,[1, /^.*$/]
+    [0.25, /^[\d\s]+$/],
+    [0.25, /^[a-z\s]+\d$/],
+    [0.25, /^[A-Z\s]+\d$/],
+    [0.5, /^[a-zA-Z\s]+\d$/],
+    [0.5, /^[a-z\s]+\d+$/],
+    [0.25, /^[a-z\s]+$/],
+    [0.25, /^[A-Z\s]+$/],
+    [0.25, /^[A-Z][a-z\s]+$/],
+    [0.25, /^[A-Z][a-z\s]+\d$/],
+    [0.5, /^[A-Z][a-z\s]+\d+$/],
+    [0.25, /^[a-z\s]+[._!\- @*#]$/],
+    [0.25, /^[A-Z\s]+[._!\- @*#]$/],
+    [0.5, /^[a-zA-Z\s]+[._!\- @*#]$/],
+    [0, /^[a-zA-Z0-9_]+@[a-zA-Z0-9]+\.[a-zA-Z]+$/],  // email must always score bad
+    [1, /^.*$/]
   ];
 
-  var hasDigits = function (str) { return /[0-9]/.test(str);};
-  var hasLowerCase = function (str) { return /[a-z]/.test(str);};
-  var hasUpperCase = function (str) { return /[A-Z]/.test(str);};
-  var hasSymbol    = function (str) { return /[^0-9a-zA-z]/.test(str);};
-  var computeSet   = function (str) {
-    var maxChar = Math.max.apply(Math,str.split('').map(function (c){return c.charCodeAt(0);}));
+  var hasDigits = function (str) { return /[0-9]/.test(str); };
+  var hasLowerCase = function (str) { return /[a-z]/.test(str); };
+  var hasUpperCase = function (str) { return /[A-Z]/.test(str); };
+  var hasSymbol = function (str) { return /[^0-9a-zA-z]/.test(str); };
+  var computeSet = function (str) {
+    var maxChar = Math.max.apply(Math, str.split('').map(function (c) { return c.charCodeAt(0); }));
     return maxChar + 256 - maxChar % 256;
   };
 
   var base = function (str) {
-    var tuples = [[10,hasDigits(str)],[26,hasLowerCase(str)],[26,hasUpperCase(str)]];
-    var bases = tuples.filter(function (t){return t[1]}).map(function (t){return t[0]});
+    var tuples = [[10, hasDigits(str)], [26, hasLowerCase(str)], [26, hasUpperCase(str)]];
+    var bases = tuples.filter(function (t) { return t[1]; }).map(function (t) { return t[0]; });
     var setSize = hasSymbol(str) ? computeSet(str) : bases.reduce(Helpers.add, 0);
     var ret = setSize === 0 ? 1 : setSize;
     return ret;
   };
 
   var entropy = function (str) {
-    return Math.log2(Math.pow(base(str),str.length));
+    return Math.log2(Math.pow(base(str), str.length));
   };
 
   var quality = function (str) {
-    var pats = patternsList.filter(function (p){return p[1].test(str);}).map(function (p){return p[0]});
+    var pats = patternsList.filter(function (p) { return p[1].test(str); }).map(function (p) { return p[0]; });
     return Math.min.apply(Math, pats);
   };
 
   var entropyWeighted = function (str) {
-    return quality(str)*entropy(str);
+    return quality(str) * entropy(str);
   };
 
   return entropyWeighted(password);
-
 };
 
 Helpers.getHostName = function () {
@@ -33821,6 +33738,7 @@ function parseMiniKey (miniKey) {
 
 Helpers.privateKeyStringToKey = function (value, format) {
   var key_bytes = null;
+  var tbytes;
 
   if (format == 'base58') {
     key_bytes = Helpers.buffertoByteArray(Base58.decode(value));
@@ -33831,14 +33749,13 @@ Helpers.privateKeyStringToKey = function (value, format) {
   } else if (format == 'mini') {
     key_bytes = Helpers.buffertoByteArray(parseMiniKey(value));
   } else if (format == 'sipa') {
-    var tbytes = Helpers.buffertoByteArray(Base58.decode(value));
-    tbytes.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
+    tbytes = Helpers.buffertoByteArray(Base58.decode(value));
+    tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
     tbytes.shift();
     key_bytes = tbytes.slice(0, tbytes.length - 4);
-
   } else if (format == 'compsipa') {
-    var tbytes = Helpers.buffertoByteArray(Base58.decode(value));
-    tbytes.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
+    tbytes = Helpers.buffertoByteArray(Base58.decode(value));
+    tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
     tbytes.shift();
     tbytes.pop();
     key_bytes = tbytes.slice(0, tbytes.length - 4);
@@ -33851,35 +33768,41 @@ Helpers.privateKeyStringToKey = function (value, format) {
 
 Helpers.detectPrivateKeyFormat = function (key) {
   // 51 characters base58, always starts with a '5'
-  if (/^5[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/.test(key))
+  if (/^5[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/.test(key)) {
     return 'sipa';
+  }
 
-  //52 character compressed starts with L or K
-  if (/^[LK][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/.test(key))
+  // 52 character compressed starts with L or K
+  if (/^[LK][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/.test(key)) {
     return 'compsipa';
+  }
 
   // 40-44 characters base58
-  if (Helpers.isBase58Key(key))
+  if (Helpers.isBase58Key(key)) {
     return 'base58';
+  }
 
-  if (/^[A-Fa-f0-9]{64}$/.test(key))
+  if (/^[A-Fa-f0-9]{64}$/.test(key)) {
     return 'hex';
+  }
 
-  if (/^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789=+\/]{44}$/.test(key))
+  if (/^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789=+\/]{44}$/.test(key)) {
     return 'base64';
+  }
 
-  if (/^6P[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{56}$/.test(key))
+  if (/^6P[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{56}$/.test(key)) {
     return 'bip38';
+  }
 
   if (/^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{21}$/.test(key) ||
       /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{25}$/.test(key) ||
       /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{29}$/.test(key) ||
       /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{30}$/.test(key)) {
-
     var testBytes = Bitcoin.crypto.sha256(key + '?');
 
-    if (testBytes[0] === 0x00 || testBytes[0] === 0x01)
+    if (testBytes[0] === 0x00 || testBytes[0] === 0x01) {
       return 'mini';
+    }
   }
   return null;
 };
@@ -33891,7 +33814,7 @@ Helpers.isValidBIP39Mnemonic = function (mnemonic) {
 Helpers.isValidPrivateKey = function (candidate) {
   try {
     var format = Helpers.detectPrivateKeyFormat(candidate);
-    if(format == 'bip38') { return true }
+    if (format == 'bip38') { return true; }
     var key = Helpers.privateKeyStringToKey(candidate, format);
     return key.getAddress();
   } catch (e) {
@@ -33901,47 +33824,52 @@ Helpers.isValidPrivateKey = function (candidate) {
 
 Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
   var asyncParse = function (resolve, reject) {
-    var format    = Helpers.detectPrivateKeyFormat(priv)
-      , okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
+    var format = Helpers.detectPrivateKeyFormat(priv);
+    var okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
     if (format === 'bip38') {
       if (bipPass == undefined || bipPass === '') {
         return reject('needsBip38');
       }
       ImportExport.parseBIP38toECPair(priv, bipPass,
-        function (key) { resolve(key);},
-        function ()    { reject('wrongBipPass'); },
-        function ()    { reject('importError');}
+        function (key) { resolve(key); },
+        function () { reject('wrongBipPass'); },
+        function () { reject('importError'); }
       );
-    }
-    else if (okFormats.indexOf(format) > -1) {
+    } else if (okFormats.indexOf(format) > -1) {
       var k = Helpers.privateKeyStringToKey(priv, format);
       return resolve(k);
+    } else {
+      reject('unknown key format');
     }
-    else { reject('unknown key format'); }
-  }
-  var predicate = function(key){
+  };
+  var predicate = function (key) {
     var a = key.getAddress();
-    return a === address? Base58.encode(key.d.toBuffer(32)) : null;
-  }
+    return a === address ? Base58.encode(key.d.toBuffer(32)) : null;
+  };
   return new Promise(asyncParse).then(predicate);
 };
 
 function parseValueBitcoin (valueString) {
-  var valueString = valueString.toString();
+  valueString = valueString.toString();
   // TODO: Detect other number formats (e.g. comma as decimal separator)
   var valueComp = valueString.split('.');
   var integralPart = valueComp[0];
   var fractionalPart = valueComp[1] || '0';
   while (fractionalPart.length < 8) fractionalPart += '0';
   fractionalPart = fractionalPart.replace(/^0+/g, '');
-  var value = BigInteger.valueOf(parseInt(integralPart));
+  var value = BigInteger.valueOf(parseInt(integralPart, 10));
   value = value.multiply(BigInteger.valueOf(100000000));
-  value = value.add(BigInteger.valueOf(parseInt(fractionalPart)));
+  value = value.add(BigInteger.valueOf(parseInt(fractionalPart, 10)));
   return value;
 }
 
+// The current 'shift' value - BTC = 1, mBTC = 3, uBTC = 6
+function sShift (symbol) {
+  return (shared.satoshi / symbol.conversion).toString().length - 1;
+}
+
 Helpers.precisionToSatoshiBN = function (x) {
-  return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, shared.sShift(shared.getBTCSymbol())).toString()));
+  return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, sShift(shared.getBTCSymbol())).toString()));
 };
 
 Helpers.verifyMessage = function (address, signature, message) {
@@ -33950,22 +33878,20 @@ Helpers.verifyMessage = function (address, signature, message) {
 
 module.exports = Helpers;
 
-},{"./import-export":186,"./shared":191,"bigi":20,"bip39":22,"bitcoinjs-lib":33,"bs58":68,"buffer":73}],186:[function(require,module,exports){
-(function (Buffer){
+},{"./import-export":185,"./shared":190,"bigi":20,"bip39":22,"bitcoinjs-lib":33,"bs58":68,"buffer":73}],185:[function(require,module,exports){
 'use strict';
 
-var assert = require('assert');
 var Bitcoin = require('bitcoinjs-lib');
 var BigInteger = require('bigi');
 var Base58 = require('bs58');
 var Unorm = require('unorm');
 var WalletCrypto = require('./wallet-crypto');
+var Buffer = require('buffer').Buffer;
 
 var hash256 = Bitcoin.crypto.hash256;
 
 var ImportExport = new function () {
-
-  this.parseBIP38toECPair = function(base58Encrypted, passphrase, success, wrong_password, error) {
+  this.parseBIP38toECPair = function (base58Encrypted, passphrase, success, wrong_password, error) {
     var hex;
 
     // Unicode NFC normalization
@@ -34022,7 +33948,7 @@ var ImportExport = new function () {
     var decrypted;
     var AES_opts = { mode: WalletCrypto.AES.ECB, padding: WalletCrypto.pad.NoPadding };
 
-    var verifyHashAndReturn = function() {
+    var verifyHashAndReturn = function () {
       var tmpkey = new Bitcoin.ECPair(decrypted, null, {compressed: isCompPoint});
 
       var base58Address = tmpkey.getAddress();
@@ -34039,11 +33965,10 @@ var ImportExport = new function () {
     if (!isECMult) {
       var addresshash = Buffer(hex.slice(3, 7));
 
-      ImportExport.Crypto_scrypt(passphrase, addresshash, 16384, 8, 8, 64, function (derivedBytes) {
+      WalletCrypto.scrypt(passphrase, addresshash, 16384, 8, 8, 64, function (derivedBytes) {
+        var k = derivedBytes.slice(32, 32 + 32);
 
-        var k = derivedBytes.slice(32, 32+32);
-
-        var decryptedBytes = WalletCrypto.AES.decrypt(Buffer(hex.slice(7, 7+32)), k, null, AES_opts);
+        var decryptedBytes = WalletCrypto.AES.decrypt(Buffer(hex.slice(7, 7 + 32)), k, null, AES_opts);
         for (var x = 0; x < 32; x++) { decryptedBytes[x] ^= derivedBytes[x]; }
 
         decrypted = BigInteger.fromBuffer(decryptedBytes);
@@ -34051,11 +33976,10 @@ var ImportExport = new function () {
         verifyHashAndReturn();
       });
     } else {
-      var ownerentropy = hex.slice(7, 7+8);
+      var ownerentropy = hex.slice(7, 7 + 8);
       var ownersalt = Buffer(!hasLotSeq ? ownerentropy : ownerentropy.slice(0, 4));
 
-      ImportExport.Crypto_scrypt(passphrase, ownersalt, 16384, 8, 8, 32, function (prefactorA) {
-
+      WalletCrypto.scrypt(passphrase, ownersalt, 16384, 8, 8, 32, function (prefactorA) {
         var passfactor;
 
         if (!hasLotSeq) {
@@ -34069,24 +33993,24 @@ var ImportExport = new function () {
 
         var passpoint = kp.getPublicKeyBuffer();
 
-        var encryptedpart2 = Buffer(hex.slice(23, 23+16));
+        var encryptedpart2 = Buffer(hex.slice(23, 23 + 16));
 
-        var addresshashplusownerentropy = Buffer(hex.slice(3, 3+12));
+        var addresshashplusownerentropy = Buffer(hex.slice(3, 3 + 12));
 
-        ImportExport.Crypto_scrypt(passpoint, addresshashplusownerentropy, 1024, 1, 1, 64, function (derived) {
+        WalletCrypto.scrypt(passpoint, addresshashplusownerentropy, 1024, 1, 1, 64, function (derived) {
           var k = derived.slice(32);
 
           var unencryptedpart2Bytes = WalletCrypto.AES.decrypt(encryptedpart2, k, null, AES_opts);
 
-          for (var i = 0; i < 16; i++) { unencryptedpart2Bytes[i] ^= derived[i+16]; }
+          for (var i = 0; i < 16; i++) { unencryptedpart2Bytes[i] ^= derived[i + 16]; }
 
-          var encryptedpart1 = Buffer.concat([Buffer(hex.slice(15, 15+8)), Buffer(unencryptedpart2Bytes.slice(0, 0+8))]);
+          var encryptedpart1 = Buffer.concat([Buffer(hex.slice(15, 15 + 8)), Buffer(unencryptedpart2Bytes.slice(0, 0 + 8))]);
 
           var unencryptedpart1Bytes = WalletCrypto.AES.decrypt(encryptedpart1, k, null, AES_opts);
 
-          for (var i = 0; i < 16; i++) { unencryptedpart1Bytes[i] ^= derived[i]; }
+          for (var ii = 0; ii < 16; ii++) { unencryptedpart1Bytes[ii] ^= derived[ii]; }
 
-          var seedb = Buffer.concat([Buffer(unencryptedpart1Bytes.slice(0, 0+16)), Buffer(unencryptedpart2Bytes.slice(8, 8+8))]);
+          var seedb = Buffer.concat([Buffer(unencryptedpart1Bytes.slice(0, 0 + 16)), Buffer(unencryptedpart2Bytes.slice(8, 8 + 8))]);
 
           var factorb = hash256(seedb);
 
@@ -34099,254 +34023,20 @@ var ImportExport = new function () {
         });
       });
     }
-  };
-
-
-  var MAX_VALUE = 2147483647;
-  var workerUrl = null;
-
-  this.Crypto_scrypt = function (passwd, salt, N, r, p, dkLen, callback) {
-    if (N == 0 || (N & (N - 1)) != 0) throw Error('N must be > 0 and a power of 2');
-
-    if (N > MAX_VALUE / 128 / r) throw Error('Parameter N is too large');
-    if (r > MAX_VALUE / 128 / p) throw Error('Parameter r is too large');
-
-    if(!Buffer.isBuffer(passwd)) {
-      passwd = new Buffer(passwd, 'utf8');
-    }
-
-    if(!Buffer.isBuffer(salt)) {
-      salt = new Buffer(salt, 'utf8');
-    }
-
-    var B = WalletCrypto.pbkdf2(passwd, salt, 1, (p * 128 * r), WalletCrypto.algo.SHA256);
-
-    // Called in Firefox and IE which don't support Blob web workers with CSP enabled.
-    window.setTimeout(function () {
-      scryptCore();
-      var ret = WalletCrypto.pbkdf2(passwd, B, 1, dkLen, WalletCrypto.algo.SHA256);
-
-      callback(ret);
-    }, 0);
-    // }
-
-    // using this function to enclose everything needed to create a worker (but also invokable directly for synchronous use)
-    function scryptCore () {
-      var XY = [], V = [];
-
-      if (typeof B === 'undefined') {
-        onmessage = function (event) {
-          var data = event.data;
-          var N = data[0], r = data[1], p = data[2], B = data[3], i = data[4];
-
-          var Bslice = [];
-          arraycopy32(B, i * 128 * r, Bslice, 0, 128 * r);
-          smix(Bslice, 0, r, N, V, XY);
-
-          postMessage([i, Bslice]);
-        };
-      } else {
-        for(var i = 0; i < p; i++) {
-          smix(B, i * 128 * r, r, N, V, XY);
-        }
-      }
-
-      function smix (B, Bi, r, N, V, XY) {
-        var Xi = 0;
-        var Yi = 128 * r;
-        var i;
-
-        arraycopy32(B, Bi, XY, Xi, Yi);
-
-        for (i = 0; i < N; i++) {
-          arraycopy32(XY, Xi, V, i * Yi, Yi);
-          blockmix_salsa8(XY, Xi, Yi, r);
-        }
-
-        for (i = 0; i < N; i++) {
-          var j = integerify(XY, Xi, r) & (N - 1);
-          blockxor(V, j * Yi, XY, Xi, Yi);
-          blockmix_salsa8(XY, Xi, Yi, r);
-        }
-
-        arraycopy32(XY, Xi, B, Bi, Yi);
-      }
-
-      function blockmix_salsa8 (BY, Bi, Yi, r) {
-        var X = [];
-        var i;
-
-        arraycopy32(BY, Bi + (2 * r - 1) * 64, X, 0, 64);
-
-        for (i = 0; i < 2 * r; i++) {
-          blockxor(BY, i * 64, X, 0, 64);
-          salsa20_8(X);
-          arraycopy32(X, 0, BY, Yi + (i * 64), 64);
-        }
-
-        for (i = 0; i < r; i++) {
-          arraycopy32(BY, Yi + (i * 2) * 64, BY, Bi + (i * 64), 64);
-        }
-
-        for (i = 0; i < r; i++) {
-          arraycopy32(BY, Yi + (i * 2 + 1) * 64, BY, Bi + (i + r) * 64, 64);
-        }
-      }
-
-      function R (a, b) {
-        return (a << b) | (a >>> (32 - b));
-      }
-
-      function salsa20_8 (B) {
-        var B32 = new Array(32);
-        var x   = new Array(32);
-        var i;
-
-        for (i = 0; i < 16; i++) {
-          B32[i]  = (B[i * 4 + 0] & 0xff) << 0;
-          B32[i] |= (B[i * 4 + 1] & 0xff) << 8;
-          B32[i] |= (B[i * 4 + 2] & 0xff) << 16;
-          B32[i] |= (B[i * 4 + 3] & 0xff) << 24;
-        }
-
-        arraycopy(B32, 0, x, 0, 16);
-
-        for (i = 8; i > 0; i -= 2) {
-          x[ 4] ^= R(x[ 0]+x[12], 7);  x[ 8] ^= R(x[ 4]+x[ 0], 9);
-          x[12] ^= R(x[ 8]+x[ 4],13);  x[ 0] ^= R(x[12]+x[ 8],18);
-          x[ 9] ^= R(x[ 5]+x[ 1], 7);  x[13] ^= R(x[ 9]+x[ 5], 9);
-          x[ 1] ^= R(x[13]+x[ 9],13);  x[ 5] ^= R(x[ 1]+x[13],18);
-          x[14] ^= R(x[10]+x[ 6], 7);  x[ 2] ^= R(x[14]+x[10], 9);
-          x[ 6] ^= R(x[ 2]+x[14],13);  x[10] ^= R(x[ 6]+x[ 2],18);
-          x[ 3] ^= R(x[15]+x[11], 7);  x[ 7] ^= R(x[ 3]+x[15], 9);
-          x[11] ^= R(x[ 7]+x[ 3],13);  x[15] ^= R(x[11]+x[ 7],18);
-          x[ 1] ^= R(x[ 0]+x[ 3], 7);  x[ 2] ^= R(x[ 1]+x[ 0], 9);
-          x[ 3] ^= R(x[ 2]+x[ 1],13);  x[ 0] ^= R(x[ 3]+x[ 2],18);
-          x[ 6] ^= R(x[ 5]+x[ 4], 7);  x[ 7] ^= R(x[ 6]+x[ 5], 9);
-          x[ 4] ^= R(x[ 7]+x[ 6],13);  x[ 5] ^= R(x[ 4]+x[ 7],18);
-          x[11] ^= R(x[10]+x[ 9], 7);  x[ 8] ^= R(x[11]+x[10], 9);
-          x[ 9] ^= R(x[ 8]+x[11],13);  x[10] ^= R(x[ 9]+x[ 8],18);
-          x[12] ^= R(x[15]+x[14], 7);  x[13] ^= R(x[12]+x[15], 9);
-          x[14] ^= R(x[13]+x[12],13);  x[15] ^= R(x[14]+x[13],18);
-        }
-
-        for (i = 0; i < 16; ++i) B32[i] = x[i] + B32[i];
-
-        for (i = 0; i < 16; i++) {
-          var bi = i * 4;
-          B[bi + 0] = (B32[i] >> 0  & 0xff);
-          B[bi + 1] = (B32[i] >> 8  & 0xff);
-          B[bi + 2] = (B32[i] >> 16 & 0xff);
-          B[bi + 3] = (B32[i] >> 24 & 0xff);
-        }
-      }
-
-      function blockxor (S, Si, D, Di, len) {
-        var i = len>>6;
-        while (i--) {
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-          D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-        }
-      }
-
-      function integerify (B, bi, r) {
-        var n;
-
-        bi += (2 * r - 1) * 64;
-
-        n  = (B[bi + 0] & 0xff) << 0;
-        n |= (B[bi + 1] & 0xff) << 8;
-        n |= (B[bi + 2] & 0xff) << 16;
-        n |= (B[bi + 3] & 0xff) << 24;
-
-        return n;
-      }
-
-      function arraycopy (src, srcPos, dest, destPos, length) {
-        while (length-- ){
-          dest[destPos++] = src[srcPos++];
-        }
-      }
-
-      function arraycopy32 (src, srcPos, dest, destPos, length) {
-        var i = length>>5;
-        while(i--) {
-          dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-          dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-          dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-          dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-
-          dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-          dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-          dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-          dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-
-          dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-          dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-          dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-          dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-
-          dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-          dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-          dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-          dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-        }
-      }
-    } // scryptCore
-  };
-
+  }
 };
 
 module.exports = ImportExport;
 
-}).call(this,require("buffer").Buffer)
-},{"./wallet-crypto":194,"assert":16,"bigi":20,"bitcoinjs-lib":33,"bs58":68,"buffer":73,"unorm":169}],187:[function(require,module,exports){
+},{"./wallet-crypto":193,"bigi":20,"bitcoinjs-lib":33,"bs58":68,"buffer":73,"unorm":169}],186:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyChain;
-////////////////////////////////////////////////////////////////////////////////
+
 var Bitcoin = require('bitcoinjs-lib');
-var assert  = require('assert');
+var assert = require('assert');
 var Helpers = require('./helpers');
 
-////////////////////////////////////////////////////////////////////////////////
 // keychain
 function KeyChain (extendedKey, index, cache) {
   this._chainRoot = null;
@@ -34363,7 +34053,7 @@ function KeyChain (extendedKey, index, cache) {
 Object.defineProperties(KeyChain.prototype, {
   'xpub': {
     configurable: false,
-    get: function () { return this._chainRoot ? this._chainRoot.neutered().toBase58() : null;}
+    get: function () { return this._chainRoot ? this._chainRoot.neutered().toBase58() : null; }
   },
   'isNeutered': {
     configurable: false,
@@ -34382,8 +34072,7 @@ KeyChain.prototype.init = function (extendedKey, index, cache) {
   // otherwise we generate it using extendedKey and index
   if (cache) {
     this._chainRoot = Bitcoin.HDNode.fromBase58(cache);
-  }
-  else {
+  } else {
     this._chainRoot = extendedKey && Helpers.isPositiveInteger(index) && index >= 0
       ? Bitcoin.HDNode.fromBase58(extendedKey).derive(index) : undefined;
   }
@@ -34401,42 +34090,41 @@ KeyChain.prototype.getPrivateKey = function (index) {
   return key ? key : null;
 };
 
-},{"./helpers":185,"assert":16,"bitcoinjs-lib":33}],188:[function(require,module,exports){
+},{"./helpers":184,"assert":16,"bitcoinjs-lib":33}],187:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyRing;
-////////////////////////////////////////////////////////////////////////////////
-var assert  = require('assert');
+
+var assert = require('assert');
 var KeyChain = require('./keychain');
 
-////////////////////////////////////////////////////////////////////////////////
 // keyring: A collection of keychains
 
 function KeyRing (extendedKey, cache) {
   this._receiveChain = null;
-  this._changeChain  = null;
+  this._changeChain = null;
   this.init(extendedKey, cache);
 }
 
 Object.defineProperties(KeyRing.prototype, {
   'receive': {
     configurable: false,
-    get: function () {return this._receiveChain;}
+    get: function () { return this._receiveChain; }
   },
   'change': {
     configurable: false,
-    get: function () {return this._changeChain;}
+    get: function () { return this._changeChain; }
   }
 });
 
-KeyRing.prototype.init = function (extendedKey, cache){
+KeyRing.prototype.init = function (extendedKey, cache) {
   cache = cache || {};
   if (this._receiveChain && this._changeChain) return this;
   if (extendedKey || cache.receiveAccount && cache.changeAccount) {
     this._receiveChain = cache.receiveAccount
-      ? new KeyChain(null,null,cache.receiveAccount ) : new KeyChain(extendedKey,0);
-    this._changeChain  = cache.changeAccount
-      ? new KeyChain(null,null,cache.changeAccount ) : new KeyChain(extendedKey,1);
+      ? new KeyChain(null, null, cache.receiveAccount) : new KeyChain(extendedKey, 0);
+    this._changeChain = cache.changeAccount
+      ? new KeyChain(null, null, cache.changeAccount) : new KeyChain(extendedKey, 1);
   }
   return this;
 };
@@ -34446,83 +34134,74 @@ KeyRing.prototype.privateKeyFromPath = function (path) {
   var components = path.split('/');
   assert(components[0] === 'M', 'Invalid Path prefix');
   assert(components[1] === '0' || components[1] === '1'
-    ,'Invalid Path: change/receive index out of bounds');
+    , 'Invalid Path: change/receive index out of bounds');
   assert(components.length === 3, 'Invalid Path length');
-  if(this._receiveChain.isNeutered) return null;
-  var receiveOrChange = parseInt(components[1]);
-  var index = parseInt(components[2]);
-  return receiveOrChange === 0 ?
-    this._receiveChain.getPrivateKey(index) :
-    this._changeChain.getPrivateKey(index) ;
+  if (this._receiveChain.isNeutered) return null;
+  var receiveOrChange = parseInt(components[1], 10);
+  var index = parseInt(components[2], 10);
+  return receiveOrChange === 0
+      ? this._receiveChain.getPrivateKey(index)
+      : this._changeChain.getPrivateKey(index);
 };
 
-KeyRing.prototype.toJSON = function (){
+KeyRing.prototype.toJSON = function () {
   var cacheJSON = {
-    receiveAccount : this._receiveChain.xpub,
-    changeAccount  : this._changeChain.xpub
+    receiveAccount: this._receiveChain.xpub,
+    changeAccount: this._changeChain.xpub
   };
   return cacheJSON;
 };
 
-},{"./keychain":187,"assert":16}],189:[function(require,module,exports){
+},{"./keychain":186,"assert":16}],188:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
-var Bitcoin       = require('bitcoinjs-lib');
-var MyWallet      = require('./wallet');
-var WalletCrypto  = require('./wallet-crypto');
-var Transaction   = require('./transaction');
-var API           = require('./api');
-var Helpers       = require('./helpers');
-var KeyRing       = require('./keyring');
-var EventEmitter  = require('events');
-var util          = require('util');
+var Bitcoin = require('bitcoinjs-lib');
+var MyWallet = require('./wallet');
+var WalletCrypto = require('./wallet-crypto');
+var Transaction = require('./transaction');
+var API = require('./api');
+var Helpers = require('./helpers');
+var KeyRing = require('./keyring');
+var EventEmitter = require('events');
+var util = require('util');
 
-////////////////////////////////////////////////////////////////////////////////
-//// Payment Class
-////////////////////////////////////////////////////////////////////////////////
+// Payment Class
 
 function Payment (payment) {
   EventEmitter.call(this);
 
-  var serverFeeFallback ={
-     "default":{
-        "fee":35000.00,
-        "surge":false,
-        "ok":true
-     },
-     "estimate":[
-        {
-           "fee":45000.0,
-           "surge":false,
-           "ok":true
-        },
-        {
-           "fee":35000.00,
-           "surge":false,
-           "ok":true
-        },
-        {
-           "fee":22000.0,
-           "surge":false,
-           "ok":true
-        },
-        {
-           "fee":19000.0,
-           "surge":false,
-           "ok":true
-        },
-        {
-           "fee":15000.0,
-           "surge":false,
-           "ok":true
-        },
-        {
-           "fee":12000.0,
-           "surge":false,
-           "ok":true
-        }
-     ]
+  var serverFeeFallback = {
+    'default': {
+      'fee': 35000.00,
+      'surge': false,
+      'ok': true
+    },
+    'estimate': [{
+      'fee': 45000.0,
+      'surge': false,
+      'ok': true
+    }, {
+      'fee': 35000.00,
+      'surge': false,
+      'ok': true
+    }, {
+      'fee': 22000.0,
+      'surge': false,
+      'ok': true
+    }, {
+      'fee': 19000.0,
+      'surge': false,
+      'ok': true
+    }, {
+      'fee': 15000.0,
+      'surge': false,
+      'ok': true
+    }, {
+      'fee': 12000.0,
+      'surge': false,
+      'ok': true
+    }]
   };
 
   var initialState = {
@@ -34539,10 +34218,10 @@ function Payment (payment) {
     balance: 0, // sum of all unspents values with any filtering     [ payment.sumOfCoins ]
     finalFee: 0, // final absolute fee that it is going to be used no matter how was obtained (advanced or regular send)
     changeAmount: 0, // final change
-    absoluteFeeBounds: [0,0,0,0,0,0], // fee bounds (absolute) per fixed amount
-    sweepFees: [0,0,0,0,0,0], // sweep absolute fee per each fee per kb (1,2,3,4,5,6)
-    maxSpendableAmounts: [0,0,0,0,0,0],  // max amount per each fee-per-kb
-    confEstimation: "unknown",
+    absoluteFeeBounds: [0, 0, 0, 0, 0, 0], // fee bounds (absolute) per fixed amount
+    sweepFees: [0, 0, 0, 0, 0, 0], // sweep absolute fee per each fee per kb (1, 2, 3, 4, 5, 6)
+    maxSpendableAmounts: [0, 0, 0, 0, 0, 0],  // max amount per each fee-per-kb
+    confEstimation: 'unknown',
     txSize: 0 // transaciton size
   };
 
@@ -34559,7 +34238,7 @@ function Payment (payment) {
   // payment.transaction    :: Transaction
 }
 util.inherits(Payment, EventEmitter);
-////////////////////////////////////////////////////////////////////////////////
+
 // Payment instance methods (can be chained)
 Payment.prototype.to = function (destinations) {
   this.payment = this.payment.then(Payment.to(destinations));
@@ -34638,15 +34317,13 @@ Payment.prototype.publish = function () {
 };
 
 Payment.prototype.printJSON = function () {
-  var printJSON = function(p) {console.log(JSON.stringify(p, null, 2));}
+  var printJSON = function (p) { console.log(JSON.stringify(p, null, 2)); };
   this.sideEffect(printJSON);
   return this;
 };
 
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
 Payment.return = function (payment) {
-  var p = payment ? payment : {}
+  var p = payment ? payment : {};
   return Promise.resolve(p);
 };
 
@@ -34665,9 +34342,10 @@ Payment.to = function (destinations) {
   };
   var accountToAddress = function (i) {
     if (Helpers.isPositiveInteger(i)) {
-      return MyWallet.wallet.hdwallet.accounts[i].receiveAddress;}
-    else {
-      return i;}
+      return MyWallet.wallet.hdwallet.accounts[i].receiveAddress;
+    } else {
+      return i;
+    }
   };
   switch (true) {
     // single bitcoin address
@@ -34685,7 +34363,7 @@ Payment.to = function (destinations) {
       formatDest = destinations.map(accountToAddress);
       break;
     default:
-      console.log('No destination set.')
+      console.log('No destination set.');
   } // fi switch
   return function (payment) {
     payment.to = formatDest;
@@ -34696,8 +34374,8 @@ Payment.to = function (destinations) {
 Payment.useAll = function (absoluteFee) {
   return function (payment) {
     if (Helpers.isPositiveNumber(absoluteFee)) {
-      var balance       = payment.balance ? payment.balance : 0;
-      payment.amounts   = (balance - absoluteFee) > 0 ? [balance - absoluteFee] : [];
+      var balance = payment.balance ? payment.balance : 0;
+      payment.amounts = (balance - absoluteFee) > 0 ? [balance - absoluteFee] : [];
     } else {
       payment.amounts = payment.sweepAmount ? [payment.sweepAmount] : [];
     }
@@ -34728,31 +34406,31 @@ Payment.amount = function (amounts, absoluteFee) {
 };
 
 Payment.from = function (origin) {
-  var that       = this;
-  var addresses  = null;
-  var change     = null;
-  var pkFormat   = Helpers.detectPrivateKeyFormat(origin);
-  var wifs       = []; // only used fromPrivateKey
-  var fromAccId  = null;
-  var watchOnly  = false;
-
+  var that = this;
+  var addresses = null;
+  var change = null;
+  var pkFormat = Helpers.detectPrivateKeyFormat(origin);
+  var wifs = []; // only used fromPrivateKey
+  var fromAccId = null;
+  var watchOnly = false;
+  
   switch (true) {
     // no origin => assume origin = all the legacy addresses (non - watchOnly)
     case origin === null || origin === undefined || origin === '':
       addresses = MyWallet.wallet.spendableActiveAddresses;
-      change    = addresses[0];
+      change = addresses[0];
       break;
     // single bitcoin address
     case Helpers.isBitcoinAddress(origin):
       addresses = [origin];
-      change    = origin;
+      change = origin;
       break;
     // single account index
     case Helpers.isPositiveInteger(origin) &&
          (origin < MyWallet.wallet.hdwallet.accounts.length):
       var fromAccount = MyWallet.wallet.hdwallet.accounts[origin];
       addresses = [fromAccount.extendedPublicKey];
-      change    = fromAccount.changeAddress;
+      change = fromAccount.changeAddress;
       fromAccId = origin;
       break;
     // multiple legacy addresses
@@ -34760,11 +34438,11 @@ Payment.from = function (origin) {
          origin.length > 0 &&
          origin.every(Helpers.isBitcoinAddress):
       addresses = origin;
-      change    = addresses[0];
+      change = addresses[0];
       break;
     // from PrivateKey
     case (pkFormat !== null):
-      var key    = Helpers.privateKeyStringToKey(origin, pkFormat);
+      var key = Helpers.privateKeyStringToKey(origin, pkFormat);
       key.compressed = false;
       var addrUncomp = key.getAddress();
       var uWIF = key.toWIF();
@@ -34776,30 +34454,30 @@ Payment.from = function (origin) {
       var ckey = MyWallet.wallet.key(addrComp);
 
       if (ukey && ukey.isWatchOnly) {
-        wifs      = [uWIF];
+        wifs = [uWIF];
         addresses = [addrUncomp];
-        change    = addrUncomp;
+        change = addrUncomp;
         watchOnly = true;
       } else if (ckey && ckey.isWatchOnly) {
-        wifs      = [cWIF];
+        wifs = [cWIF];
         addresses = [addrComp];
-        change    = addrComp;
+        change = addrComp;
         watchOnly = true;
       } else {
-        wifs      = [cWIF, uWIF];
+        wifs = [cWIF, uWIF];
         addresses = [addrComp, addrUncomp];
-        change    = addrComp;
+        change = addrComp;
       }
       break;
     default:
-      console.log('No origin set.')
+      console.log('No origin set.');
   } // fi switch
   return function (payment) {
-    payment.from           = addresses;
-    payment.change         = change;
-    payment.wifKeys        = wifs;
+    payment.from = addresses;
+    payment.change = change;
+    payment.wifKeys = wifs;
     payment.fromAccountIdx = fromAccId;
-    payment.fromWatchOnly  = watchOnly;
+    payment.fromWatchOnly = watchOnly;
 
     return getUnspentCoins(addresses).then(
       function (coins) {
@@ -34823,7 +34501,7 @@ Payment.from = function (origin) {
 Payment.updateFees = function () {
   return function (payment) {
     return API.getFees().then(
-          function (fees){
+          function (fees) {
             payment.fees = fees;
             payment.feePerKb = fees.default.fee;
             return payment;
@@ -34839,43 +34517,38 @@ Payment.updateFees = function () {
 };
 
 Payment.prebuild = function (absoluteFee) {
-
   return function (payment) {
+    var dust = Bitcoin.networks.bitcoin.dustThreshold;
 
-    var totalFee      = null;
-    var selectedCoins = [];
-    var txSize        = 0;
-    var dust          = Bitcoin.networks.bitcoin.dustThreshold;
-
-    var usableCoins   = Transaction.filterUsableCoins(payment.coins, payment.feePerKb);
+    var usableCoins = Transaction.filterUsableCoins(payment.coins, payment.feePerKb);
     var max = Transaction.maxAvailableAmount(usableCoins, payment.feePerKb);
     payment.sweepAmount = max.amount;
-    payment.sweepFee    = max.fee;
-    payment.balance     = Transaction.sumOfCoins(payment.coins);
+    payment.sweepFee = max.fee;
+    payment.balance = Transaction.sumOfCoins(payment.coins);
 
     // compute max spendable limits per each fee-per-kb
-    var maxSpendablesPerFeePerKb = function(e){
+    var maxSpendablesPerFeePerKb = function (e) {
       var c = Transaction.filterUsableCoins(payment.coins, e.fee);
       var s = Transaction.maxAvailableAmount(c, e.fee);
       return s.amount;
-    }
+    };
     payment.maxSpendableAmounts = payment.fees.estimate.map(maxSpendablesPerFeePerKb);
-    payment.sweepFees = payment.maxSpendableAmounts.map(function(v){return payment.balance - v;});
+    payment.sweepFees = payment.maxSpendableAmounts.map(function (v) { return payment.balance - v; });
 
     // if amounts defined refresh computations
     if (Array.isArray(payment.amounts) && payment.amounts.length > 0) {
-
       // coin selection
+      var s;
       if (Helpers.isPositiveNumber(absoluteFee)) {
-        var s = Transaction.selectCoins(payment.coins, payment.amounts, absoluteFee, true);
+        s = Transaction.selectCoins(payment.coins, payment.amounts, absoluteFee, true);
       } else {
-        var s = Transaction.selectCoins(usableCoins, payment.amounts, payment.feePerKb, false);
+        s = Transaction.selectCoins(usableCoins, payment.amounts, payment.feePerKb, false);
       }
-      payment.finalFee      = s.fee;
+      payment.finalFee = s.fee;
       payment.selectedCoins = s.coins;
-      payment.txSize = Transaction.guessSize(payment.selectedCoins.length, payment.amounts.length +1 );
+      payment.txSize = Transaction.guessSize(payment.selectedCoins.length, payment.amounts.length + 1);
       var c = Transaction.sumOfCoins(payment.selectedCoins) - payment.amounts.reduce(Helpers.add, 0) - payment.finalFee;
-      payment.changeAmount = c > 0? c : 0;
+      payment.changeAmount = c > 0 ? c : 0;
 
       // change consumption
       if (payment.changeAmount > 0 && payment.changeAmount < dust) {
@@ -34886,11 +34559,11 @@ Payment.prebuild = function (absoluteFee) {
       }
 
       // compute absolute fee bounds for 1,2,3,4,5,6 block confirmations
-      var toAbsoluteFee = function(e){
+      var toAbsoluteFee = function (e) {
         var c = Transaction.filterUsableCoins(payment.coins, e.fee);
         var s = Transaction.selectCoins(c, payment.amounts, e.fee, false);
         return s.fee;
-      }
+      };
       payment.absoluteFeeBounds = payment.fees.estimate.map(toAbsoluteFee);
 
       // estimation of confirmation in number of blocks
@@ -34912,11 +34585,11 @@ Payment.build = function () {
   }.bind(this);
 };
 
-Payment.sign = function(password) {
-  return function(payment) {
+Payment.sign = function (password) {
+  return function (payment) {
     var importWIF = function (WIF) {
-      MyWallet.wallet.importLegacyAddress(WIF, "Redeemed code.", password)
-        .then(function(A){A.archived = true;});
+      MyWallet.wallet.importLegacyAddress(WIF, 'Redeemed code.', password)
+        .then(function (A) { A.archived = true; });
     };
 
     if (!payment.transaction) throw 'This transaction hasn\'t been built yet';
@@ -34931,7 +34604,6 @@ Payment.sign = function(password) {
 
 Payment.publish = function () {
   return function (payment) {
-
     var success = function () {
       payment.txid = payment.transaction.getId();
       return payment;
@@ -34948,16 +34620,12 @@ Payment.publish = function () {
   };
 };
 
-////////////////////////////////////////////////////////////////////////////////
 module.exports = Payment;
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
+
 // Helper functions
 
-//////////////////////////////////////////////////////////////////////////////
 // getUnspentCoins :: [address] -> Promise [coins]
 function getUnspentCoins (addressList) {
-
   var processCoins = function (obj) {
     var processCoin = function (utxo) {
       var txBuffer = new Buffer(utxo.tx_hash, 'hex');
@@ -34967,52 +34635,49 @@ function getUnspentCoins (addressList) {
     };
     obj.unspent_outputs.forEach(processCoin);
     return obj.unspent_outputs;
-  }
+  };
 
   return API.getUnspent(addressList, -1).then(processCoins);
 }
 
-function getKey(priv, addr) {
+function getKey (priv, addr) {
   var format = Helpers.detectPrivateKeyFormat(priv);
-  var key    = Helpers.privateKeyStringToKey(priv, format);
+  var key = Helpers.privateKeyStringToKey(priv, format);
   var ckey = new Bitcoin.ECPair(key.d, null, {compressed: true});
   var ukey = new Bitcoin.ECPair(key.d, null, {compressed: false});
-  if (ckey.getAddress() === addr) {return ckey;}
-  else if (ukey.getAddress() === addr) {return ukey;}
+  if (ckey.getAddress() === addr) {
+    return ckey;
+  } else if (ukey.getAddress() === addr) {
+    return ukey;
+  }
   return key;
 }
 
-////////////////////////////////////////////////////////////////////////////////
 // obtain private key for an address
 // from Address
 function getKeyForAddress (password, addr) {
   var k = MyWallet.wallet.key(addr).priv;
-  var privateKeyBase58 = password == null ? k :
-    WalletCrypto.decryptSecretWithSecondPassword( k
-                                                , password
-                                                , MyWallet.wallet.sharedKey
-                                                , MyWallet.wallet.pbkdf2_iterations);
+  var privateKeyBase58 = password == null ? k
+      : WalletCrypto.decryptSecretWithSecondPassword(k, password,
+          MyWallet.wallet.sharedKey, MyWallet.wallet.pbkdf2_iterations);
   return getKey(privateKeyBase58, addr);
 }
-////////////////////////////////////////////////////////////////////////////////
+
 // getXPRIV :: password -> index -> xpriv
 function getXPRIV (password, accountIndex) {
   var fromAccount = MyWallet.wallet.hdwallet.accounts[accountIndex];
   return fromAccount.extendedPrivateKey == null || password == null
     ? fromAccount.extendedPrivateKey
-    : WalletCrypto.decryptSecretWithSecondPassword( fromAccount.extendedPrivateKey
-                                                  , password
-                                                  , MyWallet.wallet.sharedKey
-                                                  , MyWallet.wallet.pbkdf2_iterations);
-};
-////////////////////////////////////////////////////////////////////////////////
+    : WalletCrypto.decryptSecretWithSecondPassword(fromAccount.extendedPrivateKey, password,
+      MyWallet.wallet.sharedKey, MyWallet.wallet.pbkdf2_iterations);
+}
+
 // getKeyForPath :: xpriv -> path -> ECPair
-function getKeyForPath(extendedPrivateKey, neededPrivateKeyPath) {
+function getKeyForPath (extendedPrivateKey, neededPrivateKeyPath) {
   var keyring = new KeyRing(extendedPrivateKey);
   return keyring.privateKeyFromPath(neededPrivateKeyPath).keyPair;
-};
+}
 
-////////////////////////////////////////////////////////////////////////////////
 // getPrivateKeys :: password -> payment -> [private key]
 function getPrivateKeys (password, payment) {
   var transaction = payment.transaction;
@@ -35021,38 +34686,37 @@ function getPrivateKeys (password, payment) {
   if (Helpers.isPositiveInteger(payment.fromAccountIdx)) {
     var xpriv = getXPRIV(password, payment.fromAccountIdx);
     privateKeys = transaction.pathsOfNeededPrivateKeys.map(getKeyForPath.bind(this, xpriv));
-  };
+  }
   // if from Addresses
   if (payment.from && payment.from.every(Helpers.isBitcoinAddress) && !payment.fromWatchOnly) {
     privateKeys = transaction.addressesOfNeededPrivateKeys.map(getKeyForAddress.bind(this, password));
-  };
+  }
   // if from Watch Only
   if (payment.from && Helpers.isBitcoinAddress(payment.from[0]) && payment.fromWatchOnly) {
     privateKeys = transaction.addressesOfNeededPrivateKeys.map(getKey.bind(null, payment.wifKeys[0]));
-  };
+  }
   return privateKeys;
-};
+}
 
 }).call(this,require("buffer").Buffer)
-},{"./api":178,"./helpers":185,"./keyring":188,"./transaction":193,"./wallet":200,"./wallet-crypto":194,"bitcoinjs-lib":33,"buffer":73,"events":116,"util":172}],190:[function(require,module,exports){
+},{"./api":177,"./helpers":184,"./keyring":187,"./transaction":192,"./wallet":199,"./wallet-crypto":193,"bitcoinjs-lib":33,"buffer":73,"events":116,"util":172}],189:[function(require,module,exports){
 'use strict';
 
 module.exports = new RNG();
 
 var randomBytes = require('randombytes');
-var API         = require('./api');
-var Buffer      = require('buffer').Buffer;
-var assert      = require('assert');
-var Helpers     = require('./helpers');
+var API = require('./api');
+var Buffer = require('buffer').Buffer;
+var assert = require('assert');
+var Helpers = require('./helpers');
 
 function RNG () {
-  this.ACTION    = 'GET';
+  this.ACTION = 'GET';
   // API is undefined at this point
-  // this.URL       = API.API_ROOT_URL + 'v2/randombytes'
-  this.FORMAT    = 'hex';  // raw, hex, base64
-  this.BYTES     = 32;
+  // this.URL = API.API_ROOT_URL + 'v2/randombytes'
+  this.FORMAT = 'hex';  // raw, hex, base64
+  this.BYTES = 32;
 }
-
 
 // xor :: Buffer -> Buffer -> Buffer
 RNG.prototype.xor = function (a, b) {
@@ -35088,11 +34752,11 @@ RNG.prototype.run = function (nBytes) {
     );
 
     assert(
-      !Array.prototype.every.call(serverH, function (b) { return b === serverH[0] }),
+      !Array.prototype.every.call(serverH, function (b) { return b === serverH[0]; }),
       'The server entropy should not be the same byte repeated.'
     );
     assert(
-      !Array.prototype.every.call(localH, function (b) { return b === localH[0] }),
+      !Array.prototype.every.call(localH, function (b) { return b === localH[0]; }),
       'The browser entropy should not be the same byte repeated.'
     );
     assert(
@@ -35103,7 +34767,7 @@ RNG.prototype.run = function (nBytes) {
     var combinedH = this.xor(localH, serverH);
 
     assert(
-      !Array.prototype.every.call(combinedH, function (b) { return b === combinedH[0] }),
+      !Array.prototype.every.call(combinedH, function (b) { return b === combinedH[0]; }),
       'The combined entropy should not be the same byte repeated.'
     );
     assert(
@@ -35112,7 +34776,6 @@ RNG.prototype.run = function (nBytes) {
     );
 
     return combinedH;
-
   } catch (e) {
     console.log('Error: RNG.run');
     console.log(e);
@@ -35130,8 +34793,7 @@ RNG.prototype.getServerEntropy = function (nBytes) {
   nBytes = Helpers.isPositiveInteger(nBytes) ? nBytes : this.BYTES;
   var request = new XMLHttpRequest();
   var data = { bytes: nBytes, format: this.FORMAT };
-  var url = API.API_ROOT_URL + 'v2/randombytes'
- + '?' + API.encodeFormData(data);
+  var url = API.API_ROOT_URL + 'v2/randombytes' + '?' + API.encodeFormData(data);
 
   request.open(this.ACTION, url, false);
   request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
@@ -35151,24 +34813,17 @@ RNG.prototype.getServerEntropy = function (nBytes) {
     );
 
     return B;
-  }
-  else {
+  } else {
     throw 'Received not ok status: ' + request.status;
   }
 };
 
-},{"./api":178,"./helpers":185,"assert":16,"buffer":73,"randombytes":144}],191:[function(require,module,exports){
-var satoshi = 100000000; //One satoshi
-var symbol_btc = {code : 'BTC', symbol : 'BTC', name : 'Bitcoin',  conversion : satoshi, symbolAppearsAfter : true, local : false}; //Default BTC Currency Symbol object
-var symbol_local = {'conversion':0,'symbol':'$','name':'U.S. dollar','symbolAppearsAfter':false,'local':true,'code':'USD'}; //Users local currency object
-var symbol = symbol_btc; //Active currency object
+},{"./api":177,"./helpers":184,"assert":16,"buffer":73,"randombytes":144}],190:[function(require,module,exports){
+var satoshi = 100000000; // One satoshi
+var symbol_btc = {code: 'BTC', symbol: 'BTC', name: 'Bitcoin', conversion: satoshi, symbolAppearsAfter: true, local: false}; // Default BTC Currency Symbol object
+var symbol_local = {'conversion': 0, 'symbol': '$', 'name': 'U.S. dollar', 'symbolAppearsAfter': false, 'local': true, 'code': 'USD'}; // Users local currency object
+var symbol = symbol_btc; // Active currency object
 var resource = 'Resources/';
-var war_checksum;
-var min = true; //whether to load minified scripts
-var APP_VERSION = '3.0'; //Need some way to set this dynamically
-var APP_NAME = 'javascript_web';
-var IMPORTED_APP_NAME = 'external'; //Need some way to set this dynamically
-var IMPORTED_APP_VERSION = '0';
 
 module.exports = {
   APP_NAME: 'javascript_web',
@@ -35178,14 +34833,13 @@ module.exports = {
   satoshi: satoshi,
   setLocalSymbol: setLocalSymbol,
   setBTCSymbol: setBTCSymbol,
-  playSound: playSound,
-  sShift: sShift
+  playSound: playSound
 };
 
-function myprint (x) {console.log(x);}
-
 function setLocalSymbol (new_symbol) {
-  if (!new_symbol) return;
+  if (!new_symbol) {
+    return;
+  }
 
   if (symbol === symbol_local) {
     symbol_local = new_symbol;
@@ -35200,7 +34854,9 @@ function getLocalSymbol () {
 }
 
 function setBTCSymbol (new_symbol) {
-  if (!new_symbol) return;
+  if (!new_symbol) {
+    return;
+  }
 
   if (symbol === symbol_btc) {
     symbol_btc = new_symbol;
@@ -35217,14 +34873,15 @@ function getBTCSymbol () {
 var _sounds = {};
 function playSound (id) {
   try {
-    if (!_sounds[id])
-      _sounds[id] = new Audio('/'+resource+id+'.wav');
+    if (!_sounds[id]) {
+      _sounds[id] = new Audio('/' + resource + id + '.wav');
+    }
 
     _sounds[id].play();
   } catch (e) { }
 }
 
-//Ignore Console
+// Ignore Console
 try {
   if (!window.console) {
     var names = ['log', 'debug', 'info', 'warn', 'error', 'assert', 'dir', 'dirxml',
@@ -35237,35 +34894,27 @@ try {
   }
 } catch (e) {
 }
-//The current 'shift' value - BTC = 1, mBTC = 3, uBTC = 6
-function sShift (symbol) {
-  return (satoshi / symbol.conversion).toString().length-1;
-}
-
-},{}],192:[function(require,module,exports){
+},{}],191:[function(require,module,exports){
 'use strict';
 
-var assert  = require('assert')
-  , EventEmitter  = require('events')
-  , Helpers = require('./helpers')
-  , Tx      = require('./wallet-transaction');
+var EventEmitter = require('events');
+var Helpers = require('./helpers');
+var Tx = require('./wallet-transaction');
 
 var TransactionList = function (loadNumber) {
   var DEFAULT_TX_LOAD = 50;
-  this._loadNumber    = loadNumber || DEFAULT_TX_LOAD;
-  this._transactions  = [];
-  this._events        = new EventEmitter();
+  this._loadNumber = loadNumber || DEFAULT_TX_LOAD;
+  this._transactions = [];
+  this._events = new EventEmitter();
 };
 
 Object.defineProperties(TransactionList.prototype, {
   'transactions': {
     configurable: false,
     value: function (identity) {
-      return identity == null || identity === '' ?
-        this._transactions :
-        this._transactions.filter(function (tx) {
-          return tx.belongsTo(identity);
-        });
+      return identity == null || identity === ''
+          ? this._transactions
+          : this._transactions.filter(function (tx) { return tx.belongsTo(identity); });
     }
   },
   'transactionsForIOS': {
@@ -35312,35 +34961,31 @@ TransactionList.prototype.subscribe = function (listener) {
 
 module.exports = TransactionList;
 
-},{"./helpers":185,"./wallet-transaction":199,"assert":16,"events":116}],193:[function(require,module,exports){
+},{"./helpers":184,"./wallet-transaction":198,"events":116}],192:[function(require,module,exports){
 'use strict';
 
-var assert      = require('assert');
-var Bitcoin     = require('bitcoinjs-lib');
-var randomBytes = require('randombytes');
-var Helpers     = require('./helpers');
-var Buffer      = require('buffer').Buffer;
+var assert = require('assert');
+var Bitcoin = require('bitcoinjs-lib');
+var Helpers = require('./helpers');
+var Buffer = require('buffer').Buffer;
 
 // Error messages that can be seen by the user should take the form of:
 // {error: "NOT_GOOD", some_param: 1}
 // Error messages that should only appear during development can be any string.
 
 var Transaction = function (payment, emitter) {
-
   var unspentOutputs = payment.selectedCoins;
-  var toAddresses    = payment.to;
-  var amounts        = payment.amounts;
-  var fee            = payment.finalFee;
-  var changeAddress  = payment.change;
-  var BITCOIN_DUST   = Bitcoin.networks.bitcoin.dustThreshold;
+  var toAddresses = payment.to;
+  var amounts = payment.amounts;
+  var fee = payment.finalFee;
+  var changeAddress = payment.change;
+  var BITCOIN_DUST = Bitcoin.networks.bitcoin.dustThreshold;
 
-  if (!Array.isArray(toAddresses) && toAddresses != null) {toAddresses = [toAddresses];}
-  if (!Array.isArray(amounts) && amounts != null) {amounts = [amounts];}
-
-  var network = Bitcoin.networks.bitcoin;
+  if (!Array.isArray(toAddresses) && toAddresses != null) { toAddresses = [toAddresses]; }
+  if (!Array.isArray(amounts) && amounts != null) { amounts = [amounts]; }
 
   assert(toAddresses, 'Missing destination address');
-  assert(amounts,     'Missing amount to pay');
+  assert(amounts, 'Missing amount to pay');
 
   this.emitter = emitter;
   this.amount = amounts.reduce(Helpers.add, 0);
@@ -35354,7 +34999,7 @@ var Transaction = function (payment, emitter) {
   assert(unspentOutputs && unspentOutputs.length > 0, {error: 'NO_UNSPENT_OUTPUTS'});
   var transaction = new Bitcoin.TransactionBuilder();
   // add all outputs
-  function addOutput (e, i) {transaction.addOutput(toAddresses[i],amounts[i]);}
+  function addOutput (e, i) { transaction.addOutput(toAddresses[i], amounts[i]); }
   toAddresses.map(addOutput);
 
   // add all inputs
@@ -35366,7 +35011,7 @@ var Transaction = function (payment, emitter) {
     transaction.addInput(Array.prototype.reverse.call(transactionHashBuffer), output.index);
 
     // Generate address from output script and add to private list so we can check if the private keys match the inputs later
-    var scriptBuffer = Buffer(output.script, "hex");
+    var scriptBuffer = Buffer(output.script, 'hex');
     assert.notEqual(Bitcoin.script.classifyOutput(scriptBuffer), 'nonstandard', {error: 'STRANGE_SCRIPT'});
     var address = Bitcoin.address.fromOutputScript(scriptBuffer).toString();
     assert(address, {error: 'CANNOT_DECODE_OUTPUT_ADDRESS', tx_hash: output.tx_hash});
@@ -35375,8 +35020,7 @@ var Transaction = function (payment, emitter) {
     // Add to list of needed private keys
     if (output.xpub) {
       this.pathsOfNeededPrivateKeys.push(output.xpub.path);
-    }
-    else {
+    } else {
       this.addressesOfNeededPrivateKeys.push(address);
     }
   }
@@ -35404,24 +35048,23 @@ Transaction.prototype.addPrivateKeys = function (privateKeys) {
  * BIP69: Sort outputs lexicographycally
  */
 
-Transaction.prototype.sortBIP69 = function (){
-
+Transaction.prototype.sortBIP69 = function () {
   var compareInputs = function (a, b) {
     var hasha = new Buffer(a[0].hash);
     var hashb = new Buffer(b[0].hash);
     var x = [].reverse.call(hasha);
     var y = [].reverse.call(hashb);
-    return x.compare(y) || a[0].index - b[0].index
+    return x.compare(y) || a[0].index - b[0].index;
   };
 
-  var compareOutputs = function(a, b) {
-    return (a.value - b.value) || (a.script).compare(b.script)
+  var compareOutputs = function (a, b) {
+    return (a.value - b.value) || (a.script).compare(b.script);
   };
   var mix = Helpers.zip3(this.transaction.tx.ins, this.privateKeys, this.addressesOfInputs);
   mix.sort(compareInputs);
-  this.transaction.tx.ins = mix.map(function (a){return a[0];});
-  this.privateKeys        = mix.map(function (a){return a[1];});
-  this.addressesOfInputs  = mix.map(function (a){return a[2];});
+  this.transaction.tx.ins = mix.map(function (a) { return a[0]; });
+  this.privateKeys = mix.map(function (a) { return a[1]; });
+  this.addressesOfInputs = mix.map(function (a) { return a[2]; });
   this.transaction.tx.outs.sort(compareOutputs);
 };
 /**
@@ -35441,68 +35084,50 @@ Transaction.prototype.sign = function () {
 
   var transaction = this.transaction;
 
-  for (var i = 0; i < transaction.inputs.length; i++) {
-    this.emitter.emit('on_sign_progress', i+1);
-    var key = this.privateKeys[i];
-    transaction.sign(i, key);
-    assert(transaction.inputs[i].scriptType === 'pubkeyhash', 'Error creating input script');
+  for (var ii = 0; ii < transaction.inputs.length; ii++) {
+    this.emitter.emit('on_sign_progress', ii + 1);
+    var key = this.privateKeys[ii];
+    transaction.sign(ii, key);
+    assert(transaction.inputs[ii].scriptType === 'pubkeyhash', 'Error creating input script');
   }
 
   this.emitter.emit('on_finish_signing');
   return transaction;
 };
 
-
-function sortUnspentOutputs (unspentOutputs) {
-  var unspent = [];
-
-  for (var key in unspentOutputs) {
-    var output = unspentOutputs[key];
-    if (!output.pending) {
-      unspent.push(output);
-    }
-  }
-
-  unspent.sort(function (o1, o2){
-    return o2.value - o1.value;
-  });
-
-  return unspent;
-}
-
 Transaction.inputCost = function (feePerKb) {
   return Math.ceil(feePerKb * 0.148);
 };
 Transaction.guessSize = function (nInputs, nOutputs) {
-  if (nInputs < 1 || nOutputs < 1) { return 0;}
-  return (nInputs*148 + nOutputs*34 + 10);
+  if (nInputs < 1 || nOutputs < 1) { return 0; }
+  return (nInputs * 148 + nOutputs * 34 + 10);
 };
 
 Transaction.guessFee = function (nInputs, nOutputs, feePerKb) {
-  var sizeBytes  = Transaction.guessSize(nInputs, nOutputs);
+  var sizeBytes = Transaction.guessSize(nInputs, nOutputs);
   return Math.ceil(feePerKb * (sizeBytes / 1000));
 };
 
-Transaction.filterUsableCoins = function (coins, feePerKb){
+Transaction.filterUsableCoins = function (coins, feePerKb) {
   if (!Array.isArray(coins)) return [];
   var icost = Transaction.inputCost(feePerKb);
-  return coins.filter(function(c) { return c.value >= icost });
+  return coins.filter(function (c) { return c.value >= icost; });
 };
 
-Transaction.maxAvailableAmount = function (usableCoins, feePerKb){
+Transaction.maxAvailableAmount = function (usableCoins, feePerKb) {
   var len = usableCoins.length;
   var fee = Transaction.guessFee(len, 2, feePerKb);
-  return {"amount": usableCoins.reduce(function(a,e){a = a + e.value; return a},0) - fee, "fee" : fee};
+  return {'amount': usableCoins.reduce(function (a, e) { a = a + e.value; return a; }, 0) - fee, 'fee': fee};
 };
 
-Transaction.sumOfCoins = function (coins){
-  return coins.reduce(function(a,e){a = a + e.value; return a},0);
+Transaction.sumOfCoins = function (coins) {
+  return coins.reduce(function (a, e) { a = a + e.value; return a; }, 0);
 };
 
-Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee){
-  var amount = amounts.reduce(Helpers.add,0);
-  var nouts  = amounts.length;
-  var sorted = usableCoins.sort(function (a, b) { return b.value - a.value });
+Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
+  var amount = amounts.reduce(Helpers.add, 0);
+  var nouts = amounts.length;
+  var sorted = usableCoins.sort(function (a, b) { return b.value - a.value; });
   var len = sorted.length;
   var sel = [];
   var accAm = 0;
@@ -35513,50 +35138,49 @@ Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee){
       var coin = sorted[i];
       accAm = accAm + coin.value;
       sel.push(coin);
-      if (accAm >= fee + amount) { return {"coins": sel, "fee": fee}; }
+      if (accAm >= fee + amount) { return {'coins': sel, 'fee': fee}; }
     }
   } else {
-    for (var i = 0; i < len; i++) {
-      var coin = sorted[i];
-      accAm = accAm + coin.value;
-      accFee = Transaction.guessFee(i+1, nouts+1, fee);
-      sel.push(coin);
-      if (accAm >= accFee + amount) { return {"coins": sel, "fee": accFee}; }
+    for (var ii = 0; ii < len; ii++) {
+      var coin2 = sorted[ii];
+      accAm = accAm + coin2.value;
+      accFee = Transaction.guessFee(ii + 1, nouts + 1, fee);
+      sel.push(coin2);
+      if (accAm >= accFee + amount) { return {'coins': sel, 'fee': accFee}; }
     }
   }
-  return {"coins": [], "fee": 0};
+  return {'coins': [], 'fee': 0};
 };
 
-Transaction.confirmationEstimation = function(absoluteFees, fee) {
+Transaction.confirmationEstimation = function (absoluteFees, fee) {
   var len = absoluteFees.length;
   for (var i = 0; i < len; i++) {
     if (absoluteFees[i] > 0 && fee >= absoluteFees[i]) {
-      return i+1;
-    }
-    else{
-      if (absoluteFees[i] > 0 && (i+1 === len)) { return Infinity; }
+      return i + 1;
+    } else {
+      if (absoluteFees[i] > 0 && (i + 1 === len)) { return Infinity; }
     }
   }
   return null;
-}
+};
 module.exports = Transaction;
 
-},{"./helpers":185,"assert":16,"bitcoinjs-lib":33,"buffer":73,"randombytes":144}],194:[function(require,module,exports){
+},{"./helpers":184,"assert":16,"bitcoinjs-lib":33,"buffer":73}],193:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
-var crypto  = require('crypto')
-  , assert  = require('assert')
-  , sjcl    = require('sjcl');
+var crypto = require('crypto');
+var assert = require('assert');
+var sjcl = require('sjcl');
 
-var SUPPORTED_ENCRYPTION_VERSION = 3
-  , SALT_BYTES = 16
-  , KEY_BIT_LEN = 256
-  , BLOCK_BIT_LEN = 128;
+var SUPPORTED_ENCRYPTION_VERSION = 3;
+var SALT_BYTES = 16;
+var KEY_BIT_LEN = 256;
+var BLOCK_BIT_LEN = 128;
 
 var ALGO = {
-  SHA1    : 'sha1',
-  SHA256  : 'sha256'
+  SHA1: 'sha1',
+  SHA256: 'sha256'
 };
 
 var NoPadding = {
@@ -35580,8 +35204,8 @@ var ZeroPadding = {
   */
 
   pad: function (dataBytes, nBytesPerBlock) {
-    var nPaddingBytes = nBytesPerBlock - dataBytes.length % nBytesPerBlock
-      , zeroBytes = new Buffer(nPaddingBytes).fill(0x00);
+    var nPaddingBytes = nBytesPerBlock - dataBytes.length % nBytesPerBlock;
+    var zeroBytes = new Buffer(nPaddingBytes).fill(0x00);
     return Buffer.concat([ dataBytes, zeroBytes ]);
   },
 
@@ -35598,9 +35222,9 @@ var Iso10126 = {
   */
 
   pad: function (dataBytes, nBytesPerBlock) {
-    var nPaddingBytes = nBytesPerBlock - dataBytes.length % nBytesPerBlock
-      , paddingBytes  = crypto.randomBytes(nPaddingBytes - 1)
-      , endByte       = new Buffer([ nPaddingBytes ]);
+    var nPaddingBytes = nBytesPerBlock - dataBytes.length % nBytesPerBlock;
+    var paddingBytes = crypto.randomBytes(nPaddingBytes - 1);
+    var endByte = new Buffer([ nPaddingBytes ]);
     return Buffer.concat([ dataBytes, paddingBytes, endByte ]);
   },
 
@@ -35628,9 +35252,9 @@ var Iso97971 = {
 };
 
 var AES = {
-  CBC : 'aes-256-cbc',
-  OFB : 'aes-256-ofb',
-  ECB : 'aes-256-ecb',
+  CBC: 'aes-256-cbc',
+  OFB: 'aes-256-ofb',
+  ECB: 'aes-256-ecb',
 
   /*
   *   Encrypt / Decrypt with aes-256
@@ -35683,8 +35307,11 @@ function encryptWallet (data, password, pbkdf2_iterations, version) {
 }
 
 function decryptWallet (data, password, success, error) {
-  try       { success(decryptWalletSync(data, password)); }
-  catch (e) { error(e && e.message || e);                 }
+  try {
+    success(decryptWalletSync(data, password));
+  } catch (e) {
+    error(e && e.message || e);
+  }
 }
 
 function decryptWalletSync (data, password) {
@@ -35693,8 +35320,11 @@ function decryptWalletSync (data, password) {
 
   var wrapper, version, decrypted;
 
-  try       { wrapper = JSON.parse(data); }
-  catch (e) { version = 1;                }
+  try {
+    wrapper = JSON.parse(data);
+  } catch (e) {
+    version = 1;
+  }
 
   if (wrapper) {
     assert(wrapper.payload, 'v2 Wallet error: missing payload');
@@ -35727,37 +35357,41 @@ function decryptWalletV1 (data, password) {
 
     // v1: OFB, nopad, 1 iteration
     decryptDataWithPassword.bind(null, data, password, 1, {
-      mode    : AES.OFB,
-      padding : NoPadding
+      mode: AES.OFB,
+      padding: NoPadding
     }),
 
     // v1: OFB, ISO7816, 1 iteration
     // ISO/IEC 9797-1 Padding method 2 is the same as ISO/IEC 7816-4:2005
     decryptDataWithPassword.bind(null, data, password, 1, {
-      mode    : AES.OFB,
-      padding : Iso97971
+      mode: AES.OFB,
+      padding: Iso97971
     }),
 
     // v1: CBC, ISO10126, 1 iteration
     decryptDataWithPassword.bind(null, data, password, 1, {
-      mode    : AES.CBC,
-      padding : Iso10126
+      mode: AES.CBC,
+      padding: Iso10126
     })
   ];
 
   return decryptFns.reduce(function (acc, decrypt) {
     if (acc) return acc;
-    try       { return JSON.parse(decrypt()); }
-    catch (e) { return null;                  }
+    try {
+      return JSON.parse(decrypt());
+    } catch (e) {
+      return null;
+    }
   }, null);
 }
 
 function cipherFunction (password, sharedKey, pbkdf2Iterations, operation) {
   // operation can be 'enc' or 'dec'
   var id = function (msg) { return msg; };
-  if (!password || !sharedKey || !pbkdf2Iterations) { return id; }
-  else {
-    switch(operation) {
+  if (!password || !sharedKey || !pbkdf2Iterations) {
+    return id;
+  } else {
+    switch (operation) {
       case 'enc':
         return function (msg) {
           return encryptSecretWithSecondPassword(msg, password, sharedKey, pbkdf2Iterations);
@@ -35768,7 +35402,7 @@ function cipherFunction (password, sharedKey, pbkdf2Iterations, operation) {
         };
       default:
         return id;
-    };
+    }
   }
 }
 
@@ -35789,13 +35423,13 @@ function encryptDataWithPassword (data, password, iterations) {
   assert(password, 'password missing');
   assert(iterations, 'iterations missing');
 
-  var salt      = crypto.randomBytes(SALT_BYTES)
-    , key       = stretchPassword(password, salt, iterations, KEY_BIT_LEN)
-    , dataBytes = new Buffer(data, 'utf8')
-    , options   = { mode: AES.CBC, padding: Iso10126 };
+  var salt = crypto.randomBytes(SALT_BYTES);
+  var key = stretchPassword(password, salt, iterations, KEY_BIT_LEN);
+  var dataBytes = new Buffer(data, 'utf8');
+  var options = { mode: AES.CBC, padding: Iso10126 };
 
-  var encryptedBytes  = AES.encrypt(dataBytes, key, salt, options)
-    , payload         = Buffer.concat([ salt, encryptedBytes ]);
+  var encryptedBytes = AES.encrypt(dataBytes, key, salt, options);
+  var payload = Buffer.concat([ salt, encryptedBytes ]);
 
   return payload.toString('base64');
 }
@@ -35808,10 +35442,10 @@ function decryptDataWithPassword (data, password, iterations, options) {
   options = options || {};
   options.padding = options.padding || Iso10126;
 
-  var dataHex = new Buffer(data, 'base64')
-    , salt    = dataHex.slice(0, SALT_BYTES)
-    , payload = dataHex.slice(SALT_BYTES)
-    , key     = stretchPassword(password, salt, iterations, KEY_BIT_LEN);
+  var dataHex = new Buffer(data, 'base64');
+  var salt = dataHex.slice(0, SALT_BYTES);
+  var payload = dataHex.slice(SALT_BYTES);
+  var key = stretchPassword(password, salt, iterations, KEY_BIT_LEN);
 
   var decryptedBytes = AES.decrypt(payload, key, salt, options);
   return decryptedBytes.toString('utf8');
@@ -35821,7 +35455,7 @@ function stretchPassword (password, salt, iterations, keylen) {
   assert(salt, 'salt missing');
   assert(password, 'password missing');
   assert(iterations, 'iterations missing');
-  assert(typeof(sjcl.hash.sha1) === 'function', 'missing sha1, make sure sjcl is configured correctly');
+  assert(typeof (sjcl.hash.sha1) === 'function', 'missing sha1, make sure sjcl is configured correctly');
 
   var hmacSHA1 = function (key) {
     var hasher = new sjcl.misc.hmac(key, sjcl.hash.sha1);
@@ -35850,6 +35484,215 @@ function sha256 (data) {
   return crypto.createHash('sha256').update(data).digest();
 }
 
+function smix (B, Bi, r, N, V, XY) {
+  var Xi = 0;
+  var Yi = 128 * r;
+  var i;
+
+  arraycopy32(B, Bi, XY, Xi, Yi);
+
+  for (i = 0; i < N; i++) {
+    arraycopy32(XY, Xi, V, i * Yi, Yi);
+    blockmix_salsa8(XY, Xi, Yi, r);
+  }
+
+  for (i = 0; i < N; i++) {
+    var j = integerify(XY, Xi, r) & (N - 1);
+    blockxor(V, j * Yi, XY, Xi, Yi);
+    blockmix_salsa8(XY, Xi, Yi, r);
+  }
+
+  arraycopy32(XY, Xi, B, Bi, Yi);
+}
+
+function blockmix_salsa8 (BY, Bi, Yi, r) {
+  var X = [];
+  var i;
+
+  arraycopy32(BY, Bi + (2 * r - 1) * 64, X, 0, 64);
+
+  for (i = 0; i < 2 * r; i++) {
+    blockxor(BY, i * 64, X, 0, 64);
+    salsa20_8(X);
+    arraycopy32(X, 0, BY, Yi + (i * 64), 64);
+  }
+
+  for (i = 0; i < r; i++) {
+    arraycopy32(BY, Yi + (i * 2) * 64, BY, Bi + (i * 64), 64);
+  }
+
+  for (i = 0; i < r; i++) {
+    arraycopy32(BY, Yi + (i * 2 + 1) * 64, BY, Bi + (i + r) * 64, 64);
+  }
+}
+
+function R (a, b) {
+  return (a << b) | (a >>> (32 - b));
+}
+
+function salsa20_8 (B) {
+  var B32 = new Array(32);
+  var x = new Array(32);
+  var i;
+
+  for (i = 0; i < 16; i++) {
+    B32[i] = (B[i * 4 + 0] & 0xff) << 0;
+    B32[i] |= (B[i * 4 + 1] & 0xff) << 8;
+    B32[i] |= (B[i * 4 + 2] & 0xff) << 16;
+    B32[i] |= (B[i * 4 + 3] & 0xff) << 24;
+  }
+
+  arraycopy(B32, 0, x, 0, 16);
+
+  for (i = 8; i > 0; i -= 2) {
+    /*eslint-disable */
+    x[ 4] ^= R(x[ 0]+x[12], 7);  x[ 8] ^= R(x[ 4]+x[ 0], 9);
+    x[12] ^= R(x[ 8]+x[ 4],13);  x[ 0] ^= R(x[12]+x[ 8],18);
+    x[ 9] ^= R(x[ 5]+x[ 1], 7);  x[13] ^= R(x[ 9]+x[ 5], 9);
+    x[ 1] ^= R(x[13]+x[ 9],13);  x[ 5] ^= R(x[ 1]+x[13],18);
+    x[14] ^= R(x[10]+x[ 6], 7);  x[ 2] ^= R(x[14]+x[10], 9);
+    x[ 6] ^= R(x[ 2]+x[14],13);  x[10] ^= R(x[ 6]+x[ 2],18);
+    x[ 3] ^= R(x[15]+x[11], 7);  x[ 7] ^= R(x[ 3]+x[15], 9);
+    x[11] ^= R(x[ 7]+x[ 3],13);  x[15] ^= R(x[11]+x[ 7],18);
+    x[ 1] ^= R(x[ 0]+x[ 3], 7);  x[ 2] ^= R(x[ 1]+x[ 0], 9);
+    x[ 3] ^= R(x[ 2]+x[ 1],13);  x[ 0] ^= R(x[ 3]+x[ 2],18);
+    x[ 6] ^= R(x[ 5]+x[ 4], 7);  x[ 7] ^= R(x[ 6]+x[ 5], 9);
+    x[ 4] ^= R(x[ 7]+x[ 6],13);  x[ 5] ^= R(x[ 4]+x[ 7],18);
+    x[11] ^= R(x[10]+x[ 9], 7);  x[ 8] ^= R(x[11]+x[10], 9);
+    x[ 9] ^= R(x[ 8]+x[11],13);  x[10] ^= R(x[ 9]+x[ 8],18);
+    x[12] ^= R(x[15]+x[14], 7);  x[13] ^= R(x[12]+x[15], 9);
+    x[14] ^= R(x[13]+x[12],13);  x[15] ^= R(x[14]+x[13],18);
+    /*eslint-enable */
+  }
+
+  for (i = 0; i < 16; ++i) B32[i] = x[i] + B32[i];
+
+  for (i = 0; i < 16; i++) {
+    var bi = i * 4;
+    B[bi + 0] = (B32[i] >> 0 & 0xff);
+    B[bi + 1] = (B32[i] >> 8 & 0xff);
+    B[bi + 2] = (B32[i] >> 16 & 0xff);
+    B[bi + 3] = (B32[i] >> 24 & 0xff);
+  }
+}
+
+function blockxor (S, Si, D, Di, len) {
+  var i = len >> 6;
+  while (i--) {
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+  }
+}
+
+function integerify (B, bi, r) {
+  var n;
+
+  bi += (2 * r - 1) * 64;
+
+  n = (B[bi + 0] & 0xff) << 0;
+  n |= (B[bi + 1] & 0xff) << 8;
+  n |= (B[bi + 2] & 0xff) << 16;
+  n |= (B[bi + 3] & 0xff) << 24;
+
+  return n;
+}
+
+function arraycopy (src, srcPos, dest, destPos, length) {
+  while (length--) {
+    dest[destPos++] = src[srcPos++];
+  }
+}
+
+function arraycopy32 (src, srcPos, dest, destPos, length) {
+  var i = length >> 5;
+  while (i--) {
+    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
+
+    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
+
+    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
+
+    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
+  }
+}
+
+function scrypt (passwd, salt, N, r, p, dkLen, callback) {
+  if (N == 0 || (N & (N - 1)) != 0) throw Error('N must be > 0 and a power of 2');
+
+  var MAX_VALUE = 2147483647;
+  if (N > MAX_VALUE / 128 / r) throw Error('Parameter N is too large');
+  if (r > MAX_VALUE / 128 / p) throw Error('Parameter r is too large');
+
+  if (!Buffer.isBuffer(passwd)) {
+    passwd = new Buffer(passwd, 'utf8');
+  }
+
+  if (!Buffer.isBuffer(salt)) {
+    salt = new Buffer(salt, 'utf8');
+  }
+
+  var B = pbkdf2(passwd, salt, 1, (p * 128 * r), ALGO.SHA256);
+
+  var XY = [];
+  var V = [];
+
+  for (var i = 0; i < p; i++) {
+    smix(B, i * 128 * r, r, N, V, XY);
+  }
+
+  callback(pbkdf2(passwd, B, 1, dkLen, ALGO.SHA256));
+
+}
+
 module.exports = {
   encryptWallet: encryptWallet,
   decryptWallet: decryptWallet,
@@ -35864,6 +35707,7 @@ module.exports = {
   pbkdf2: pbkdf2,
   hashNTimes: hashNTimes,
   sha256: sha256,
+  scrypt: scrypt,
   AES: AES,
   algo: ALGO,
   pad: {
@@ -35875,7 +35719,7 @@ module.exports = {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"assert":16,"buffer":73,"crypto":82,"sjcl":165}],195:[function(require,module,exports){
+},{"assert":16,"buffer":73,"crypto":82,"sjcl":165}],194:[function(require,module,exports){
 'use strict';
 
 var API = require('./api');
@@ -35884,14 +35728,13 @@ var WalletCrypto = require('./wallet-crypto');
 var MyWallet = require('./wallet');
 var assert = require('assert');
 
-
 function handleError (msg) {
   return function (e) {
     var errMsg = e.responseJSON && e.responseJSON.initial_error
         ? e.responseJSON.initial_error
         : e || msg;
     return Promise.reject(errMsg);
-  }
+  };
 }
 
 function handleResponse (obj) {
@@ -35904,7 +35747,6 @@ function handleResponse (obj) {
 }
 
 function generateUUIDs (count) {
-
   var data = {
     format: 'json',
     n: count,
@@ -35928,12 +35770,11 @@ function generateUUIDs (count) {
  */
 // used in the frontend and in iOS
 function resendTwoFactorSms (user_guid) {
-
   var data = {
-    format : 'json',
-    resend_code : true,
-    ct : Date.now(),
-    api_code : API.API_CODE
+    format: 'json',
+    resend_code: true,
+    ct: Date.now(),
+    api_code: API.API_CODE
   };
 
   return API.request('GET', 'wallet/' + user_guid, data, true, false)
@@ -35947,13 +35788,12 @@ function resendTwoFactorSms (user_guid) {
  */
 // used in the frontend
 function recoverGuid (user_email, captcha) {
-
   var data = {
     method: 'recover-wallet',
-    email : user_email,
+    email: user_email,
     captcha: captcha,
-    ct : Date.now(),
-    api_code : API.API_CODE
+    ct: Date.now(),
+    api_code: API.API_CODE
   };
 
   return API.request('POST', 'wallet', data, true)
@@ -35962,7 +35802,7 @@ function recoverGuid (user_email, captcha) {
 
 function checkWalletChecksum (payload_checksum, success, error) {
   assert(payload_checksum, 'Payload checksum missing');
-  var data = {method : 'wallet.aes.json', format : 'json', checksum : payload_checksum};
+  var data = {method: 'wallet.aes.json', format: 'json', checksum: payload_checksum};
 
   API.securePostCallbacks('wallet', data, function (obj) {
     if (!obj.payload || obj.payload == 'Not modified') {
@@ -35990,7 +35830,6 @@ function requestTwoFactorReset (
   secret,
   message,
   captcha) {
-
   var data = {
     method: 'reset-two-factor-form',
     guid: user_guid,
@@ -35999,8 +35838,8 @@ function requestTwoFactorReset (
     secret_phrase: secret,
     message: message,
     kaptcha: captcha,
-    ct : Date.now(),
-    api_code : API.API_CODE
+    ct: Date.now(),
+    api_code: API.API_CODE
   };
 
   return API.request('POST', 'wallet', data, true)
@@ -36017,8 +35856,8 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
     // var data = MyWallet.makeCustomWalletJSON(null, guid, sharedKey);
     var data = JSON.stringify(MyWallet.wallet, null, 2);
 
-    //Everything looks ok, Encrypt the JSON output
-    var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.wallet.defaultPbkdf2Iterations,  MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0);
+    // Everything looks ok, Encrypt the JSON output
+    var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.wallet.defaultPbkdf2Iterations, MyWallet.wallet.isUpgradedToHD ? 3.0 : 2.0);
 
     if (crypted.length == 0) {
       return reject('Error encrypting the JSON output');
@@ -36026,14 +35865,14 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
 
     decryptWalletProgress && decryptWalletProgress();
 
-    //Now Decrypt the it again to double check for any possible corruption
+    // Now Decrypt the it again to double check for any possible corruption
     try {
       WalletCrypto.decryptWalletSync(crypted, password);
     } catch (e) {
       return reject(e);
     }
 
-    //SHA256 new_checksum verified by server in case of corruption during transit
+    // SHA256 new_checksum verified by server in case of corruption during transit
     var new_checksum = WalletCrypto.sha256(crypted).toString('hex');
 
     extra = extra || {};
@@ -36042,10 +35881,10 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
       length: crypted.length,
       payload: crypted,
       checksum: new_checksum,
-      method : 'insert',
-      format : 'plain',
-      sharedKey : sharedKey,
-      guid : guid
+      method: 'insert',
+      format: 'plain',
+      sharedKey: sharedKey,
+      guid: guid
     };
 
     Helpers.merge(post_data, extra);
@@ -36053,7 +35892,7 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
   });
 
   var apiPromise = dataPromise.then(function (postData) {
-    return API.securePost('wallet', postData)
+    return API.securePost('wallet', postData);
   });
 
   return Promise.all([dataPromise, apiPromise]);
@@ -36068,7 +35907,7 @@ module.exports = {
   requestTwoFactorReset: requestTwoFactorReset
 };
 
-},{"./api":178,"./helpers":185,"./wallet":200,"./wallet-crypto":194,"assert":16}],196:[function(require,module,exports){
+},{"./api":177,"./helpers":184,"./wallet":199,"./wallet-crypto":193,"assert":16}],195:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -36077,11 +35916,9 @@ var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
 var WalletNetwork = require('./wallet-network');
 
-function generateNewWallet (password, email, firstAccountName, success, error, isHD, generateUUIDProgress, decryptWalletProgress) {
+function generateNewWallet (password, email, mnemonic, bip39Password, firstAccountName, success, error, generateUUIDProgress, decryptWalletProgress) {
   assert(password.length <= 255, 'Passwords must be shorter than 256 characters');
-  assert(!navigator.userAgent.match(/MeeGo/i), 'MeeGo browser currently not supported.'); //User reported this browser generated an invalid private key
-
-  isHD = Helpers.isBoolean(isHD) ? isHD : true;
+  assert(!navigator.userAgent.match(/MeeGo/i), 'MeeGo browser currently not supported.'); // User reported this browser generated an invalid private key
 
   generateUUIDProgress && generateUUIDProgress();
 
@@ -36093,17 +35930,15 @@ function generateNewWallet (password, email, firstAccountName, success, error, i
       error('Error generating wallet identifier');
     }
 
-    // Upgrade to HD immediately:
     var saveWallet = function () {
-      WalletNetwork.insertWallet(guid, sharedKey, password, {email : email}, decryptWalletProgress).then(function () {
+      WalletNetwork.insertWallet(guid, sharedKey, password, {email: email}, decryptWalletProgress).then(function () {
         success(guid, sharedKey, password);
       }, function (e) {
         error(e);
       });
     };
 
-    Wallet.new(guid, sharedKey, firstAccountName, saveWallet, error, isHD);
-
+    Wallet.new(guid, sharedKey, mnemonic, bip39Password, firstAccountName, saveWallet, error);
   }).catch(error);
 }
 
@@ -36111,29 +35946,28 @@ module.exports = {
   generateNewWallet: generateNewWallet
 };
 
-},{"./blockchain-wallet":182,"./helpers":185,"./wallet-network":195,"assert":16}],197:[function(require,module,exports){
+},{"./blockchain-wallet":181,"./helpers":184,"./wallet-network":194,"assert":16}],196:[function(require,module,exports){
 'use strict';
 
 var MyWallet = require('./wallet');
 var WalletCrypto = require('./wallet-crypto');
 
 var WalletStore = (function () {
-  var password; //Password
-  var guid; //Wallet identifier
+  var password; // Password
+  var guid; // Wallet identifier
   var language = 'en';
   var pbkdf2_iterations = 5000; // pbkdf2_interations of the main password (to encrypt the full payload)
   var disable_logout = false;
-  var real_auth_type = 0; //The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
-  var encrypted_wallet_data; //Encrypted wallet data (Base64, AES 256)
-  var payload_checksum; //SHA256 hash of the current wallet.aes.json
+  var real_auth_type = 0; // The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
+  var encrypted_wallet_data; // Encrypted wallet data (Base64, AES 256)
+  var payload_checksum; // SHA256 hash of the current wallet.aes.json
   var isPolling = false;
   var isRestoringWallet = false;
   var counter = 0;
   var sync_pubkeys = false;
   var isSynchronizedWithServer = true;
-  var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
+  var event_listeners = []; // Emits Did decrypt wallet event (used on claim page)
 
-  ////////////////////////////////////////////////////////////////////////////
   return {
     setPbkdf2Iterations: function (iterations) {
       pbkdf2_iterations = iterations;
@@ -36165,14 +35999,14 @@ var WalletStore = (function () {
     },
     get2FATypeString: function () {
       var stringType = '';
-      switch(real_auth_type){
-      case 0: stringType = null; break;
-      case 1: stringType = 'Yubikey'; break;
-      case 2: stringType = 'Email'; break;
-      case 3: stringType = 'Yubikey MtGox - Unsupported'; break;
-      case 4: stringType = 'Google Auth'; break;
-      case 5: stringType = 'SMS'; break;
-      default: stringType = null; break;
+      switch (real_auth_type) {
+        case 0: stringType = null; break;
+        case 1: stringType = 'Yubikey'; break;
+        case 2: stringType = 'Email'; break;
+        case 3: stringType = 'Yubikey MtGox - Unsupported'; break;
+        case 4: stringType = 'Google Auth'; break;
+        case 5: stringType = 'SMS'; break;
+        default: stringType = null; break;
       }
       return stringType;
     },
@@ -36189,8 +36023,7 @@ var WalletStore = (function () {
       if (!data || data.length == 0) {
         encrypted_wallet_data = null;
         payload_checksum = null;
-      }
-      else {
+      } else {
         encrypted_wallet_data = data;
         payload_checksum = this.generatePayloadChecksum();
       }
@@ -36222,37 +36055,37 @@ var WalletStore = (function () {
     getCounter: function () {
       return counter;
     },
-    setSyncPubKeys: function (bool){
+    setSyncPubKeys: function (bool) {
       sync_pubkeys = bool;
     },
-    isSyncPubKeys: function (){
+    isSyncPubKeys: function () {
       return sync_pubkeys;
     },
-    isSynchronizedWithServer: function (){
+    isSynchronizedWithServer: function () {
       return isSynchronizedWithServer;
     },
-    setIsSynchronizedWithServer: function (bool){
+    setIsSynchronizedWithServer: function (bool) {
       isSynchronizedWithServer = bool;
     },
-    addEventListener: function (func){
+    addEventListener: function (func) {
       event_listeners.push(func);
     },
-    sendEvent: function (event_name, obj){
+    sendEvent: function (event_name, obj) {
       for (var listener in event_listeners) {
         event_listeners[listener](event_name, obj);
       }
     },
-    isCorrectMainPassword: function (candidate){
+    isCorrectMainPassword: function (candidate) {
       return password === candidate;
     },
-    changePassword: function (new_password, success, error){
+    changePassword: function (new_password, success, error) {
       password = new_password;
       MyWallet.syncWallet(success, error);
     },
-    unsafeSetPassword: function (newPassword){
+    unsafeSetPassword: function (newPassword) {
       password = newPassword;
     },
-    getPassword: function (){
+    getPassword: function () {
       return password;
     },
     getLogoutTime: function () {
@@ -36266,7 +36099,7 @@ var WalletStore = (function () {
 
 module.exports = WalletStore;
 
-},{"./wallet":200,"./wallet-crypto":194}],198:[function(require,module,exports){
+},{"./wallet":199,"./wallet-crypto":193}],197:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -36279,16 +36112,17 @@ function postTokenEndpoint (method, token, extraParams) {
   assert(extraParams, 'Extra params dictionary required');
 
   var handleResponse = function (res) {
-    if (res && res.success !== undefined)
+    if (res && res.success !== undefined) {
       return res.success ? res : Promise.reject(res);
-    else
-      return Promise.reject({ error: 'TOKEN_ENDPOINT_UNEXPECTED_RESPONSE' });
+    } else {
+      return Promise.reject({error: 'TOKEN_ENDPOINT_UNEXPECTED_RESPONSE'});
+    }
   };
 
   var params = {
     token: token,
-    method : method,
-    api_code : API.API_CODE
+    method: method,
+    api_code: API.API_CODE
   };
 
   for (var k in extraParams) {
@@ -36342,16 +36176,14 @@ module.exports = {
   postTokenEndpoint: postTokenEndpoint // For tests
 };
 
-},{"./api":178,"./helpers":185,"assert":16}],199:[function(require,module,exports){
+},{"./api":177,"./helpers":184,"assert":16}],198:[function(require,module,exports){
 'use strict';
 
 module.exports = Tx;
-////////////////////////////////////////////////////////////////////////////////
-var Helpers     = require('./helpers');
-var MyWallet    = require('./wallet');
-var WalletStore = require('./wallet-store');
-////////////////////////////////////////////////////////////////////////////////
-function Tx (object){
+
+var MyWallet = require('./wallet');
+
+function Tx (object) {
   var obj = object || {};
   // original properties
   var setConfirmations = function (tx_block_height) {
@@ -36361,35 +36193,35 @@ function Tx (object){
       conf = lastBlock.height - tx_block_height + 1;
     }
     return conf;
-  }
+  };
 
-  this.balance          = obj.balance;
-  this.block_height     = obj.block_height;
-  this.hash             = obj.hash;
-  this.inputs           = obj.inputs || [];
-  this.lock_time        = obj.lock_time;
-  this.out              = obj.out  || [];
-  this.relayed_by       = obj.relayed_by;
-  this._result          = obj.result;
-  this.size             = obj.size;
-  this.time             = obj.time;
-  this.tx_index         = obj.tx_index;
-  this.ver              = obj.ver;
-  this.vin_sz           = obj.vin_sz;
-  this.vout_sz          = obj.vout_sz;
-  this.double_spend     = obj.double_spend;
-  this.publicNote       = obj.note;
-  this.note             = MyWallet.wallet.getNote(this.hash);
-  this.confirmations    = setConfirmations(this.block_height);
+  this.balance = obj.balance;
+  this.block_height = obj.block_height;
+  this.hash = obj.hash;
+  this.inputs = obj.inputs || [];
+  this.lock_time = obj.lock_time;
+  this.out = obj.out || [];
+  this.relayed_by = obj.relayed_by;
+  this._result = obj.result;
+  this.size = obj.size;
+  this.time = obj.time;
+  this.tx_index = obj.tx_index;
+  this.ver = obj.ver;
+  this.vin_sz = obj.vin_sz;
+  this.vout_sz = obj.vout_sz;
+  this.double_spend = obj.double_spend;
+  this.publicNote = obj.note;
+  this.note = MyWallet.wallet.getNote(this.hash);
+  this.confirmations = setConfirmations(this.block_height);
 
   // computed properties
   var initialOut = {
-      taggedOuts: []
-    , toWatchOnly: false
-    , totalOut: 0
-    , internalReceive: 0
-    , changeAmount: 0
-  }
+    taggedOuts: [],
+    toWatchOnly: false,
+    totalOut: 0,
+    internalReceive: 0,
+    changeAmount: 0
+  };
   var pouts = this.out.reduce(procOuts, initialOut);
   this.processedOutputs = pouts.taggedOuts;
   this.toWatchOnly = pouts.toWatchOnly;
@@ -36398,16 +36230,16 @@ function Tx (object){
   this.changeAmount = pouts.changeAmount;
 
   var initialIn = {
-      taggedIns: []
-    , fromWatchOnly: false
-    , totalIn: 0
-    , internalSpend: 0
-  }
+    taggedIns: [],
+    fromWatchOnly: false,
+    totalIn: 0,
+    internalSpend: 0
+  };
   var pins = this.inputs.reduce(procIns.bind(this), initialIn);
   this.processedInputs = pins.taggedIns;
-  this.totalIn        = pins.totalIn;
-  this.internalSpend  = pins.internalSpend;
-  this.fromWatchOnly  = pins.fromWatchOnly;
+  this.totalIn = pins.totalIn;
+  this.internalSpend = pins.internalSpend;
+  this.fromWatchOnly = pins.fromWatchOnly;
 
   this.fee = isCoinBase(this.inputs[0]) ? 0 : this.totalIn - this.totalOut;
   this.result = this._result ? this._result : this.internalReceive - this.internalSpend;
@@ -36426,7 +36258,7 @@ Object.defineProperties(Tx.prototype, {
   }
 });
 
-function procOuts(acc, output) {
+function procOuts (acc, output) {
   var tagOut = tagCoin(output);
   acc.taggedOuts.push(tagOut);
   if (tagOut.isWatchOnly) {
@@ -36443,11 +36275,11 @@ function procOuts(acc, output) {
   return acc;
 }
 
-function procIns(acc, input) {
+function procIns (acc, input) {
   var f = tagCoin.compose(unpackInput.bind(this));
   var tagIn = f(input);
   acc.taggedIns.push(tagIn);
-  acc.fromWatchOnly =  acc.fromWatchOnly || tagIn.isWatchOnly || false;
+  acc.fromWatchOnly = acc.fromWatchOnly || tagIn.isWatchOnly || false;
   if (tagIn.coinType !== 'external') {
     acc.internalSpend = acc.internalSpend + tagIn.amount;
   }
@@ -36455,7 +36287,7 @@ function procIns(acc, input) {
   return acc;
 }
 
-function belongsTo(tx, id) {
+function belongsTo (tx, id) {
   return tx.processedInputs.concat(tx.processedOutputs).some(function (p) { return p.identity == id; });
 }
 // var memoizedBelongsTo = Helpers.memoize(belongsTo);
@@ -36472,7 +36304,7 @@ function isAccountChange (x) {
   return (isAccount(x) && x.xpub.path.split('/')[1] === '1');
 }
 
-function accountPath (x){
+function accountPath (x) {
   return account(x).index + x.xpub.path.substr(1);
 }
 
@@ -36529,7 +36361,7 @@ function unpackInput (input) {
   }
 }
 
-function computeAmount(Tx) {
+function computeAmount (Tx) {
   var am = 0;
   switch (Tx.txType) {
     case 'transfer':
@@ -36547,7 +36379,7 @@ function computeAmount(Tx) {
   return am;
 }
 
-function computeTxType(Tx) {
+function computeTxType (Tx) {
   var v = null;
   var impactNoFee = Tx.result + Tx.fee;
   switch (true) {
@@ -36561,7 +36393,7 @@ function computeTxType(Tx) {
       v = 'received';
       break;
     default:
-      v = 'complex'
+      v = 'complex';
   }
   return v;
 }
@@ -36570,35 +36402,32 @@ function isCoinBase (input) {
   return (input == null || input.prev_out == null || input.prev_out.addr == null);
 }
 
-Tx.factory = function (o){
+Tx.factory = function (o) {
   if (o instanceof Object && !(o instanceof Tx)) {
     return new Tx(o);
-  }
-  else { return o; }
+  } else { return o; }
 };
 
-Tx.IOSfactory = function (tx){
+Tx.IOSfactory = function (tx) {
   return {
-    time          : tx.time,
-    result        : tx.result,
-    amount        : tx.amount,
-    confirmations : tx.confirmations,
-    myHash        : tx.hash,
-    txType        : tx.txType,
-    block_height  : tx.block_height,
-    fromWatchOnly : tx.fromWatchOnly,
-    toWatchOnly   : tx.toWatchOnly,
+    time: tx.time,
+    result: tx.result,
+    amount: tx.amount,
+    confirmations: tx.confirmations,
+    myHash: tx.hash,
+    txType: tx.txType,
+    block_height: tx.block_height,
+    fromWatchOnly: tx.fromWatchOnly,
+    toWatchOnly: tx.toWatchOnly
   };
 };
 
-},{"./helpers":185,"./wallet":200,"./wallet-store":197}],200:[function(require,module,exports){
+},{"./wallet":199}],199:[function(require,module,exports){
 'use strict';
 
 var MyWallet = module.exports = {};
 
 var assert = require('assert');
-var Bitcoin = require('bitcoinjs-lib');
-var ECPair = Bitcoin.ECPair;
 var Buffer = require('buffer').Buffer;
 
 var WalletStore = require('./wallet-store');
@@ -36610,6 +36439,8 @@ var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
 var BlockchainSocket = require('./blockchain-socket');
 var BlockchainSettingsAPI = require('./blockchain-settings-api');
+var RNG = require('./rng');
+var BIP39 = require('bip39');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -36629,8 +36460,7 @@ function socketConnect () {
     }
     try {
       obj = JSON.parse(message);
-    }
-    catch (e) {
+    } catch (e) {
       console.log('Websocket error: could not parse message data as JSON: ' + message);
       return;
     }
@@ -36644,25 +36474,22 @@ function socketConnect () {
 
         MyWallet.getWallet();
       }
-
     } else if (obj.op == 'utx') {
       WalletStore.sendEvent('on_tx_received');
       var sendOnTx = WalletStore.sendEvent.bind(null, 'on_tx');
       MyWallet.wallet.getHistory().then(sendOnTx);
-
-    }  else if (obj.op == 'block') {
+    } else if (obj.op == 'block') {
       var sendOnBlock = WalletStore.sendEvent.bind(null, 'on_block');
       MyWallet.wallet.getHistory().then(sendOnBlock);
       MyWallet.wallet.latestBlock = obj.x;
-
-    }  else if (obj.op == 'pong') {
+    } else if (obj.op == 'pong') {
       clearTimeout(MyWallet.ws.pingTimeoutPID);
     }
   }
 
   function onOpen () {
     WalletStore.sendEvent('ws_on_open');
-    var accounts = MyWallet.wallet.hdwallet? MyWallet.wallet.hdwallet.activeXpubs : [];
+    var accounts = MyWallet.wallet.hdwallet ? MyWallet.wallet.hdwallet.activeXpubs : [];
     var msg = MyWallet.ws.msgOnOpen(MyWallet.wallet.guid, MyWallet.wallet.activeAddresses, accounts);
     MyWallet.ws.send(msg);
   }
@@ -36674,20 +36501,20 @@ function socketConnect () {
 
 // used two times
 function didDecryptWallet (success) {
-
-  //We need to check if the wallet has changed
+  // We need to check if the wallet has changed
   MyWallet.getWallet();
   success();
 }
 
-//Fetch a new wallet from the server
-//success(modified true/false)
+// Fetch a new wallet from the server
+// success(modified true/false)
 // used locally and iOS
 MyWallet.getWallet = function (success, error) {
-  var data = {method : 'wallet.aes.json', format : 'json'};
+  var data = {method: 'wallet.aes.json', format: 'json'};
 
-  if (WalletStore.getPayloadChecksum() && WalletStore.getPayloadChecksum().length > 0)
+  if (WalletStore.getPayloadChecksum() && WalletStore.getPayloadChecksum().length > 0) {
     data.checksum = WalletStore.getPayloadChecksum();
+  }
 
   API.securePostCallbacks('wallet', data, function (obj) {
     if (!obj.payload || obj.payload == 'Not modified') {
@@ -36705,15 +36532,12 @@ MyWallet.getWallet = function (success, error) {
       // When re-fetching the wallet after a remote update, if we can't decrypt
       // it, logout for safety.
       MyWallet.logout(true);
-      if (error) error(
-      );
+      if (error) { error(); }
     });
   }, function (e) {
     if (error) error();
   });
 };
-
-////////////////////////////////////////////////////////////////////////////////
 
 function decryptAndInitializeWallet (success, error, decrypt_success, build_hd_success) {
   assert(success, 'Success callback required');
@@ -36740,7 +36564,7 @@ function decryptAndInitializeWallet (success, error, decrypt_success, build_hd_s
       if (rootContainer) {
         WalletStore.setPbkdf2Iterations(rootContainer.pbkdf2_iterations);
       }
-      //If we don't have a checksum then the wallet is probably brand new - so we can generate our own
+      // If we don't have a checksum then the wallet is probably brand new - so we can generate our own
       if (WalletStore.getPayloadChecksum() == null || WalletStore.getPayloadChecksum().length == 0) {
         WalletStore.setPayloadChecksum(WalletStore.generatePayloadChecksum());
       }
@@ -36754,12 +36578,10 @@ function decryptAndInitializeWallet (success, error, decrypt_success, build_hd_s
   );
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 // used in the frontend
 MyWallet.makePairingCode = function (success, error) {
   try {
-    API.securePostCallbacks('wallet', { method : 'pairing-encryption-password' }, function (encryption_phrase) {
+    API.securePostCallbacks('wallet', { method: 'pairing-encryption-password' }, function (encryption_phrase) {
       var pwHex = new Buffer(WalletStore.getPassword()).toString('hex');
       var encrypted = WalletCrypto.encrypt(MyWallet.wallet.sharedKey + '|' + pwHex, encryption_phrase, 10);
       success('1|' + MyWallet.wallet.guid + '|' + encrypted);
@@ -36771,20 +36593,9 @@ MyWallet.makePairingCode = function (success, error) {
   }
 };
 
-////////////////////////////////////////////////////////////////////////////////
-MyWallet.login = function ( user_guid
-                          , shared_key
-                          , inputedPassword
-                          , twoFA
-                          , success
-                          , needs_two_factor_code
-                          , wrong_two_factor_code
-                          , authorization_required
-                          , other_error
-                          , fetch_success
-                          , decrypt_success
-                          , build_hd_success) {
-
+MyWallet.login = function (user_guid, shared_key, inputedPassword, twoFA, success, needs_two_factor_code,
+                           wrong_two_factor_code, authorization_required, other_error, fetch_success,
+                           decrypt_success, build_hd_success) {
   assert(success, 'Success callback required');
   assert(other_error, 'Error callback required');
   assert(twoFA !== undefined, '2FA code must be null or set');
@@ -36795,12 +36606,11 @@ MyWallet.login = function ( user_guid
   );
 
   var clientTime = (new Date()).getTime();
-  var data = { format : 'json', resend_code : null, ct : clientTime, api_code : API.API_CODE };
+  var data = { format: 'json', resend_code: null, ct: clientTime, api_code: API.API_CODE };
 
   if (shared_key) { data.sharedKey = shared_key; }
 
   var tryToFetchWalletJSON = function (guid, successCallback) {
-
     var success = function (obj) {
       fetch_success && fetch_success();
       // Even if Two Factor is enabled, some settings need to be saved here,
@@ -36822,34 +36632,33 @@ MyWallet.login = function ( user_guid
         needs_two_factor_code(obj.auth_type);
         return;
       }
-      successCallback(obj)
+      successCallback(obj);
     };
 
     var error = function (e) {
-       console.log(e);
-       var obj = 'object' === typeof e ? e : JSON.parse(e);
-       if(obj && obj.initial_error && !obj.authorization_required) {
-         other_error(obj.initial_error);
-         return;
-       }
-       WalletStore.sendEvent('did_fail_set_guid');
-       if (obj.authorization_required && typeof(authorization_required) === 'function') {
-         authorization_required(function () {
-           MyWallet.pollForSessionGUID(function () {
-             tryToFetchWalletJSON(guid, successCallback);
-           });
-         });
-       }
-       if (obj.initial_error) {
-         WalletStore.sendEvent('msg', {type: 'error', message: obj.initial_error});
-       }
+      console.log(e);
+      var obj = 'object' === typeof e ? e : JSON.parse(e);
+      if (obj && obj.initial_error && !obj.authorization_required) {
+        other_error(obj.initial_error);
+        return;
+      }
+      WalletStore.sendEvent('did_fail_set_guid');
+      if (obj.authorization_required && typeof (authorization_required) === 'function') {
+        authorization_required(function () {
+          MyWallet.pollForSessionGUID(function () {
+            tryToFetchWalletJSON(guid, successCallback);
+          });
+        });
+      }
+      if (obj.initial_error) {
+        WalletStore.sendEvent('msg', {type: 'error', message: obj.initial_error});
+      }
     };
     API.request('GET', 'wallet/' + guid, data, true, false).then(success).catch(error);
   };
 
   var tryToFetchWalletWith2FA = function (guid, two_factor_auth, successCallback) {
-
-    if(Helpers.isString(two_factor_auth)) {
+    if (Helpers.isString(two_factor_auth)) {
       two_factor_auth = {
         type: null,
         code: two_factor_auth
@@ -36861,73 +36670,71 @@ MyWallet.login = function ( user_guid
       return;
     }
     if (two_factor_auth.code.length == 0 || two_factor_auth.code.length > 255) {
-     other_error('You must enter a Two Factor Authentication code');
-     return;
+      other_error('You must enter a Two Factor Authentication code');
+      return;
     }
 
     var two_factor_auth_key = two_factor_auth.code;
 
-    switch(two_factor_auth.type) {
+    switch (two_factor_auth.type) {
       case 2: // email
       case 4: // sms
       case 5: // Google Auth
         two_factor_auth_key = two_factor_auth_key.toUpperCase();
-      break;
+        break;
     }
 
     var success = function (data) {
-     if (data == null || data.length == 0) {
-       other_error('Server Return Empty Wallet Data');
-       return;
-     }
-     if (data != 'Not modified') { WalletStore.setEncryptedWalletData(data); }
-     successCallback(data);
+      if (data == null || data.length == 0) {
+        other_error('Server Return Empty Wallet Data');
+        return;
+      }
+      if (data != 'Not modified') { WalletStore.setEncryptedWalletData(data); }
+      successCallback(data);
     };
     var error = function (response) {
-     WalletStore.setRestoringWallet(false);
-     wrong_two_factor_code(response);
+      WalletStore.setRestoringWallet(false);
+      wrong_two_factor_code(response);
     };
 
-    var myData = { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : API.API_CODE};
+    var myData = { guid: guid, payload: two_factor_auth_key, length: two_factor_auth_key.length, method: 'get-wallet', format: 'plain', api_code: API.API_CODE };
     API.request('POST', 'wallet', myData, true, false).then(success).catch(error);
   };
 
   var didFetchWalletJSON = function (obj) {
     if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
-     WalletStore.setEncryptedWalletData(obj.payload);
+      WalletStore.setEncryptedWalletData(obj.payload);
     }
 
     if (obj.language && WalletStore.getLanguage() != obj.language) {
-     WalletStore.setLanguage(obj.language);
+      WalletStore.setLanguage(obj.language);
     }
     MyWallet.initializeWallet(inputedPassword, success, other_error, decrypt_success, build_hd_success);
-  }
+  };
 
-  if(twoFA == null) {
-    tryToFetchWalletJSON(user_guid, didFetchWalletJSON)
+  if (twoFA == null) {
+    tryToFetchWalletJSON(user_guid, didFetchWalletJSON);
   } else {
     // If 2FA is enabled and we already fetched the wallet before, don't fetch
     // it again
-    if(user_guid === WalletStore.getGuid() && WalletStore.getEncryptedWalletData()) {
+    if (user_guid === WalletStore.getGuid() && WalletStore.getEncryptedWalletData()) {
       MyWallet.initializeWallet(inputedPassword, success, other_error, decrypt_success, build_hd_success);
     } else {
-      tryToFetchWalletWith2FA(user_guid, twoFA, didFetchWalletJSON)
+      tryToFetchWalletWith2FA(user_guid, twoFA, didFetchWalletJSON);
     }
   }
 };
-////////////////////////////////////////////////////////////////////////////////
 
 // used locally
 MyWallet.pollForSessionGUID = function (successCallback) {
-
   if (WalletStore.isPolling()) return;
   WalletStore.setIsPolling(true);
-  var data = {format : 'json'};
+  var data = {format: 'json'};
   var success = function (obj) {
     if (obj.guid) {
       WalletStore.setIsPolling(false);
       WalletStore.sendEvent('msg', {type: 'success', message: 'Authorization Successful'});
-      successCallback()
+      successCallback();
     } else {
       if (WalletStore.getCounter() < 600) {
         WalletStore.incrementCounter();
@@ -36938,14 +36745,13 @@ MyWallet.pollForSessionGUID = function (successCallback) {
         WalletStore.setIsPolling(false);
       }
     }
-  }
+  };
   var error = function () {
     WalletStore.setIsPolling(false);
-  }
+  };
   API.request('GET', 'wallet/poll-for-session-guid', data, true, false).then(success).catch(error);
 };
 // used locally
-////////////////////////////////////////////////////////////////////////////////
 
 MyWallet.initializeWallet = function (pw, success, other_error, decrypt_success, build_hd_success) {
   assert(success, 'Success callback required');
@@ -36966,18 +36772,15 @@ MyWallet.initializeWallet = function (pw, success, other_error, decrypt_success,
   WalletStore.unsafeSetPassword(pw);
 
   decryptAndInitializeWallet(
-    function () {
-      WalletStore.setRestoringWallet(false);
-      didDecryptWallet(success);
-    }
-    , _error
-    , decrypt_success
-    , build_hd_success
+      function () {
+        WalletStore.setRestoringWallet(false);
+        didDecryptWallet(success);
+      },
+      _error,
+      decrypt_success,
+      build_hd_success
   );
 };
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
 
 // used on iOS
 MyWallet.getIsInitialized = function () {
@@ -36991,25 +36794,24 @@ function setIsInitialized () {
   isInitialized = true;
 }
 
-////////////////////////////////////////////////////////////////////////////////
 // This should replace backup functions
 function syncWallet (successcallback, errorcallback) {
-
   var panic = function (e) {
-      console.log('Panic ' + e);
-      window.location.replace('/');
-      throw 'Save disabled.';
-      // kick out of the wallet in a inconsistent state to prevent save
+    console.log('Panic ' + e);
+    window.location.replace('/');
+    throw 'Save disabled.';
+    // kick out of the wallet in a inconsistent state to prevent save
   };
 
   if (MyWallet.wallet.isEncryptionConsistent === false) {
     panic('The wallet was not fully enc/decrypted');
   }
 
-  if (!MyWallet.wallet || !MyWallet.wallet.sharedKey
-      || MyWallet.wallet.sharedKey.length === 0
-      || MyWallet.wallet.sharedKey.length !== 36)
-    { throw 'Cannot backup wallet now. Shared key is not set'; };
+  if (!MyWallet.wallet || !MyWallet.wallet.sharedKey ||
+      MyWallet.wallet.sharedKey.length === 0 ||
+      MyWallet.wallet.sharedKey.length !== 36) {
+    throw 'Cannot backup wallet now. Shared key is not set';
+  }
 
   WalletStore.disableLogout();
 
@@ -37025,29 +36827,27 @@ function syncWallet (successcallback, errorcallback) {
   try {
     var method = 'update';
     var data = JSON.stringify(MyWallet.wallet, null, 2);
-    var crypted = WalletCrypto.encryptWallet( data
-                                              , WalletStore.getPassword()
-                                              , WalletStore.getPbkdf2Iterations()
-                                              , MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0 );
+    var crypted = WalletCrypto.encryptWallet(data, WalletStore.getPassword(),
+        WalletStore.getPbkdf2Iterations(), MyWallet.wallet.isUpgradedToHD ? 3.0 : 2.0);
 
     if (crypted.length == 0) {
       throw 'Error encrypting the JSON output';
     }
 
-    //Now Decrypt the it again to double check for any possible corruption
+    // Now Decrypt the it again to double check for any possible corruption
     WalletCrypto.decryptWallet(crypted, WalletStore.getPassword(), function (obj) {
       try {
         var oldChecksum = WalletStore.getPayloadChecksum();
         WalletStore.sendEvent('on_backup_wallet_start');
         WalletStore.setEncryptedWalletData(crypted);
         var new_checksum = WalletStore.getPayloadChecksum();
-        var data =  {
+        var data = {
           length: crypted.length,
           payload: crypted,
           checksum: new_checksum,
-          method : method,
-          format : 'plain',
-          language : WalletStore.getLanguage()
+          method: method,
+          format: 'plain',
+          language: WalletStore.getLanguage()
         };
 
         if (Helpers.isHex(oldChecksum)) {
@@ -37061,7 +36861,7 @@ function syncWallet (successcallback, errorcallback) {
             MyWallet.wallet.hdwallet.accounts != undefined
           ) ? [].concat.apply([],
             MyWallet.wallet.hdwallet.accounts.map(function (account) {
-              return account.labeledReceivingAddresses
+              return account.labeledReceivingAddresses;
             })) : [];
           data.active = [].concat.apply([],
             [
@@ -37072,45 +36872,42 @@ function syncWallet (successcallback, errorcallback) {
         }
 
         API.securePostCallbacks(
-            'wallet'
-          , data
-          , function (data) {
+            'wallet',
+            data,
+            function (data) {
               WalletNetwork.checkWalletChecksum(
-                  new_checksum
-                , function () {
+                  new_checksum,
+                  function () {
                     WalletStore.setIsSynchronizedWithServer(true);
                     WalletStore.enableLogout();
                     WalletStore.sendEvent('on_backup_wallet_success');
                     successcallback && successcallback();
-                    }
-                , function () {
+                  },
+                  function () {
                     _errorcallback('Checksum Did Not Match Expected Value');
                     WalletStore.enableLogout();
                   }
               );
+            },
+            function (e) {
+              WalletStore.enableLogout();
+              _errorcallback(e);
             }
-          , function (e) {
-            WalletStore.enableLogout();
-            _errorcallback(e);
-          }
         );
-
       } catch (e) {
         _errorcallback(e);
         WalletStore.enableLogout();
       }
-    },
-                               function (e) {
-                                 console.log(e);
-                                 throw('Decryption failed');
-                               });
+    }, function (e) {
+      console.log(e);
+      throw 'Decryption failed';
+    });
   } catch (e) {
     _errorcallback(e);
     WalletStore.enableLogout();
   }
-
 }
-MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function (){
+MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function () {
   console.log('SAVE CALLED...');
   WalletStore.setIsSynchronizedWithServer(false);
 });
@@ -37122,50 +36919,84 @@ MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function (){
  * @param {string} currencyCode language code (e.g. en)
  * @param {function (string, string, string)} success callback function with guid, sharedkey and password
  * @param {function (string)} error callback function with error message
+ * @param {string} mnemonic: optional BIP 39 mnemonic
+ * @param {string} bip39Password: optional BIP 39 passphrase
  */
  // used on mywallet, iOS and frontend
-MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccountName, languageCode, currencyCode, success, error, isHD) {
-  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, firstAccountName, function (createdGuid, createdSharedKey, createdPassword) {
+MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccountName, languageCode, currencyCode, successCallback, errorCallback) {
+  var success = function (createdGuid, createdSharedKey, createdPassword) {
     if (languageCode) {
       WalletStore.setLanguage(languageCode);
-      BlockchainSettingsAPI.change_language(languageCode, (function () {}));
+      BlockchainSettingsAPI.change_language(languageCode, function () {});
     }
 
     if (currencyCode) {
-      BlockchainSettingsAPI.change_local_currency(currencyCode, (function () {}));
+      BlockchainSettingsAPI.change_local_currency(currencyCode, function () {});
     }
 
     WalletStore.unsafeSetPassword(createdPassword);
-    success(createdGuid, createdSharedKey, createdPassword);
-  }, function (e) {
-    error(e);
-  }, isHD);
+    successCallback(createdGuid, createdSharedKey, createdPassword);
+  };
+
+  var mnemonic = BIP39.generateMnemonic(undefined, RNG.run.bind(RNG));
+
+  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, undefined, firstAccountName, success, errorCallback);
 };
 
 // used on frontend
-MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, recoveryMnemonic, bip39Password, success, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
+MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic, bip39Password, success, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
   var walletSuccess = function (guid, sharedKey, password) {
     WalletStore.unsafeSetPassword(password);
-    var runSuccess = function () {success({ guid: guid, sharedKey: sharedKey, password: password});};
-    MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password, undefined, startedRestoreHDWallet, accountProgress).then(runSuccess).catch(error);
+    success({guid: guid, sharedKey: sharedKey, password: password});
   };
-  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, null, walletSuccess, error, true, generateUUIDProgress, decryptWalletProgress);
+  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, bip39Password, null, walletSuccess, error, generateUUIDProgress, decryptWalletProgress);
 };
 
 // used frontend and mywallet
 MyWallet.logout = function (force) {
-  if (!force && WalletStore.isLogoutDisabled())
+  if (!force && WalletStore.isLogoutDisabled()) {
     return;
+  }
   var reload = function () {
     try { window.location.reload(); } catch (e) {
       console.log(e);
     }
   };
-  var data = {format : 'plain', api_code : API.API_CODE};
+  var data = {format: 'plain', api_code: API.API_CODE};
   WalletStore.sendEvent('logging_out');
 
-  API.request("GET", 'wallet/logout', data, true, false).then(reload).catch(reload);
+  API.request('GET', 'wallet/logout', data, true, false).then(reload).catch(reload);
 };
 
-},{"./api":178,"./blockchain-settings-api":180,"./blockchain-socket":181,"./blockchain-wallet":182,"./helpers":185,"./wallet-crypto":194,"./wallet-network":195,"./wallet-signup":196,"./wallet-store":197,"assert":16,"bitcoinjs-lib":33,"buffer":73}]},{},[1])(1)
+},{"./api":177,"./blockchain-settings-api":179,"./blockchain-socket":180,"./blockchain-wallet":181,"./helpers":184,"./rng":189,"./wallet-crypto":193,"./wallet-network":194,"./wallet-signup":195,"./wallet-store":196,"assert":16,"bip39":22,"buffer":73}],200:[function(require,module,exports){
+
+var global = (function () { return this; })();
+var WebSocket = global.WebSocket || global.MozWebSocket;
+
+function ws (uri, protocols, opts) {
+  return protocols ? new WebSocket(uri, protocols) : new WebSocket(uri);
+}
+
+if (WebSocket) {
+  ws.prototype = WebSocket.prototype;
+
+  ws.prototype.on = function (event, callback) {
+    this['on' + event] = callback;
+  };
+
+  ws.prototype.once = function (event, callback) {
+    this['on' + event] = function () {
+      callback.apply(callback, arguments);
+      this['on' + event] = null;
+    }.bind(this);
+  };
+
+  ws.prototype.off = function (event) {
+    this['on' + event] = null;
+  };
+}
+
+module.exports = WebSocket ? ws : null;
+
+},{}]},{},[1])(1)
 });
