@@ -1,22 +1,20 @@
 __Blockchain Wallet V3__
 
-#   (2016-05-09)
+#   (2016-05-20)
 
 
 
 ---
 
-## Bug Fixes
+## Features
 
-- **Recovery:** only save if recovery is completed. Repaired tests.
-  ([cf474244](https://github.com/blockchain/My-Wallet-V3/commit/cf474244a55be424342f546a0895791d726e59ef))
-- **restore:** restore is checking for further accounts.
-  ([cbf3e6f0](https://github.com/blockchain/My-Wallet-V3/commit/cbf3e6f05e9e61908da16b9326c12ecc6e51efe7))
+- **Payment:** emit message event when unspent responds with a notice
+  ([bcb605d1](https://github.com/blockchain/My-Wallet-V3/commit/bcb605d1ab9aa8fd59957442f4f50118d4a1712e))
 
 
 ## Chore
 
-- **Release:** 3.15.1
+- **Release:** 3.15.3
 
 
 
