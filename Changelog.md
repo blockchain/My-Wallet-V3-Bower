@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2016-05-20)
+#   (2016-05-31)
 
 
 
@@ -8,13 +8,20 @@ __Blockchain Wallet V3__
 
 ## Features
 
-- **Payment:** emit message event when unspent responds with a notice
-  ([bcb605d1](https://github.com/blockchain/My-Wallet-V3/commit/bcb605d1ab9aa8fd59957442f4f50118d4a1712e))
+- **API:** use `Authorization: Bearer xxx` instead of `X-Session-ID: xxx` header
+  ([cb1ffe22](https://github.com/blockchain/My-Wallet-V3/commit/cb1ffe22fba5ca19f96d5b57f163837e9a318743))
+- **Login:** login clean up and no more cookies
+  ([92f49893](https://github.com/blockchain/My-Wallet-V3/commit/92f49893450410c2be23e5811ee7540129ddbf98))
+
+
+## Refactor
+
+- **Wallet:** reorganize login() parameters
 
 
 ## Chore
 
-- **Release:** 3.15.3
+- **Release:** version 3.16.0
 
 
 

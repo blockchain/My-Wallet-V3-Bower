@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.15.3",
+  "version": "3.16.0",
   "dependencies": {
     "abbrev": {
       "version": "1.0.7",
@@ -130,9 +130,9 @@
       "resolved": "https://registry.npmjs.org/arrify/-/arrify-1.0.1.tgz"
     },
     "asap": {
-      "version": "2.0.3",
+      "version": "2.0.4",
       "from": "asap@>=2.0.3 <2.1.0",
-      "resolved": "https://registry.npmjs.org/asap/-/asap-2.0.3.tgz"
+      "resolved": "https://registry.npmjs.org/asap/-/asap-2.0.4.tgz"
     },
     "asn1": {
       "version": "0.2.3",
@@ -175,19 +175,14 @@
       "resolved": "https://registry.npmjs.org/aws-sign2/-/aws-sign2-0.6.0.tgz"
     },
     "babel-polyfill": {
-      "version": "6.9.0",
+      "version": "6.9.1",
       "from": "babel-polyfill@>=6.7.2 <7.0.0",
-      "resolved": "https://registry.npmjs.org/babel-polyfill/-/babel-polyfill-6.9.0.tgz"
-    },
-    "babel-regenerator-runtime": {
-      "version": "6.5.0",
-      "from": "babel-regenerator-runtime@>=6.3.13 <7.0.0",
-      "resolved": "https://registry.npmjs.org/babel-regenerator-runtime/-/babel-regenerator-runtime-6.5.0.tgz"
+      "resolved": "https://registry.npmjs.org/babel-polyfill/-/babel-polyfill-6.9.1.tgz"
     },
     "babel-runtime": {
-      "version": "6.9.0",
-      "from": "babel-runtime@>=6.9.0 <7.0.0",
-      "resolved": "https://registry.npmjs.org/babel-runtime/-/babel-runtime-6.9.0.tgz"
+      "version": "6.9.2",
+      "from": "babel-runtime@>=6.9.1 <7.0.0",
+      "resolved": "https://registry.npmjs.org/babel-runtime/-/babel-runtime-6.9.2.tgz"
     },
     "babylon": {
       "version": "6.8.0",
@@ -245,9 +240,9 @@
       "resolved": "https://registry.npmjs.org/bigi/-/bigi-1.4.1.tgz"
     },
     "binary-extensions": {
-      "version": "1.4.0",
+      "version": "1.4.1",
       "from": "binary-extensions@>=1.0.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/binary-extensions/-/binary-extensions-1.4.0.tgz"
+      "resolved": "https://registry.npmjs.org/binary-extensions/-/binary-extensions-1.4.1.tgz"
     },
     "bip39": {
       "version": "2.1.2",
@@ -314,9 +309,9 @@
       "resolved": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-1.1.4.tgz"
     },
     "braces": {
-      "version": "1.8.4",
+      "version": "1.8.5",
       "from": "braces@>=1.8.2 <2.0.0",
-      "resolved": "https://registry.npmjs.org/braces/-/braces-1.8.4.tgz"
+      "resolved": "https://registry.npmjs.org/braces/-/braces-1.8.5.tgz"
     },
     "brorand": {
       "version": "1.0.5",
@@ -329,9 +324,9 @@
       "resolved": "https://registry.npmjs.org/browser-pack/-/browser-pack-6.0.1.tgz"
     },
     "browser-resolve": {
-      "version": "1.11.1",
+      "version": "1.11.2",
       "from": "browser-resolve@>=1.11.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/browser-resolve/-/browser-resolve-1.11.1.tgz"
+      "resolved": "https://registry.npmjs.org/browser-resolve/-/browser-resolve-1.11.2.tgz"
     },
     "browserify": {
       "version": "13.0.1",
@@ -485,9 +480,9 @@
       }
     },
     "chokidar": {
-      "version": "1.5.0",
+      "version": "1.5.1",
       "from": "chokidar@>=1.0.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/chokidar/-/chokidar-1.5.0.tgz"
+      "resolved": "https://registry.npmjs.org/chokidar/-/chokidar-1.5.1.tgz"
     },
     "cipher-base": {
       "version": "1.0.2",
@@ -952,9 +947,9 @@
       "resolved": "https://registry.npmjs.org/ee-first/-/ee-first-1.1.1.tgz"
     },
     "elliptic": {
-      "version": "6.2.3",
+      "version": "6.2.7",
       "from": "elliptic@>=6.0.0 <7.0.0",
-      "resolved": "https://registry.npmjs.org/elliptic/-/elliptic-6.2.3.tgz"
+      "resolved": "https://registry.npmjs.org/elliptic/-/elliptic-6.2.7.tgz"
     },
     "encoding": {
       "version": "0.1.12",
@@ -3129,9 +3124,9 @@
       "resolved": "https://registry.npmjs.org/karma-phantomjs-launcher/-/karma-phantomjs-launcher-1.0.0.tgz",
       "dependencies": {
         "lodash": {
-          "version": "4.12.0",
+          "version": "4.13.1",
           "from": "lodash@>=4.0.1 <5.0.0",
-          "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.12.0.tgz"
+          "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.13.1.tgz"
         }
       }
     },
@@ -3506,9 +3501,9 @@
       }
     },
     "module-deps": {
-      "version": "4.0.5",
+      "version": "4.0.7",
       "from": "module-deps@>=4.0.2 <5.0.0",
-      "resolved": "https://registry.npmjs.org/module-deps/-/module-deps-4.0.5.tgz"
+      "resolved": "https://registry.npmjs.org/module-deps/-/module-deps-4.0.7.tgz"
     },
     "mout": {
       "version": "1.0.0",
@@ -3536,9 +3531,9 @@
       "resolved": "https://registry.npmjs.org/negotiator/-/negotiator-0.4.9.tgz"
     },
     "node-fetch": {
-      "version": "1.5.2",
+      "version": "1.5.3",
       "from": "node-fetch@>=1.0.1 <2.0.0",
-      "resolved": "https://registry.npmjs.org/node-fetch/-/node-fetch-1.5.2.tgz"
+      "resolved": "https://registry.npmjs.org/node-fetch/-/node-fetch-1.5.3.tgz"
     },
     "node-osx-notifier": {
       "version": "0.1.0",
@@ -4169,6 +4164,11 @@
       "from": "redent@>=1.0.0 <2.0.0",
       "resolved": "https://registry.npmjs.org/redent/-/redent-1.0.0.tgz"
     },
+    "regenerator-runtime": {
+      "version": "0.9.5",
+      "from": "regenerator-runtime@>=0.9.5 <0.10.0",
+      "resolved": "https://registry.npmjs.org/regenerator-runtime/-/regenerator-runtime-0.9.5.tgz"
+    },
     "regex-cache": {
       "version": "0.4.3",
       "from": "regex-cache@>=0.4.2 <0.5.0",
@@ -4273,9 +4273,9 @@
       }
     },
     "rocambole-linebreak": {
-      "version": "1.0.1",
+      "version": "1.0.2",
       "from": "rocambole-linebreak@>=1.0.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/rocambole-linebreak/-/rocambole-linebreak-1.0.1.tgz",
+      "resolved": "https://registry.npmjs.org/rocambole-linebreak/-/rocambole-linebreak-1.0.2.tgz",
       "dependencies": {
         "semver": {
           "version": "4.3.6",
