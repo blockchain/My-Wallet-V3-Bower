@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2016-05-31)
+#   (2016-06-08)
 
 
 
@@ -8,20 +8,15 @@ __Blockchain Wallet V3__
 
 ## Features
 
-- **API:** use `Authorization: Bearer xxx` instead of `X-Session-ID: xxx` header
-  ([cb1ffe22](https://github.com/blockchain/My-Wallet-V3/commit/cb1ffe22fba5ca19f96d5b57f163837e9a318743))
-- **Login:** login clean up and no more cookies
-  ([92f49893](https://github.com/blockchain/My-Wallet-V3/commit/92f49893450410c2be23e5811ee7540129ddbf98))
-
-
-## Refactor
-
-- **Wallet:** reorganize login() parameters
+- **Browser:** math test to check unknown browsers
+  ([7b472b5c](https://github.com/blockchain/My-Wallet-V3/commit/7b472b5cfaa333e2d1ee89253eb58c9cac3b4bb6))
+- **RBF:** add rbf and double_spends flags
+  ([2b7a0e24](https://github.com/blockchain/My-Wallet-V3/commit/2b7a0e247b2820067aa3e7003ddd2b105fbb4824))
 
 
 ## Chore
 
-- **Release:** version 3.16.0
+- **Release:** bump version
 
 
 
