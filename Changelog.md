@@ -1,22 +1,27 @@
 __Blockchain Wallet V3__
 
-#   (2016-06-08)
+#   (2016-06-15)
 
 
 
 ---
 
-## Features
+## Bug Fixes
 
-- **Browser:** math test to check unknown browsers
-  ([7b472b5c](https://github.com/blockchain/My-Wallet-V3/commit/7b472b5cfaa333e2d1ee89253eb58c9cac3b4bb6))
-- **RBF:** add rbf and double_spends flags
-  ([2b7a0e24](https://github.com/blockchain/My-Wallet-V3/commit/2b7a0e247b2820067aa3e7003ddd2b105fbb4824))
+- **Browser:** additional quick checks (#226)
+  ([163da7f1](https://github.com/blockchain/My-Wallet-V3/commit/163da7f12d90ba358ff33fa9fc301c155c3ec1f9))
+- **Dep:** add eslint@2.0 to make npm happy
+  ([9c6b8cbf](https://github.com/blockchain/My-Wallet-V3/commit/9c6b8cbf93182240c272309015a55f56fc6bf372))
+- **Login:** no need to fetch wallet again after failed password entry (#225)
+  ([40af752a](https://github.com/blockchain/My-Wallet-V3/commit/40af752a4fdf9ce2e0b812e84e71b3ddc37c3f44))
+- **Wallet-Network:** login with sharedKey
+  ([b8390496](https://github.com/blockchain/My-Wallet-V3/commit/b8390496dc2cfd4b7052881fb0354e9281940ef9))
 
 
-## Chore
+## Refactor
 
-- **Release:** bump version
+- **paidTo:** remove unused functionality
+- **semistandard:** fix last remaining issues and force use of semistandard (#221)
 
 
 
