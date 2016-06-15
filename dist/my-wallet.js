@@ -36781,7 +36781,12 @@ function procIns (acc, input) {
 }
 
 function belongsTo (tx, id) {
-  return tx.processedInputs.concat(tx.processedOutputs).some(function (p) { return p.identity === id; });
+  return tx.processedInputs.concat(tx.processedOutputs).some(function (p) {
+    return (
+      (p.identity === 'imported' && id === 'imported') ||
+      p.identity === parseInt(id, 10)
+    );
+  });
 }
 // var memoizedBelongsTo = Helpers.memoize(belongsTo);
 
@@ -37393,11 +37398,11 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
   var success = function (createdGuid, createdSharedKey, createdPassword) {
     if (languageCode) {
       WalletStore.setLanguage(languageCode);
-      BlockchainSettingsAPI.change_language(languageCode, function () {});
+      BlockchainSettingsAPI.changeLanguage(languageCode, function () {});
     }
 
     if (currencyCode) {
-      BlockchainSettingsAPI.change_local_currency(currencyCode, function () {});
+      BlockchainSettingsAPI.changeLocalCurrency(currencyCode, function () {});
     }
 
     WalletStore.unsafeSetPassword(createdPassword);
