@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2016-06-15)
+#   (2016-06-17)
 
 
 
@@ -8,10 +8,15 @@ __Blockchain Wallet V3__
 
 ## Bug Fixes
 
-- **Signup:** semistandard function rename
-  ([6d71311d](https://github.com/blockchain/My-Wallet-V3/commit/6d71311dd1d0d3de80897ee0e53fd56b2cf3bb8a))
-- **Transactions:** semistandard refactor broke account and imported address display
-  ([5fa378ce](https://github.com/blockchain/My-Wallet-V3/commit/5fa378cef45a482c27137a5ae6cfa75175c94b79))
+- **Login:** no need to fetch wallet again after failed password entry
+  ([16392dc4](https://github.com/blockchain/My-Wallet-V3/commit/16392dc449bfc7319bcfd9013ec29b4f403d6478))
+- **Sessions:** better handling (#227)
+  ([d9c7ee7a](https://github.com/blockchain/My-Wallet-V3/commit/d9c7ee7a34e29454af51f7abe26c8cba85818ddd))
+
+
+## Chore
+
+- **Release:** v3.17.1
 
 
 

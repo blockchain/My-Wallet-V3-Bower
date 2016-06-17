@@ -31310,7 +31310,7 @@ Object.defineProperties(Address.prototype, {
         this._label = str === '' ? undefined : str;
         MyWallet.syncWallet();
       } else {
-        throw new Error('address.label must be an alphanumeric string');
+        throw 'Error: address.label must be an alphanumeric string';
       }
     }
   },
@@ -31333,7 +31333,7 @@ Object.defineProperties(Address.prototype, {
       if (Helpers.isPositiveNumber(num)) {
         this._balance = num;
       } else {
-        throw new Error('address.balance must be a positive number');
+        throw 'Error: address.balance must be a positive number';
       }
     }
   },
@@ -31344,7 +31344,7 @@ Object.defineProperties(Address.prototype, {
       if (Helpers.isPositiveNumber(num)) {
         this._totalSent = num;
       } else {
-        throw new Error('address.totalSent must be a positive number');
+        throw 'Error: address.totalSent must be a positive number';
       }
     }
   },
@@ -31355,7 +31355,7 @@ Object.defineProperties(Address.prototype, {
       if (Helpers.isPositiveNumber(num)) {
         this._totalReceived = num;
       } else {
-        throw new Error('address.totalReceived must be a positive number');
+        throw 'Error: address.totalReceived must be a positive number';
       }
     }
   },
@@ -31384,7 +31384,7 @@ Object.defineProperties(Address.prototype, {
         }
         MyWallet.syncWallet();
       } else {
-        throw new Error('address.archived must be a boolean');
+        throw 'Error: address.archived must be a boolean';
       }
     }
   },
@@ -31428,7 +31428,7 @@ Address.import = function (key, label) {
       object.priv = Base58.encode(key.d.toBuffer(32));
       break;
     default:
-      throw new Error('address import format not supported');
+      throw 'Error: address import format not supported';
   }
 
   // initialization
@@ -31448,7 +31448,7 @@ Address.fromString = function (keyOrAddr, label, bipPass) {
       var okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
 
       if (format === 'bip38') {
-        if (bipPass === undefined || bipPass === null || bipPass === '') {
+        if (bipPass == undefined || bipPass === '') {
           return reject('needsBip38');
         }
         ImportExport.parseBIP38toECPair(keyOrAddr, bipPass,
@@ -31492,9 +31492,9 @@ Address.prototype.toJSON = function () {
 };
 
 Address.prototype.signMessage = function (message, secondPassword) {
-  if (!Helpers.isString(message)) throw new Error('Expected message to be a string');
-  if (this.isWatchOnly) throw new Error('Private key needed for message signing');
-  if (this.isEncrypted && secondPassword == null) throw new Error('Second password needed to decrypt key');
+  if (!Helpers.isString(message)) throw 'Expected message to be a string';
+  if (this.isWatchOnly) throw 'Private key needed for message signing';
+  if (this.isEncrypted && secondPassword == null) throw 'Second password needed to decrypt key';
 
   var getDecrypted = WalletCrypto.decryptSecretWithSecondPassword.bind(null,
     this.priv, secondPassword, MyWallet.wallet.sharedKey, MyWallet.wallet.pbkdf2_iterations);
@@ -31509,7 +31509,7 @@ Address.prototype.signMessage = function (message, secondPassword) {
 Address.prototype.encrypt = function (cipher) {
   if (!this._priv) return this;
   var priv = cipher ? cipher(this._priv) : this._priv;
-  if (!priv) { throw new Error('Error Encoding key'); }
+  if (!priv) { throw 'Error Encoding key'; }
   this._temporal_priv = priv;
   return this;
 };
@@ -31517,7 +31517,7 @@ Address.prototype.encrypt = function (cipher) {
 Address.prototype.decrypt = function (cipher) {
   if (!this._priv) return this;
   var priv = cipher ? cipher(this._priv) : this._priv;
-  if (!priv) { throw new Error('Error Decoding key'); }
+  if (!priv) { throw 'Error Decoding key'; }
   this._temporal_priv = priv;
   return this;
 };
@@ -31561,12 +31561,13 @@ API.prototype.encodeFormData = function (data) {
   return encoded;
 };
 
-/* Permitted extra headers:
-   sessionToken -> "Authorization Bearer <token>" */
+////////////////////////////////////////////////////////////////////////////////
+// Permitted extra headers:
+// sessionToken -> "Authorization Bearer <token>"
 API.prototype.request = function (action, method, data, extraHeaders) {
-  var url = this.ROOT_URL + method;
-  var body = data ? this.encodeFormData(data) : '';
-  var time = (new Date()).getTime();
+  var url   = this.ROOT_URL + method
+  var body  = data ? this.encodeFormData(data) : ''
+  var time  = (new Date()).getTime();
 
   var options = {
     method: action,
@@ -31574,8 +31575,8 @@ API.prototype.request = function (action, method, data, extraHeaders) {
     credentials: 'omit'
   };
 
-  if (extraHeaders) {
-    if (extraHeaders.sessionToken) {
+  if(extraHeaders) {
+    if(extraHeaders.sessionToken) {
       options.headers['Authorization'] = 'Bearer ' + extraHeaders.sessionToken;
     }
   }
@@ -31626,7 +31627,7 @@ API.prototype.retry = function (f, n) {
   if (i > 1) {
     return f().then(
         undefined, // pass through success
-        function () { return self.retry(f, i - 1); }
+        function (err) { return self.retry(f, i - 1); }
     );
   } else {
     return f();
@@ -31703,7 +31704,7 @@ API.prototype.getUnspent = function (fromAddresses, confirmations) {
   return this.retry(this.request.bind(this, 'POST', 'unspent', data));
 };
 
-API.prototype.getHistory = function (addresses, txFilter, offset, n, syncBool) {
+API.prototype.getHistory = function (addresses, tx_filter, offset, n, syncBool) {
   var clientTime = (new Date()).getTime();
   offset = offset || 0;
   n = n || 0;
@@ -31720,18 +31721,18 @@ API.prototype.getHistory = function (addresses, txFilter, offset, n, syncBool) {
     api_code: this.API_CODE
   };
 
-  if (txFilter !== undefined && txFilter !== null) {
-    data.filter = txFilter;
+  if (tx_filter !== undefined && tx_filter !== null) {
+    data.filter = tx_filter;
   }
   return this.retry(this.request.bind(this, 'POST', 'multiaddr', data, null, syncBool));
 };
 
-API.prototype.securePost = function (url, data) {
+API.prototype.securePost = function (url, data, extraHeaders) {
   var clone = Helpers.merge({}, data);
   if (!Helpers.isValidGUID(data.guid)) { clone.guid = MyWallet.wallet.guid; }
   if (!data.sharedKey) {
     var sharedKey = MyWallet.wallet ? MyWallet.wallet.sharedKey : undefined;
-    if (!Helpers.isValidSharedKey(sharedKey)) throw new Error('Shared key is invalid');
+    if (!Helpers.isValidSharedKey(sharedKey)) throw 'Shared key is invalid';
     // Rather than sending the shared key plain text
     // send a hash using a totp scheme
     var now = new Date().getTime();
@@ -31754,7 +31755,7 @@ API.prototype.securePost = function (url, data) {
   clone.api_code = this.API_CODE;
   clone.format = data.format ? data.format : 'plain';
 
-  return this.retry(this.request.bind(this, 'POST', url, clone, true));
+  return this.retry(this.request.bind(this, 'POST', url, clone, extraHeaders));
 };
 
 API.prototype.securePostCallbacks = function (url, data, success, error) {
@@ -31896,7 +31897,7 @@ var WalletStore = require('./wallet-store.js');
 var MyWallet = require('./wallet.js');
 var API = require('./api');
 
-function getAccountInfo (success, error) {
+function get_account_info (success, error) {
   API.securePostCallbacks('wallet', {method: 'get-info', format: 'json'}, function (data) {
     typeof (success) === 'function' && success(data);
   }, function (data) {
@@ -31908,7 +31909,7 @@ function getAccountInfo (success, error) {
 }
 
 function updateKV (method, value, success, error, extra) {
-  if (typeof value === 'string') {
+  if (typeof value == 'string') {
     value = value.trim();
   }
 
@@ -31930,27 +31931,27 @@ function updateKV (method, value, success, error, extra) {
  * @param {function ()} success success callback function
  * @param {function ()} error error callback function
  */
-function updateIPlock (ips, success, error) {
+function update_IP_lock (ips, success, error) {
   updateKV('update-ip-lock', ips, success, error);
 }
 
-function updateIPlockOn (enabled, success, error) {
-  updateKV('update-ip-lock-on', Boolean(enabled), success, error);
+function update_IP_lock_on (enabled, success, error) {
+  updateKV('update-ip-lock-on', enabled ? true : false, success, error);
 }
 
-function changeLanguage (language, success, error) {
+function change_language (language, success, error) {
   updateKV('update-language', language, success, error);
 }
 
-function changeLocalCurrency (code, success, error) {
+function change_local_currency (code, success, error) {
   updateKV('update-currency', code, success, error);
 }
 
-function changeBtcCurrency (code, success, error) {
+function change_btc_currency (code, success, error) {
   updateKV('update-btc-currency', code, success, error);
 }
 
-function updateTorIpBlock (enabled, success, error) {
+function update_tor_ip_block (enabled, success, error) {
   updateKV('update-block-tor-ips', enabled ? 1 : 0, success, error);
 }
 
@@ -31966,21 +31967,21 @@ function isBadPasswordHint (value) {
   }
 }
 
-function updatePasswordHint1 (value, success, error) {
+function update_password_hint1 (value, success, error) {
   assert(error && typeof (error) === 'function', 'Error callback required');
 
   var isBad = isBadPasswordHint(value);
   isBad ? error(isBad) : updateKV('update-password-hint1', value, success, error);
 }
 
-function updatePasswordHint2 (value, success, error) {
+function update_password_hint2 (value, success, error) {
   assert(error && typeof (error) === 'function', 'Error callback required');
 
   var isBad = isBadPasswordHint(value);
   isBad ? error(isBad) : updateKV('update-password-hint2', value, success, error);
 }
 
-function changeEmail (email, success, error) {
+function change_email (email, success, error) {
   updateKV('update-email', email, success, error);
 }
 
@@ -31997,7 +31998,7 @@ function updateLoggingLevel (val, success, error) {
 }
 
 function toggleSave2FA (val, success, error) {
-  updateKV('update-never-save-auth-type', Boolean(val), success, error);
+  updateKV('update-never-save-auth-type', val ? true : false, success, error);
 }
 
 function updateAuthType (val, success, error) {
@@ -32038,8 +32039,8 @@ function setTwoFactorEmail (success, error) {
 }
 
 function setTwoFactorGoogleAuthenticator (success, error) {
-  API.securePostCallbacks('wallet', { method: 'generate-google-secret' }, function (googleSecretURL) {
-    typeof (success) === 'function' && success(googleSecretURL);
+  API.securePostCallbacks('wallet', { method: 'generate-google-secret' }, function (google_secret_url) {
+    typeof (success) === 'function' && success(google_secret_url);
   }, function (data) {
     WalletStore.sendEvent('msg', {type: 'error', message: data.responseText});
     typeof (error) === 'function' && error(data.responseText);
@@ -32166,16 +32167,16 @@ function disableAllNotifications (success, error) {
 }
 
 module.exports = {
-  getAccountInfo: getAccountInfo,
-  updateIPlock: updateIPlock,
-  updateIPlockOn: updateIPlockOn,
-  changeLanguage: changeLanguage,
-  changeLocalCurrency: changeLocalCurrency,
-  changeBtcCurrency: changeBtcCurrency,
-  updateTorIpBlock: updateTorIpBlock,
-  updatePasswordHint1: updatePasswordHint1,
-  updatePasswordHint2: updatePasswordHint2,
-  changeEmail: changeEmail,
+  get_account_info: get_account_info,
+  update_IP_lock: update_IP_lock,
+  update_IP_lock_on: update_IP_lock_on,
+  change_language: change_language,
+  change_local_currency: change_local_currency,
+  change_btc_currency: change_btc_currency,
+  update_tor_ip_block: update_tor_ip_block,
+  update_password_hint1: update_password_hint1,
+  update_password_hint2: update_password_hint2,
+  change_email: change_email,
   changeMobileNumber: changeMobileNumber,
   updateLoggingLevel: updateLoggingLevel,
   toggleSave2FA: toggleSave2FA,
@@ -32351,6 +32352,13 @@ function Wallet (object) {
   // hdwallets list
   this._hd_wallets = obj.hd_wallets ? obj.hd_wallets.map(HDWallet.factory) : undefined;
 
+  // paidTo dictionary
+  this._paidTo = obj.paidTo || {};
+  if (this.isUpgradedToHD) {
+    Helpers.merge(this._paidTo, this.hdwallet._paidTo); // move paidTo from the wrong place
+    delete this.hdwallet._paidTo;
+  }
+
   // address book list
   // address book in json is [{address: 'address1', label: 'label1'} , ... ]
   // address book in memory is {address1: 'label1', address2: 'label2'}
@@ -32410,9 +32418,11 @@ Object.defineProperties(Wallet.prototype, {
     set: function (value) {
       switch (true) {
         case !Helpers.isPositiveNumber(value):
-          throw new Error('wallet.fee_per_kb must be a positive number');
+          throw 'Error: wallet.fee_per_kb must be a positive number';
+          break;
         case value > 1000000:  // 0.01 btc
-          throw new Error('wallet.fee_per_kb too high (0.01 btc limit)');
+          throw 'Error: wallet.fee_per_kb too high (0.01 btc limit)';
+          break;
         default:
           this._fee_per_kb = value;
           MyWallet.syncWallet();
@@ -32430,7 +32440,7 @@ Object.defineProperties(Wallet.prototype, {
       if (Helpers.isPositiveNumber(value)) {
         this._totalSent = value;
       } else {
-        throw new Error('wallet.totalSent must be a positive number');
+        throw 'Error: wallet.totalSent must be a positive number';
       }
     }
   },
@@ -32441,7 +32451,7 @@ Object.defineProperties(Wallet.prototype, {
       if (Helpers.isPositiveNumber(value)) {
         this._totalReceived = value;
       } else {
-        throw new Error('wallet.totalReceived must be a positive number');
+        throw 'Error: wallet.totalReceived must be a positive number';
       }
     }
   },
@@ -32452,7 +32462,7 @@ Object.defineProperties(Wallet.prototype, {
       if (Helpers.isPositiveNumber(value)) {
         this._finalBalance = value;
       } else {
-        throw new Error('wallet.finalBalance must be a positive number');
+        throw 'Error: wallet.finalBalance must be a positive number';
       }
     }
   },
@@ -32467,7 +32477,7 @@ Object.defineProperties(Wallet.prototype, {
       if (Helpers.isPositiveInteger(value)) {
         this._numberTxTotal = value;
       } else {
-        throw new Error('wallet.numberTx must be a positive integer');
+        throw 'Error: wallet.numberTx must be a positive integer';
       }
     }
   },
@@ -32567,7 +32577,7 @@ Object.defineProperties(Wallet.prototype, {
   'balanceSpendableActive': {
     configurable: false,
     get: function () {
-      return this.balanceSpendableActiveLegacy + this.balanceActiveAccounts;
+        return this.balanceSpendableActiveLegacy + this.balanceActiveAccounts;
     }
   },
   'balanceSpendableActiveLegacy': {
@@ -32596,7 +32606,7 @@ Object.defineProperties(Wallet.prototype, {
         this._latestBlock = b;
         WalletStore.sendEvent('did_set_latest_block');
       } else {
-        throw new Error('tried to set wrong wallet.latestBlock');
+        throw 'Error: tried to set wrong wallet.latestBlock';
       }
     }
   },
@@ -32608,7 +32618,7 @@ Object.defineProperties(Wallet.prototype, {
         this._logout_time = t;
         MyWallet.syncWallet();
       } else {
-        throw new Error('wallet.logoutTime must be a positive integer in range 60000,86400001');
+        throw 'Error: wallet.logoutTime must be a positive integer in range 60000,86400001';
       }
     }
   }
@@ -32669,18 +32679,18 @@ Wallet.prototype._updateWalletInfo = function (obj) {
   return obj.txs.length;
 };
 
-Wallet.prototype.getHistory = function () {
+Wallet.prototype.getHistory = function () {
   return API.getHistory(this.context, 0, 0, this.txList.loadNumber)
     .then(function (obj) { this.txList.wipe(); return obj; }.bind(this))
     .then(this._updateWalletInfo.bind(this));
 };
 
-Wallet.prototype.fetchTransactions = function () {
+Wallet.prototype.fetchTransactions = function () {
   return API.getHistory(this.context, 0, this.txList.fetched, this.txList.loadNumber)
     .then(this._updateWalletInfo.bind(this));
 };
 
-Wallet.prototype.getBalancesForArchived = function () {
+Wallet.prototype.getBalancesForArchived = function () {
   var updateBalance = function (key) {
     if (this.containsLegacyAddress(key.address)) {
       this.key(key.address).balance = key.final_balance;
@@ -32719,6 +32729,7 @@ Wallet.prototype.toJSON = function () {
     // tx_tags           : this._tx_tags,
     tx_names: this._tx_names,
     keys: this.keys,
+    paidTo: this._paidTo,
     hd_wallets: Helpers.isEmptyArray(this._hd_wallets) ? undefined : this._hd_wallets
   };
 };
@@ -32734,14 +32745,14 @@ Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bi
         if (this.key(newKey.address).isWatchOnly) {
           watchOnlyKey = this._addresses[newKey.address];
         } else {
-          throw new Error('privateKeyOfAnotherNonWatchOnlyAddress');
+          throw 'privateKeyOfAnotherNonWatchOnlyAddress';
         }
       }
     }
     watchOnlyKey._priv = newKey._priv;
     if (this.isDoubleEncrypted) {
-      if (!secPass) { throw new Error('second password needed'); }
-      if (!this.validateSecondPassword(secPass)) { throw new Error('wrong second password'); }
+      if (!secPass) { throw 'Error: second password needed'; }
+      if (!this.validateSecondPassword(secPass)) { throw 'Error: wrong second password'; }
       var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, 'enc');
       watchOnlyKey.encrypt(cipher).persist();
     }
@@ -32764,12 +32775,12 @@ Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) 
       if (this.key(ad.address).isWatchOnly && !ad.isWatchOnly) {
         return this.addKeyToLegacyAddress(addr, ad.address, secPass, bipPass);
       } else {
-        throw new Error('presentInWallet');
+        throw 'presentInWallet';
       }
     }
     if (this.isDoubleEncrypted) {
-      if (!secPass) { throw new Error('second password needed'); }
-      if (!this.validateSecondPassword(secPass)) { throw new Error('wrong second password'); }
+      if (!secPass) { throw 'Error: second password needed'; }
+      if (!this.validateSecondPassword(secPass)) { throw 'Error: wrong second password'; }
       var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, 'enc');
       ad.encrypt(cipher).persist();
     }
@@ -32825,8 +32836,8 @@ Wallet.prototype.deleteLegacyAddress = function (a) {
 Wallet.prototype.validateSecondPassword = function (inputString) {
   // old wallets default_iterations is 10
   var it = !this._pbkdf2_iterations ? 10 : this._pbkdf2_iterations;
-  var passwordHash = WalletCrypto.hashNTimes(this._sharedKey + inputString, it);
-  return passwordHash === this._dpasswordhash;
+  var password_hash = WalletCrypto.hashNTimes(this._sharedKey + inputString, it);
+  return password_hash === this._dpasswordhash;
 };
 
 Wallet.prototype.encrypt = function (pw, success, error, encrypting, syncing) {
@@ -32972,7 +32983,7 @@ Wallet.prototype.disableNotifications = function (success, error) {
 
 // creating a new wallet object
 Wallet.new = function (guid, sharedKey, mnemonic, bip39Password, firstAccountLabel, success, error) {
-  assert(mnemonic, 'BIP 39 mnemonic required');
+  assert(mnemonic, "BIP 39 mnemonic required")
 
   var object = {
     guid: guid,
@@ -32997,13 +33008,14 @@ Wallet.new = function (guid, sharedKey, mnemonic, bip39Password, firstAccountLab
 
 // Adds an HD wallet to an existing wallet, used by frontend and iOs
 Wallet.prototype.upgradeToV3 = function (firstAccountLabel, pw, success, error) {
+
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, 'enc');
   try {
     var mnemonic = BIP39.generateMnemonic(undefined, RNG.run.bind(RNG));
     var hd = HDWallet.new(mnemonic, undefined, encoder);
   } catch (e) { error(e); return; }
   this._hd_wallets.push(hd);
-  var label = firstAccountLabel || 'My Bitcoin Wallet';
+  var label = firstAccountLabel ? firstAccountLabel : 'My Bitcoin Wallet';
   this.newAccount(label, pw, this._hd_wallets.length - 1, true);
   MyWallet.syncWallet(function (res) {
     success();
@@ -33026,6 +33038,10 @@ Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosav
   if (!(nosave === true)) MyWallet.syncWallet();
   typeof (success) === 'function' && success();
   return newAccount;
+};
+
+Wallet.prototype.getPaidTo = function (txHash) {
+  return this._paidTo[txHash];
 };
 
 Wallet.prototype.getAddressBookLabel = function (address) {
@@ -33154,7 +33170,7 @@ Object.defineProperties(HDAccount.prototype, {
         this._label = str;
         MyWallet.syncWallet();
       } else {
-        throw new Error('account.label must be an alphanumeric string');
+        throw 'Error: account.label must be an alphanumeric string';
       }
     }
   },
@@ -33165,7 +33181,7 @@ Object.defineProperties(HDAccount.prototype, {
       if (Helpers.isPositiveNumber(num)) {
         this._balance = num;
       } else {
-        throw new Error('account.balance must be a positive number');
+        throw 'Error: account.balance must be a positive number';
       }
     }
   },
@@ -33175,7 +33191,7 @@ Object.defineProperties(HDAccount.prototype, {
       if (Helpers.isPositiveInteger(num)) {
         this._n_tx = num;
       } else {
-        throw new Error('account.n_tx must be a positive integer');
+        throw 'Error: account.n_tx must be a positive integer';
       }
     }
   },
@@ -33191,7 +33207,7 @@ Object.defineProperties(HDAccount.prototype, {
           MyWallet.wallet.getHistory();
         }
       } else {
-        throw new Error('account.archived must be a boolean');
+        throw 'Error: account.archived must be a boolean';
       }
     }
   },
@@ -33207,7 +33223,7 @@ Object.defineProperties(HDAccount.prototype, {
       if (Helpers.isPositiveInteger(value)) {
         this._receiveIndex = value;
       } else {
-        throw new Error('account.receiveIndex must be a number');
+        throw 'Error: account.receiveIndex must be a number';
       }
     }
   },
@@ -33218,7 +33234,7 @@ Object.defineProperties(HDAccount.prototype, {
       if (Helpers.isPositiveInteger(value)) {
         this._lastUsedReceiveIndex = value;
       } else {
-        throw new Error('account.lastUsedReceiveIndex must be a number');
+        throw 'Error: account.lastUsedReceiveIndex must be a number';
       }
     }
   },
@@ -33228,7 +33244,7 @@ Object.defineProperties(HDAccount.prototype, {
       var keys = Object.keys(this._address_labels).map(function (k) {
         return parseInt(k, 10);
       });
-      if (keys.length === 0) {
+      if (keys.length == 0) {
         return -1;
       } else {
         return Math.max.apply(null, keys);
@@ -33242,7 +33258,7 @@ Object.defineProperties(HDAccount.prototype, {
       if (Helpers.isPositiveInteger(value)) {
         this._changeIndex = value;
       } else {
-        throw new Error('account.changeIndex must be a number');
+        throw 'Error: account.changeIndex must be a number';
       }
     }
   },
@@ -33419,7 +33435,7 @@ HDAccount.prototype.receiveAddressAtIndex = function (index) {
 HDAccount.prototype.encrypt = function (cipher) {
   if (!this._xpriv) return this;
   var xpriv = cipher ? cipher(this._xpriv) : this._xpriv;
-  if (!xpriv) { throw new Error('Error Encoding account extended private key'); }
+  if (!xpriv) { throw 'Error Encoding account extended private key'; }
   this._temporal_xpriv = xpriv;
   return this;
 };
@@ -33427,7 +33443,7 @@ HDAccount.prototype.encrypt = function (cipher) {
 HDAccount.prototype.decrypt = function (cipher) {
   if (!this._xpriv) return this;
   var xpriv = cipher ? cipher(this._xpriv) : this._xpriv;
-  if (!xpriv) { throw new Error('Error Decoding account extended private key'); }
+  if (!xpriv) { throw 'Error Decoding account extended private key'; }
   this._temporal_xpriv = xpriv;
   return this;
 };
@@ -33461,12 +33477,14 @@ function HDWallet (object) {
   // private members
   var obj = object || {};
   obj.accounts = obj.accounts || [];
+  obj.paidTo = obj.paidTo || {};
 
   this._seedHex = obj.seed_hex;
   this._bip39Password = obj.passphrase;
   this._mnemonic_verified = obj.mnemonic_verified;
   this._default_account_idx = obj.default_account_idx;
   this._accounts = obj.accounts.map(addAccount);
+  this._paidTo = obj.paidTo;
 }
 
 Object.defineProperties(HDWallet.prototype, {
@@ -33490,7 +33508,7 @@ Object.defineProperties(HDWallet.prototype, {
         this._default_account_idx = value;
         MyWallet.syncWallet();
       } else {
-        throw new Error('unvalid default index account');
+        throw 'Error: unvalid default index account';
       }
     }
   },
@@ -33562,7 +33580,7 @@ function decryptMnemonic (seedHex, cipher) {
     if (Helpers.isSeedHex(seedHex)) {
       return BIP39.entropyToMnemonic(seedHex);
     } else {
-      throw new Error('Decryption function needed to get the mnemonic');
+      throw 'Decryption function needed to get the mnemonic';
     }
   }
 }
@@ -33590,7 +33608,7 @@ function getMasterHex (seedHex, bip39Password, cipher) {
 // restore hdwallet
 
 HDWallet.new = function (mnemonic, bip39Password, cipher) {
-  assert(mnemonic, 'BIP 39 mnemonic required');
+  assert(mnemonic, "BIP 39 mnemonic required")
   var seedHex = BIP39.mnemonicToEntropy(mnemonic);
 
   if (!Helpers.isString(bip39Password)) bip39Password = '';
@@ -33644,6 +33662,7 @@ HDWallet.prototype.toJSON = function () {
     passphrase: this._bip39Password,
     mnemonic_verified: this._mnemonic_verified,
     default_account_idx: this._default_account_idx,
+    // paidTo              : this._paidTo,
     accounts: this._accounts
   };
   return hdwallet;
@@ -33730,7 +33749,7 @@ var Helpers = {};
 Math.log2 = function (x) { return Math.log(x) / Math.LN2; };
 
 Helpers.isString = function (str) {
-  return typeof str === 'string' || str instanceof String;
+  return typeof str == 'string' || str instanceof String;
 };
 Helpers.isKey = function (bitcoinKey) {
   return Helpers.isInstanceOf(bitcoinKey, Bitcoin.ECPair);
@@ -33773,13 +33792,13 @@ Helpers.isBase64 = function (str) {
   return Helpers.isString(str) && /^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789=+\/]+$/.test(str);
 };
 Helpers.isNumber = function (num) {
-  return typeof num === 'number' && !isNaN(num);
+  return typeof num == 'number' && !isNaN(num);
 };
 Helpers.isPositiveNumber = function (num) {
   return Helpers.isNumber(num) && num >= 0;
 };
 Helpers.isPositiveInteger = function (num) {
-  return Helpers.isPositiveNumber(num) && num % 1 === 0;
+  return Helpers.isPositiveNumber(num) && num % 1 == 0;
 };
 Helpers.isNotNumber = function (num) {
   return !Helpers.isNumber(num);
@@ -33816,10 +33835,7 @@ Helpers.memoize = function (f) {
   return function () {
     var key = arguments.length + Array.prototype.join.call(arguments, ',');
     if (key in cache) return cache[key];
-    else {
-      var value = cache[key] = f.apply(this, arguments);
-      return value;
-    }
+    else return cache[key] = f.apply(this, arguments);
   };
 };
 
@@ -33891,7 +33907,7 @@ Helpers.maybeCompose = function (f, g) {
   }
 };
 
-Function.prototype.compose = function (g) { // eslint-disable-line no-extend-native
+Function.prototype.compose = function (g) {
   var fn = this;
   return function () {
     return fn.call(this, g.apply(this, arguments));
@@ -33978,7 +33994,7 @@ Helpers.tor = function () {
   var hostname = Helpers.getHostName();
 
   // NodeJS TOR detection not supported:
-  if (typeof hostname !== 'string') return null;
+  if ('string' !== typeof hostname) return null;
 
   return hostname.slice(-6) === '.onion';
 };
@@ -33990,39 +34006,39 @@ Helpers.buffertoByteArray = function (value) {
 function parseMiniKey (miniKey) {
   var check = Bitcoin.crypto.sha256(miniKey + '?');
   if (check[0] !== 0x00) {
-    throw new Error('Invalid mini key');
+    throw 'Invalid mini key';
   }
   return Bitcoin.crypto.sha256(miniKey);
 }
 
 Helpers.privateKeyStringToKey = function (value, format) {
-  var keyBytes = null;
+  var key_bytes = null;
   var tbytes;
 
-  if (format === 'base58') {
-    keyBytes = Helpers.buffertoByteArray(Base58.decode(value));
-  } else if (format === 'base64') {
-    keyBytes = Helpers.buffertoByteArray(new Buffer(value, 'base64'));
-  } else if (format === 'hex') {
-    keyBytes = Helpers.buffertoByteArray(new Buffer(value, 'hex'));
-  } else if (format === 'mini') {
-    keyBytes = Helpers.buffertoByteArray(parseMiniKey(value));
-  } else if (format === 'sipa') {
+  if (format == 'base58') {
+    key_bytes = Helpers.buffertoByteArray(Base58.decode(value));
+  } else if (format == 'base64') {
+    key_bytes = Helpers.buffertoByteArray(new Buffer(value, 'base64'));
+  } else if (format == 'hex') {
+    key_bytes = Helpers.buffertoByteArray(new Buffer(value, 'hex'));
+  } else if (format == 'mini') {
+    key_bytes = Helpers.buffertoByteArray(parseMiniKey(value));
+  } else if (format == 'sipa') {
     tbytes = Helpers.buffertoByteArray(Base58.decode(value));
     tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
     tbytes.shift();
-    keyBytes = tbytes.slice(0, tbytes.length - 4);
-  } else if (format === 'compsipa') {
+    key_bytes = tbytes.slice(0, tbytes.length - 4);
+  } else if (format == 'compsipa') {
     tbytes = Helpers.buffertoByteArray(Base58.decode(value));
     tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
     tbytes.shift();
     tbytes.pop();
-    keyBytes = tbytes.slice(0, tbytes.length - 4);
+    key_bytes = tbytes.slice(0, tbytes.length - 4);
   } else {
-    throw new Error('Unsupported Key Format');
+    throw 'Unsupported Key Format';
   }
 
-  return new Bitcoin.ECPair(new BigInteger.fromByteArrayUnsigned(keyBytes), null, {compressed: format !== 'sipa'}); // eslint-disable-line new-cap
+  return new Bitcoin.ECPair(new BigInteger.fromByteArrayUnsigned(key_bytes), null, {compressed: format !== 'sipa'});
 };
 
 Helpers.detectPrivateKeyFormat = function (key) {
@@ -34073,7 +34089,7 @@ Helpers.isValidBIP39Mnemonic = function (mnemonic) {
 Helpers.isValidPrivateKey = function (candidate) {
   try {
     var format = Helpers.detectPrivateKeyFormat(candidate);
-    if (format === 'bip38') { return true; }
+    if (format == 'bip38') { return true; }
     var key = Helpers.privateKeyStringToKey(candidate, format);
     return key.getAddress();
   } catch (e) {
@@ -34086,7 +34102,7 @@ Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
     var format = Helpers.detectPrivateKeyFormat(priv);
     var okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
     if (format === 'bip38') {
-      if (bipPass === undefined || bipPass === null || bipPass === '') {
+      if (bipPass == undefined || bipPass === '') {
         return reject('needsBip38');
       }
       ImportExport.parseBIP38toECPair(priv, bipPass,
@@ -34150,7 +34166,7 @@ var Buffer = require('buffer').Buffer;
 var hash256 = Bitcoin.crypto.hash256;
 
 var ImportExport = new function () {
-  this.parseBIP38toECPair = function (base58Encrypted, passphrase, success, wrongPassword, error) {
+  this.parseBIP38toECPair = function (base58Encrypted, passphrase, success, wrong_password, error) {
     var hex;
 
     // Unicode NFC normalization
@@ -34163,10 +34179,10 @@ var ImportExport = new function () {
       return;
     }
 
-    if (hex.length !== 43) {
+    if (hex.length != 43) {
       error('Invalid Private Key');
       return;
-    } else if (hex[0] !== 0x01) {
+    } else if (hex[0] != 0x01) {
       error('Invalid Private Key');
       return;
     }
@@ -34176,7 +34192,7 @@ var ImportExport = new function () {
 
     var checksum = hash256(hex);
 
-    if (checksum[0] !== expChecksum[0] || checksum[1] !== expChecksum[1] || checksum[2] !== expChecksum[2] || checksum[3] !== expChecksum[3]) {
+    if (checksum[0] != expChecksum[0] || checksum[1] != expChecksum[1] || checksum[2] != expChecksum[2] || checksum[3] != expChecksum[3]) {
       error('Invalid Private Key');
       return;
     }
@@ -34184,18 +34200,18 @@ var ImportExport = new function () {
     var isCompPoint = false;
     var isECMult = false;
     var hasLotSeq = false;
-    if (hex[1] === 0x42) {
-      if (hex[2] === 0xe0) {
+    if (hex[1] == 0x42) {
+      if (hex[2] == 0xe0) {
         isCompPoint = true;
-      } else if (hex[2] !== 0xc0) {
+      } else if (hex[2] != 0xc0) {
         error('Invalid Private Key');
         return;
       }
-    } else if (hex[1] === 0x43) {
+    } else if (hex[1] == 0x43) {
       isECMult = true;
-      isCompPoint = (hex[2] & 0x20) !== 0;
-      hasLotSeq = (hex[2] & 0x04) !== 0;
-      if ((hex[2] & 0x24) !== hex[2]) {
+      isCompPoint = (hex[2] & 0x20) != 0;
+      hasLotSeq = (hex[2] & 0x04) != 0;
+      if ((hex[2] & 0x24) != hex[2]) {
         error('Invalid Private Key');
         return;
       }
@@ -34205,7 +34221,7 @@ var ImportExport = new function () {
     }
 
     var decrypted;
-    var AESopts = { mode: WalletCrypto.AES.ECB, padding: WalletCrypto.pad.NoPadding };
+    var AES_opts = { mode: WalletCrypto.AES.ECB, padding: WalletCrypto.pad.NoPadding };
 
     var verifyHashAndReturn = function () {
       var tmpkey = new Bitcoin.ECPair(decrypted, null, {compressed: isCompPoint});
@@ -34214,8 +34230,8 @@ var ImportExport = new function () {
 
       checksum = hash256(base58Address);
 
-      if (checksum[0] !== hex[3] || checksum[1] !== hex[4] || checksum[2] !== hex[5] || checksum[3] !== hex[6]) {
-        wrongPassword();
+      if (checksum[0] != hex[3] || checksum[1] != hex[4] || checksum[2] != hex[5] || checksum[3] != hex[6]) {
+        wrong_password();
         return;
       }
       success(tmpkey, isCompPoint);
@@ -34227,7 +34243,7 @@ var ImportExport = new function () {
       WalletCrypto.scrypt(passphrase, addresshash, 16384, 8, 8, 64, function (derivedBytes) {
         var k = derivedBytes.slice(32, 32 + 32);
 
-        var decryptedBytes = WalletCrypto.AES.decrypt(Buffer(hex.slice(7, 7 + 32)), k, null, AESopts);
+        var decryptedBytes = WalletCrypto.AES.decrypt(Buffer(hex.slice(7, 7 + 32)), k, null, AES_opts);
         for (var x = 0; x < 32; x++) { decryptedBytes[x] ^= derivedBytes[x]; }
 
         decrypted = BigInteger.fromBuffer(decryptedBytes);
@@ -34259,13 +34275,13 @@ var ImportExport = new function () {
         WalletCrypto.scrypt(passpoint, addresshashplusownerentropy, 1024, 1, 1, 64, function (derived) {
           var k = derived.slice(32);
 
-          var unencryptedpart2Bytes = WalletCrypto.AES.decrypt(encryptedpart2, k, null, AESopts);
+          var unencryptedpart2Bytes = WalletCrypto.AES.decrypt(encryptedpart2, k, null, AES_opts);
 
           for (var i = 0; i < 16; i++) { unencryptedpart2Bytes[i] ^= derived[i + 16]; }
 
           var encryptedpart1 = Buffer.concat([Buffer(hex.slice(15, 15 + 8)), Buffer(unencryptedpart2Bytes.slice(0, 0 + 8))]);
 
-          var unencryptedpart1Bytes = WalletCrypto.AES.decrypt(encryptedpart1, k, null, AESopts);
+          var unencryptedpart1Bytes = WalletCrypto.AES.decrypt(encryptedpart1, k, null, AES_opts);
 
           for (var ii = 0; ii < 16; ii++) { unencryptedpart1Bytes[ii] ^= derived[ii]; }
 
@@ -34282,7 +34298,7 @@ var ImportExport = new function () {
         });
       });
     }
-  };
+  }
 };
 
 module.exports = ImportExport;
@@ -34346,7 +34362,7 @@ KeyChain.prototype.getAddress = function (index) {
 KeyChain.prototype.getPrivateKey = function (index) {
   assert(Helpers.isPositiveInteger(index), 'private key index must be integer >= 0');
   var key = this._getKey(index);
-  return key || null;
+  return key ? key : null;
 };
 
 },{"./helpers":184,"assert":16,"bitcoinjs-lib":33}],187:[function(require,module,exports){
@@ -34389,7 +34405,7 @@ KeyRing.prototype.init = function (extendedKey, cache) {
 };
 
 // "M/0/0" -> HDNode
-KeyRing.prototype.privateKeyFromPath = function (path) {
+KeyRing.prototype.privateKeyFromPath = function (path) {
   var components = path.split('/');
   assert(components[0] === 'M', 'Invalid Path prefix');
   assert(components[1] === '0' || components[1] === '1'
@@ -34484,7 +34500,7 @@ function Payment (payment) {
     txSize: 0 // transaciton size
   };
 
-  var p = payment || initialState;
+  var p = payment ? payment : initialState;
   this.payment = Payment.return(p);
   this.updateFees();
 
@@ -34582,7 +34598,7 @@ Payment.prototype.printJSON = function () {
 };
 
 Payment.return = function (payment) {
-  var p = payment || {};
+  var p = payment ? payment : {};
   return Promise.resolve(p);
 };
 
@@ -34749,7 +34765,7 @@ Payment.from = function (origin) {
       // this could fail for network issues or no-balance
       function (error) {
         if (error !== 'No free outputs to spend') {
-          that.emit('error', { error: 'ERR_FETCH_UNSPENT' });
+          that.emit('error', {error:'ERR_FETCH_UNSPENT' });
         }
         console.log(error);
         payment.coins = [];
@@ -34853,7 +34869,7 @@ Payment.sign = function (password) {
         .then(function (A) { A.archived = true; });
     };
 
-    if (!payment.transaction) throw new Error('This transaction hasn\'t been built yet');
+    if (!payment.transaction) throw 'This transaction hasn\'t been built yet';
     if (Array.isArray(payment.wifKeys) && !payment.fromWatchOnly) payment.wifKeys.forEach(importWIF);
 
     payment.transaction.addPrivateKeys(getPrivateKeys(password, payment));
@@ -35043,7 +35059,7 @@ RNG.prototype.run = function (nBytes) {
   } catch (e) {
     console.log('Error: RNG.run');
     console.log(e);
-    throw new Error('Error generating the entropy' + e);
+    throw 'Error generating the entropy' + e;
   }
 };
 
@@ -35078,12 +35094,11 @@ RNG.prototype.getServerEntropy = function (nBytes) {
 
     return B;
   } else {
-    throw new Error('Received not ok status: ' + request.status);
+    throw 'Received not ok status: ' + request.status;
   }
 };
 
 },{"./api":177,"./helpers":184,"assert":16,"buffer":74,"randombytes":145}],190:[function(require,module,exports){
-/* eslint-disable camelcase */
 var satoshi = 100000000; // One satoshi
 var symbol_btc = {code: 'BTC', symbol: 'BTC', name: 'Bitcoin', conversion: satoshi, symbolAppearsAfter: true, local: false}; // Default BTC Currency Symbol object
 var symbol_local = {'conversion': 0, 'symbol': '$', 'name': 'U.S. dollar', 'symbolAppearsAfter': false, 'local': true, 'code': 'USD'}; // Users local currency object
@@ -35159,8 +35174,6 @@ try {
   }
 } catch (e) {
 }
-/* eslint-enable camelcase */
-
 },{}],191:[function(require,module,exports){
 'use strict';
 
@@ -35221,7 +35234,7 @@ TransactionList.prototype.pushTxs = function (txs) {
 };
 
 TransactionList.prototype.subscribe = function (listener) {
-  if (typeof listener !== 'function') return;
+  if ('function' !== typeof listener) return;
   this._events.addListener('update', listener);
   return this._events.removeListener.bind(this._events, 'update', listener);
 };
@@ -35251,8 +35264,8 @@ var Transaction = function (payment, emitter) {
   if (!Array.isArray(toAddresses) && toAddresses != null) { toAddresses = [toAddresses]; }
   if (!Array.isArray(amounts) && amounts != null) { amounts = [amounts]; }
 
-  assert(toAddresses && toAddresses.length, 'Missing destination address');
-  assert(amounts && amounts.length, 'Missing amount to pay');
+  assert(toAddresses, 'Missing destination address');
+  assert(amounts, 'Missing amount to pay');
 
   this.emitter = emitter;
   this.amount = amounts.reduce(Helpers.add, 0);
@@ -35261,7 +35274,7 @@ var Transaction = function (payment, emitter) {
   this.addressesOfNeededPrivateKeys = [];
   this.pathsOfNeededPrivateKeys = [];
 
-  assert(toAddresses.length === amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
+  assert(toAddresses.length == amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
   assert(this.amount >= BITCOIN_DUST, {error: 'BELOW_DUST_THRESHOLD', amount: this.amount, threshold: BITCOIN_DUST});
   assert(unspentOutputs && unspentOutputs.length > 0, {error: 'NO_UNSPENT_OUTPUTS'});
   var transaction = new Bitcoin.TransactionBuilder();
@@ -35560,16 +35573,16 @@ var AES = {
   }
 };
 
-function encryptWallet (data, password, pbkdf2Iterations, version) {
+function encryptWallet (data, password, pbkdf2_iterations, version) {
   assert(data, 'data missing');
   assert(password, 'password missing');
-  assert(pbkdf2Iterations, 'pbkdf2Iterations missing');
+  assert(pbkdf2_iterations, 'pbkdf2_iterations missing');
   assert(version, 'version missing');
 
   return JSON.stringify({
-    pbkdf2_iterations: pbkdf2Iterations,
+    pbkdf2_iterations: pbkdf2_iterations,
     version: version,
-    payload: encryptDataWithPassword(data, password, pbkdf2Iterations)
+    payload: encryptDataWithPassword(data, password, pbkdf2_iterations)
   });
 }
 
@@ -35601,7 +35614,7 @@ function decryptWalletSync (data, password) {
   }
 
   if (version > SUPPORTED_ENCRYPTION_VERSION) {
-    throw new Error('Wallet version ' + version + ' not supported.');
+    throw 'Wallet version ' + version + ' not supported.';
   }
 
   try {
@@ -35612,7 +35625,7 @@ function decryptWalletSync (data, password) {
     decrypted = decryptWalletV1(data, password);
   } finally {
     assert(decrypted, 'Error decrypting wallet, please check that your password is correct');
-    return decrypted; // eslint-disable-line no-unsafe-finally
+    return decrypted;
   }
 }
 
@@ -35673,16 +35686,16 @@ function cipherFunction (password, sharedKey, pbkdf2Iterations, operation) {
   }
 }
 
-function encryptSecretWithSecondPassword (base58, password, sharedKey, pbkdf2Iterations) {
-  return encryptDataWithPassword(base58, sharedKey + password, pbkdf2Iterations);
+function encryptSecretWithSecondPassword (base58, password, sharedKey, pbkdf2_iterations) {
+  return encryptDataWithPassword(base58, sharedKey + password, pbkdf2_iterations);
 }
 
-function decryptSecretWithSecondPassword (secret, password, sharedKey, pbkdf2Iterations) {
-  return decryptDataWithPassword(secret, sharedKey + password, pbkdf2Iterations);
+function decryptSecretWithSecondPassword (secret, password, sharedKey, pbkdf2_iterations) {
+  return decryptDataWithPassword(secret, sharedKey + password, pbkdf2_iterations);
 }
 
-function decryptPasswordWithProcessedPin (data, password, pbkdf2Iterations) {
-  return decryptDataWithPassword(data, password, pbkdf2Iterations);
+function decryptPasswordWithProcessedPin (data, password, pbkdf2_iterations) {
+  return decryptDataWithPassword(data, password, pbkdf2_iterations);
 }
 
 function encryptDataWithPassword (data, password, iterations) {
@@ -35725,7 +35738,7 @@ function stretchPassword (password, salt, iterations, keylen) {
   assert(typeof (sjcl.hash.sha1) === 'function', 'missing sha1, make sure sjcl is configured correctly');
 
   var hmacSHA1 = function (key) {
-    var hasher = new sjcl.misc.hmac(key, sjcl.hash.sha1); // eslint-disable-line new-cap
+    var hasher = new sjcl.misc.hmac(key, sjcl.hash.sha1);
     this.encrypt = hasher.encrypt.bind(hasher);
   };
 
@@ -35772,7 +35785,7 @@ function smix (B, Bi, r, N, V, XY) {
   arraycopy32(XY, Xi, B, Bi, Yi);
 }
 
-function blockmix_salsa8 (BY, Bi, Yi, r) { // eslint-disable-line camelcase
+function blockmix_salsa8 (BY, Bi, Yi, r) {
   var X = [];
   var i;
 
@@ -35797,7 +35810,7 @@ function R (a, b) {
   return (a << b) | (a >>> (32 - b));
 }
 
-function salsa20_8 (B) { // eslint-disable-line camelcase
+function salsa20_8 (B) {
   var B32 = new Array(32);
   var x = new Array(32);
   var i;
@@ -35933,7 +35946,7 @@ function arraycopy32 (src, srcPos, dest, destPos, length) {
 }
 
 function scrypt (passwd, salt, N, r, p, dkLen, callback) {
-  if (N === 0 || (N & (N - 1)) !== 0) throw Error('N must be > 0 and a power of 2');
+  if (N == 0 || (N & (N - 1)) != 0) throw Error('N must be > 0 and a power of 2');
 
   var MAX_VALUE = 2147483647;
   if (N > MAX_VALUE / 128 / r) throw Error('Parameter N is too large');
@@ -35957,6 +35970,7 @@ function scrypt (passwd, salt, N, r, p, dkLen, callback) {
   }
 
   callback(pbkdf2(passwd, B, 1, dkLen, ALGO.SHA256));
+
 }
 
 module.exports = {
@@ -36021,7 +36035,7 @@ function generateUUIDs (count) {
   };
 
   var extractUUIDs = function (data) {
-    if (!data.uuids || data.uuids.length !== count) {
+    if (!data.uuids || data.uuids.length != count) {
       return Promise.reject('Could not generate uuids');
     }
     return data.uuids;
@@ -36033,13 +36047,13 @@ function generateUUIDs (count) {
 
 /**
  * Fetch information on wallet identfier with resend code set to true
- * @param {string} userGuid User GUID.
+ * @param {string} user_guid User GUID.
  * @param {string} sessionToken.
  */
 // used in the frontend and in iOS
-function resendTwoFactorSms (userGuid, sessionToken) {
-  assert(userGuid, 'wallet identifier required');
-  assert(sessionToken, 'Session token required');
+function resendTwoFactorSms (user_guid, sessionToken) {
+  assert(user_guid, "wallet identifier required");
+  assert(sessionToken, "Session token required");
 
   var data = {
     format: 'json',
@@ -36050,20 +36064,20 @@ function resendTwoFactorSms (userGuid, sessionToken) {
 
   var headers = {sessionToken: sessionToken};
 
-  return API.request('GET', 'wallet/' + userGuid, data, headers)
+  return API.request('GET', 'wallet/' + user_guid, data, headers)
     .catch(handleError('Could not resend two factor sms'));
 }
 
 /**
  * Trigger an email with the users wallet guid(s)
- * @param {string} userEmail Registered mail address.
+ * @param {string} user_email Registered mail address.
  * @param {string} captcha Spam protection
  */
 // used in the frontend
-function recoverGuid (sessionToken, userEmail, captcha) {
+function recoverGuid (sessionToken, user_email, captcha) {
   var data = {
     method: 'recover-wallet',
-    email: userEmail,
+    email: user_email,
     captcha: captcha,
     ct: Date.now(),
     api_code: API.API_CODE
@@ -36077,12 +36091,12 @@ function recoverGuid (sessionToken, userEmail, captcha) {
     .then(handleResponse).catch(handleError('Could not send recovery email'));
 }
 
-function checkWalletChecksum (payloadChecksum, success, error) {
-  assert(payloadChecksum, 'Payload checksum missing');
-  var data = {method: 'wallet.aes.json', format: 'json', checksum: payloadChecksum};
+function checkWalletChecksum (payload_checksum, success, error) {
+  assert(payload_checksum, 'Payload checksum missing');
+  var data = {method: 'wallet.aes.json', format: 'json', checksum: payload_checksum};
 
   API.securePostCallbacks('wallet', data, function (obj) {
-    if (!obj.payload || obj.payload === 'Not modified') {
+    if (!obj.payload || obj.payload == 'Not modified') {
       if (success) success();
     } else if (error) error();
   }, function () {
@@ -36092,9 +36106,9 @@ function checkWalletChecksum (payloadChecksum, success, error) {
 
 /**
  * Trigger the 2FA reset process
- * @param {string} userGuid User GUID.
- * @param {string} userEmail Registered email address.
- * @param {string} userNewEmail Optional new email address.
+ * @param {string} user_guid User GUID.
+ * @param {string} user_email Registered email address.
+ * @param {string} user_new_email Optional new email address.
  * @param {string} secret
  * @param {string} message
  * @param {string} captcha Spam protection
@@ -36102,17 +36116,17 @@ function checkWalletChecksum (payloadChecksum, success, error) {
 // used in the frontend
 function requestTwoFactorReset (
   sessionToken,
-  userGuid,
-  userEmail,
-  userNewEmail,
+  user_guid,
+  user_email,
+  user_new_email,
   secret,
   message,
   captcha) {
   var data = {
     method: 'reset-two-factor-form',
-    guid: userGuid,
-    email: userEmail,
-    contact_email: userNewEmail,
+    guid: user_guid,
+    email: user_email,
+    contact_email: user_new_email,
     secret_phrase: secret,
     message: message,
     kaptcha: captcha,
@@ -36129,7 +36143,7 @@ function requestTwoFactorReset (
 }
 
 // Save the javascript wallet to the remote server
-function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) {
+function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress, sessionToken) {
   assert(guid, 'GUID missing');
   assert(sharedKey, 'Shared Key missing');
   assert(password, 'Password missing');
@@ -36141,7 +36155,7 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
     // Everything looks ok, Encrypt the JSON output
     var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.wallet.defaultPbkdf2Iterations, MyWallet.wallet.isUpgradedToHD ? 3.0 : 2.0);
 
-    if (crypted.length === 0) {
+    if (crypted.length == 0) {
       return reject('Error encrypting the JSON output');
     }
 
@@ -36151,30 +36165,32 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
     try {
       WalletCrypto.decryptWalletSync(crypted, password);
     } catch (e) {
-      return reject(e.message !== undefined ? e.message : e);
+      return reject(e);
     }
 
-    // SHA256 newChecksum verified by server in case of corruption during transit
-    var newChecksum = WalletCrypto.sha256(crypted).toString('hex');
+    // SHA256 new_checksum verified by server in case of corruption during transit
+    var new_checksum = WalletCrypto.sha256(crypted).toString('hex');
 
     extra = extra || {};
 
-    var postData = {
+    var post_data = {
       length: crypted.length,
       payload: crypted,
-      checksum: newChecksum,
+      checksum: new_checksum,
       method: 'insert',
       format: 'plain',
       sharedKey: sharedKey,
       guid: guid
     };
 
-    Helpers.merge(postData, extra);
-    resolve(postData);
+    Helpers.merge(post_data, extra);
+    resolve(post_data);
   });
 
   var apiPromise = dataPromise.then(function (postData) {
-    return API.securePost('wallet', postData);
+    var headers = {sessionToken: sessionToken};
+
+    return API.securePost('wallet', postData, headers);
   });
 
   return Promise.all([dataPromise, apiPromise]);
@@ -36188,11 +36204,11 @@ function obtainSessionToken () {
     return data.token;
   };
 
-  return API.request('POST', 'sessions').then(processResult);
+  return API.request("POST", "sessions").then(processResult);
 }
 
 function establishSession (token) {
-  if (token) {
+  if(token) {
     return Promise.resolve(token);
   } else {
     return this.obtainSessionToken();
@@ -36203,13 +36219,13 @@ function establishSession (token) {
 // token must be present if sharedKey isn't
 function callGetWalletEndpoint (guid, sharedKey, sessionToken) {
   var clientTime = (new Date()).getTime();
-  var data = { format: 'json', resend_code: null, ct: clientTime, api_code: API.API_CODE };
-  var headers = {};
+  var data = { format : 'json', resend_code : null, ct : clientTime, api_code : API.API_CODE };
+  var headers = {}
 
   if (sharedKey) {
     data.sharedKey = sharedKey;
   } else {
-    assert(sessionToken, 'Session token required');
+    assert(sessionToken, "Session token required");
     headers.sessionToken = sessionToken;
   }
   return API.request('GET', 'wallet/' + guid, data, headers);
@@ -36217,6 +36233,7 @@ function callGetWalletEndpoint (guid, sharedKey, sessionToken) {
 
 function fetchWallet (guid, token, needsTwoFactorCode, authorizationRequired) {
   var promise = new Promise(function (resolve, reject) {
+
     var success = function (obj) {
       if (!obj.guid) {
         WalletStore.sendEvent('msg', {type: 'error', message: 'Server returned null guid.'});
@@ -36230,7 +36247,7 @@ function fetchWallet (guid, token, needsTwoFactorCode, authorizationRequired) {
       WalletStore.setRealAuthType(obj.real_auth_type);
       WalletStore.setSyncPubKeys(obj.sync_pubkeys);
 
-      if (obj.payload && obj.payload.length > 0 && obj.payload !== 'Not modified') {
+      if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
         resolve(obj);
       } else {
         needsTwoFactorCode(obj.auth_type);
@@ -36238,60 +36255,60 @@ function fetchWallet (guid, token, needsTwoFactorCode, authorizationRequired) {
     };
 
     var error = function (e) {
-      var obj = typeof e === 'object' ? e : JSON.parse(e);
-      if (obj && obj.initial_error && !obj.authorization_required) {
-        reject(obj.initial_error);
-        return;
-      }
-      if (obj.authorization_required) {
-        authorizationRequired().then(function () {
-          callGetWalletEndpoint(guid, null, token).then(success).catch(error);
-        });
-      }
+       var obj = 'object' === typeof e ? e : JSON.parse(e);
+       if(obj && obj.initial_error && !obj.authorization_required) {
+         reject(obj.initial_error);
+         return;
+       }
+       if (obj.authorization_required) {
+         authorizationRequired().then(function() {
+           callGetWalletEndpoint(guid, null, token).then(success).catch(error);
+         })
+       }
     };
 
-    callGetWalletEndpoint(guid, null, token).then(success).catch(error);
+    callGetWalletEndpoint(guid, null, token).then(success).catch(error)
   });
   return promise;
 }
 
-function fetchWalletWithTwoFactor (guid, sessionToken, twoFactor) {
+function  fetchWalletWithTwoFactor (guid, sessionToken, twoFactor) {
   var promise = new Promise(function (resolve, reject) {
-    if (twoFactor.code.length === 0 || twoFactor.code.length > 255) {
-      reject('You must enter a Two Factor Authentication code');
-      return;
+    if (twoFactor.code.length == 0 || twoFactor.code.length > 255) {
+     reject('You must enter a Two Factor Authentication code');
+     return;
     }
 
-    var twoFactorAuthKey = twoFactor.code;
+    var two_factor_auth_key = twoFactor.code;
 
-    switch (twoFactor.type) {
+    switch(twoFactor.type) {
       case 2: // email
       case 4: // sms
       case 5: // Google Auth
-        twoFactorAuthKey = twoFactorAuthKey.toUpperCase();
-        break;
+        two_factor_auth_key = two_factor_auth_key.toUpperCase();
+      break;
     }
 
     var success = function (data) {
-      if (data == null || data.length === 0) {
-        reject('Server Return Empty Wallet Data');
-        return;
-      }
-      if (data !== 'Not modified') { WalletStore.setEncryptedWalletData(data); }
-      resolve(data);
+     if (data == null || data.length == 0) {
+       otherError('Server Return Empty Wallet Data');
+       return;
+     }
+     if (data != 'Not modified') { WalletStore.setEncryptedWalletData(data); }
+     resolve(data);
     };
     var error = function (response) {
-      WalletStore.setRestoringWallet(false);
-      reject(response);
+     WalletStore.setRestoringWallet(false);
+     reject(response);
     };
 
     var myData = {
       guid: guid,
-      payload: twoFactorAuthKey,
-      length: twoFactorAuthKey.length,
-      method: 'get-wallet',
-      format: 'plain',
-      api_code: API.API_CODE
+      payload: two_factor_auth_key,
+      length : two_factor_auth_key.length,
+      method : 'get-wallet',
+      format : 'plain',
+      api_code : API.API_CODE
     };
 
     var headers = {sessionToken: sessionToken};
@@ -36302,9 +36319,11 @@ function fetchWalletWithTwoFactor (guid, sessionToken, twoFactor) {
 }
 
 function fetchWalletWithSharedKey (guid, sharedKey) {
+
   var success = function (obj) {
+
     if (!obj.guid) {
-      throw (new Error('Server returned null guid.'));
+      throw('Server returned null guid.');
     }
 
     // Even if Two Factor is enabled, some settings need to be saved here,
@@ -36313,37 +36332,38 @@ function fetchWalletWithSharedKey (guid, sharedKey) {
     WalletStore.setRealAuthType(obj.real_auth_type);
     WalletStore.setSyncPubKeys(obj.sync_pubkeys);
 
-    if (obj.payload && obj.payload.length > 0 && obj.payload !== 'Not modified') {
-      return obj;
+    if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
+      resolve(obj)
     } else {
-      throw (new Error('Wallet payload missing, empty or not modified'));
+      reject("Wallet payload missing, empty or 'not modified'");
     }
   };
 
   var error = function (e) {
-    console.log(e);
-    var obj = typeof e === 'object' ? e : JSON.parse(e);
-    if (obj && obj.initial_error) {
-      throw (new Error(obj.initial_error));
-    }
+     console.log(e);
+     var obj = 'object' === typeof e ? e : JSON.parse(e);
+     if(obj && obj.initial_error) {
+       reject(obj.initial_error);
+       return;
+     }
 
-    WalletStore.sendEvent('did_fail_set_guid');
+     WalletStore.sendEvent('did_fail_set_guid');
   };
 
-  return callGetWalletEndpoint(guid, sharedKey).then(success).catch(error);
+  return callGetWalletEndpoint(guid, sharedKey).then(success).catch(error)
 }
 
 function pollForSessionGUID (sessionToken) {
   var promise = new Promise(function (resolve, reject) {
     if (WalletStore.isPolling()) return;
     WalletStore.setIsPolling(true);
-    var data = {format: 'json'};
+    var data = {format : 'json'};
     var headers = {sessionToken: sessionToken};
     var success = function (obj) {
       if (obj.guid) {
         WalletStore.setIsPolling(false);
         WalletStore.sendEvent('msg', {type: 'success', message: 'Authorization Successful'});
-        resolve();
+        resolve()
       } else {
         if (WalletStore.getCounter() < 600) {
           WalletStore.incrementCounter();
@@ -36354,30 +36374,30 @@ function pollForSessionGUID (sessionToken) {
           WalletStore.setIsPolling(false);
         }
       }
-    };
+    }
     var error = function () {
       WalletStore.setIsPolling(false);
-    };
+    }
     API.request('GET', 'wallet/poll-for-session-guid', data, headers).then(success).catch(error);
   });
   return promise;
-}
+};
 
 function getCaptchaImage () {
   var self = this;
   var promise = new Promise(function (resolve, reject) {
-    self.obtainSessionToken().then(function (sessionToken) {
-      var success = function (data) {
+    self.obtainSessionToken().then(function(sessionToken) {
+      var success = function(data) {
         resolve({
           image: data,
           sessionToken: sessionToken
         });
-      };
+      }
 
-      var error = function (e) {
+      var error = function(e) {
         console.log(e);
         reject(e.initial_error);
-      };
+      }
 
       var data = {
         timestamp: new Date().getTime()
@@ -36389,7 +36409,8 @@ function getCaptchaImage () {
     });
   });
   return promise;
-}
+};
+
 
 module.exports = {
   checkWalletChecksum: checkWalletChecksum,
@@ -36400,11 +36421,11 @@ module.exports = {
   requestTwoFactorReset: requestTwoFactorReset,
   obtainSessionToken: obtainSessionToken,
   establishSession: establishSession,
-  fetchWalletWithSharedKey: fetchWalletWithSharedKey,
-  fetchWalletWithTwoFactor: fetchWalletWithTwoFactor,
-  fetchWallet: fetchWallet,
-  pollForSessionGUID: pollForSessionGUID,
-  getCaptchaImage: getCaptchaImage
+  fetchWalletWithSharedKey : fetchWalletWithSharedKey,
+  fetchWalletWithTwoFactor : fetchWalletWithTwoFactor,
+  fetchWallet : fetchWallet,
+  pollForSessionGUID : pollForSessionGUID,
+  getCaptchaImage : getCaptchaImage
 };
 
 },{"./api":177,"./helpers":184,"./wallet":199,"./wallet-crypto":193,"./wallet-store":196,"assert":16}],195:[function(require,module,exports){
@@ -36413,6 +36434,7 @@ module.exports = {
 var assert = require('assert');
 
 var Wallet = require('./blockchain-wallet');
+var Helpers = require('./helpers');
 var WalletNetwork = require('./wallet-network');
 
 function generateNewWallet (password, email, mnemonic, bip39Password, firstAccountName, success, error, generateUUIDProgress, decryptWalletProgress) {
@@ -36425,7 +36447,7 @@ function generateNewWallet (password, email, mnemonic, bip39Password, firstAccou
     var guid = uuids[0];
     var sharedKey = uuids[1];
 
-    if (guid.length !== 36 || sharedKey.length !== 36) {
+    if (guid.length != 36 || sharedKey.length != 36) {
       error('Error generating wallet identifier');
     }
 
@@ -36437,7 +36459,7 @@ module.exports = {
   generateNewWallet: generateNewWallet
 };
 
-},{"./blockchain-wallet":181,"./wallet-network":194,"assert":16}],196:[function(require,module,exports){
+},{"./blockchain-wallet":181,"./helpers":184,"./wallet-network":194,"assert":16}],196:[function(require,module,exports){
 'use strict';
 
 var MyWallet = require('./wallet');
@@ -36447,25 +36469,25 @@ var WalletStore = (function () {
   var password; // Password
   var guid; // Wallet identifier
   var language = 'en';
-  var pbkdf2Iterations = 5000; // pbkdf2_interations of the main password (to encrypt the full payload)
-  var disableLogout = false;
-  var realAuthType = 0; // The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
-  var encryptedWalletData; // Encrypted wallet data (Base64, AES 256)
-  var payloadChecksum; // SHA256 hash of the current wallet.aes.json
+  var pbkdf2_iterations = 5000; // pbkdf2_interations of the main password (to encrypt the full payload)
+  var disable_logout = false;
+  var real_auth_type = 0; // The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
+  var encrypted_wallet_data; // Encrypted wallet data (Base64, AES 256)
+  var payload_checksum; // SHA256 hash of the current wallet.aes.json
   var isPolling = false;
   var isRestoringWallet = false;
   var counter = 0;
-  var syncPubkeys = false;
+  var sync_pubkeys = false;
   var isSynchronizedWithServer = true;
-  var eventListeners = []; // Emits Did decrypt wallet event (used on claim page)
+  var event_listeners = []; // Emits Did decrypt wallet event (used on claim page)
 
   return {
     setPbkdf2Iterations: function (iterations) {
-      pbkdf2Iterations = iterations;
+      pbkdf2_iterations = iterations;
       return;
     },
     getPbkdf2Iterations: function () {
-      return pbkdf2Iterations;
+      return pbkdf2_iterations;
     },
     getLanguage: function () {
       return language;
@@ -36474,23 +36496,23 @@ var WalletStore = (function () {
       language = lan;
     },
     disableLogout: function () {
-      disableLogout = true;
+      disable_logout = true;
     },
     enableLogout: function () {
-      disableLogout = false;
+      disable_logout = false;
     },
     isLogoutDisabled: function () {
-      return disableLogout;
+      return disable_logout;
     },
     setRealAuthType: function (number) {
-      realAuthType = number;
+      real_auth_type = number;
     },
     get2FAType: function () {
-      return realAuthType;
+      return real_auth_type;
     },
     get2FATypeString: function () {
       var stringType = '';
-      switch (realAuthType) {
+      switch (real_auth_type) {
         case 0: stringType = null; break;
         case 1: stringType = 'Yubikey'; break;
         case 2: stringType = 'Email'; break;
@@ -36508,25 +36530,25 @@ var WalletStore = (function () {
       guid = stringValue;
     },
     generatePayloadChecksum: function () {
-      return WalletCrypto.sha256(encryptedWalletData).toString('hex');
+      return WalletCrypto.sha256(encrypted_wallet_data).toString('hex');
     },
     setEncryptedWalletData: function (data) {
-      if (!data || data.length === 0) {
-        encryptedWalletData = null;
-        payloadChecksum = null;
+      if (!data || data.length == 0) {
+        encrypted_wallet_data = null;
+        payload_checksum = null;
       } else {
-        encryptedWalletData = data;
-        payloadChecksum = this.generatePayloadChecksum();
+        encrypted_wallet_data = data;
+        payload_checksum = this.generatePayloadChecksum();
       }
     },
     getEncryptedWalletData: function () {
-      return encryptedWalletData;
+      return encrypted_wallet_data;
     },
     getPayloadChecksum: function () {
-      return payloadChecksum;
+      return payload_checksum;
     },
     setPayloadChecksum: function (value) {
-      payloadChecksum = value;
+      payload_checksum = value;
     },
     isPolling: function () {
       return isPolling;
@@ -36547,10 +36569,10 @@ var WalletStore = (function () {
       return counter;
     },
     setSyncPubKeys: function (bool) {
-      syncPubkeys = bool;
+      sync_pubkeys = bool;
     },
     isSyncPubKeys: function () {
-      return syncPubkeys;
+      return sync_pubkeys;
     },
     isSynchronizedWithServer: function () {
       return isSynchronizedWithServer;
@@ -36559,18 +36581,18 @@ var WalletStore = (function () {
       isSynchronizedWithServer = bool;
     },
     addEventListener: function (func) {
-      eventListeners.push(func);
+      event_listeners.push(func);
     },
-    sendEvent: function (eventName, obj) {
-      for (var listener in eventListeners) {
-        eventListeners[listener](eventName, obj);
+    sendEvent: function (event_name, obj) {
+      for (var listener in event_listeners) {
+        event_listeners[listener](event_name, obj);
       }
     },
     isCorrectMainPassword: function (candidate) {
       return password === candidate;
     },
-    changePassword: function (newPassword, success, error) {
-      password = newPassword;
+    changePassword: function (new_password, success, error) {
+      password = new_password;
       MyWallet.syncWallet(success, error);
     },
     unsafeSetPassword: function (newPassword) {
@@ -36580,10 +36602,10 @@ var WalletStore = (function () {
       return password;
     },
     getLogoutTime: function () {
-      return MyWallet.wallet._logoutTime;
+      return MyWallet.wallet._logout_time;
     },
-    setLogoutTime: function (logoutTime) {
-      MyWallet.wallet.logoutTime = logoutTime;
+    setLogoutTime: function (logout_time) {
+      MyWallet.wallet.logoutTime = logout_time;
     }
   };
 })();
@@ -36677,11 +36699,11 @@ var MyWallet = require('./wallet');
 function Tx (object) {
   var obj = object || {};
   // original properties
-  var setConfirmations = function (txBlockHeight) {
+  var setConfirmations = function (tx_block_height) {
     var lastBlock = MyWallet.wallet.latestBlock;
     var conf = 0;
-    if (lastBlock && txBlockHeight != null && txBlockHeight > 0) {
-      conf = lastBlock.height - txBlockHeight + 1;
+    if (lastBlock && tx_block_height != null && tx_block_height > 0) {
+      conf = lastBlock.height - tx_block_height + 1;
     }
     return conf;
   };
@@ -36781,12 +36803,7 @@ function procIns (acc, input) {
 }
 
 function belongsTo (tx, id) {
-  return tx.processedInputs.concat(tx.processedOutputs).some(function (p) {
-    return (
-      (p.identity === 'imported' && id === 'imported') ||
-      p.identity === parseInt(id, 10)
-    );
-  });
+  return tx.processedInputs.concat(tx.processedOutputs).some(function (p) { return p.identity == id; });
 }
 // var memoizedBelongsTo = Helpers.memoize(belongsTo);
 
@@ -36941,7 +36958,7 @@ var RNG = require('./rng');
 var BIP39 = require('bip39');
 var Bitcoin = require('bitcoinjs-lib');
 // Intentionally not directly included in package.json:
-var pbkdf2 = require('pbkdf2').pbkdf2Sync;
+var createHmac = require('create-hmac');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -36951,7 +36968,7 @@ MyWallet.ws = new BlockchainSocket();
 function socketConnect () {
   MyWallet.ws.connect(onOpen, onMessage, onClose);
 
-  var lastOnChange = null;
+  var last_on_change = null;
 
   function onMessage (message) {
     var obj = null;
@@ -36966,24 +36983,24 @@ function socketConnect () {
       return;
     }
 
-    if (obj.op === 'on_change') {
-      var oldChecksum = WalletStore.generatePayloadChecksum();
-      var newChecksum = obj.checksum;
+    if (obj.op == 'on_change') {
+      var old_checksum = WalletStore.generatePayloadChecksum();
+      var new_checksum = obj.checksum;
 
-      if (lastOnChange !== newChecksum && oldChecksum !== newChecksum) {
-        lastOnChange = newChecksum;
+      if (last_on_change != new_checksum && old_checksum != new_checksum) {
+        last_on_change = new_checksum;
 
         MyWallet.getWallet();
       }
-    } else if (obj.op === 'utx') {
+    } else if (obj.op == 'utx') {
       WalletStore.sendEvent('on_tx_received');
       var sendOnTx = WalletStore.sendEvent.bind(null, 'on_tx');
       MyWallet.wallet.getHistory().then(sendOnTx);
-    } else if (obj.op === 'block') {
+    } else if (obj.op == 'block') {
       var sendOnBlock = WalletStore.sendEvent.bind(null, 'on_block');
       MyWallet.wallet.getHistory().then(sendOnBlock);
       MyWallet.wallet.latestBlock = obj.x;
-    } else if (obj.op === 'pong') {
+    } else if (obj.op == 'pong') {
       clearTimeout(MyWallet.ws.pingTimeoutPID);
     }
   }
@@ -37018,7 +37035,7 @@ MyWallet.getWallet = function (success, error) {
   }
 
   API.securePostCallbacks('wallet', data, function (obj) {
-    if (!obj.payload || obj.payload === 'Not modified') {
+    if (!obj.payload || obj.payload == 'Not modified') {
       if (success) success();
       return;
     }
@@ -37040,12 +37057,12 @@ MyWallet.getWallet = function (success, error) {
   });
 };
 
-MyWallet.decryptAndInitializeWallet = function (success, error, decryptSuccess, buildHdSuccess) {
+MyWallet.decryptAndInitializeWallet = function(success, error, decrypt_success, build_hd_success) {
   assert(success, 'Success callback required');
   assert(error, 'Error callback required');
   var encryptedWalletData = WalletStore.getEncryptedWalletData();
 
-  if (encryptedWalletData === undefined || encryptedWalletData === null || encryptedWalletData.length === 0) {
+  if (encryptedWalletData == null || encryptedWalletData.length == 0) {
     error('No Wallet Data To Decrypt');
     return;
   }
@@ -37053,12 +37070,12 @@ MyWallet.decryptAndInitializeWallet = function (success, error, decryptSuccess, 
     encryptedWalletData,
     WalletStore.getPassword(),
     function (obj, rootContainer) {
-      decryptSuccess && decryptSuccess();
+      decrypt_success && decrypt_success();
       MyWallet.wallet = new Wallet(obj);
 
       // this sanity check should be done on the load
       // if (!sharedKey || sharedKey.length == 0 || sharedKey.length != 36) {
-      //   throw new Error('Shared Key is invalid');
+      //   throw 'Shared Key is invalid';
       // }
 
       // TODO: pbkdf2 iterations should be stored correctly on wallet wrapper
@@ -37066,8 +37083,7 @@ MyWallet.decryptAndInitializeWallet = function (success, error, decryptSuccess, 
         WalletStore.setPbkdf2Iterations(rootContainer.pbkdf2_iterations);
       }
       // If we don't have a checksum then the wallet is probably brand new - so we can generate our own
-      var checkSum = WalletStore.getPayloadChecksum();
-      if (checkSum === undefined || checkSum === null || checkSum.length === 0) {
+      if (WalletStore.getPayloadChecksum() == null || WalletStore.getPayloadChecksum().length == 0) {
         WalletStore.setPayloadChecksum(WalletStore.generatePayloadChecksum());
       }
       if (MyWallet.wallet.isUpgradedToHD === false) {
@@ -37078,14 +37094,14 @@ MyWallet.decryptAndInitializeWallet = function (success, error, decryptSuccess, 
     },
     error
   );
-};
+}
 
 // used in the frontend
 MyWallet.makePairingCode = function (success, error) {
   try {
-    API.securePostCallbacks('wallet', { method: 'pairing-encryption-password' }, function (encryptionPhrase) {
+    API.securePostCallbacks('wallet', { method: 'pairing-encryption-password' }, function (encryption_phrase) {
       var pwHex = new Buffer(WalletStore.getPassword()).toString('hex');
-      var encrypted = WalletCrypto.encrypt(MyWallet.wallet.sharedKey + '|' + pwHex, encryptionPhrase, 10);
+      var encrypted = WalletCrypto.encrypt(MyWallet.wallet.sharedKey + '|' + pwHex, encryption_phrase, 10);
       success('1|' + MyWallet.wallet.guid + '|' + encrypted);
     }, function (e) {
       error(e);
@@ -37095,18 +37111,19 @@ MyWallet.makePairingCode = function (success, error) {
   }
 };
 
-/* guid: the wallet identifier
-   password: to decrypt the wallet (which happens in the browser)
-   server credentials:
-     twoFactor: 2FA {type: ..., code: ....} or null
-     sharedKey: if present, it bypasses 2FA and browser verification
-   callbacks:
-     needsTwoFactorCode
-     wrongTwoFactorCode
-     authorizationRequired: this is a new browser
-     didFetch: wallet has been downloaded from the server
-     didDecrypt wallet has been decrypted (with the password)
-     didBuildHD: HD part of wallet has been constructed in memory */
+////////////////////////////////////////////////////////////////////////////////
+// guid: the wallet identifier
+// password: to decrypt the wallet (which happens in the browser)
+// server credentials:
+//   twoFactor: 2FA {type: ..., code: ....} or null
+//   sharedKey: if present, it bypasses 2FA and browser verification
+// callbacks:
+//   needsTwoFactorCode
+//   wrongTwoFactorCode
+//   authorizationRequired: this is a new browser
+//   didFetch: wallet has been downloaded from the server
+//   didDecrypt wallet has been decrypted (with the password)
+//   didBuildHD: HD part of wallet has been constructed in memory
 
 MyWallet.login = function (guid, password, credentials, callbacks) {
   assert(credentials.twoFactor !== undefined, '2FA code must be null or set');
@@ -37119,38 +37136,41 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
     if (guid === WalletStore.getGuid() && WalletStore.getEncryptedWalletData()) {
       // If we already fetched the wallet before (e.g.
       // after user enters a wrong password), don't fetch it again:
-      MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
+      MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function() {
         resolve({guid: guid});
       }).catch(function (e) {
         reject(e);
       });
-    } else if (credentials.sharedKey) {
+    } else if(credentials.sharedKey) {
       // If the shared key is known, 2FA and browser verification are skipped.
       // No session is needed in that case.
       return WalletNetwork.fetchWalletWithSharedKey(guid, credentials.sharedKey)
         .then(function (obj) {
           callbacks.didFetch && callbacks.didFetch();
-          MyWallet.didFetchWallet(obj).then(function () {
-            MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
+          MyWallet.didFetchWallet(obj).then(function() {
+            MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function() {
               resolve({guid: guid});
             }).catch(function (e) {
               reject(e);
             });
           });
-        });
+        })
     } else {
       // Estabish a session to enable 2FA and browser verification:
       WalletNetwork.establishSession(credentials.sessionToken)
-      .then(function (token) {
+      .then(function(token) {
+        if(typeof callbacks.newSessionToken === 'function') {
+          callbacks.newSessionToken(token);
+        }
         // If a new browser is used, the user receives a verification email.
         // We wait for them to click the link.
-        var authorizationRequired = function () {
-          var promise = new Promise(function (resolveA, rejectA) { // eslint-disable-line promise/param-names
-            if (typeof (callbacks.authorizationRequired) === 'function') {
+        var authorizationRequired = function() {
+          var promise = new Promise(function (resolveA, rejectA) {
+            if(typeof(callbacks.authorizationRequired) === 'function') {
               callbacks.authorizationRequired(function () {
                 WalletNetwork.pollForSessionGUID(token).then(function () {
                   resolveA();
-                }).catch(function (error) {
+                }).catch(function(error) {
                   rejectA(error);
                 });
               });
@@ -37160,16 +37180,16 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
         };
 
         var needsTwoFactorCode = function (authType) {
-          callbacks.needsTwoFactorCode(token, authType);
+          callbacks.needsTwoFactorCode(authType);
         };
 
-        if (credentials.twoFactor) {
+        if(credentials.twoFactor) {
           WalletNetwork.fetchWalletWithTwoFactor(guid, token, credentials.twoFactor)
           .then(function (obj) {
             callbacks.didFetch && callbacks.didFetch();
-            MyWallet.didFetchWallet(obj).then(function () {
-              MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
-                resolve({guid: guid, sessionToken: token});
+            MyWallet.didFetchWallet(obj).then(function() {
+              MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function() {
+                resolve({guid: guid});
               }).catch(function (e) {
                 reject(e);
               });
@@ -37177,14 +37197,15 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
           }).catch(function (e) {
             callbacks.wrongTwoFactorCode(e);
           });
+
         } else {
           // Try without 2FA:
           WalletNetwork.fetchWallet(guid, token, needsTwoFactorCode, authorizationRequired)
           .then(function (obj) {
             callbacks.didFetch && callbacks.didFetch();
-            MyWallet.didFetchWallet(obj).then(function () {
-              MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
-                resolve({guid: guid, sessionToken: token});
+            MyWallet.didFetchWallet(obj).then(function() {
+              MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function() {
+                resolve({guid: guid});
               }).catch(function (e) {
                 reject(e);
               });
@@ -37193,30 +37214,32 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
             reject(e);
           });
         }
+
       }).catch(function (error) {
         console.log(error.message);
-        reject('Unable to establish session');
+        reject("Unable to establish session");
       });
     }
   });
 
   return loginPromise;
-};
+}
 
-MyWallet.didFetchWallet = function (obj) {
-  if (obj.payload && obj.payload.length > 0 && obj.payload !== 'Not modified') {
-    WalletStore.setEncryptedWalletData(obj.payload);
+MyWallet.didFetchWallet = function(obj) {
+  if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
+   WalletStore.setEncryptedWalletData(obj.payload);
   }
 
-  if (obj.language && WalletStore.getLanguage() !== obj.language) {
-    WalletStore.setLanguage(obj.language);
+  if (obj.language && WalletStore.getLanguage() != obj.language) {
+   WalletStore.setLanguage(obj.language);
   }
 
   return Promise.resolve();
-};
+}
 
-MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
+MyWallet.initializeWallet = function (pw, decrypt_success, build_hd_success) {
   var promise = new Promise(function (resolve, reject) {
+
     if (isInitialized || WalletStore.isRestoringWallet()) {
       return;
     }
@@ -37242,8 +37265,8 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
         didDecryptWallet(_success);
       }
       , _error
-      , decryptSuccess
-      , buildHdSuccess
+      , decrypt_success
+      , build_hd_success
     );
   });
   return promise;
@@ -37266,7 +37289,7 @@ function syncWallet (successcallback, errorcallback) {
   var panic = function (e) {
     console.log('Panic ' + e);
     window.location.replace('/');
-    throw new Error('Save disabled.');
+    throw 'Save disabled.';
     // kick out of the wallet in a inconsistent state to prevent save
   };
 
@@ -37277,7 +37300,7 @@ function syncWallet (successcallback, errorcallback) {
   if (!MyWallet.wallet || !MyWallet.wallet.sharedKey ||
       MyWallet.wallet.sharedKey.length === 0 ||
       MyWallet.wallet.sharedKey.length !== 36) {
-    throw new Error('Cannot backup wallet now. Shared key is not set');
+    throw 'Cannot backup wallet now. Shared key is not set';
   }
 
   WalletStore.disableLogout();
@@ -37294,15 +37317,11 @@ function syncWallet (successcallback, errorcallback) {
   try {
     var method = 'update';
     var data = JSON.stringify(MyWallet.wallet, null, 2);
-    var crypted = WalletCrypto.encryptWallet(
-      data,
-      WalletStore.getPassword(),
-      WalletStore.getPbkdf2Iterations(),
-      MyWallet.wallet.isUpgradedToHD ? 3.0 : 2.0
-    );
+    var crypted = WalletCrypto.encryptWallet(data, WalletStore.getPassword(),
+        WalletStore.getPbkdf2Iterations(), MyWallet.wallet.isUpgradedToHD ? 3.0 : 2.0);
 
-    if (crypted.length === 0) {
-      throw new Error('Error encrypting the JSON output');
+    if (crypted.length == 0) {
+      throw 'Error encrypting the JSON output';
     }
 
     // Now Decrypt the it again to double check for any possible corruption
@@ -37311,11 +37330,11 @@ function syncWallet (successcallback, errorcallback) {
         var oldChecksum = WalletStore.getPayloadChecksum();
         WalletStore.sendEvent('on_backup_wallet_start');
         WalletStore.setEncryptedWalletData(crypted);
-        var newChecksum = WalletStore.getPayloadChecksum();
+        var new_checksum = WalletStore.getPayloadChecksum();
         var data = {
           length: crypted.length,
           payload: crypted,
-          checksum: newChecksum,
+          checksum: new_checksum,
           method: method,
           format: 'plain',
           language: WalletStore.getLanguage()
@@ -37328,13 +37347,13 @@ function syncWallet (successcallback, errorcallback) {
         if (WalletStore.isSyncPubKeys()) {
           // Include HD addresses unless in lame mode:
           var hdAddresses = (
-            MyWallet.wallet.hdwallet !== undefined &&
-            MyWallet.wallet.hdwallet.accounts !== undefined
+            MyWallet.wallet.hdwallet != undefined &&
+            MyWallet.wallet.hdwallet.accounts != undefined
           ) ? [].concat.apply([],
             MyWallet.wallet.hdwallet.accounts.map(function (account) {
               return account.labeledReceivingAddresses;
             })) : [];
-          data.active = [].concat.apply([], // eslint-disable-line no-useless-call
+          data.active = [].concat.apply([],
             [
               MyWallet.wallet.activeAddresses,
               hdAddresses
@@ -37347,7 +37366,7 @@ function syncWallet (successcallback, errorcallback) {
             data,
             function (data) {
               WalletNetwork.checkWalletChecksum(
-                  newChecksum,
+                  new_checksum,
                   function () {
                     WalletStore.setIsSynchronizedWithServer(true);
                     WalletStore.enableLogout();
@@ -37371,7 +37390,7 @@ function syncWallet (successcallback, errorcallback) {
       }
     }, function (e) {
       console.log(e);
-      throw new Error('Decryption failed');
+      throw 'Decryption failed';
     });
   } catch (e) {
     _errorcallback(e);
@@ -37395,44 +37414,47 @@ MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function () {
  */
  // used on mywallet, iOS and frontend
 MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccountName, languageCode, currencyCode, successCallback, errorCallback) {
-  var success = function (createdGuid, createdSharedKey, createdPassword) {
+  var success = function (createdGuid, createdSharedKey, createdPassword, sessionToken) {
     if (languageCode) {
       WalletStore.setLanguage(languageCode);
-      BlockchainSettingsAPI.changeLanguage(languageCode, function () {});
+      BlockchainSettingsAPI.change_language(languageCode, function () {});
     }
 
     if (currencyCode) {
-      BlockchainSettingsAPI.changeLocalCurrency(currencyCode, function () {});
+      BlockchainSettingsAPI.change_local_currency(currencyCode, function () {});
     }
 
     WalletStore.unsafeSetPassword(createdPassword);
-    successCallback(createdGuid, createdSharedKey, createdPassword);
+    successCallback(createdGuid, createdSharedKey, createdPassword, sessionToken);
   };
 
+
   var saveWallet = function (wallet) {
-    WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, {email: inputedEmail}).then(function () {
-      success(wallet.guid, wallet.sharedKey, inputedPassword);
-    }).catch(function (e) {
-      errorCallback(e);
+    // Generate a session token to facilitate future login attempts:
+    WalletNetwork.establishSession(null).then(function(sessionToken) {
+      WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, {email: inputedEmail}, undefined, sessionToken).then(function () {
+        success(wallet.guid, wallet.sharedKey, inputedPassword, sessionToken);
+      }).catch(function (e) {
+        errorCallback(e);
+      });
     });
   };
 
-  try {
-    var mnemonic = BIP39.generateMnemonic(undefined, RNG.run.bind(RNG));
-    WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, undefined, firstAccountName, saveWallet, errorCallback);
-  } catch (e) {
-    errorCallback(e);
-  }
+  var mnemonic = BIP39.generateMnemonic(undefined, RNG.run.bind(RNG));
+
+  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, undefined, firstAccountName, saveWallet, errorCallback);
 };
 
 // used on frontend
 MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic, bip39Password, successCallback, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
   var walletGenerated = function (wallet) {
+
     var saveWallet = function () {
-      WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, {email: inputedEmail}, decryptWalletProgress).then(function () {
-        successCallback({guid: wallet.guid, sharedKey: wallet.sharedKey, password: inputedPassword});
-      }, function (e) {
-        error(e);
+      // Generate a session token to facilitate future login attempts:
+      WalletNetwork.establishSession(null).then(function(sessionToken) {
+        WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, {email: inputedEmail}, decryptWalletProgress, sessionToken).then(function () {
+          successCallback({guid: wallet.guid, sharedKey: wallet.sharedKey, password: inputedPassword, sessionToken: sessionToken});
+        });
       });
     };
 
@@ -37445,9 +37467,8 @@ MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic
 
 // used frontend and mywallet
 MyWallet.logout = function (sessionToken, force) {
-  if (!force && WalletStore.isLogoutDisabled()) {
+  if (!force && WalletStore.isLogoutDisabled())
     return;
-  }
 
   var reload = function () {
     try { window.location.reload(); } catch (e) {
@@ -37459,73 +37480,31 @@ MyWallet.logout = function (sessionToken, force) {
 
   var headers = {sessionToken: sessionToken};
 
-  API.request('GET', 'wallet/logout', data, headers).then(reload).catch(reload);
+  API.request("GET", 'wallet/logout', data, headers).then(reload).catch(reload);
 };
 
 // In case of a non-mainstream browser, ensure it correctly implements the
 // math needed to derive addresses from a mnemonic.
-MyWallet.browserCheck = function () {
+MyWallet.browserCheck = function() {
   var mnemonic = 'daughter size twenty place alter glass small bid purse october faint beyond';
   var seed = BIP39.mnemonicToSeed(mnemonic, '');
   var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed);
-
   var account = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(0);
   var address = account.derive(0).derive(0).getAddress();
   return address === '1QBWUDG4AFL2kFmbqoZ9y4KsSpQoCTZKRw';
-};
+}
 
-// Takes about 100 ms on a Macbook Pro
-MyWallet.browserCheckFast = function () {
-  var mnemonic = 'daughter size twenty place alter glass small bid purse october faint beyond';
+MyWallet.browserCheckFast = function() {
+  var seed = Buffer('9f3ad67c5f1eebbffcc8314cb8a3aacbfa28046fd4b3d0af6965a8c804a603e57f5b551320eca4017267550e5b01e622978c133f2085c5999f7ef57a340d0ae2', 'hex');
+  var hmacSha512Expected =
+    '554d80de8f1747c88d8fb01d27277d0a77ee167886737e91b03da170319858b69ff5840b791b0faaf4b83b54c65886db4ef0f7abc8d0a4e3e10add20681b744f';
+  var hmacSha512 = createHmac('sha512', seed);
+  hmacSha512.update('100 bottles of beer on the wall');
+  var hmacSha512Output = hmacSha512.digest().toString('hex');
+  return hmacSha512Output === hmacSha512Expected;
+}
 
-  var seed = pbkdf2(mnemonic, 'mnemonic', 100, 64, 'sha512');
-  var seedString = seed.toString('hex');
-
-  if (seedString !== '25357208f6fcbde803b4f333e59ce7a0ebe8b77b0390fa8b72899496f50fcc3707c65debf6102b19912cd0ccb36a2332cfebecb53e61b5fa79f11592c825bdda') {
-    return false;
-  }
-
-  seed = Buffer('9f3ad67c5f1eebbffcc8314cb8a3aacbfa28046fd4b3d0af6965a8c804a603e57f5b551320eca4017267550e5b01e622978c133f2085c5999f7ef57a340d0ae2', 'hex');
-
-  // master node -> xpriv (1 ms)
-  var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed);
-  var xpriv = masterkey.toString();
-
-  if (xpriv !== 'xprv9s21ZrQH143K44XyzPUorz65tsvifDFiWZRoqeM69iTeYXd5KbSrz4WEAbWwB2CY6jCGJ2pKdXgw66oQPePPifrpxhWuGoDkumMGCZQwduP') {
-    return false;
-  }
-
-  // xpriv -> xpriv' (100 ms)
-  // var xprivChild = masterkey.derive(0);
-  // if (xprivChild.toString() !== 'xprv9u32fAyAZYdehCkX6YGKSuTd1PnEgrjjPbdUwZ9v1aP2v8Dbr4JCaG4teSc9YNScsXeKGRhSHkimo4W6qefVUnT9eAuiL7yDRMbwf6McJBY') {
-  //   return false;
-  // }
-
-  // xpriv -> xpub, test .neutered() // 100 ms
-  // var xprivChild = Bitcoin.HDNode.fromBase58('xprv9u32fAyAZYdehCkX6YGKSuTd1PnEgrjjPbdUwZ9v1aP2v8Dbr4JCaG4teSc9YNScsXeKGRhSHkimo4W6qefVUnT9eAuiL7yDRMbwf6McJBY');
-  // var xpub = xprivChild.neutered();
-  // if (xpub.toString() !== 'xpub682P4gW4PvBwugpzCZoKp3QMZRcj6KTakpZ5jwZXZuv1nvYkPbcT84PNVk1vSKnf1XtLRfTzuwqRH6y7T2HYKRWohWHLDpEv2sfeqPCAFkH') {
-  //   return false;
-  // }
-
-  var xpub = Bitcoin.HDNode.fromBase58('xpub682P4gW4PvBwugpzCZoKp3QMZRcj6KTakpZ5jwZXZuv1nvYkPbcT84PNVk1vSKnf1XtLRfTzuwqRH6y7T2HYKRWohWHLDpEv2sfeqPCAFkH');
-
-  // xpub -> address // 2 ms
-  if (xpub.getAddress() !== '1MGULYKjmADKfZG6BpWwQQ3qVw622HqhCR') {
-    return false;
-  }
-
-  // xpub -> xpub' // 100 ms
-  var xpubChild = xpub.derive(0);
-
-  if (xpubChild.toString() !== 'xpub6BQQYoWs7yyp2oNXYABTjjfmcJNJN1vHogwZ9qFdRPAfYhh5EDrBH63MHdjv5uvaawU3E3HTDGZ4SWDhwDjtnmP2S7A3EyYoQiZdFaFju5e') {
-    return false;
-  }
-
-  return true;
-};
-
-},{"./api":177,"./blockchain-settings-api":179,"./blockchain-socket":180,"./blockchain-wallet":181,"./helpers":184,"./rng":189,"./wallet-crypto":193,"./wallet-network":194,"./wallet-signup":195,"./wallet-store":196,"assert":16,"bip39":22,"bitcoinjs-lib":33,"buffer":74,"pbkdf2":136}],200:[function(require,module,exports){
+},{"./api":177,"./blockchain-settings-api":179,"./blockchain-socket":180,"./blockchain-wallet":181,"./helpers":184,"./rng":189,"./wallet-crypto":193,"./wallet-network":194,"./wallet-signup":195,"./wallet-store":196,"assert":16,"bip39":22,"bitcoinjs-lib":33,"buffer":74,"create-hmac":81}],200:[function(require,module,exports){
 
 var global = (function () { return this; })();
 var WebSocket = global.WebSocket || global.MozWebSocket;
