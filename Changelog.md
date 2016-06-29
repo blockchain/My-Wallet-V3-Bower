@@ -6,6 +6,12 @@ __Blockchain Wallet V3__
 
 ---
 
+## Bug Fixes
+
+- **AccountInfo:** return null for mobile number if user has no mobile number
+  ([47a49605](https://github.com/blockchain/My-Wallet-V3/commit/47a4960502db4d391bbd7721741f8fa60d4b4f50))
+
+
 ## Chore
 
 - **Version:** bump version
