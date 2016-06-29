@@ -49,7 +49,7 @@ module.exports = {
   // BIP39: require('bip39')
 };
 
-},{"./src/address":176,"./src/api":177,"./src/blockchain-settings-api":179,"./src/helpers":184,"./src/import-export":185,"./src/payment":188,"./src/rng":189,"./src/shared":190,"./src/transaction":192,"./src/wallet":199,"./src/wallet-crypto":193,"./src/wallet-network":194,"./src/wallet-store":196,"./src/wallet-token-endpoints":197,"./src/wallet-transaction":198,"bitcoinjs-lib":33,"buffer":74,"es6-promise":115,"isomorphic-fetch":129}],2:[function(require,module,exports){
+},{"./src/address":177,"./src/api":178,"./src/blockchain-settings-api":180,"./src/helpers":185,"./src/import-export":186,"./src/payment":189,"./src/rng":190,"./src/shared":191,"./src/transaction":193,"./src/wallet":200,"./src/wallet-crypto":194,"./src/wallet-network":195,"./src/wallet-store":197,"./src/wallet-token-endpoints":198,"./src/wallet-transaction":199,"bitcoinjs-lib":33,"buffer":74,"es6-promise":115,"isomorphic-fetch":129}],2:[function(require,module,exports){
 var asn1 = exports;
 
 asn1.bignum = require('bn.js');
@@ -14474,7 +14474,7 @@ exports.kMaxLength = kMaxLength()
 function typedArraySupport () {
   try {
     var arr = new Uint8Array(1)
-    arr.foo = function () { return 42 }
+    arr.__proto__ = {__proto__: Uint8Array.prototype, foo: function () { return 42 }}
     return arr.foo() === 42 && // typed array instances can be augmented
         typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
         arr.subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
@@ -14618,7 +14618,7 @@ function allocUnsafe (that, size) {
   assertSize(size)
   that = createBuffer(that, size < 0 ? 0 : checked(size) | 0)
   if (!Buffer.TYPED_ARRAY_SUPPORT) {
-    for (var i = 0; i < size; i++) {
+    for (var i = 0; i < size; ++i) {
       that[i] = 0
     }
   }
@@ -14796,14 +14796,14 @@ Buffer.concat = function concat (list, length) {
   var i
   if (length === undefined) {
     length = 0
-    for (i = 0; i < list.length; i++) {
+    for (i = 0; i < list.length; ++i) {
       length += list[i].length
     }
   }
 
   var buffer = Buffer.allocUnsafe(length)
   var pos = 0
-  for (i = 0; i < list.length; i++) {
+  for (i = 0; i < list.length; ++i) {
     var buf = list[i]
     if (!Buffer.isBuffer(buf)) {
       throw new TypeError('"list" argument must be an Array of Buffers')
@@ -14835,7 +14835,6 @@ function byteLength (string, encoding) {
     switch (encoding) {
       case 'ascii':
       case 'binary':
-      // Deprecated
       case 'raw':
       case 'raws':
         return len
@@ -15073,15 +15072,16 @@ function arrayIndexOf (arr, val, byteOffset, encoding) {
   }
 
   var foundIndex = -1
-  for (var i = 0; byteOffset + i < arrLength; i++) {
-    if (read(arr, byteOffset + i) === read(val, foundIndex === -1 ? 0 : i - foundIndex)) {
+  for (var i = byteOffset; i < arrLength; ++i) {
+    if (read(arr, i) === read(val, foundIndex === -1 ? 0 : i - foundIndex)) {
       if (foundIndex === -1) foundIndex = i
-      if (i - foundIndex + 1 === valLength) return (byteOffset + foundIndex) * indexSize
+      if (i - foundIndex + 1 === valLength) return foundIndex * indexSize
     } else {
       if (foundIndex !== -1) i -= i - foundIndex
       foundIndex = -1
     }
   }
+
   return -1
 }
 
@@ -15146,7 +15146,7 @@ function hexWrite (buf, string, offset, length) {
   if (length > strLen / 2) {
     length = strLen / 2
   }
-  for (var i = 0; i < length; i++) {
+  for (var i = 0; i < length; ++i) {
     var parsed = parseInt(string.substr(i * 2, 2), 16)
     if (isNaN(parsed)) return i
     buf[offset + i] = parsed
@@ -15360,7 +15360,7 @@ function asciiSlice (buf, start, end) {
   var ret = ''
   end = Math.min(buf.length, end)
 
-  for (var i = start; i < end; i++) {
+  for (var i = start; i < end; ++i) {
     ret += String.fromCharCode(buf[i] & 0x7F)
   }
   return ret
@@ -15370,7 +15370,7 @@ function binarySlice (buf, start, end) {
   var ret = ''
   end = Math.min(buf.length, end)
 
-  for (var i = start; i < end; i++) {
+  for (var i = start; i < end; ++i) {
     ret += String.fromCharCode(buf[i])
   }
   return ret
@@ -15383,7 +15383,7 @@ function hexSlice (buf, start, end) {
   if (!end || end < 0 || end > len) end = len
 
   var out = ''
-  for (var i = start; i < end; i++) {
+  for (var i = start; i < end; ++i) {
     out += toHex(buf[i])
   }
   return out
@@ -15426,7 +15426,7 @@ Buffer.prototype.slice = function slice (start, end) {
   } else {
     var sliceLen = end - start
     newBuf = new Buffer(sliceLen, undefined)
-    for (var i = 0; i < sliceLen; i++) {
+    for (var i = 0; i < sliceLen; ++i) {
       newBuf[i] = this[i + start]
     }
   }
@@ -15653,7 +15653,7 @@ Buffer.prototype.writeUInt8 = function writeUInt8 (value, offset, noAssert) {
 
 function objectWriteUInt16 (buf, value, offset, littleEndian) {
   if (value < 0) value = 0xffff + value + 1
-  for (var i = 0, j = Math.min(buf.length - offset, 2); i < j; i++) {
+  for (var i = 0, j = Math.min(buf.length - offset, 2); i < j; ++i) {
     buf[offset + i] = (value & (0xff << (8 * (littleEndian ? i : 1 - i)))) >>>
       (littleEndian ? i : 1 - i) * 8
   }
@@ -15687,7 +15687,7 @@ Buffer.prototype.writeUInt16BE = function writeUInt16BE (value, offset, noAssert
 
 function objectWriteUInt32 (buf, value, offset, littleEndian) {
   if (value < 0) value = 0xffffffff + value + 1
-  for (var i = 0, j = Math.min(buf.length - offset, 4); i < j; i++) {
+  for (var i = 0, j = Math.min(buf.length - offset, 4); i < j; ++i) {
     buf[offset + i] = (value >>> (littleEndian ? i : 3 - i) * 8) & 0xff
   }
 }
@@ -15902,12 +15902,12 @@ Buffer.prototype.copy = function copy (target, targetStart, start, end) {
 
   if (this === target && start < targetStart && targetStart < end) {
     // descending copy from end
-    for (i = len - 1; i >= 0; i--) {
+    for (i = len - 1; i >= 0; --i) {
       target[i + targetStart] = this[i + start]
     }
   } else if (len < 1000 || !Buffer.TYPED_ARRAY_SUPPORT) {
     // ascending copy from start
-    for (i = 0; i < len; i++) {
+    for (i = 0; i < len; ++i) {
       target[i + targetStart] = this[i + start]
     }
   } else {
@@ -15968,7 +15968,7 @@ Buffer.prototype.fill = function fill (val, start, end, encoding) {
 
   var i
   if (typeof val === 'number') {
-    for (i = start; i < end; i++) {
+    for (i = start; i < end; ++i) {
       this[i] = val
     }
   } else {
@@ -15976,7 +15976,7 @@ Buffer.prototype.fill = function fill (val, start, end, encoding) {
       ? val
       : utf8ToBytes(new Buffer(val, encoding).toString())
     var len = bytes.length
-    for (i = 0; i < end - start; i++) {
+    for (i = 0; i < end - start; ++i) {
       this[i + start] = bytes[i % len]
     }
   }
@@ -16018,7 +16018,7 @@ function utf8ToBytes (string, units) {
   var leadSurrogate = null
   var bytes = []
 
-  for (var i = 0; i < length; i++) {
+  for (var i = 0; i < length; ++i) {
     codePoint = string.charCodeAt(i)
 
     // is surrogate component
@@ -16093,7 +16093,7 @@ function utf8ToBytes (string, units) {
 
 function asciiToBytes (str) {
   var byteArray = []
-  for (var i = 0; i < str.length; i++) {
+  for (var i = 0; i < str.length; ++i) {
     // Node's code seems to be doing this and not & 0x7F..
     byteArray.push(str.charCodeAt(i) & 0xFF)
   }
@@ -16103,7 +16103,7 @@ function asciiToBytes (str) {
 function utf16leToBytes (str, units) {
   var c, hi, lo
   var byteArray = []
-  for (var i = 0; i < str.length; i++) {
+  for (var i = 0; i < str.length; ++i) {
     if ((units -= 2) < 0) break
 
     c = str.charCodeAt(i)
@@ -16121,7 +16121,7 @@ function base64ToBytes (str) {
 }
 
 function blitBuffer (src, dst, offset, length) {
-  for (var i = 0; i < length; i++) {
+  for (var i = 0; i < length; ++i) {
     if ((i + offset >= dst.length) || (i >= src.length)) break
     dst[i + offset] = src[i]
   }
@@ -23472,8 +23472,12 @@ EventEmitter.prototype.emit = function(type) {
       er = arguments[1];
       if (er instanceof Error) {
         throw er; // Unhandled 'error' event
+      } else {
+        // At least give some kind of context to the user
+        var err = new Error('Uncaught, unspecified "error" event. (' + er + ')');
+        err.context = er;
+        throw err;
       }
-      throw TypeError('Uncaught, unspecified "error" event.');
     }
   }
 
@@ -31260,6 +31264,75 @@ module.exports = {
 },{"bs58check":69,"buffer":74}],176:[function(require,module,exports){
 'use strict';
 
+var assert = require('assert');
+var Helpers = require('./helpers');
+
+module.exports = AccountInfo;
+
+function AccountInfo (object) {
+  this._email = object.email;
+
+  if (object.sms_number && object.sms_number.length > 5) {
+    this._mobile = {
+      countryCode: object.sms_number.split(' ')[0].substr(1),
+      number: object.sms_number.split(' ')[1]
+    };
+  } else {
+    this._mobile = null;
+  }
+
+  this._dialCode = object.dial_code;
+
+  this._isEmailVerified = Boolean(object.email_verified);
+  this._isMobileVerified = Boolean(object.sms_verified);
+
+  this._currency = object.currency;
+}
+
+Object.defineProperties(AccountInfo.prototype, {
+
+  'email': {
+    configurable: false,
+    get: function () { return this._email; },
+    set: function (value) {
+      this._email = value;
+    }
+  },
+  'mobileObject': {
+    configurable: false,
+    get: function () { return this._mobile; }
+  },
+  'mobile': {
+    configurable: false,
+    get: function () {
+      return '+' + this._mobile.countryCode + this._mobile.number.replace(/^0*/, '');
+    }
+  },
+  'dialCode': {
+    configurable: false,
+    get: function () { return this._dialCode; }
+  },
+  'isEmailVerified': {
+    configurable: false,
+    get: function () { return this._isEmailVerified; },
+    set: function (value) {
+      assert(Helpers.isBoolean(value), 'Boolean');
+      this._isEmailVerified = value;
+    }
+  },
+  'isMobileVerified': {
+    configurable: false,
+    get: function () { return this._isMobileVerified; }
+  },
+  'currency': {
+    configurable: false,
+    get: function () { return this._currency; }
+  }
+});
+
+},{"./helpers":185,"assert":16}],177:[function(require,module,exports){
+'use strict';
+
 module.exports = Address;
 
 var Base58 = require('bs58');
@@ -31529,7 +31602,7 @@ Address.prototype.persist = function () {
   return this;
 };
 
-},{"./helpers":184,"./import-export":185,"./rng":189,"./shared":190,"./wallet":199,"./wallet-crypto":193,"bitcoinjs-lib":33,"bs58":68}],177:[function(require,module,exports){
+},{"./helpers":185,"./import-export":186,"./rng":190,"./shared":191,"./wallet":200,"./wallet-crypto":194,"bitcoinjs-lib":33,"bs58":68}],178:[function(require,module,exports){
 'use strict';
 
 module.exports = new API();
@@ -31658,7 +31731,17 @@ API.prototype.getBalances = function (addresses) {
     format: 'json',
     api_code: this.API_CODE
   };
-  return this.retry(this.request.bind(this, 'POST', 'multiaddr', data));
+  return this.retry(this.request.bind(this, 'POST', 'balance', data));
+};
+
+API.prototype.getTransaction = function (txhash) {
+  var transaction = 'tx/' + txhash;
+  var data = {
+    format: 'json',
+    cors: 'true',
+    api_code: this.API_CODE
+  };
+  return this.retry(this.request.bind(this, 'GET', transaction, data));
 };
 
 API.prototype.getBalanceForRedeemCode = function (privatekey) {
@@ -31837,7 +31920,7 @@ API.prototype.getFees = function () {
 //   }
 // };
 
-},{"./helpers":184,"./wallet":199,"./wallet-crypto":193,"./wallet-store":196,"assert":16,"bitcoinjs-lib":33}],178:[function(require,module,exports){
+},{"./helpers":185,"./wallet":200,"./wallet-crypto":194,"./wallet-store":197,"assert":16,"bitcoinjs-lib":33}],179:[function(require,module,exports){
 'use strict';
 
 module.exports = Block;
@@ -31887,7 +31970,7 @@ Block.fromJSON = function (json) {
   }
 };
 
-},{}],179:[function(require,module,exports){
+},{}],180:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -31896,6 +31979,15 @@ var WalletStore = require('./wallet-store.js');
 var MyWallet = require('./wallet.js');
 var API = require('./api');
 
+function fetchAccountInfo () {
+  return API.securePost('wallet', {method: 'get-info', format: 'json'})
+    .catch(function (data) {
+      var response = data.responseText || 'Error Downloading Account Settings';
+      WalletStore.sendEvent('msg', {type: 'error', message: response});
+    });
+}
+
+// TODO: depricate
 function getAccountInfo (success, error) {
   API.securePostCallbacks('wallet', {method: 'get-info', format: 'json'}, function (data) {
     typeof (success) === 'function' && success(data);
@@ -31980,7 +32072,12 @@ function updatePasswordHint2 (value, success, error) {
   isBad ? error(isBad) : updateKV('update-password-hint2', value, success, error);
 }
 
-function changeEmail (email, success, error) {
+function changeEmail (email, successCallback, error) {
+  var success = function (res) {
+    MyWallet.wallet.accountInfo.email = email;
+    MyWallet.wallet.accountInfo.isEmailVerified = false;
+    if (typeof successCallback === 'function') successCallback(res);
+  };
   updateKV('update-email', email, success, error);
 }
 
@@ -32166,6 +32263,7 @@ function disableAllNotifications (success, error) {
 }
 
 module.exports = {
+  fetchAccountInfo: fetchAccountInfo,
   getAccountInfo: getAccountInfo,
   updateIPlock: updateIPlock,
   updateIPlockOn: updateIPlockOn,
@@ -32198,7 +32296,7 @@ module.exports = {
 
 };
 
-},{"./api":177,"./wallet-store.js":196,"./wallet.js":199,"assert":16}],180:[function(require,module,exports){
+},{"./api":178,"./wallet-store.js":197,"./wallet.js":200,"assert":16}],181:[function(require,module,exports){
 
 var WebSocket = require('ws');
 var Helpers = require('./helpers');
@@ -32305,7 +32403,7 @@ BlockchainSocket.prototype.msgOnOpen = function (guid, addresses, xpubs) {
 
 module.exports = BlockchainSocket;
 
-},{"./helpers":184,"ws":200}],181:[function(require,module,exports){
+},{"./helpers":185,"ws":201}],182:[function(require,module,exports){
 'use strict';
 
 module.exports = Wallet;
@@ -32327,6 +32425,7 @@ var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var KeyRing = require('./keyring');
 var TxList = require('./transaction-list');
 var Block = require('./bitcoin-block');
+var AccountInfo = require('./account-info');
 
 // Wallet
 
@@ -32378,6 +32477,7 @@ function Wallet (object) {
   this._numberTxTotal = 0;
   this._txList = new TxList();
   this._latestBlock = null;
+  this._accountInfo = null;
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -32611,6 +32711,10 @@ Object.defineProperties(Wallet.prototype, {
         throw new Error('wallet.logoutTime must be a positive integer in range 60000,86400001');
       }
     }
+  },
+  'accountInfo': {
+    configurable: false,
+    get: function () { return this._accountInfo; }
   }
 });
 
@@ -32903,14 +33007,14 @@ function isAccountNonUsed (account, progress) {
     if (progress) { progress(obj); }
     return obj.addresses[0].account_index === 0 && obj.addresses[0].change_index === 0;
   };
-  return API.getHistory([account.extendedPublicKey], 0, 0, 50).then(isNonUsed);
+  return API.getBalances([account.extendedPublicKey]).then(isNonUsed);
 }
 
 Wallet.prototype.scanBip44 = function (secondPassword, startedRestoreHDWallet, progress) {
   // wallet restoration
   startedRestoreHDWallet && startedRestoreHDWallet();
   var self = this;
-  API.getHistory([self.hdwallet._accounts[0].extendedPublicKey], 0, 0, 50).then(progress);
+  API.getBalances([self.hdwallet._accounts[0].extendedPublicKey]).then(progress);
   var accountIndex = 1;
   var AccountsGap = 10;
 
@@ -33103,7 +33207,15 @@ Wallet.prototype._getPrivateKey = function (accountIndex, path, secondPassword) 
   return kr.privateKeyFromPath(path).keyPair.toWIF();
 };
 
-},{"./address":176,"./api":177,"./bitcoin-block":178,"./blockchain-settings-api":179,"./hd-wallet":183,"./helpers":184,"./keyring":187,"./rng":189,"./shared":190,"./transaction-list":191,"./wallet":199,"./wallet-crypto":193,"./wallet-store":196,"assert":16,"bip39":22}],182:[function(require,module,exports){
+Wallet.prototype.fetchAccountInfo = function () {
+  var parentThis = this;
+  return BlockchainSettingsAPI.fetchAccountInfo().then(function (info) {
+    parentThis._accountInfo = new AccountInfo(info);
+    return info; // TODO: handle more here instead of in the frontend / iOs
+  });
+};
+
+},{"./account-info":176,"./address":177,"./api":178,"./bitcoin-block":179,"./blockchain-settings-api":180,"./hd-wallet":184,"./helpers":185,"./keyring":188,"./rng":190,"./shared":191,"./transaction-list":192,"./wallet":200,"./wallet-crypto":194,"./wallet-store":197,"assert":16,"bip39":22}],183:[function(require,module,exports){
 'use strict';
 
 module.exports = HDAccount;
@@ -33439,7 +33551,7 @@ HDAccount.prototype.persist = function () {
   return this;
 };
 
-},{"./helpers":184,"./keyring":187,"./wallet":199,"assert":16,"bitcoinjs-lib":33}],183:[function(require,module,exports){
+},{"./helpers":185,"./keyring":188,"./wallet":200,"assert":16,"bitcoinjs-lib":33}],184:[function(require,module,exports){
 'use strict';
 
 module.exports = HDWallet;
@@ -33715,7 +33827,7 @@ HDWallet.prototype.isValidAccountIndex = function (index) {
   return Helpers.isPositiveInteger(index) && index < this._accounts.length;
 };
 
-},{"./hd-account":182,"./helpers":184,"./wallet":199,"assert":16,"bip39":22,"bitcoinjs-lib":33}],184:[function(require,module,exports){
+},{"./hd-account":183,"./helpers":185,"./wallet":200,"assert":16,"bip39":22,"bitcoinjs-lib":33}],185:[function(require,module,exports){
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -34135,9 +34247,21 @@ Helpers.verifyMessage = function (address, signature, message) {
   return Bitcoin.message.verify(address, signature, message);
 };
 
+Helpers.getMobileOperatingSystem = function () {
+  var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+
+  if (userAgent.match(/iPad/i) || userAgent.match(/iPhone/i) || userAgent.match(/iPod/i)) {
+    return 'iOS';
+  } else if (userAgent.match(/Android/i)) {
+    return 'Android';
+  } else {
+    return 'unknown';
+  }
+};
+
 module.exports = Helpers;
 
-},{"./import-export":185,"./shared":190,"bigi":20,"bip39":22,"bitcoinjs-lib":33,"bs58":68,"buffer":74}],185:[function(require,module,exports){
+},{"./import-export":186,"./shared":191,"bigi":20,"bip39":22,"bitcoinjs-lib":33,"bs58":68,"buffer":74}],186:[function(require,module,exports){
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -34287,7 +34411,7 @@ var ImportExport = new function () {
 
 module.exports = ImportExport;
 
-},{"./wallet-crypto":193,"bigi":20,"bitcoinjs-lib":33,"bs58":68,"buffer":74,"unorm":169}],186:[function(require,module,exports){
+},{"./wallet-crypto":194,"bigi":20,"bitcoinjs-lib":33,"bs58":68,"buffer":74,"unorm":169}],187:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyChain;
@@ -34349,7 +34473,7 @@ KeyChain.prototype.getPrivateKey = function (index) {
   return key || null;
 };
 
-},{"./helpers":184,"assert":16,"bitcoinjs-lib":33}],187:[function(require,module,exports){
+},{"./helpers":185,"assert":16,"bitcoinjs-lib":33}],188:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyRing;
@@ -34411,7 +34535,7 @@ KeyRing.prototype.toJSON = function () {
   return cacheJSON;
 };
 
-},{"./keychain":186,"assert":16}],188:[function(require,module,exports){
+},{"./keychain":187,"assert":16}],189:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -34963,7 +35087,7 @@ function getPrivateKeys (password, payment) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./api":177,"./helpers":184,"./keyring":187,"./transaction":192,"./wallet":199,"./wallet-crypto":193,"bitcoinjs-lib":33,"buffer":74,"events":116,"util":172}],189:[function(require,module,exports){
+},{"./api":178,"./helpers":185,"./keyring":188,"./transaction":193,"./wallet":200,"./wallet-crypto":194,"bitcoinjs-lib":33,"buffer":74,"events":116,"util":172}],190:[function(require,module,exports){
 'use strict';
 
 module.exports = new RNG();
@@ -34973,6 +35097,8 @@ var API = require('./api');
 var Buffer = require('buffer').Buffer;
 var assert = require('assert');
 var Helpers = require('./helpers');
+
+module.exports.randomBytes = randomBytes;
 
 function RNG () {
   this.ACTION = 'GET';
@@ -35004,8 +35130,8 @@ RNG.prototype.run = function (nBytes) {
   try {
     nBytes = Helpers.isPositiveInteger(nBytes) ? nBytes : this.BYTES;
     var serverH = this.getServerEntropy(nBytes);
-    var localH = randomBytes(nBytes);
-
+    // Expose randomBytes for iOS to override
+    var localH = module.exports.randomBytes(nBytes);
     assert(
       localH.length > 0,
       'Local entropy should not be empty.'
@@ -35082,7 +35208,7 @@ RNG.prototype.getServerEntropy = function (nBytes) {
   }
 };
 
-},{"./api":177,"./helpers":184,"assert":16,"buffer":74,"randombytes":145}],190:[function(require,module,exports){
+},{"./api":178,"./helpers":185,"assert":16,"buffer":74,"randombytes":145}],191:[function(require,module,exports){
 /* eslint-disable camelcase */
 var satoshi = 100000000; // One satoshi
 var symbol_btc = {code: 'BTC', symbol: 'BTC', name: 'Bitcoin', conversion: satoshi, symbolAppearsAfter: true, local: false}; // Default BTC Currency Symbol object
@@ -35161,7 +35287,7 @@ try {
 }
 /* eslint-enable camelcase */
 
-},{}],191:[function(require,module,exports){
+},{}],192:[function(require,module,exports){
 'use strict';
 
 var EventEmitter = require('events');
@@ -35228,7 +35354,7 @@ TransactionList.prototype.subscribe = function (listener) {
 
 module.exports = TransactionList;
 
-},{"./helpers":184,"./wallet-transaction":198,"events":116}],192:[function(require,module,exports){
+},{"./helpers":185,"./wallet-transaction":199,"events":116}],193:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -35432,7 +35558,7 @@ Transaction.confirmationEstimation = function (absoluteFees, fee) {
 };
 module.exports = Transaction;
 
-},{"./helpers":184,"assert":16,"bitcoinjs-lib":33,"buffer":74}],193:[function(require,module,exports){
+},{"./helpers":185,"assert":16,"bitcoinjs-lib":33,"buffer":74}],194:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -35691,7 +35817,8 @@ function encryptDataWithPassword (data, password, iterations) {
   assert(iterations, 'iterations missing');
 
   var salt = crypto.randomBytes(SALT_BYTES);
-  var key = stretchPassword(password, salt, iterations, KEY_BIT_LEN);
+  // Expose stretchPassword for iOS to override
+  var key = module.exports.stretchPassword(password, salt, iterations, KEY_BIT_LEN);
   var dataBytes = new Buffer(data, 'utf8');
   var options = { mode: AES.CBC, padding: Iso10126 };
 
@@ -35712,7 +35839,8 @@ function decryptDataWithPassword (data, password, iterations, options) {
   var dataHex = new Buffer(data, 'base64');
   var salt = dataHex.slice(0, SALT_BYTES);
   var payload = dataHex.slice(SALT_BYTES);
-  var key = stretchPassword(password, salt, iterations, KEY_BIT_LEN);
+  // Expose stretchPassword for iOS to override
+  var key = module.exports.stretchPassword(password, salt, iterations, KEY_BIT_LEN);
 
   var decryptedBytes = AES.decrypt(payload, key, salt, options);
   return decryptedBytes.toString('utf8');
@@ -35985,7 +36113,7 @@ module.exports = {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"assert":16,"buffer":74,"crypto":82,"sjcl":165}],194:[function(require,module,exports){
+},{"assert":16,"buffer":74,"crypto":82,"sjcl":165}],195:[function(require,module,exports){
 'use strict';
 
 var API = require('./api');
@@ -36409,7 +36537,7 @@ module.exports = {
   getCaptchaImage: getCaptchaImage
 };
 
-},{"./api":177,"./helpers":184,"./wallet":199,"./wallet-crypto":193,"./wallet-store":196,"assert":16}],195:[function(require,module,exports){
+},{"./api":178,"./helpers":185,"./wallet":200,"./wallet-crypto":194,"./wallet-store":197,"assert":16}],196:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -36439,7 +36567,7 @@ module.exports = {
   generateNewWallet: generateNewWallet
 };
 
-},{"./blockchain-wallet":181,"./wallet-network":194,"assert":16}],196:[function(require,module,exports){
+},{"./blockchain-wallet":182,"./wallet-network":195,"assert":16}],197:[function(require,module,exports){
 'use strict';
 
 var MyWallet = require('./wallet');
@@ -36592,7 +36720,7 @@ var WalletStore = (function () {
 
 module.exports = WalletStore;
 
-},{"./wallet":199,"./wallet-crypto":193}],197:[function(require,module,exports){
+},{"./wallet":200,"./wallet-crypto":194}],198:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -36669,7 +36797,7 @@ module.exports = {
   postTokenEndpoint: postTokenEndpoint // For tests
 };
 
-},{"./api":177,"./helpers":184,"assert":16}],198:[function(require,module,exports){
+},{"./api":178,"./helpers":185,"assert":16}],199:[function(require,module,exports){
 'use strict';
 
 module.exports = Tx;
@@ -36679,15 +36807,6 @@ var MyWallet = require('./wallet');
 function Tx (object) {
   var obj = object || {};
   // original properties
-  var setConfirmations = function (txBlockHeight) {
-    var lastBlock = MyWallet.wallet.latestBlock;
-    var conf = 0;
-    if (lastBlock && txBlockHeight != null && txBlockHeight > 0) {
-      conf = lastBlock.height - txBlockHeight + 1;
-    }
-    return conf;
-  };
-
   this.balance = obj.balance;
   this.block_height = obj.block_height;
   this.hash = obj.hash;
@@ -36707,7 +36826,7 @@ function Tx (object) {
   this.rbf = obj.rbf;
   this.publicNote = obj.note;
   this.note = MyWallet.wallet.getNote(this.hash);
-  this.confirmations = setConfirmations(this.block_height);
+  this.confirmations = Tx.setConfirmations(this.block_height);
 
   // computed properties
   var initialOut = {
@@ -36744,6 +36863,18 @@ function Tx (object) {
 
 Tx.prototype.toString = function () {
   return this.hash;
+};
+
+Tx.prototype.updateConfirmationsOnBlock = function (txIndexes) {
+  if (this.confirmations > 0) {
+    this.confirmations = this.confirmations + 1;
+  } else {
+    if (txIndexes.indexOf(this.tx_index) >= 0) {
+      // transaction included in the last block
+      this.confirmations = this.confirmations + 1;
+    }
+      // otherwise: Transaction not confirmed
+  }
 };
 
 Object.defineProperties(Tx.prototype, {
@@ -36922,7 +37053,16 @@ Tx.IOSfactory = function (tx) {
   };
 };
 
-},{"./wallet":199}],199:[function(require,module,exports){
+Tx.setConfirmations = function (txBlockHeight) {
+  var lastBlock = MyWallet.wallet.latestBlock;
+  var conf = 0;
+  if (lastBlock && txBlockHeight != null && txBlockHeight > 0) {
+    conf = lastBlock.height - txBlockHeight + 1;
+  }
+  return conf;
+};
+
+},{"./wallet":200}],200:[function(require,module,exports){
 'use strict';
 
 var MyWallet = module.exports = {};
@@ -36949,58 +37089,25 @@ var isInitialized = false;
 MyWallet.wallet = undefined;
 MyWallet.ws = new BlockchainSocket();
 
-// used locally
-function socketConnect () {
+// used locally and overridden in iOS
+MyWallet.socketConnect = function () {
   MyWallet.ws.connect(onOpen, onMessage, onClose);
 
-  var lastOnChange = null;
+  var lastOnChange = { checksum: null };
 
   function onMessage (message) {
-    var obj = null;
-
-    if (!(typeof window === 'undefined')) {
-      message = message.data;
-    }
-    try {
-      obj = JSON.parse(message);
-    } catch (e) {
-      console.log('Websocket error: could not parse message data as JSON: ' + message);
-      return;
-    }
-
-    if (obj.op === 'on_change') {
-      var oldChecksum = WalletStore.generatePayloadChecksum();
-      var newChecksum = obj.checksum;
-
-      if (lastOnChange !== newChecksum && oldChecksum !== newChecksum) {
-        lastOnChange = newChecksum;
-
-        MyWallet.getWallet();
-      }
-    } else if (obj.op === 'utx') {
-      WalletStore.sendEvent('on_tx_received');
-      var sendOnTx = WalletStore.sendEvent.bind(null, 'on_tx');
-      MyWallet.wallet.getHistory().then(sendOnTx);
-    } else if (obj.op === 'block') {
-      var sendOnBlock = WalletStore.sendEvent.bind(null, 'on_block');
-      MyWallet.wallet.getHistory().then(sendOnBlock);
-      MyWallet.wallet.latestBlock = obj.x;
-    } else if (obj.op === 'pong') {
-      clearTimeout(MyWallet.ws.pingTimeoutPID);
-    }
+    MyWallet.getSocketOnMessage(message, lastOnChange);
   }
 
   function onOpen () {
     WalletStore.sendEvent('ws_on_open');
-    var accounts = MyWallet.wallet.hdwallet ? MyWallet.wallet.hdwallet.activeXpubs : [];
-    var msg = MyWallet.ws.msgOnOpen(MyWallet.wallet.guid, MyWallet.wallet.activeAddresses, accounts);
-    MyWallet.ws.send(msg);
+    MyWallet.ws.send(MyWallet.getSocketOnOpenMessage());
   }
 
   function onClose () {
     WalletStore.sendEvent('ws_on_close');
   }
-}
+};
 
 // used two times
 function didDecryptWallet (success) {
@@ -37008,6 +37115,60 @@ function didDecryptWallet (success) {
   MyWallet.getWallet();
   success();
 }
+
+// called by native websocket in iOS
+MyWallet.getSocketOnMessage = function (message, lastOnChange) {
+  var obj = null;
+
+  if (!(typeof window === 'undefined') && message.data) {
+    message = message.data;
+  }
+  try {
+    obj = JSON.parse(message);
+  } catch (e) {
+    console.log('Websocket error: could not parse message data as JSON: ' + message);
+    return;
+  }
+
+  if (obj.op === 'on_change') {
+    var oldChecksum = WalletStore.generatePayloadChecksum();
+    var newChecksum = obj.checksum;
+
+    if (lastOnChange.checksum !== newChecksum && oldChecksum !== newChecksum) {
+      lastOnChange.checksum = newChecksum;
+
+      MyWallet.getWallet();
+    }
+  } else if (obj.op === 'utx') {
+    WalletStore.sendEvent('on_tx_received');
+    var sendOnTx = WalletStore.sendEvent.bind(null, 'on_tx');
+    MyWallet.wallet.getHistory().then(sendOnTx);
+  } else if (obj.op === 'block') {
+    if (obj.x.prevBlockIndex !== MyWallet.wallet.latestBlock.blockIndex && MyWallet.wallet.latestBlock.blockIndex !== 0) {
+      // there is a reorg
+      MyWallet.wallet.getHistory();
+    } else {
+      // there is no reorg
+      MyWallet.wallet.latestBlock = obj.x;
+      var up = function (t) {
+        t.updateConfirmationsOnBlock(obj.x.txIndexes);
+      };
+      MyWallet.wallet.txList._transactions.forEach(up);
+    }
+    WalletStore.sendEvent('on_block');
+  } else if (obj.op === 'pong') {
+    clearTimeout(MyWallet.ws.pingTimeoutPID);
+  } else if (obj.op === 'email_verified') {
+    MyWallet.wallet.accountInfo.isEmailVerified = Boolean(obj.x);
+    WalletStore.sendEvent('on_email_verified', obj.x);
+  }
+};
+
+// called by native websocket in iOS
+MyWallet.getSocketOnOpenMessage = function () {
+  var accounts = MyWallet.wallet.hdwallet ? MyWallet.wallet.hdwallet.activeXpubs : [];
+  return MyWallet.ws.msgOnOpen(MyWallet.wallet.guid, MyWallet.wallet.activeAddresses, accounts);
+};
 
 // Fetch a new wallet from the server
 // success(modified true/false)
@@ -37055,7 +37216,6 @@ MyWallet.decryptAndInitializeWallet = function (success, error, decryptSuccess, 
     encryptedWalletData,
     WalletStore.getPassword(),
     function (obj, rootContainer) {
-      decryptSuccess && decryptSuccess();
       MyWallet.wallet = new Wallet(obj);
 
       // this sanity check should be done on the load
@@ -37076,6 +37236,7 @@ MyWallet.decryptAndInitializeWallet = function (success, error, decryptSuccess, 
         WalletStore.sendEvent('hd_wallets_does_not_exist');
       }
       setIsInitialized();
+      decryptSuccess && decryptSuccess();
       success();
     },
     error
@@ -37262,7 +37423,7 @@ MyWallet.getIsInitialized = function () {
 // used once
 function setIsInitialized () {
   if (isInitialized) return;
-  socketConnect();
+  MyWallet.socketConnect();
   isInitialized = true;
 }
 
@@ -37534,7 +37695,7 @@ MyWallet.browserCheckFast = function () {
   return true;
 };
 
-},{"./api":177,"./blockchain-settings-api":179,"./blockchain-socket":180,"./blockchain-wallet":181,"./helpers":184,"./rng":189,"./wallet-crypto":193,"./wallet-network":194,"./wallet-signup":195,"./wallet-store":196,"assert":16,"bip39":22,"bitcoinjs-lib":33,"buffer":74,"pbkdf2":136}],200:[function(require,module,exports){
+},{"./api":178,"./blockchain-settings-api":180,"./blockchain-socket":181,"./blockchain-wallet":182,"./helpers":185,"./rng":190,"./wallet-crypto":194,"./wallet-network":195,"./wallet-signup":196,"./wallet-store":197,"assert":16,"bip39":22,"bitcoinjs-lib":33,"buffer":74,"pbkdf2":136}],201:[function(require,module,exports){
 
 var global = (function () { return this; })();
 var WebSocket = global.WebSocket || global.MozWebSocket;
