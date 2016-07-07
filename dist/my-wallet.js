@@ -31729,7 +31729,6 @@ API.prototype.handleNTPResponse = function (obj, clientTime) {
 API.prototype.getBalances = function (addresses) {
   var data = {
     active: addresses.join('|'),
-    simple: true,
     format: 'json',
     api_code: this.API_CODE
   };
@@ -31886,41 +31885,6 @@ API.prototype.getFees = function () {
             .then(checkStatus)
             .catch(handleNetworkError);
 };
-
-// OLD FUNCTIONS COPIED: Must rewrite this ones (email ,sms)
-// function sendViaEmail(email, tx, privateKey, successCallback, errorCallback) {
-//   try {
-//     MyWallet.securePost('send-via', {
-//       type : 'email',
-//       to : email,
-//       priv : privateKey,
-//       hash : tx.getHash().toString('hex')
-//     }, function (data) {
-//       successCallback(data);
-//     }, function (data) {
-//       errorCallback(data ? data.responseText : null);
-//     });
-//   } catch (e) {
-//     errorCallback(e);
-//   }
-// };
-//
-// function sendViaSMS(number, tx, privateKey, successCallback, errorCallback) {
-//   try {
-//     MyWallet.securePost('send-via', {
-//       type : 'sms',
-//       to : number,
-//       priv : privateKey,
-//       hash : tx.getHash().toString('hex')
-//     }, function () {
-//       successCallback();
-//     }, function (data) {
-//       errorCallback(data ? data.responseText : null);
-//     });
-//   } catch (e) {
-//     errorCallback(e);
-//   }
-// };
 
 },{"./helpers":185,"./wallet":200,"./wallet-crypto":194,"./wallet-store":197,"assert":16,"bitcoinjs-lib":33}],179:[function(require,module,exports){
 'use strict';
@@ -32264,6 +32228,14 @@ function disableAllNotifications (success, error) {
   });
 }
 
+function removeAlias () {
+  return API.securePost('wallet', {
+    method: 'remove-alias',
+    length: 0,
+    payload: ''
+  });
+}
+
 module.exports = {
   fetchAccountInfo: fetchAccountInfo,
   getAccountInfo: getAccountInfo,
@@ -32291,11 +32263,11 @@ module.exports = {
   getActivityLogs: getActivityLogs,
   enableEmailReceiveNotifications: enableEmailReceiveNotifications,
   disableAllNotifications: disableAllNotifications,
+  removeAlias: removeAlias,
   // for tests only
   enableEmailNotifications: enableEmailNotifications,
   enableReceiveNotifications: enableReceiveNotifications,
   updateAuthType: updateAuthType
-
 };
 
 },{"./api":178,"./wallet-store.js":197,"./wallet.js":200,"assert":16}],181:[function(require,module,exports){
@@ -33006,27 +32978,22 @@ Wallet.reviver = function (k, v) {
 
 function isAccountNonUsed (account, progress) {
   var isNonUsed = function (obj) {
-    if (progress) { progress(obj); }
-    return obj.addresses[0].account_index === 0 && obj.addresses[0].change_index === 0;
+    var result = obj[account.extendedPublicKey];
+    progress && progress(result);
+    return result.total_received === 0;
   };
   return API.getBalances([account.extendedPublicKey]).then(isNonUsed);
 }
 
-Wallet.prototype.scanBip44 = function (secondPassword, startedRestoreHDWallet, progress) {
-  // wallet restoration
-  startedRestoreHDWallet && startedRestoreHDWallet();
+Wallet.prototype.scanBip44 = function (secondPassword, progress) {
   var self = this;
-  API.getBalances([self.hdwallet._accounts[0].extendedPublicKey]).then(progress);
   var accountIndex = 1;
   var AccountsGap = 10;
+  isAccountNonUsed(self.hdwallet._accounts[0], progress);
 
   var untilNEmptyAccounts = function (n) {
     var go = function (nonused) {
-      if (nonused) {
-        return untilNEmptyAccounts(n - 1);
-      } else {
-        return untilNEmptyAccounts(AccountsGap);
-      }
+      return untilNEmptyAccounts(nonused ? n - 1 : AccountsGap);
     };
     if (n === 0) {
       self.hdwallet._accounts.splice(-AccountsGap);
@@ -33038,7 +33005,6 @@ Wallet.prototype.scanBip44 = function (secondPassword, startedRestoreHDWallet, p
     }
   };
 
-  // it returns a promise of the new HDWallet
   return untilNEmptyAccounts(AccountsGap);
 };
 
@@ -37609,7 +37575,8 @@ MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic
     };
 
     WalletStore.unsafeSetPassword(inputedPassword);
-    wallet.scanBip44(undefined, startedRestoreHDWallet, accountProgress).then(saveWallet).catch(error);
+    startedRestoreHDWallet && startedRestoreHDWallet();
+    wallet.scanBip44(undefined, accountProgress).then(saveWallet).catch(error);
   };
 
   WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, bip39Password, null, walletGenerated, error, generateUUIDProgress, decryptWalletProgress);
