@@ -1,28 +1,27 @@
 __Blockchain Wallet V3__
 
-#   (2016-07-07)
+#   (2016-07-20)
 
 
 
 ---
 
-## Bug Fixes
-
-- **API:** use new /balance endpoint (#243)
-  ([a3e906a4](https://github.com/blockchain/My-Wallet-V3/commit/a3e906a46a097e682766c9e176587fe196bf329c))
-
-
 ## Features
 
-- **Alias:** settings api function to remove alias (#239)
-  ([b0b3c75e](https://github.com/blockchain/My-Wallet-V3/commit/b0b3c75ede35a663d28077db45c66d92c12acce7))
-- **Spender:** remove unused functionality (#241)
-  ([3f420f05](https://github.com/blockchain/My-Wallet-V3/commit/3f420f05f201206f63e403cd68c9432ed7e452d2))
+- **Metadata:** store, retrieve and update; what's new entries (#244)
+  ([25a3e8ca](https://github.com/blockchain/My-Wallet-V3/commit/25a3e8ca6085c53cc78797881069695bf36abb47))
+- **email notifications:** current and 20 non-labeled address beyond current receive notifications of transaction by email.
+  ([c9737600](https://github.com/blockchain/My-Wallet-V3/commit/c973760058df289e2fdd533fe077324f823a2d78))
+
+
+## Refactor
+
+- **Notifications:** extend api for updating notification settings (#245)
 
 
 ## Chore
 
-- **Release:** v3.19.4
+- **Release:** bump version
 
 
 

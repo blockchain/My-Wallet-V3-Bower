@@ -39,6 +39,7 @@ module.exports = {
   Transaction: require('./src/transaction'),
   // Wallet: require('./blockchain-wallet'),
   Address: require('./src/address'),
+  Metadata: require('./src/metadata'),
   // HDAccount: require('./hd-account'),
   // HDWallet: require('./hd-wallet'),
   // KeyChain: require('./keychain'),
@@ -49,7 +50,7 @@ module.exports = {
   // BIP39: require('bip39')
 };
 
-},{"./src/address":177,"./src/api":178,"./src/blockchain-settings-api":180,"./src/helpers":185,"./src/import-export":186,"./src/payment":189,"./src/rng":190,"./src/shared":191,"./src/transaction":193,"./src/wallet":200,"./src/wallet-crypto":194,"./src/wallet-network":195,"./src/wallet-store":197,"./src/wallet-token-endpoints":198,"./src/wallet-transaction":199,"bitcoinjs-lib":33,"buffer":74,"es6-promise":115,"isomorphic-fetch":129}],2:[function(require,module,exports){
+},{"./src/address":177,"./src/api":178,"./src/blockchain-settings-api":180,"./src/helpers":185,"./src/import-export":186,"./src/metadata":189,"./src/payment":190,"./src/rng":191,"./src/shared":192,"./src/transaction":194,"./src/wallet":201,"./src/wallet-crypto":195,"./src/wallet-network":196,"./src/wallet-store":198,"./src/wallet-token-endpoints":199,"./src/wallet-transaction":200,"bitcoinjs-lib":33,"buffer":74,"es6-promise":115,"isomorphic-fetch":129}],2:[function(require,module,exports){
 var asn1 = exports;
 
 asn1.bignum = require('bn.js');
@@ -315,7 +316,7 @@ module.exports = Node;
 var stateProps = [
   'enc', 'parent', 'children', 'tag', 'args', 'reverseArgs', 'choice',
   'optional', 'any', 'obj', 'use', 'alteredUse', 'key', 'default', 'explicit',
-  'implicit'
+  'implicit', 'contains'
 ];
 
 Node.prototype.clone = function clone() {
@@ -520,17 +521,17 @@ Node.prototype.contains = function contains(item) {
 // Decoding
 //
 
-Node.prototype._decode = function decode(input) {
+Node.prototype._decode = function decode(input, options) {
   var state = this._baseState;
 
   // Decode root node
   if (state.parent === null)
-    return input.wrapResult(state.children[0]._decode(input));
+    return input.wrapResult(state.children[0]._decode(input, options));
 
   var result = state['default'];
   var present = true;
 
-  var prevKey;
+  var prevKey = null;
   if (state.key !== null)
     prevKey = input.enterKey(state.key);
 
@@ -549,9 +550,9 @@ Node.prototype._decode = function decode(input) {
       var save = input.save();
       try {
         if (state.choice === null)
-          this._decodeGeneric(state.tag, input);
+          this._decodeGeneric(state.tag, input, options);
         else
-          this._decodeChoice(input);
+          this._decodeChoice(input, options);
         present = true;
       } catch (e) {
         present = false;
@@ -579,6 +580,8 @@ Node.prototype._decode = function decode(input) {
       input = explicit;
     }
 
+    var start = input.offset;
+
     // Unwrap implicit and normal values
     if (state.use === null && state.choice === null) {
       if (state.any)
@@ -597,13 +600,19 @@ Node.prototype._decode = function decode(input) {
         input = body;
     }
 
+    if (options && options.track && state.tag !== null)
+      options.track(input.path(), start, input.length, 'tagged');
+
+    if (options && options.track && state.tag !== null)
+      options.track(input.path(), input.offset, input.length, 'content');
+
     // Select proper method for tag
     if (state.any)
       result = result;
     else if (state.choice === null)
-      result = this._decodeGeneric(state.tag, input);
+      result = this._decodeGeneric(state.tag, input, options);
     else
-      result = this._decodeChoice(input);
+      result = this._decodeChoice(input, options);
 
     if (input.isError(result))
       return result;
@@ -613,14 +622,15 @@ Node.prototype._decode = function decode(input) {
       state.children.forEach(function decodeChildren(child) {
         // NOTE: We are ignoring errors here, to let parser continue with other
         // parts of encoded data
-        child._decode(input);
+        child._decode(input, options);
       });
     }
 
     // Decode contained/encoded by schema, only in bit or octet strings
     if (state.contains && (state.tag === 'octstr' || state.tag === 'bitstr')) {
       var data = new DecoderBuffer(result);
-      result = this._getUse(state.contains, input._reporterState.obj)._decode(data);
+      result = this._getUse(state.contains, input._reporterState.obj)
+          ._decode(data, options);
     }
   }
 
@@ -631,35 +641,40 @@ Node.prototype._decode = function decode(input) {
   // Set key
   if (state.key !== null && (result !== null || present === true))
     input.leaveKey(prevKey, state.key, result);
+  else if (prevKey !== null)
+    input.exitKey(prevKey);
 
   return result;
 };
 
-Node.prototype._decodeGeneric = function decodeGeneric(tag, input) {
+Node.prototype._decodeGeneric = function decodeGeneric(tag, input, options) {
   var state = this._baseState;
 
   if (tag === 'seq' || tag === 'set')
     return null;
   if (tag === 'seqof' || tag === 'setof')
-    return this._decodeList(input, tag, state.args[0]);
+    return this._decodeList(input, tag, state.args[0], options);
   else if (/str$/.test(tag))
-    return this._decodeStr(input, tag);
+    return this._decodeStr(input, tag, options);
   else if (tag === 'objid' && state.args)
-    return this._decodeObjid(input, state.args[0], state.args[1]);
+    return this._decodeObjid(input, state.args[0], state.args[1], options);
   else if (tag === 'objid')
-    return this._decodeObjid(input, null, null);
+    return this._decodeObjid(input, null, null, options);
   else if (tag === 'gentime' || tag === 'utctime')
-    return this._decodeTime(input, tag);
+    return this._decodeTime(input, tag, options);
   else if (tag === 'null_')
-    return this._decodeNull(input);
+    return this._decodeNull(input, options);
   else if (tag === 'bool')
-    return this._decodeBool(input);
+    return this._decodeBool(input, options);
   else if (tag === 'int' || tag === 'enum')
-    return this._decodeInt(input, state.args && state.args[0]);
-  else if (state.use !== null)
-    return this._getUse(state.use, input._reporterState.obj)._decode(input);
-  else
+    return this._decodeInt(input, state.args && state.args[0], options);
+
+  if (state.use !== null) {
+    return this._getUse(state.use, input._reporterState.obj)
+        ._decode(input, options);
+  } else {
     return input.error('unknown tag: ' + tag);
+  }
 };
 
 Node.prototype._getUse = function _getUse(entity, obj) {
@@ -676,7 +691,7 @@ Node.prototype._getUse = function _getUse(entity, obj) {
   return state.useDecoder;
 };
 
-Node.prototype._decodeChoice = function decodeChoice(input) {
+Node.prototype._decodeChoice = function decodeChoice(input, options) {
   var state = this._baseState;
   var result = null;
   var match = false;
@@ -685,7 +700,7 @@ Node.prototype._decodeChoice = function decodeChoice(input) {
     var save = input.save();
     var node = state.choice[key];
     try {
-      var value = node._decode(input);
+      var value = node._decode(input, options);
       if (input.isError(value))
         return false;
 
@@ -900,12 +915,22 @@ Reporter.prototype.enterKey = function enterKey(key) {
   return this._reporterState.path.push(key);
 };
 
-Reporter.prototype.leaveKey = function leaveKey(index, key, value) {
+Reporter.prototype.exitKey = function exitKey(index) {
   var state = this._reporterState;
 
   state.path = state.path.slice(0, index - 1);
+};
+
+Reporter.prototype.leaveKey = function leaveKey(index, key, value) {
+  var state = this._reporterState;
+
+  this.exitKey(index);
   if (state.obj !== null)
     state.obj[key] = value;
+};
+
+Reporter.prototype.path = function path() {
+  return this._reporterState.path.join('/');
 };
 
 Reporter.prototype.enterObject = function enterObject() {
@@ -1155,14 +1180,15 @@ DERNode.prototype._skipUntilEnd = function skipUntilEnd(buffer, fail) {
   }
 };
 
-DERNode.prototype._decodeList = function decodeList(buffer, tag, decoder) {
+DERNode.prototype._decodeList = function decodeList(buffer, tag, decoder,
+                                                    options) {
   var result = [];
   while (!buffer.isEmpty()) {
     var possibleEnd = this._peekTag(buffer, 'end');
     if (buffer.isError(possibleEnd))
       return possibleEnd;
 
-    var res = decoder.decode(buffer, 'der');
+    var res = decoder.decode(buffer, 'der', options);
     if (buffer.isError(res) && possibleEnd)
       break;
     result.push(res);
@@ -8967,8 +8993,12 @@ module.exports = types
   }
 
   BN.isBN = function isBN (num) {
+    if (num instanceof BN) {
+      return true;
+    }
+
     return num !== null && typeof num === 'object' &&
-      num.constructor.name === 'BN' && Array.isArray(num.words);
+      num.constructor.wordSize === BN.wordSize && Array.isArray(num.words);
   };
 
   BN.max = function max (left, right) {
@@ -14674,7 +14704,9 @@ function fromArrayBuffer (that, array, byteOffset, length) {
     throw new RangeError('\'length\' is out of bounds')
   }
 
-  if (length === undefined) {
+  if (byteOffset === undefined && length === undefined) {
+    array = new Uint8Array(array)
+  } else if (length === undefined) {
     array = new Uint8Array(array, byteOffset)
   } else {
     array = new Uint8Array(array, byteOffset, length)
@@ -31604,7 +31636,7 @@ Address.prototype.persist = function () {
   return this;
 };
 
-},{"./helpers":185,"./import-export":186,"./rng":190,"./shared":191,"./wallet":200,"./wallet-crypto":194,"bitcoinjs-lib":33,"bs58":68}],178:[function(require,module,exports){
+},{"./helpers":185,"./import-export":186,"./rng":191,"./shared":192,"./wallet":201,"./wallet-crypto":195,"bitcoinjs-lib":33,"bs58":68}],178:[function(require,module,exports){
 'use strict';
 
 module.exports = new API();
@@ -31886,7 +31918,7 @@ API.prototype.getFees = function () {
             .catch(handleNetworkError);
 };
 
-},{"./helpers":185,"./wallet":200,"./wallet-crypto":194,"./wallet-store":197,"assert":16,"bitcoinjs-lib":33}],179:[function(require,module,exports){
+},{"./helpers":185,"./wallet":201,"./wallet-crypto":195,"./wallet-store":198,"assert":16,"bitcoinjs-lib":33}],179:[function(require,module,exports){
 'use strict';
 
 module.exports = Block;
@@ -32169,11 +32201,7 @@ function getActivityLogs (success, error) {
 }
 
 function enableEmailNotifications (success, error) {
-  API.securePostCallbacks('wallet', {
-    method: 'update-notifications-type',
-    length: 1,
-    payload: 1
-  }, function (data) {
+  updateNotificationsType({ email: true }).then(function (data) {
     typeof (success) === 'function' && success(data);
   }, function (data) {
     var response = data.responseText || 'Error Enabling Email Notifications';
@@ -32183,11 +32211,7 @@ function enableEmailNotifications (success, error) {
 }
 
 function enableReceiveNotifications (success, error) {
-  API.securePostCallbacks('wallet', {
-    method: 'update-notifications-on',
-    length: 1,
-    payload: 2
-  }, function (data) {
+  updateNotificationsOn({ receive: true }).then(function (data) {
     typeof (success) === 'function' && success(data);
   }, function (data) {
     var response = data.responseText || 'Error Enabling Receive Notifications';
@@ -32201,12 +32225,7 @@ function enableEmailReceiveNotifications (success, error) {
   assert(error && typeof (error) === 'function', 'Error callback required');
 
   enableEmailNotifications(
-    function () {
-      enableReceiveNotifications(
-        success,
-        error
-      );
-    },
+    function () { enableReceiveNotifications(success, error); },
     error
   );
 }
@@ -32215,16 +32234,39 @@ function disableAllNotifications (success, error) {
   assert(success && typeof (success) === 'function', 'Success callback required');
   assert(error && typeof (error) === 'function', 'Error callback required');
 
-  API.securePostCallbacks('wallet', {
-    method: 'update-notifications-type',
-    length: 1,
-    payload: 0
-  }, function (data) {
-    success(data);
-  }, function (data) {
+  updateNotificationsType({}).then(success, function (data) {
     var response = data.responseText || 'Error Disabling Receive Notifications';
-    WalletStore.sendEvent('msg', {type: 'error', message: response});
+    WalletStore.sendEvent('msg', { type: 'error', message: response });
     error();
+  });
+}
+
+function updateNotificationsType (types) {
+  assert(typeof types === 'object', 'Must pass an object of notification types');
+
+  var payload = [
+    types.email ? 1 << 0 : 0,
+    types.http ? 1 << 2 : 0,
+    types.sms ? 1 << 5 : 0
+  ].reduce(function (acc, n) {
+    return acc | n;
+  });
+
+  return API.securePost('wallet', {
+    method: 'update-notifications-type',
+    length: String(payload).length,
+    payload: payload
+  });
+}
+
+function updateNotificationsOn (on) {
+  on = on || {};
+  assert(on.send || on.receive, 'Must have notifications for sending or receiving');
+
+  return API.securePost('wallet', {
+    method: 'update-notifications-on',
+    length: 1,
+    payload: on.send && on.receive ? 0 : (on.send ? 1 : 2)
   });
 }
 
@@ -32261,6 +32303,8 @@ module.exports = {
   verifyEmail: verifyEmail,
   verifyMobile: verifyMobile,
   getActivityLogs: getActivityLogs,
+  updateNotificationsType: updateNotificationsType,
+  updateNotificationsOn: updateNotificationsOn,
   enableEmailReceiveNotifications: enableEmailReceiveNotifications,
   disableAllNotifications: disableAllNotifications,
   removeAlias: removeAlias,
@@ -32270,7 +32314,7 @@ module.exports = {
   updateAuthType: updateAuthType
 };
 
-},{"./api":178,"./wallet-store.js":197,"./wallet.js":200,"assert":16}],181:[function(require,module,exports){
+},{"./api":178,"./wallet-store.js":198,"./wallet.js":201,"assert":16}],181:[function(require,module,exports){
 
 var WebSocket = require('ws');
 var Helpers = require('./helpers');
@@ -32377,7 +32421,7 @@ BlockchainSocket.prototype.msgOnOpen = function (guid, addresses, xpubs) {
 
 module.exports = BlockchainSocket;
 
-},{"./helpers":185,"ws":201}],182:[function(require,module,exports){
+},{"./helpers":185,"ws":202}],182:[function(require,module,exports){
 'use strict';
 
 module.exports = Wallet;
@@ -33183,7 +33227,7 @@ Wallet.prototype.fetchAccountInfo = function () {
   });
 };
 
-},{"./account-info":176,"./address":177,"./api":178,"./bitcoin-block":179,"./blockchain-settings-api":180,"./hd-wallet":184,"./helpers":185,"./keyring":188,"./rng":190,"./shared":191,"./transaction-list":192,"./wallet":200,"./wallet-crypto":194,"./wallet-store":197,"assert":16,"bip39":22}],183:[function(require,module,exports){
+},{"./account-info":176,"./address":177,"./api":178,"./bitcoin-block":179,"./blockchain-settings-api":180,"./hd-wallet":184,"./helpers":185,"./keyring":188,"./rng":191,"./shared":192,"./transaction-list":193,"./wallet":201,"./wallet-crypto":195,"./wallet-store":198,"assert":16,"bip39":22}],183:[function(require,module,exports){
 'use strict';
 
 module.exports = HDAccount;
@@ -33519,7 +33563,7 @@ HDAccount.prototype.persist = function () {
   return this;
 };
 
-},{"./helpers":185,"./keyring":188,"./wallet":200,"assert":16,"bitcoinjs-lib":33}],184:[function(require,module,exports){
+},{"./helpers":185,"./keyring":188,"./wallet":201,"assert":16,"bitcoinjs-lib":33}],184:[function(require,module,exports){
 'use strict';
 
 module.exports = HDWallet;
@@ -33531,7 +33575,6 @@ var HDAccount = require('./hd-account');
 var BIP39 = require('bip39');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 
-// Address class
 function HDWallet (object) {
   function addAccount (o, index) {
     o.index = index;
@@ -33656,11 +33699,11 @@ function decryptPassphrase (bip39Password, cipher) {
   }
 }
 
-function getMasterHex (seedHex, bip39Password, cipher) {
+HDWallet.getMasterHex = function (seedHex, bip39Password, cipher) {
   var mnemonic = decryptMnemonic(seedHex, cipher);
   var passphrase = decryptPassphrase(bip39Password, cipher);
   return BIP39.mnemonicToSeed(mnemonic, passphrase);
-}
+};
 
 // Constructors
 
@@ -33697,19 +33740,27 @@ HDWallet.factory = function (o) {
   }
 };
 
-HDWallet.prototype.newAccount = function (label, cipher) {
-  var accIndex = this._accounts.length;
+HDWallet.prototype.getMasterHDNode = function (cipher) {
   var dec;
-  var enc;
 
   if (cipher) {
     dec = cipher('dec');
+  }
+
+  var masterhex = HDWallet.getMasterHex(this._seedHex, this._bip39Password, dec);
+  var network = Bitcoin.networks.bitcoin;
+  return Bitcoin.HDNode.fromSeedBuffer(masterhex, network);
+};
+
+HDWallet.prototype.newAccount = function (label, cipher) {
+  var accIndex = this._accounts.length;
+  var enc;
+
+  if (cipher) {
     enc = cipher('enc');
   }
 
-  var masterhex = getMasterHex(this._seedHex, this._bip39Password, dec);
-  var network = Bitcoin.networks.bitcoin;
-  var masterkey = Bitcoin.HDNode.fromSeedBuffer(masterhex, network);
+  var masterkey = this.getMasterHDNode(cipher);
   var account = HDAccount.fromWalletMasterKey(masterkey, accIndex, label);
   account.encrypt(enc).persist();
   this._accounts.push(account);
@@ -33795,7 +33846,7 @@ HDWallet.prototype.isValidAccountIndex = function (index) {
   return Helpers.isPositiveInteger(index) && index < this._accounts.length;
 };
 
-},{"./hd-account":183,"./helpers":185,"./wallet":200,"assert":16,"bip39":22,"bitcoinjs-lib":33}],185:[function(require,module,exports){
+},{"./hd-account":183,"./helpers":185,"./wallet":201,"assert":16,"bip39":22,"bitcoinjs-lib":33}],185:[function(require,module,exports){
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -34229,7 +34280,7 @@ Helpers.getMobileOperatingSystem = function () {
 
 module.exports = Helpers;
 
-},{"./import-export":186,"./shared":191,"bigi":20,"bip39":22,"bitcoinjs-lib":33,"bs58":68,"buffer":74}],186:[function(require,module,exports){
+},{"./import-export":186,"./shared":192,"bigi":20,"bip39":22,"bitcoinjs-lib":33,"bs58":68,"buffer":74}],186:[function(require,module,exports){
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -34379,7 +34430,7 @@ var ImportExport = new function () {
 
 module.exports = ImportExport;
 
-},{"./wallet-crypto":194,"bigi":20,"bitcoinjs-lib":33,"bs58":68,"buffer":74,"unorm":169}],187:[function(require,module,exports){
+},{"./wallet-crypto":195,"bigi":20,"bitcoinjs-lib":33,"bs58":68,"buffer":74,"unorm":169}],187:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyChain;
@@ -34504,6 +34555,193 @@ KeyRing.prototype.toJSON = function () {
 };
 
 },{"./keychain":187,"assert":16}],189:[function(require,module,exports){
+(function (Buffer){
+'use strict';
+
+var WalletCrypto = require('./wallet-crypto');
+var Bitcoin = require('bitcoinjs-lib');
+var API = require('./api');
+
+var MyWallet = require('./wallet');
+
+module.exports = Metadata;
+
+function Metadata (payloadType, cipher) {
+  this.VERSION = 1;
+  this._payloadTypeId = payloadType;
+  this._magicHash = null;
+  this._value = null;
+
+  // BIP 43 purpose needs to be 31 bit or less. For lack of a BIP number
+  // we take the first 31 bits of the SHA256 hash of a reverse domain.
+  var hash = WalletCrypto.sha256('info.blockchain.metadata');
+  var purpose = hash.slice(0, 4).readUInt32BE(0) & 0x7FFFFFFF; // 510742
+
+  var masterHDNode = MyWallet.wallet.hdwallet.getMasterHDNode(cipher);
+  var metaDataHDNode = masterHDNode.deriveHardened(purpose);
+
+  // Payload types:
+  // 0: reserved
+  // 1: reserved
+  // 2: whats-new
+
+  var payloadTypeNode = metaDataHDNode.deriveHardened(payloadType);
+
+  // purpose' / type' / 0' : https://meta.blockchain.info/{address}
+  //                       signature used to authenticate
+  // purpose' / type' / 1' : sha256(private key) used as 256 bit AES key
+
+  var node = payloadTypeNode.deriveHardened(0);
+
+  this._address = node.getAddress();
+  this._signatureKeyPair = node.keyPair;
+
+  var privateKeyBuffer = payloadTypeNode.deriveHardened(1).keyPair.d.toBuffer();
+  this._encryptionKey = WalletCrypto.sha256(privateKeyBuffer);
+}
+
+Metadata.prototype.setMagicHash = function (encryptedPayload) {
+  this._magicHash = Bitcoin.message.magicHash(encryptedPayload, Bitcoin.networks.bitcoin);
+};
+
+/*
+metadata = new Blockchain.Metadata(2);
+metadata.create({
+  lastViewed: Date.now()
+});
+*/
+Metadata.prototype.create = function (data) {
+  var self = this;
+
+  var payload = JSON.stringify(data);
+
+  var encryptedPayload = WalletCrypto.encryptDataWithKey(payload, this._encryptionKey);
+
+  var encryptedPayloadSignature = Bitcoin.message.sign(
+    this._signatureKeyPair,
+    encryptedPayload
+  );
+
+  var serverPayload = {
+    version: 1,
+    payload_type_id: this._payloadTypeId,
+    payload: encryptedPayload,
+    signature: encryptedPayloadSignature.toString('base64')
+  };
+
+  return this.POST(this._address, serverPayload).then(function () {
+    self._value = data;
+    self.setMagicHash(encryptedPayload);
+  });
+};
+
+Metadata.prototype.fetch = function () {
+  var self = this;
+  return this.GET(this._address).then(function (serverPayload) {
+    if (serverPayload === null) {
+      return null;
+    }
+
+    var decryptedPayload = WalletCrypto.decryptDataWithKey(serverPayload.payload, self._encryptionKey);
+
+    var verified = Bitcoin.message.verify(
+      self._address,
+      Buffer(serverPayload.signature, 'base64'),
+      serverPayload.payload
+    );
+
+    if (verified) {
+      self._value = JSON.parse(decryptedPayload);
+      self.setMagicHash(serverPayload.payload);
+      return self._value;
+    } else {
+      throw new Error('METADATA_SIGNATURE_VERIFICATION_ERROR');
+    }
+  });
+};
+
+/*
+metadata.update({
+  lastViewed: Date.now()
+});
+*/
+Metadata.prototype.update = function (data) {
+  var self = this;
+
+  var payload = JSON.stringify(data);
+
+  if (payload === JSON.stringify(self._value)) {
+    return Promise.resolve();
+  }
+
+  var encryptedPayload = WalletCrypto.encryptDataWithKey(payload, this._encryptionKey);
+
+  var encryptedPayloadSignature = Bitcoin.message.sign(
+    this._signatureKeyPair,
+    encryptedPayload
+  );
+
+  var serverPayload = {
+    version: 1,
+    payload_type_id: this._payloadTypeId,
+    prev_magic_hash: this._magicHash.toString('hex'),
+    payload: encryptedPayload,
+    signature: encryptedPayloadSignature.toString('base64')
+  };
+
+  return this.PUT(this._address, serverPayload).then(function () {
+    self._value = data;
+    self.setMagicHash(encryptedPayload);
+  });
+};
+
+Metadata.prototype.GET = function (endpoint, data) {
+  return this.request('GET', endpoint, data);
+};
+
+Metadata.prototype.POST = function (endpoint, data) {
+  return this.request('POST', endpoint, data);
+};
+
+Metadata.prototype.PUT = function (endpoint, data) {
+  return this.request('PUT', endpoint, data);
+};
+
+Metadata.prototype.request = function (method, endpoint, data) {
+  var url = API.API_ROOT_URL + 'metadata/' + endpoint;
+
+  var options = {
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'omit'
+  };
+
+  if (method !== 'GET') {
+    options.body = JSON.stringify(data);
+  }
+
+  options.method = method;
+
+  var handleNetworkError = function (e) {
+    return Promise.reject({ error: 'METADATA_CONNECT_ERROR', message: e });
+  };
+
+  var checkStatus = function (response) {
+    if (response.status >= 200 && response.status < 300) {
+      return response.json();
+    } else if (method === 'GET' && response.status === 404) {
+      return null;
+    } else {
+      return response.text().then(Promise.reject.bind(Promise));
+    }
+  };
+
+  return fetch(url, options)
+    .catch(handleNetworkError)
+    .then(checkStatus);
+};
+
+}).call(this,require("buffer").Buffer)
+},{"./api":178,"./wallet":201,"./wallet-crypto":195,"bitcoinjs-lib":33,"buffer":74}],190:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -35055,7 +35293,7 @@ function getPrivateKeys (password, payment) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./api":178,"./helpers":185,"./keyring":188,"./transaction":193,"./wallet":200,"./wallet-crypto":194,"bitcoinjs-lib":33,"buffer":74,"events":116,"util":172}],190:[function(require,module,exports){
+},{"./api":178,"./helpers":185,"./keyring":188,"./transaction":194,"./wallet":201,"./wallet-crypto":195,"bitcoinjs-lib":33,"buffer":74,"events":116,"util":172}],191:[function(require,module,exports){
 'use strict';
 
 module.exports = new RNG();
@@ -35176,7 +35414,7 @@ RNG.prototype.getServerEntropy = function (nBytes) {
   }
 };
 
-},{"./api":178,"./helpers":185,"assert":16,"buffer":74,"randombytes":145}],191:[function(require,module,exports){
+},{"./api":178,"./helpers":185,"assert":16,"buffer":74,"randombytes":145}],192:[function(require,module,exports){
 /* eslint-disable camelcase */
 var satoshi = 100000000; // One satoshi
 var symbol_btc = {code: 'BTC', symbol: 'BTC', name: 'Bitcoin', conversion: satoshi, symbolAppearsAfter: true, local: false}; // Default BTC Currency Symbol object
@@ -35255,7 +35493,7 @@ try {
 }
 /* eslint-enable camelcase */
 
-},{}],192:[function(require,module,exports){
+},{}],193:[function(require,module,exports){
 'use strict';
 
 var EventEmitter = require('events');
@@ -35322,7 +35560,7 @@ TransactionList.prototype.subscribe = function (listener) {
 
 module.exports = TransactionList;
 
-},{"./helpers":185,"./wallet-transaction":199,"events":116}],193:[function(require,module,exports){
+},{"./helpers":185,"./wallet-transaction":200,"events":116}],194:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -35526,7 +35764,7 @@ Transaction.confirmationEstimation = function (absoluteFees, fee) {
 };
 module.exports = Transaction;
 
-},{"./helpers":185,"assert":16,"bitcoinjs-lib":33,"buffer":74}],194:[function(require,module,exports){
+},{"./helpers":185,"assert":16,"bitcoinjs-lib":33,"buffer":74}],195:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -35779,6 +36017,22 @@ function decryptPasswordWithProcessedPin (data, password, pbkdf2Iterations) {
   return decryptDataWithPassword(data, password, pbkdf2Iterations);
 }
 
+// data: e.g. JSON.stringify({...})
+// key: AES key (256 bit Buffer)
+// iv: optional initialization vector
+// returns: concatenated and Base64 encoded iv + payload
+function encryptDataWithKey (data, key, iv) {
+  iv = iv || crypto.randomBytes(SALT_BYTES);
+
+  var dataBytes = new Buffer(data, 'utf8');
+  var options = { mode: AES.CBC, padding: Iso10126 };
+
+  var encryptedBytes = AES.encrypt(dataBytes, key, iv, options);
+  var payload = Buffer.concat([ iv, encryptedBytes ]);
+
+  return payload.toString('base64');
+}
+
 function encryptDataWithPassword (data, password, iterations) {
   assert(data, 'data missing');
   assert(password, 'password missing');
@@ -35787,13 +36041,33 @@ function encryptDataWithPassword (data, password, iterations) {
   var salt = crypto.randomBytes(SALT_BYTES);
   // Expose stretchPassword for iOS to override
   var key = module.exports.stretchPassword(password, salt, iterations, KEY_BIT_LEN);
-  var dataBytes = new Buffer(data, 'utf8');
-  var options = { mode: AES.CBC, padding: Iso10126 };
 
-  var encryptedBytes = AES.encrypt(dataBytes, key, salt, options);
-  var payload = Buffer.concat([ salt, encryptedBytes ]);
+  return encryptDataWithKey(data, key, salt);
+}
 
-  return payload.toString('base64');
+// payload: Base64 encoded concatenated payload + iv
+// key: AES key (256 bit Buffer)
+// returns: decrypted payload (e.g. a JSON string)
+function decryptDataWithKey (data, key) {
+  var dataHex = new Buffer(data, 'base64');
+
+  var iv = dataHex.slice(0, SALT_BYTES);
+  var payload = dataHex.slice(SALT_BYTES);
+
+  return this.decryptBufferWithKey(payload, iv, key);
+}
+
+// payload: (Buffer)
+// iv: initialization vector (Buffer)
+// key: AES key (256 bit Buffer)
+// options: (optional)
+// returns: decrypted payload (e.g. a JSON string)
+function decryptBufferWithKey (payload, iv, key, options) {
+  options = options || {};
+  options.padding = options.padding || Iso10126;
+
+  var decryptedBytes = AES.decrypt(payload, key, iv, options);
+  return decryptedBytes.toString('utf8');
 }
 
 function decryptDataWithPassword (data, password, iterations, options) {
@@ -35801,17 +36075,18 @@ function decryptDataWithPassword (data, password, iterations, options) {
   assert(password, 'password missing');
   assert(iterations, 'iterations missing');
 
-  options = options || {};
-  options.padding = options.padding || Iso10126;
-
   var dataHex = new Buffer(data, 'base64');
-  var salt = dataHex.slice(0, SALT_BYTES);
+
+  var iv = dataHex.slice(0, SALT_BYTES);
   var payload = dataHex.slice(SALT_BYTES);
+
+  //  AES initialization vector is also used as the salt in password stretching
+  var salt = iv;
   // Expose stretchPassword for iOS to override
   var key = module.exports.stretchPassword(password, salt, iterations, KEY_BIT_LEN);
 
-  var decryptedBytes = AES.decrypt(payload, key, salt, options);
-  return decryptedBytes.toString('utf8');
+  var res = module.exports.decryptBufferWithKey(payload, iv, key, options);
+  return res;
 }
 
 function stretchPassword (password, salt, iterations, keylen) {
@@ -36060,6 +36335,9 @@ module.exports = {
   decryptWallet: decryptWallet,
   decryptWalletSync: decryptWalletSync,
   cipherFunction: cipherFunction,
+  encryptDataWithKey: encryptDataWithKey,
+  decryptBufferWithKey: decryptBufferWithKey,
+  decryptDataWithKey: decryptDataWithKey,
   decryptSecretWithSecondPassword: decryptSecretWithSecondPassword,
   encryptSecretWithSecondPassword: encryptSecretWithSecondPassword,
   decryptPasswordWithProcessedPin: decryptPasswordWithProcessedPin,
@@ -36077,11 +36355,13 @@ module.exports = {
     ZeroPadding: ZeroPadding,
     Iso10126: Iso10126,
     Iso97971: Iso97971
-  }
+  },
+  // For test purposes:
+  Buffer: Buffer
 };
 
 }).call(this,require("buffer").Buffer)
-},{"assert":16,"buffer":74,"crypto":82,"sjcl":165}],195:[function(require,module,exports){
+},{"assert":16,"buffer":74,"crypto":82,"sjcl":165}],196:[function(require,module,exports){
 'use strict';
 
 var API = require('./api');
@@ -36505,7 +36785,7 @@ module.exports = {
   getCaptchaImage: getCaptchaImage
 };
 
-},{"./api":178,"./helpers":185,"./wallet":200,"./wallet-crypto":194,"./wallet-store":197,"assert":16}],196:[function(require,module,exports){
+},{"./api":178,"./helpers":185,"./wallet":201,"./wallet-crypto":195,"./wallet-store":198,"assert":16}],197:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -36535,7 +36815,7 @@ module.exports = {
   generateNewWallet: generateNewWallet
 };
 
-},{"./blockchain-wallet":182,"./wallet-network":195,"assert":16}],197:[function(require,module,exports){
+},{"./blockchain-wallet":182,"./wallet-network":196,"assert":16}],198:[function(require,module,exports){
 'use strict';
 
 var MyWallet = require('./wallet');
@@ -36688,7 +36968,7 @@ var WalletStore = (function () {
 
 module.exports = WalletStore;
 
-},{"./wallet":200,"./wallet-crypto":194}],198:[function(require,module,exports){
+},{"./wallet":201,"./wallet-crypto":195}],199:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -36765,7 +37045,7 @@ module.exports = {
   postTokenEndpoint: postTokenEndpoint // For tests
 };
 
-},{"./api":178,"./helpers":185,"assert":16}],199:[function(require,module,exports){
+},{"./api":178,"./helpers":185,"assert":16}],200:[function(require,module,exports){
 'use strict';
 
 module.exports = Tx;
@@ -37030,7 +37310,7 @@ Tx.setConfirmations = function (txBlockHeight) {
   return conf;
 };
 
-},{"./wallet":200}],200:[function(require,module,exports){
+},{"./wallet":201}],201:[function(require,module,exports){
 'use strict';
 
 var MyWallet = module.exports = {};
@@ -37461,19 +37741,17 @@ function syncWallet (successcallback, errorcallback) {
 
         if (WalletStore.isSyncPubKeys()) {
           // Include HD addresses unless in lame mode:
-          var hdAddresses = (
-            MyWallet.wallet.hdwallet !== undefined &&
-            MyWallet.wallet.hdwallet.accounts !== undefined
-          ) ? [].concat.apply([],
-            MyWallet.wallet.hdwallet.accounts.map(function (account) {
-              return account.labeledReceivingAddresses;
-            })) : [];
-          data.active = [].concat.apply([], // eslint-disable-line no-useless-call
-            [
-              MyWallet.wallet.activeAddresses,
-              hdAddresses
-            ]
-          ).join('|');
+          var hdAddresses = [];
+          if (MyWallet.wallet.hdwallet !== undefined && MyWallet.wallet.hdwallet.accounts !== undefined) {
+            var subscribeAccount = function (acc) {
+              var ri = acc.receiveIndex;
+              var labeled = acc.labeledReceivingAddresses ? acc.labeledReceivingAddresses : [];
+              var getAddress = function (i) { return acc.receiveAddressAtIndex(i + ri); };
+              return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map(getAddress).concat(labeled);
+            };
+            hdAddresses = MyWallet.wallet.hdwallet.accounts.map(subscribeAccount).reduce(function (a, b) { return a.concat(b); }, []);
+          }
+          data.active = hdAddresses.concat(MyWallet.wallet.activeAddresses).join('|');
         }
 
         API.securePostCallbacks(
@@ -37664,7 +37942,7 @@ MyWallet.browserCheckFast = function () {
   return true;
 };
 
-},{"./api":178,"./blockchain-settings-api":180,"./blockchain-socket":181,"./blockchain-wallet":182,"./helpers":185,"./rng":190,"./wallet-crypto":194,"./wallet-network":195,"./wallet-signup":196,"./wallet-store":197,"assert":16,"bip39":22,"bitcoinjs-lib":33,"buffer":74,"pbkdf2":136}],201:[function(require,module,exports){
+},{"./api":178,"./blockchain-settings-api":180,"./blockchain-socket":181,"./blockchain-wallet":182,"./helpers":185,"./rng":191,"./wallet-crypto":195,"./wallet-network":196,"./wallet-signup":197,"./wallet-store":198,"assert":16,"bip39":22,"bitcoinjs-lib":33,"buffer":74,"pbkdf2":136}],202:[function(require,module,exports){
 
 var global = (function () { return this; })();
 var WebSocket = global.WebSocket || global.MozWebSocket;
