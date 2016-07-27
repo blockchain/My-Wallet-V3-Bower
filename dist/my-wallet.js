@@ -3626,11 +3626,9 @@ function bnModInverse(m) {
     }
   }
   if (v.compareTo(BigInteger.ONE) != 0) return BigInteger.ZERO
-  if (d.compareTo(m) >= 0) return d.subtract(m)
-  if (d.signum() < 0) d.addTo(m, d)
-  else return d
-  if (d.signum() < 0) return d.add(m)
-  else return d
+  while (d.compareTo(m) >= 0) d.subTo(m, d)
+  while (d.signum() < 0) d.addTo(m, d)
+  return d
 }
 
 var lowprimes = [
@@ -3870,16 +3868,20 @@ module.exports={
     ]
   ],
   "_from": "bigi@>=1.4.0 <1.5.0",
-  "_id": "bigi@1.4.1",
+  "_id": "bigi@1.4.2",
   "_inCache": true,
   "_installable": true,
   "_location": "/bigi",
-  "_nodeVersion": "2.1.0",
+  "_nodeVersion": "6.1.0",
+  "_npmOperationalInternal": {
+    "host": "packages-12-west.internal.npmjs.com",
+    "tmp": "tmp/bigi-1.4.2.tgz_1469584192413_0.6801238611806184"
+  },
   "_npmUser": {
     "email": "jprichardson@gmail.com",
     "name": "jprichardson"
   },
-  "_npmVersion": "2.10.1",
+  "_npmVersion": "3.8.6",
   "_phantomChildren": {},
   "_requested": {
     "name": "bigi",
@@ -3894,8 +3896,8 @@ module.exports={
     "/bitcoinjs-lib",
     "/ecurve"
   ],
-  "_resolved": "https://registry.npmjs.org/bigi/-/bigi-1.4.1.tgz",
-  "_shasum": "726e8ab08d1fe1dfb8aa6bb6309bffecf93a21b7",
+  "_resolved": "https://registry.npmjs.org/bigi/-/bigi-1.4.2.tgz",
+  "_shasum": "9c665a95f88b8b08fc05cfd731f561859d725825",
   "_shrinkwrap": null,
   "_spec": "bigi@1.4.*",
   "_where": "/var/lib/jenkins/jobs/My Wallet V3/workspace",
@@ -3913,10 +3915,10 @@ module.exports={
   },
   "directories": {},
   "dist": {
-    "shasum": "726e8ab08d1fe1dfb8aa6bb6309bffecf93a21b7",
-    "tarball": "https://registry.npmjs.org/bigi/-/bigi-1.4.1.tgz"
+    "shasum": "9c665a95f88b8b08fc05cfd731f561859d725825",
+    "tarball": "https://registry.npmjs.org/bigi/-/bigi-1.4.2.tgz"
   },
-  "gitHead": "7d034a1b38ca90f68daa9de472dda2fb813836f1",
+  "gitHead": "c25308081c896ff84702303722bf5ecd8b3f78e3",
   "homepage": "https://github.com/cryptocoinjs/bigi#readme",
   "keywords": [
     "cryptography",
@@ -3981,7 +3983,7 @@ module.exports={
     "files": "test/*.js",
     "harness": "mocha"
   },
-  "version": "1.4.1"
+  "version": "1.4.2"
 }
 
 },{}],22:[function(require,module,exports){
@@ -25691,7 +25693,7 @@ function drainQueue() {
     if (draining) {
         return;
     }
-    var timeout = cachedSetTimeout(cleanUpNextTick);
+    var timeout = cachedSetTimeout.call(null, cleanUpNextTick);
     draining = true;
 
     var len = queue.length;
@@ -25708,7 +25710,7 @@ function drainQueue() {
     }
     currentQueue = null;
     draining = false;
-    cachedClearTimeout(timeout);
+    cachedClearTimeout.call(null, timeout);
 }
 
 process.nextTick = function (fun) {
@@ -25720,7 +25722,7 @@ process.nextTick = function (fun) {
     }
     queue.push(new Item(fun, args));
     if (queue.length === 1 && !draining) {
-        cachedSetTimeout(drainQueue, 0);
+        cachedSetTimeout.call(null, drainQueue, 0);
     }
 };
 
@@ -32252,11 +32254,17 @@ function updateNotificationsType (types) {
     return acc | n;
   });
 
+  var success = function (result) {
+    WalletStore.setSyncPubKeys(payload !== 0);
+    MyWallet.syncWallet();
+    return result;
+  };
+
   return API.securePost('wallet', {
     method: 'update-notifications-type',
     length: String(payload).length,
     payload: payload
-  });
+  }).then(success);
 }
 
 function updateNotificationsOn (on) {
@@ -33057,33 +33065,13 @@ Wallet.prototype.scanBip44 = function (secondPassword, progress) {
 Wallet.prototype.enableNotifications = function (success, error) {
   assert(success, 'Success callback required');
   assert(error, 'Error callback required');
-
-  BlockchainSettingsAPI.enableEmailReceiveNotifications(
-    function () {
-      WalletStore.setSyncPubKeys(true);
-      MyWallet.syncWallet();
-      success();
-    },
-    function () {
-      error();
-    }
-  );
+  BlockchainSettingsAPI.enableEmailReceiveNotifications(success, error);
 };
 
 Wallet.prototype.disableNotifications = function (success, error) {
   assert(success, 'Success callback required');
   assert(error, 'Error callback required');
-
-  BlockchainSettingsAPI.disableAllNotifications(
-    function () {
-      WalletStore.setSyncPubKeys(false);
-      MyWallet.syncWallet();
-      success();
-    },
-    function () {
-      error();
-    }
-  );
+  BlockchainSettingsAPI.disableAllNotifications(success, error);
 };
 
 // creating a new wallet object
