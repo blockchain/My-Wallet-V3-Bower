@@ -11041,6 +11041,10 @@ module.exports = types
 
     assert(this.negative === 0, 'imaskn works only with positive numbers');
 
+    if (this.length <= s) {
+      return this;
+    }
+
     if (r !== 0) {
       s++;
     }
@@ -25642,7 +25646,6 @@ function nextTick(fn, arg1, arg2, arg3) {
 }).call(this,require('_process'))
 },{"_process":138}],138:[function(require,module,exports){
 // shim for using process in browser
-
 var process = module.exports = {};
 
 // cached from whatever global is present so that test runners that stub it
@@ -25654,21 +25657,35 @@ var cachedSetTimeout;
 var cachedClearTimeout;
 
 (function () {
-  try {
-    cachedSetTimeout = setTimeout;
-  } catch (e) {
-    cachedSetTimeout = function () {
-      throw new Error('setTimeout is not defined');
+    try {
+        cachedSetTimeout = setTimeout;
+    } catch (e) {
+        cachedSetTimeout = function () {
+            throw new Error('setTimeout is not defined');
+        }
     }
-  }
-  try {
-    cachedClearTimeout = clearTimeout;
-  } catch (e) {
-    cachedClearTimeout = function () {
-      throw new Error('clearTimeout is not defined');
+    try {
+        cachedClearTimeout = clearTimeout;
+    } catch (e) {
+        cachedClearTimeout = function () {
+            throw new Error('clearTimeout is not defined');
+        }
     }
-  }
 } ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        return setTimeout(fun, 0);
+    } else {
+        return cachedSetTimeout.call(null, fun, 0);
+    }
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        clearTimeout(marker);
+    } else {
+        cachedClearTimeout.call(null, marker);
+    }
+}
 var queue = [];
 var draining = false;
 var currentQueue;
@@ -25693,7 +25710,7 @@ function drainQueue() {
     if (draining) {
         return;
     }
-    var timeout = cachedSetTimeout.call(null, cleanUpNextTick);
+    var timeout = runTimeout(cleanUpNextTick);
     draining = true;
 
     var len = queue.length;
@@ -25710,7 +25727,7 @@ function drainQueue() {
     }
     currentQueue = null;
     draining = false;
-    cachedClearTimeout.call(null, timeout);
+    runClearTimeout(timeout);
 }
 
 process.nextTick = function (fun) {
@@ -25722,7 +25739,7 @@ process.nextTick = function (fun) {
     }
     queue.push(new Item(fun, args));
     if (queue.length === 1 && !draining) {
-        cachedSetTimeout.call(null, drainQueue, 0);
+        runTimeout(drainQueue);
     }
 };
 
@@ -31321,6 +31338,17 @@ function AccountInfo (object) {
   this._isMobileVerified = Boolean(object.sms_verified);
 
   this._currency = object.currency;
+
+  var notifications = {};
+  if (object.notifications_type) {
+    var mapped = object.notifications_type.map(Math.log2);
+    notifications = {
+      email: Boolean(~mapped.indexOf(0)),
+      http: Boolean(~mapped.indexOf(2)),
+      sms: Boolean(~mapped.indexOf(5))
+    };
+  }
+  this._notifications = notifications;
 }
 
 Object.defineProperties(AccountInfo.prototype, {
@@ -31363,6 +31391,10 @@ Object.defineProperties(AccountInfo.prototype, {
   'currency': {
     configurable: false,
     get: function () { return this._currency; }
+  },
+  'notifications': {
+    configurable: false,
+    get: function () { return this._notifications; }
   }
 });
 
@@ -31918,6 +31950,17 @@ API.prototype.getFees = function () {
   return fetch(this.API_ROOT_URL + 'fees')
             .then(checkStatus)
             .catch(handleNetworkError);
+};
+
+API.prototype.exportHistory = function (active, currency, options) {
+  options = options || {};
+  var data = {
+    active: Array.isArray(active) ? active.join('|') : active,
+    currency: currency
+  };
+  if (options.start) data.start = options.start;
+  if (options.end) data.end = options.end;
+  return this.request('GET', 'v2/export-history', data);
 };
 
 },{"./helpers":185,"./wallet":201,"./wallet-crypto":195,"./wallet-store":198,"assert":16,"bitcoinjs-lib":33}],179:[function(require,module,exports){
