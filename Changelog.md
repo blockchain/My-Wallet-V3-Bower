@@ -1,31 +1,39 @@
 __Blockchain Wallet V3__
 
-#   (2016-08-03)
+#   (2016-08-29)
 
 
 
 ---
 
+## Bug Fixes
+
+- **api:** only add the api_code parameter to request if an api code is set (#250)
+  ([92f487cf](https://github.com/blockchain/My-Wallet-V3/commit/92f487cf3a4e105b8a4f5fd7433f3db8004f6a0c))
+- **cosmetic:** semistandard
+  ([1ce7f4ac](https://github.com/blockchain/My-Wallet-V3/commit/1ce7f4acacac0ecc123610c92ffeb56060c6fe68))
+- **exporthistory:** use POST for request to export-history (#253)
+  ([37b89944](https://github.com/blockchain/My-Wallet-V3/commit/37b8994449cbad8a23d6fa7b945f71d80d422c5d))
+
+
 ## Features
 
-- **accountinfo:** notifications (#248)
-  ([99357a65](https://github.com/blockchain/My-Wallet-V3/commit/99357a65c9203cc7c37e63eabfbc65275d05f417))
-- **exporthistory:** add API method for export-history (#249)
-  ([bbbd6727](https://github.com/blockchain/My-Wallet-V3/commit/bbbd67270620313ce67e6a5d2759fd7539f18005))
+- **cream:** see #254
+  ([1ff13101](https://github.com/blockchain/My-Wallet-V3/commit/1ff13101124ab3b85837c9fb659de9883bca7610))
+- **export:** legacy address private keys can be exported as WIF
+  ([4e89e962](https://github.com/blockchain/My-Wallet-V3/commit/4e89e96248d199f58e664c5bd7fc0a4b266116b5))
 
 
 ## Chore
 
-- **changelog:** use latest version
-  ([5e9b961b](https://github.com/blockchain/My-Wallet-V3/commit/5e9b961b3bae9efcab79382d3d53e68a84ac19bd))
-- **release:** v3.21.1
-  ([f084ae65](https://github.com/blockchain/My-Wallet-V3/commit/f084ae65d96bb5b6ec19365e7d013c1e80e31c67))
+- **release:** increase minor version
+  ([c0bfbb2e](https://github.com/blockchain/My-Wallet-V3/commit/c0bfbb2ed20b3d4afd9521de923e77b5da42c655))
 
 
 ## Pull requests merged
 
-- Merge pull request #246 from blockchain/changelog
-  ([3bf4b3e0](https://github.com/blockchain/My-Wallet-V3/commit/3bf4b3e0254c1fcef8d2972f03e52d8e9d538199))
+- Merge pull request #251 from blockchain/wif
+  ([86411685](https://github.com/blockchain/My-Wallet-V3/commit/864116856eff92465328f5d590d4bfcfbd29e95c))
 
 
 

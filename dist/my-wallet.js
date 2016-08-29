@@ -37,20 +37,13 @@ module.exports = {
   WalletNetwork: require('./src/wallet-network'),
   RNG: require('./src/rng'),
   Transaction: require('./src/transaction'),
-  // Wallet: require('./blockchain-wallet'),
   Address: require('./src/address'),
   Metadata: require('./src/metadata'),
-  // HDAccount: require('./hd-account'),
-  // HDWallet: require('./hd-wallet'),
-  // KeyChain: require('./keychain'),
-  // KeyRing: require('./keyring'),
-  Bitcoin: require('bitcoinjs-lib')
-  // Base58: require('bs58'),
-  // BigInteger: require('bigi'),
-  // BIP39: require('bip39')
+  Bitcoin: require('bitcoinjs-lib'),
+  External: require('./src/external')
 };
 
-},{"./src/address":177,"./src/api":178,"./src/blockchain-settings-api":180,"./src/helpers":185,"./src/import-export":186,"./src/metadata":189,"./src/payment":190,"./src/rng":191,"./src/shared":192,"./src/transaction":194,"./src/wallet":201,"./src/wallet-crypto":195,"./src/wallet-network":196,"./src/wallet-store":198,"./src/wallet-token-endpoints":199,"./src/wallet-transaction":200,"bitcoinjs-lib":33,"buffer":74,"es6-promise":115,"isomorphic-fetch":129}],2:[function(require,module,exports){
+},{"./src/address":178,"./src/api":179,"./src/blockchain-settings-api":181,"./src/external":192,"./src/helpers":195,"./src/import-export":196,"./src/metadata":199,"./src/payment":200,"./src/rng":201,"./src/shared":202,"./src/transaction":204,"./src/wallet":211,"./src/wallet-crypto":205,"./src/wallet-network":206,"./src/wallet-store":208,"./src/wallet-token-endpoints":209,"./src/wallet-transaction":210,"bitcoinjs-lib":33,"buffer":74,"es6-promise":115,"isomorphic-fetch":129}],2:[function(require,module,exports){
 var asn1 = exports;
 
 asn1.bignum = require('bn.js');
@@ -124,7 +117,7 @@ Entity.prototype.encode = function encode(data, enc, /* internal */ reporter) {
   return this._getEncoder(enc).encode(data, reporter);
 };
 
-},{"../asn1":2,"inherits":126,"vm":173}],4:[function(require,module,exports){
+},{"../asn1":2,"inherits":126,"vm":174}],4:[function(require,module,exports){
 var inherits = require('inherits');
 var Reporter = require('../base').Reporter;
 var Buffer = require('buffer').Buffer;
@@ -2135,7 +2128,7 @@ var objectKeys = Object.keys || function (obj) {
   return keys;
 };
 
-},{"util/":172}],17:[function(require,module,exports){
+},{"util/":173}],17:[function(require,module,exports){
 'use strict'
 
 exports.toByteArray = toByteArray
@@ -4116,7 +4109,7 @@ module.exports = {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./wordlists/en.json":23,"assert":16,"buffer":74,"create-hash":78,"pbkdf2":136,"randombytes":145,"unorm":169}],23:[function(require,module,exports){
+},{"./wordlists/en.json":23,"assert":16,"buffer":74,"create-hash":78,"pbkdf2":136,"randombytes":145,"unorm":170}],23:[function(require,module,exports){
 module.exports=[
   "abandon",
   "ability",
@@ -6339,7 +6332,7 @@ module.exports = {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./networks":35,"./script":37,"./types":40,"bs58check":69,"buffer":74,"typeforce":168}],26:[function(require,module,exports){
+},{"./networks":35,"./script":37,"./types":40,"bs58check":69,"buffer":74,"typeforce":169}],26:[function(require,module,exports){
 (function (Buffer){
 var bufferutils = require('./bufferutils')
 var bcrypto = require('./crypto')
@@ -6931,7 +6924,7 @@ module.exports = {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./ecsignature":31,"./types":40,"bigi":20,"buffer":74,"create-hmac":81,"ecurve":95,"typeforce":168}],30:[function(require,module,exports){
+},{"./ecsignature":31,"./types":40,"bigi":20,"buffer":74,"create-hmac":81,"ecurve":95,"typeforce":169}],30:[function(require,module,exports){
 (function (Buffer){
 var bcrypto = require('./crypto')
 var bs58check = require('bs58check')
@@ -7067,7 +7060,7 @@ ECPair.prototype.verify = function (hash, signature) {
 module.exports = ECPair
 
 }).call(this,require("buffer").Buffer)
-},{"./crypto":28,"./ecdsa":29,"./networks":35,"./types":40,"bigi":20,"bs58check":69,"buffer":74,"ecurve":95,"randombytes":145,"typeforce":168,"wif":175}],31:[function(require,module,exports){
+},{"./crypto":28,"./ecdsa":29,"./networks":35,"./types":40,"bigi":20,"bs58check":69,"buffer":74,"ecurve":95,"randombytes":145,"typeforce":169,"wif":176}],31:[function(require,module,exports){
 (function (Buffer){
 var bip66 = require('bip66')
 var typeforce = require('typeforce')
@@ -7158,7 +7151,7 @@ ECSignature.prototype.toScriptSignature = function (hashType) {
 module.exports = ECSignature
 
 }).call(this,require("buffer").Buffer)
-},{"./types":40,"bigi":20,"bip66":24,"buffer":74,"typeforce":168}],32:[function(require,module,exports){
+},{"./types":40,"bigi":20,"bip66":24,"buffer":74,"typeforce":169}],32:[function(require,module,exports){
 (function (Buffer){
 var base58check = require('bs58check')
 var bcrypto = require('./crypto')
@@ -7448,7 +7441,7 @@ HDNode.prototype.toString = HDNode.prototype.toBase58
 module.exports = HDNode
 
 }).call(this,require("buffer").Buffer)
-},{"./crypto":28,"./ecpair":30,"./networks":35,"./types":40,"bigi":20,"bs58check":69,"buffer":74,"create-hmac":81,"ecurve":95,"typeforce":168}],33:[function(require,module,exports){
+},{"./crypto":28,"./ecpair":30,"./networks":35,"./types":40,"bigi":20,"bs58check":69,"buffer":74,"create-hmac":81,"ecurve":95,"typeforce":169}],33:[function(require,module,exports){
 module.exports = {
   Block: require('./block'),
   ECPair: require('./ecpair'),
@@ -8107,7 +8100,7 @@ module.exports = {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./bufferutils":27,"./opcodes":36,"./types":40,"bip66":24,"buffer":74,"typeforce":168}],38:[function(require,module,exports){
+},{"./bufferutils":27,"./opcodes":36,"./types":40,"bip66":24,"buffer":74,"typeforce":169}],38:[function(require,module,exports){
 (function (Buffer){
 var bcrypto = require('./crypto')
 var bscript = require('./script')
@@ -8426,7 +8419,7 @@ Transaction.prototype.setInputScript = function (index, scriptSig) {
 module.exports = Transaction
 
 }).call(this,require("buffer").Buffer)
-},{"./bufferutils":27,"./crypto":28,"./opcodes":36,"./script":37,"./types":40,"buffer":74,"typeforce":168}],39:[function(require,module,exports){
+},{"./bufferutils":27,"./crypto":28,"./opcodes":36,"./script":37,"./types":40,"buffer":74,"typeforce":169}],39:[function(require,module,exports){
 (function (Buffer){
 var baddress = require('./address')
 var bcrypto = require('./crypto')
@@ -8937,7 +8930,7 @@ for (var typeName in typeforce) {
 
 module.exports = types
 
-},{"typeforce":168}],41:[function(require,module,exports){
+},{"typeforce":169}],41:[function(require,module,exports){
 (function (module, exports) {
   'use strict';
 
@@ -13842,7 +13835,7 @@ module.exports = {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./algos":63,"./sign":66,"./verify":67,"buffer":74,"create-hash":78,"inherits":126,"stream":166}],65:[function(require,module,exports){
+},{"./algos":63,"./sign":66,"./verify":67,"buffer":74,"create-hash":78,"inherits":126,"stream":167}],65:[function(require,module,exports){
 'use strict'
 exports['1.3.132.0.10'] = 'secp256k1'
 
@@ -14623,6 +14616,8 @@ if (Buffer.TYPED_ARRAY_SUPPORT) {
 function assertSize (size) {
   if (typeof size !== 'number') {
     throw new TypeError('"size" argument must be a number')
+  } else if (size < 0) {
+    throw new RangeError('"size" argument must not be negative')
   }
 }
 
@@ -14686,12 +14681,20 @@ function fromString (that, string, encoding) {
   var length = byteLength(string, encoding) | 0
   that = createBuffer(that, length)
 
-  that.write(string, encoding)
+  var actual = that.write(string, encoding)
+
+  if (actual !== length) {
+    // Writing a hex string, for example, that contains invalid characters will
+    // cause everything after the first invalid character to be ignored. (e.g.
+    // 'abxxcd' will be treated as 'ab')
+    that = that.slice(0, actual)
+  }
+
   return that
 }
 
 function fromArrayLike (that, array) {
-  var length = checked(array.length) | 0
+  var length = array.length < 0 ? 0 : checked(array.length) | 0
   that = createBuffer(that, length)
   for (var i = 0; i < length; i += 1) {
     that[i] = array[i] & 255
@@ -14760,7 +14763,7 @@ function fromObject (that, obj) {
 }
 
 function checked (length) {
-  // Note: cannot use `length < kMaxLength` here because that fails when
+  // Note: cannot use `length < kMaxLength()` here because that fails when
   // length is NaN (which is otherwise coerced to zero.)
   if (length >= kMaxLength()) {
     throw new RangeError('Attempt to allocate Buffer larger than maximum ' +
@@ -14809,9 +14812,9 @@ Buffer.isEncoding = function isEncoding (encoding) {
     case 'utf8':
     case 'utf-8':
     case 'ascii':
+    case 'latin1':
     case 'binary':
     case 'base64':
-    case 'raw':
     case 'ucs2':
     case 'ucs-2':
     case 'utf16le':
@@ -14872,9 +14875,8 @@ function byteLength (string, encoding) {
   for (;;) {
     switch (encoding) {
       case 'ascii':
+      case 'latin1':
       case 'binary':
-      case 'raw':
-      case 'raws':
         return len
       case 'utf8':
       case 'utf-8':
@@ -14947,8 +14949,9 @@ function slowToString (encoding, start, end) {
       case 'ascii':
         return asciiSlice(this, start, end)
 
+      case 'latin1':
       case 'binary':
-        return binarySlice(this, start, end)
+        return latin1Slice(this, start, end)
 
       case 'base64':
         return base64Slice(this, start, end)
@@ -14996,6 +14999,20 @@ Buffer.prototype.swap32 = function swap32 () {
   for (var i = 0; i < len; i += 4) {
     swap(this, i, i + 3)
     swap(this, i + 1, i + 2)
+  }
+  return this
+}
+
+Buffer.prototype.swap64 = function swap64 () {
+  var len = this.length
+  if (len % 8 !== 0) {
+    throw new RangeError('Buffer size must be a multiple of 64-bits')
+  }
+  for (var i = 0; i < len; i += 8) {
+    swap(this, i, i + 7)
+    swap(this, i + 1, i + 6)
+    swap(this, i + 2, i + 5)
+    swap(this, i + 3, i + 4)
   }
   return this
 }
@@ -15082,7 +15099,73 @@ Buffer.prototype.compare = function compare (target, start, end, thisStart, this
   return 0
 }
 
-function arrayIndexOf (arr, val, byteOffset, encoding) {
+// Finds either the first index of `val` in `buffer` at offset >= `byteOffset`,
+// OR the last index of `val` in `buffer` at offset <= `byteOffset`.
+//
+// Arguments:
+// - buffer - a Buffer to search
+// - val - a string, Buffer, or number
+// - byteOffset - an index into `buffer`; will be clamped to an int32
+// - encoding - an optional encoding, relevant is val is a string
+// - dir - true for indexOf, false for lastIndexOf
+function bidirectionalIndexOf (buffer, val, byteOffset, encoding, dir) {
+  // Empty buffer means no match
+  if (buffer.length === 0) return -1
+
+  // Normalize byteOffset
+  if (typeof byteOffset === 'string') {
+    encoding = byteOffset
+    byteOffset = 0
+  } else if (byteOffset > 0x7fffffff) {
+    byteOffset = 0x7fffffff
+  } else if (byteOffset < -0x80000000) {
+    byteOffset = -0x80000000
+  }
+  byteOffset = +byteOffset  // Coerce to Number.
+  if (isNaN(byteOffset)) {
+    // byteOffset: it it's undefined, null, NaN, "foo", etc, search whole buffer
+    byteOffset = dir ? 0 : (buffer.length - 1)
+  }
+
+  // Normalize byteOffset: negative offsets start from the end of the buffer
+  if (byteOffset < 0) byteOffset = buffer.length + byteOffset
+  if (byteOffset >= buffer.length) {
+    if (dir) return -1
+    else byteOffset = buffer.length - 1
+  } else if (byteOffset < 0) {
+    if (dir) byteOffset = 0
+    else return -1
+  }
+
+  // Normalize val
+  if (typeof val === 'string') {
+    val = Buffer.from(val, encoding)
+  }
+
+  // Finally, search either indexOf (if dir is true) or lastIndexOf
+  if (Buffer.isBuffer(val)) {
+    // Special case: looking for empty string/buffer always fails
+    if (val.length === 0) {
+      return -1
+    }
+    return arrayIndexOf(buffer, val, byteOffset, encoding, dir)
+  } else if (typeof val === 'number') {
+    val = val & 0xFF // Search for a byte value [0-255]
+    if (Buffer.TYPED_ARRAY_SUPPORT &&
+        typeof Uint8Array.prototype.indexOf === 'function') {
+      if (dir) {
+        return Uint8Array.prototype.indexOf.call(buffer, val, byteOffset)
+      } else {
+        return Uint8Array.prototype.lastIndexOf.call(buffer, val, byteOffset)
+      }
+    }
+    return arrayIndexOf(buffer, [ val ], byteOffset, encoding, dir)
+  }
+
+  throw new TypeError('val must be string, number or Buffer')
+}
+
+function arrayIndexOf (arr, val, byteOffset, encoding, dir) {
   var indexSize = 1
   var arrLength = arr.length
   var valLength = val.length
@@ -15109,60 +15192,45 @@ function arrayIndexOf (arr, val, byteOffset, encoding) {
     }
   }
 
-  var foundIndex = -1
-  for (var i = byteOffset; i < arrLength; ++i) {
-    if (read(arr, i) === read(val, foundIndex === -1 ? 0 : i - foundIndex)) {
-      if (foundIndex === -1) foundIndex = i
-      if (i - foundIndex + 1 === valLength) return foundIndex * indexSize
-    } else {
-      if (foundIndex !== -1) i -= i - foundIndex
-      foundIndex = -1
+  var i
+  if (dir) {
+    var foundIndex = -1
+    for (i = byteOffset; i < arrLength; i++) {
+      if (read(arr, i) === read(val, foundIndex === -1 ? 0 : i - foundIndex)) {
+        if (foundIndex === -1) foundIndex = i
+        if (i - foundIndex + 1 === valLength) return foundIndex * indexSize
+      } else {
+        if (foundIndex !== -1) i -= i - foundIndex
+        foundIndex = -1
+      }
+    }
+  } else {
+    if (byteOffset + valLength > arrLength) byteOffset = arrLength - valLength
+    for (i = byteOffset; i >= 0; i--) {
+      var found = true
+      for (var j = 0; j < valLength; j++) {
+        if (read(arr, i + j) !== read(val, j)) {
+          found = false
+          break
+        }
+      }
+      if (found) return i
     }
   }
 
   return -1
 }
 
-Buffer.prototype.indexOf = function indexOf (val, byteOffset, encoding) {
-  if (typeof byteOffset === 'string') {
-    encoding = byteOffset
-    byteOffset = 0
-  } else if (byteOffset > 0x7fffffff) {
-    byteOffset = 0x7fffffff
-  } else if (byteOffset < -0x80000000) {
-    byteOffset = -0x80000000
-  }
-  byteOffset >>= 0
-
-  if (this.length === 0) return -1
-  if (byteOffset >= this.length) return -1
-
-  // Negative offsets start from the end of the buffer
-  if (byteOffset < 0) byteOffset = Math.max(this.length + byteOffset, 0)
-
-  if (typeof val === 'string') {
-    val = Buffer.from(val, encoding)
-  }
-
-  if (Buffer.isBuffer(val)) {
-    // special case: looking for empty string/buffer always fails
-    if (val.length === 0) {
-      return -1
-    }
-    return arrayIndexOf(this, val, byteOffset, encoding)
-  }
-  if (typeof val === 'number') {
-    if (Buffer.TYPED_ARRAY_SUPPORT && Uint8Array.prototype.indexOf === 'function') {
-      return Uint8Array.prototype.indexOf.call(this, val, byteOffset)
-    }
-    return arrayIndexOf(this, [ val ], byteOffset, encoding)
-  }
-
-  throw new TypeError('val must be string, number or Buffer')
-}
-
 Buffer.prototype.includes = function includes (val, byteOffset, encoding) {
   return this.indexOf(val, byteOffset, encoding) !== -1
+}
+
+Buffer.prototype.indexOf = function indexOf (val, byteOffset, encoding) {
+  return bidirectionalIndexOf(this, val, byteOffset, encoding, true)
+}
+
+Buffer.prototype.lastIndexOf = function lastIndexOf (val, byteOffset, encoding) {
+  return bidirectionalIndexOf(this, val, byteOffset, encoding, false)
 }
 
 function hexWrite (buf, string, offset, length) {
@@ -15179,7 +15247,7 @@ function hexWrite (buf, string, offset, length) {
 
   // must be an even number of digits
   var strLen = string.length
-  if (strLen % 2 !== 0) throw new Error('Invalid hex string')
+  if (strLen % 2 !== 0) throw new TypeError('Invalid hex string')
 
   if (length > strLen / 2) {
     length = strLen / 2
@@ -15200,7 +15268,7 @@ function asciiWrite (buf, string, offset, length) {
   return blitBuffer(asciiToBytes(string), buf, offset, length)
 }
 
-function binaryWrite (buf, string, offset, length) {
+function latin1Write (buf, string, offset, length) {
   return asciiWrite(buf, string, offset, length)
 }
 
@@ -15262,8 +15330,9 @@ Buffer.prototype.write = function write (string, offset, length, encoding) {
       case 'ascii':
         return asciiWrite(this, string, offset, length)
 
+      case 'latin1':
       case 'binary':
-        return binaryWrite(this, string, offset, length)
+        return latin1Write(this, string, offset, length)
 
       case 'base64':
         // Warning: maxLength not taken into account in base64Write
@@ -15404,7 +15473,7 @@ function asciiSlice (buf, start, end) {
   return ret
 }
 
-function binarySlice (buf, start, end) {
+function latin1Slice (buf, start, end) {
   var ret = ''
   end = Math.min(buf.length, end)
 
@@ -16265,7 +16334,7 @@ CipherBase.prototype._toString = function (value, enc, final) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":74,"inherits":126,"stream":166,"string_decoder":167}],76:[function(require,module,exports){
+},{"buffer":74,"inherits":126,"stream":167,"string_decoder":168}],76:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -16558,7 +16627,7 @@ module.exports = function createHash (alg) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./md5":80,"buffer":74,"cipher-base":75,"inherits":126,"ripemd160":156,"sha.js":158}],79:[function(require,module,exports){
+},{"./md5":80,"buffer":74,"cipher-base":75,"inherits":126,"ripemd160":157,"sha.js":159}],79:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 var intSize = 4;
@@ -16824,7 +16893,7 @@ module.exports = function createHmac(alg, key) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":74,"create-hash/browser":78,"inherits":126,"stream":166}],82:[function(require,module,exports){
+},{"buffer":74,"create-hash/browser":78,"inherits":126,"stream":167}],82:[function(require,module,exports){
 'use strict'
 
 exports.randomBytes = exports.rng = exports.pseudoRandomBytes = exports.prng = require('randombytes')
@@ -25080,22 +25149,26 @@ if (typeof Object.create === 'function') {
 }
 
 },{}],127:[function(require,module,exports){
-/**
- * Determine if an object is Buffer
+/*!
+ * Determine if an object is a Buffer
  *
- * Author:   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
- * License:  MIT
- *
- * `npm install is-buffer`
+ * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
+ * @license  MIT
  */
 
+// The _isBuffer check is for Safari 5-7 support, because it's missing
+// Object.prototype.constructor. Remove this eventually
 module.exports = function (obj) {
-  return !!(obj != null &&
-    (obj._isBuffer || // For Safari 5-7 (missing Object.prototype.constructor)
-      (obj.constructor &&
-      typeof obj.constructor.isBuffer === 'function' &&
-      obj.constructor.isBuffer(obj))
-    ))
+  return obj != null && (isBuffer(obj) || isSlowBuffer(obj) || !!obj._isBuffer)
+}
+
+function isBuffer (obj) {
+  return !!obj.constructor && typeof obj.constructor.isBuffer === 'function' && obj.constructor.isBuffer(obj)
+}
+
+// For Node v0.10 support. Remove this eventually.
+function isSlowBuffer (obj) {
+  return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
 },{}],128:[function(require,module,exports){
@@ -25113,7 +25186,7 @@ module.exports = Array.isArray || function (arr) {
 require('whatwg-fetch');
 module.exports = self.fetch.bind(self);
 
-},{"whatwg-fetch":174}],130:[function(require,module,exports){
+},{"whatwg-fetch":175}],130:[function(require,module,exports){
 var bn = require('bn.js');
 var brorand = require('brorand');
 
@@ -25674,17 +25747,45 @@ var cachedClearTimeout;
 } ())
 function runTimeout(fun) {
     if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
         return setTimeout(fun, 0);
-    } else {
-        return cachedSetTimeout.call(null, fun, 0);
     }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
 }
 function runClearTimeout(marker) {
     if (cachedClearTimeout === clearTimeout) {
-        clearTimeout(marker);
-    } else {
-        cachedClearTimeout.call(null, marker);
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
     }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
 }
 var queue = [];
 var draining = false;
@@ -26240,21 +26341,21 @@ if (debugUtil && debugUtil.debuglog) {
 }
 /*</replacement>*/
 
+var BufferList = require('./internal/streams/BufferList');
 var StringDecoder;
 
 util.inherits(Readable, Stream);
 
-var hasPrependListener = typeof EE.prototype.prependListener === 'function';
-
 function prependListener(emitter, event, fn) {
-  if (hasPrependListener) return emitter.prependListener(event, fn);
-
-  // This is a brutally ugly hack to make sure that our error handler
-  // is attached before any userland ones.  NEVER DO THIS. This is here
-  // only because this code needs to continue to work with older versions
-  // of Node.js that do not include the prependListener() method. The goal
-  // is to eventually remove this hack.
-  if (!emitter._events || !emitter._events[event]) emitter.on(event, fn);else if (isArray(emitter._events[event])) emitter._events[event].unshift(fn);else emitter._events[event] = [fn, emitter._events[event]];
+  if (typeof emitter.prependListener === 'function') {
+    return emitter.prependListener(event, fn);
+  } else {
+    // This is a hack to make sure that our error handler is attached before any
+    // userland ones.  NEVER DO THIS. This is here only because this code needs
+    // to continue to work with older versions of Node.js that do not include
+    // the prependListener() method. The goal is to eventually remove this hack.
+    if (!emitter._events || !emitter._events[event]) emitter.on(event, fn);else if (isArray(emitter._events[event])) emitter._events[event].unshift(fn);else emitter._events[event] = [fn, emitter._events[event]];
+  }
 }
 
 var Duplex;
@@ -26278,7 +26379,10 @@ function ReadableState(options, stream) {
   // cast to ints.
   this.highWaterMark = ~ ~this.highWaterMark;
 
-  this.buffer = [];
+  // A linked list is used to store data chunks instead of an array because the
+  // linked list can remove elements from the beginning faster than
+  // array.shift()
+  this.buffer = new BufferList();
   this.length = 0;
   this.pipes = null;
   this.pipesCount = 0;
@@ -26441,7 +26545,8 @@ function computeNewHighWaterMark(n) {
   if (n >= MAX_HWM) {
     n = MAX_HWM;
   } else {
-    // Get the next highest power of 2
+    // Get the next highest power of 2 to prevent increasing hwm excessively in
+    // tiny amounts
     n--;
     n |= n >>> 1;
     n |= n >>> 2;
@@ -26453,44 +26558,34 @@ function computeNewHighWaterMark(n) {
   return n;
 }
 
+// This function is designed to be inlinable, so please take care when making
+// changes to the function body.
 function howMuchToRead(n, state) {
-  if (state.length === 0 && state.ended) return 0;
-
-  if (state.objectMode) return n === 0 ? 0 : 1;
-
-  if (n === null || isNaN(n)) {
-    // only flow one buffer at a time
-    if (state.flowing && state.buffer.length) return state.buffer[0].length;else return state.length;
+  if (n <= 0 || state.length === 0 && state.ended) return 0;
+  if (state.objectMode) return 1;
+  if (n !== n) {
+    // Only flow one buffer at a time
+    if (state.flowing && state.length) return state.buffer.head.data.length;else return state.length;
   }
-
-  if (n <= 0) return 0;
-
-  // If we're asking for more than the target buffer level,
-  // then raise the water mark.  Bump up to the next highest
-  // power of 2, to prevent increasing it excessively in tiny
-  // amounts.
+  // If we're asking for more than the current hwm, then raise the hwm.
   if (n > state.highWaterMark) state.highWaterMark = computeNewHighWaterMark(n);
-
-  // don't have that much.  return null, unless we've ended.
-  if (n > state.length) {
-    if (!state.ended) {
-      state.needReadable = true;
-      return 0;
-    } else {
-      return state.length;
-    }
+  if (n <= state.length) return n;
+  // Don't have enough
+  if (!state.ended) {
+    state.needReadable = true;
+    return 0;
   }
-
-  return n;
+  return state.length;
 }
 
 // you can override either this method, or the async _read(n) below.
 Readable.prototype.read = function (n) {
   debug('read', n);
+  n = parseInt(n, 10);
   var state = this._readableState;
   var nOrig = n;
 
-  if (typeof n !== 'number' || n > 0) state.emittedReadable = false;
+  if (n !== 0) state.emittedReadable = false;
 
   // if we're doing read(0) to trigger a readable event, but we
   // already have a bunch of data in the buffer, then just trigger
@@ -26546,9 +26641,7 @@ Readable.prototype.read = function (n) {
   if (state.ended || state.reading) {
     doRead = false;
     debug('reading or ended', doRead);
-  }
-
-  if (doRead) {
+  } else if (doRead) {
     debug('do read');
     state.reading = true;
     state.sync = true;
@@ -26557,11 +26650,10 @@ Readable.prototype.read = function (n) {
     // call internal read method
     this._read(state.highWaterMark);
     state.sync = false;
+    // If _read pushed data synchronously, then `reading` will be false,
+    // and we need to re-evaluate how much data we can return to the user.
+    if (!state.reading) n = howMuchToRead(nOrig, state);
   }
-
-  // If _read pushed data synchronously, then `reading` will be false,
-  // and we need to re-evaluate how much data we can return to the user.
-  if (doRead && !state.reading) n = howMuchToRead(nOrig, state);
 
   var ret;
   if (n > 0) ret = fromList(n, state);else ret = null;
@@ -26569,16 +26661,18 @@ Readable.prototype.read = function (n) {
   if (ret === null) {
     state.needReadable = true;
     n = 0;
+  } else {
+    state.length -= n;
   }
 
-  state.length -= n;
+  if (state.length === 0) {
+    // If we have nothing in the buffer, then we want to know
+    // as soon as we *do* get something into the buffer.
+    if (!state.ended) state.needReadable = true;
 
-  // If we have nothing in the buffer, then we want to know
-  // as soon as we *do* get something into the buffer.
-  if (state.length === 0 && !state.ended) state.needReadable = true;
-
-  // If we tried to read() past the EOF, then emit end on the next tick.
-  if (nOrig !== n && state.ended && state.length === 0) endReadable(this);
+    // If we tried to read() past the EOF, then emit end on the next tick.
+    if (nOrig !== n && state.ended) endReadable(this);
+  }
 
   if (ret !== null) this.emit('data', ret);
 
@@ -26726,11 +26820,17 @@ Readable.prototype.pipe = function (dest, pipeOpts) {
     if (state.awaitDrain && (!dest._writableState || dest._writableState.needDrain)) ondrain();
   }
 
+  // If the user pushes more data while we're writing to dest then we'll end up
+  // in ondata again. However, we only want to increase awaitDrain once because
+  // dest will only emit one 'drain' event for the multiple writes.
+  // => Introduce a guard on increasing awaitDrain.
+  var increasedAwaitDrain = false;
   src.on('data', ondata);
   function ondata(chunk) {
     debug('ondata');
+    increasedAwaitDrain = false;
     var ret = dest.write(chunk);
-    if (false === ret) {
+    if (false === ret && !increasedAwaitDrain) {
       // If the user unpiped during `dest.write()`, it is possible
       // to get stuck in a permanently paused state if that write
       // also returned false.
@@ -26738,6 +26838,7 @@ Readable.prototype.pipe = function (dest, pipeOpts) {
       if ((state.pipesCount === 1 && state.pipes === dest || state.pipesCount > 1 && indexOf(state.pipes, dest) !== -1) && !cleanedUp) {
         debug('false write response, pause', src._readableState.awaitDrain);
         src._readableState.awaitDrain++;
+        increasedAwaitDrain = true;
       }
       src.pause();
     }
@@ -26851,18 +26952,14 @@ Readable.prototype.unpipe = function (dest) {
 Readable.prototype.on = function (ev, fn) {
   var res = Stream.prototype.on.call(this, ev, fn);
 
-  // If listening to data, and it has not explicitly been paused,
-  // then call resume to start the flow of data on the next tick.
-  if (ev === 'data' && false !== this._readableState.flowing) {
-    this.resume();
-  }
-
-  if (ev === 'readable' && !this._readableState.endEmitted) {
+  if (ev === 'data') {
+    // Start flowing on next tick if stream isn't explicitly paused
+    if (this._readableState.flowing !== false) this.resume();
+  } else if (ev === 'readable') {
     var state = this._readableState;
-    if (!state.readableListening) {
-      state.readableListening = true;
+    if (!state.endEmitted && !state.readableListening) {
+      state.readableListening = state.needReadable = true;
       state.emittedReadable = false;
-      state.needReadable = true;
       if (!state.reading) {
         processNextTick(nReadingNextTick, this);
       } else if (state.length) {
@@ -26906,6 +27003,7 @@ function resume_(stream, state) {
   }
 
   state.resumeScheduled = false;
+  state.awaitDrain = 0;
   stream.emit('resume');
   flow(stream);
   if (state.flowing && !state.reading) stream.read(0);
@@ -26924,11 +27022,7 @@ Readable.prototype.pause = function () {
 function flow(stream) {
   var state = stream._readableState;
   debug('flow', state.flowing);
-  if (state.flowing) {
-    do {
-      var chunk = stream.read();
-    } while (null !== chunk && state.flowing);
-  }
+  while (state.flowing && stream.read() !== null) {}
 }
 
 // wrap an old-style stream as the async data source.
@@ -26999,50 +27093,101 @@ Readable._fromList = fromList;
 
 // Pluck off n bytes from an array of buffers.
 // Length is the combined lengths of all the buffers in the list.
+// This function is designed to be inlinable, so please take care when making
+// changes to the function body.
 function fromList(n, state) {
-  var list = state.buffer;
-  var length = state.length;
-  var stringMode = !!state.decoder;
-  var objectMode = !!state.objectMode;
+  // nothing buffered
+  if (state.length === 0) return null;
+
   var ret;
-
-  // nothing in the list, definitely empty.
-  if (list.length === 0) return null;
-
-  if (length === 0) ret = null;else if (objectMode) ret = list.shift();else if (!n || n >= length) {
-    // read it all, truncate the array.
-    if (stringMode) ret = list.join('');else if (list.length === 1) ret = list[0];else ret = Buffer.concat(list, length);
-    list.length = 0;
+  if (state.objectMode) ret = state.buffer.shift();else if (!n || n >= state.length) {
+    // read it all, truncate the list
+    if (state.decoder) ret = state.buffer.join('');else if (state.buffer.length === 1) ret = state.buffer.head.data;else ret = state.buffer.concat(state.length);
+    state.buffer.clear();
   } else {
-    // read just some of it.
-    if (n < list[0].length) {
-      // just take a part of the first list item.
-      // slice is the same for buffers and strings.
-      var buf = list[0];
-      ret = buf.slice(0, n);
-      list[0] = buf.slice(n);
-    } else if (n === list[0].length) {
-      // first list is a perfect match
-      ret = list.shift();
-    } else {
-      // complex case.
-      // we have enough to cover it, but it spans past the first buffer.
-      if (stringMode) ret = '';else ret = bufferShim.allocUnsafe(n);
-
-      var c = 0;
-      for (var i = 0, l = list.length; i < l && c < n; i++) {
-        var _buf = list[0];
-        var cpy = Math.min(n - c, _buf.length);
-
-        if (stringMode) ret += _buf.slice(0, cpy);else _buf.copy(ret, c, 0, cpy);
-
-        if (cpy < _buf.length) list[0] = _buf.slice(cpy);else list.shift();
-
-        c += cpy;
-      }
-    }
+    // read part of list
+    ret = fromListPartial(n, state.buffer, state.decoder);
   }
 
+  return ret;
+}
+
+// Extracts only enough buffered data to satisfy the amount requested.
+// This function is designed to be inlinable, so please take care when making
+// changes to the function body.
+function fromListPartial(n, list, hasStrings) {
+  var ret;
+  if (n < list.head.data.length) {
+    // slice is the same for buffers and strings
+    ret = list.head.data.slice(0, n);
+    list.head.data = list.head.data.slice(n);
+  } else if (n === list.head.data.length) {
+    // first chunk is a perfect match
+    ret = list.shift();
+  } else {
+    // result spans more than one buffer
+    ret = hasStrings ? copyFromBufferString(n, list) : copyFromBuffer(n, list);
+  }
+  return ret;
+}
+
+// Copies a specified amount of characters from the list of buffered data
+// chunks.
+// This function is designed to be inlinable, so please take care when making
+// changes to the function body.
+function copyFromBufferString(n, list) {
+  var p = list.head;
+  var c = 1;
+  var ret = p.data;
+  n -= ret.length;
+  while (p = p.next) {
+    var str = p.data;
+    var nb = n > str.length ? str.length : n;
+    if (nb === str.length) ret += str;else ret += str.slice(0, n);
+    n -= nb;
+    if (n === 0) {
+      if (nb === str.length) {
+        ++c;
+        if (p.next) list.head = p.next;else list.head = list.tail = null;
+      } else {
+        list.head = p;
+        p.data = str.slice(nb);
+      }
+      break;
+    }
+    ++c;
+  }
+  list.length -= c;
+  return ret;
+}
+
+// Copies a specified amount of bytes from the list of buffered data chunks.
+// This function is designed to be inlinable, so please take care when making
+// changes to the function body.
+function copyFromBuffer(n, list) {
+  var ret = bufferShim.allocUnsafe(n);
+  var p = list.head;
+  var c = 1;
+  p.data.copy(ret);
+  n -= p.data.length;
+  while (p = p.next) {
+    var buf = p.data;
+    var nb = n > buf.length ? buf.length : n;
+    buf.copy(ret, ret.length - n, 0, nb);
+    n -= nb;
+    if (n === 0) {
+      if (nb === buf.length) {
+        ++c;
+        if (p.next) list.head = p.next;else list.head = list.tail = null;
+      } else {
+        list.head = p;
+        p.data = buf.slice(nb);
+      }
+      break;
+    }
+    ++c;
+  }
+  list.length -= c;
   return ret;
 }
 
@@ -27081,7 +27226,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'))
-},{"./_stream_duplex":147,"_process":138,"buffer":74,"buffer-shims":72,"core-util-is":76,"events":116,"inherits":126,"isarray":128,"process-nextick-args":137,"string_decoder/":167,"util":43}],150:[function(require,module,exports){
+},{"./_stream_duplex":147,"./internal/streams/BufferList":152,"_process":138,"buffer":74,"buffer-shims":72,"core-util-is":76,"events":116,"inherits":126,"isarray":128,"process-nextick-args":137,"string_decoder/":168,"util":43}],150:[function(require,module,exports){
 // a transform stream is a readable/writable stream where you do
 // something with the data.  Sometimes it's called a "filter",
 // but that's not a great name for it, since that implies a thing where
@@ -27791,10 +27936,75 @@ function CorkedRequest(state) {
   };
 }
 }).call(this,require('_process'))
-},{"./_stream_duplex":147,"_process":138,"buffer":74,"buffer-shims":72,"core-util-is":76,"events":116,"inherits":126,"process-nextick-args":137,"util-deprecate":170}],152:[function(require,module,exports){
+},{"./_stream_duplex":147,"_process":138,"buffer":74,"buffer-shims":72,"core-util-is":76,"events":116,"inherits":126,"process-nextick-args":137,"util-deprecate":171}],152:[function(require,module,exports){
+'use strict';
+
+var Buffer = require('buffer').Buffer;
+/*<replacement>*/
+var bufferShim = require('buffer-shims');
+/*</replacement>*/
+
+module.exports = BufferList;
+
+function BufferList() {
+  this.head = null;
+  this.tail = null;
+  this.length = 0;
+}
+
+BufferList.prototype.push = function (v) {
+  var entry = { data: v, next: null };
+  if (this.length > 0) this.tail.next = entry;else this.head = entry;
+  this.tail = entry;
+  ++this.length;
+};
+
+BufferList.prototype.unshift = function (v) {
+  var entry = { data: v, next: this.head };
+  if (this.length === 0) this.tail = entry;
+  this.head = entry;
+  ++this.length;
+};
+
+BufferList.prototype.shift = function () {
+  if (this.length === 0) return;
+  var ret = this.head.data;
+  if (this.length === 1) this.head = this.tail = null;else this.head = this.head.next;
+  --this.length;
+  return ret;
+};
+
+BufferList.prototype.clear = function () {
+  this.head = this.tail = null;
+  this.length = 0;
+};
+
+BufferList.prototype.join = function (s) {
+  if (this.length === 0) return '';
+  var p = this.head;
+  var ret = '' + p.data;
+  while (p = p.next) {
+    ret += s + p.data;
+  }return ret;
+};
+
+BufferList.prototype.concat = function (n) {
+  if (this.length === 0) return bufferShim.alloc(0);
+  if (this.length === 1) return this.head.data;
+  var ret = bufferShim.allocUnsafe(n >>> 0);
+  var p = this.head;
+  var i = 0;
+  while (p) {
+    p.data.copy(ret, i);
+    i += p.data.length;
+    p = p.next;
+  }
+  return ret;
+};
+},{"buffer":74,"buffer-shims":72}],153:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":148}],153:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":148}],154:[function(require,module,exports){
 (function (process){
 var Stream = (function (){
   try {
@@ -27814,13 +28024,13 @@ if (!process.browser && process.env.READABLE_STREAM === 'disable' && Stream) {
 }
 
 }).call(this,require('_process'))
-},{"./lib/_stream_duplex.js":147,"./lib/_stream_passthrough.js":148,"./lib/_stream_readable.js":149,"./lib/_stream_transform.js":150,"./lib/_stream_writable.js":151,"_process":138}],154:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":147,"./lib/_stream_passthrough.js":148,"./lib/_stream_readable.js":149,"./lib/_stream_transform.js":150,"./lib/_stream_writable.js":151,"_process":138}],155:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":150}],155:[function(require,module,exports){
+},{"./lib/_stream_transform.js":150}],156:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":151}],156:[function(require,module,exports){
+},{"./lib/_stream_writable.js":151}],157:[function(require,module,exports){
 (function (Buffer){
 /*
 CryptoJS v3.1.2
@@ -28034,7 +28244,7 @@ function ripemd160 (message) {
 module.exports = ripemd160
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":74}],157:[function(require,module,exports){
+},{"buffer":74}],158:[function(require,module,exports){
 (function (Buffer){
 // prototype class for hash functions
 function Hash (blockSize, finalSize) {
@@ -28107,7 +28317,7 @@ Hash.prototype._update = function () {
 module.exports = Hash
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":74}],158:[function(require,module,exports){
+},{"buffer":74}],159:[function(require,module,exports){
 var exports = module.exports = function SHA (algorithm) {
   algorithm = algorithm.toLowerCase()
 
@@ -28124,7 +28334,7 @@ exports.sha256 = require('./sha256')
 exports.sha384 = require('./sha384')
 exports.sha512 = require('./sha512')
 
-},{"./sha":159,"./sha1":160,"./sha224":161,"./sha256":162,"./sha384":163,"./sha512":164}],159:[function(require,module,exports){
+},{"./sha":160,"./sha1":161,"./sha224":162,"./sha256":163,"./sha384":164,"./sha512":165}],160:[function(require,module,exports){
 (function (Buffer){
 /*
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-0, as defined
@@ -28221,7 +28431,7 @@ Sha.prototype._hash = function () {
 module.exports = Sha
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":157,"buffer":74,"inherits":126}],160:[function(require,module,exports){
+},{"./hash":158,"buffer":74,"inherits":126}],161:[function(require,module,exports){
 (function (Buffer){
 /*
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-1, as defined
@@ -28323,7 +28533,7 @@ Sha1.prototype._hash = function () {
 module.exports = Sha1
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":157,"buffer":74,"inherits":126}],161:[function(require,module,exports){
+},{"./hash":158,"buffer":74,"inherits":126}],162:[function(require,module,exports){
 (function (Buffer){
 /**
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-256, as defined
@@ -28379,7 +28589,7 @@ Sha224.prototype._hash = function () {
 module.exports = Sha224
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":157,"./sha256":162,"buffer":74,"inherits":126}],162:[function(require,module,exports){
+},{"./hash":158,"./sha256":163,"buffer":74,"inherits":126}],163:[function(require,module,exports){
 (function (Buffer){
 /**
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-256, as defined
@@ -28517,7 +28727,7 @@ Sha256.prototype._hash = function () {
 module.exports = Sha256
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":157,"buffer":74,"inherits":126}],163:[function(require,module,exports){
+},{"./hash":158,"buffer":74,"inherits":126}],164:[function(require,module,exports){
 (function (Buffer){
 var inherits = require('inherits')
 var SHA512 = require('./sha512')
@@ -28577,7 +28787,7 @@ Sha384.prototype._hash = function () {
 module.exports = Sha384
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":157,"./sha512":164,"buffer":74,"inherits":126}],164:[function(require,module,exports){
+},{"./hash":158,"./sha512":165,"buffer":74,"inherits":126}],165:[function(require,module,exports){
 (function (Buffer){
 var inherits = require('inherits')
 var Hash = require('./hash')
@@ -28840,7 +29050,7 @@ Sha512.prototype._hash = function () {
 module.exports = Sha512
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":157,"buffer":74,"inherits":126}],165:[function(require,module,exports){
+},{"./hash":158,"buffer":74,"inherits":126}],166:[function(require,module,exports){
 "use strict";function q(a){throw a;}var r=void 0,s=!1;var sjcl={cipher:{},hash:{},keyexchange:{},mode:{},misc:{},codec:{},exception:{corrupt:function(a){this.toString=function(){return"CORRUPT: "+this.message};this.message=a},invalid:function(a){this.toString=function(){return"INVALID: "+this.message};this.message=a},bug:function(a){this.toString=function(){return"BUG: "+this.message};this.message=a},notReady:function(a){this.toString=function(){return"NOT READY: "+this.message};this.message=a}}};
 "undefined"!==typeof module&&module.exports&&(module.exports=sjcl);"function"===typeof define&&define([],function(){return sjcl});
 sjcl.cipher.aes=function(a){this.n[0][0][0]||this.H();var b,c,d,e,f=this.n[0][4],g=this.n[1];b=a.length;var h=1;4!==b&&(6!==b&&8!==b)&&q(new sjcl.exception.invalid("invalid aes key size"));this.b=[d=a.slice(0),e=[]];for(a=b;a<4*b+28;a++){c=d[a-1];if(0===a%b||8===b&&4===a%b)c=f[c>>>24]<<24^f[c>>16&255]<<16^f[c>>8&255]<<8^f[c&255],0===a%b&&(c=c<<8^c>>>24^h<<24,h=h<<1^283*(h>>7));d[a]=d[a-b]^c}for(b=0;a;b++,a--)c=d[b&3?a:a-4],e[b]=4>=a||4>b?c:g[0][f[c>>>24]]^g[1][f[c>>16&255]]^g[2][f[c>>8&255]]^g[3][f[c&
@@ -28899,7 +29109,7 @@ b.mode&&sjcl.arrayBuffer&&sjcl.arrayBuffer.ccm&&b.ct instanceof ArrayBuffer?sjcl
 q(new sjcl.exception.invalid("json decode: this isn't json!")),null!=d[3]?b[d[2]]=parseInt(d[3],10):null!=d[4]?b[d[2]]=d[2].match(/^(ct|adata|salt|iv)$/)?sjcl.codec.base64.toBits(d[4]):unescape(d[4]):null!=d[5]&&(b[d[2]]="true"===d[5]);return b},h:function(a,b,c){a===r&&(a={});if(b===r)return a;for(var d in b)b.hasOwnProperty(d)&&(c&&(a[d]!==r&&a[d]!==b[d])&&q(new sjcl.exception.invalid("required parameter overridden")),a[d]=b[d]);return a},ja:function(a,b){var c={},d;for(d in a)a.hasOwnProperty(d)&&
 a[d]!==b[d]&&(c[d]=a[d]);return c},ia:function(a,b){var c={},d;for(d=0;d<b.length;d++)a[b[d]]!==r&&(c[b[d]]=a[b[d]]);return c}};sjcl.encrypt=sjcl.json.encrypt;sjcl.decrypt=sjcl.json.decrypt;sjcl.misc.ga={};sjcl.misc.cachedPbkdf2=function(a,b){var c=sjcl.misc.ga,d;b=b||{};d=b.iter||1E3;c=c[a]=c[a]||{};d=c[d]=c[d]||{firstSalt:b.salt&&b.salt.length?b.salt.slice(0):sjcl.random.randomWords(2,0)};c=b.salt===r?d.firstSalt:b.salt;d[c]=d[c]||sjcl.misc.pbkdf2(a,c,b.iter);return{key:d[c].slice(0),salt:c.slice(0)}};
 
-},{"crypto":82}],166:[function(require,module,exports){
+},{"crypto":82}],167:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -29028,7 +29238,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":116,"inherits":126,"readable-stream/duplex.js":146,"readable-stream/passthrough.js":152,"readable-stream/readable.js":153,"readable-stream/transform.js":154,"readable-stream/writable.js":155}],167:[function(require,module,exports){
+},{"events":116,"inherits":126,"readable-stream/duplex.js":146,"readable-stream/passthrough.js":153,"readable-stream/readable.js":154,"readable-stream/transform.js":155,"readable-stream/writable.js":156}],168:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -29251,7 +29461,7 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":74}],168:[function(require,module,exports){
+},{"buffer":74}],169:[function(require,module,exports){
 (function (Buffer){
 var inherits = require('inherits')
 
@@ -29567,7 +29777,7 @@ module.exports.TfTypeError = TfTypeError
 module.exports.TfPropertyTypeError = TfPropertyTypeError
 
 }).call(this,{"isBuffer":require("../is-buffer/index.js")})
-},{"../is-buffer/index.js":127,"inherits":126}],169:[function(require,module,exports){
+},{"../is-buffer/index.js":127,"inherits":126}],170:[function(require,module,exports){
 (function (root) {
    "use strict";
 
@@ -30011,7 +30221,7 @@ UChar.udata={
    }
 }(this));
 
-},{}],170:[function(require,module,exports){
+},{}],171:[function(require,module,exports){
 (function (global){
 
 /**
@@ -30082,14 +30292,14 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],171:[function(require,module,exports){
+},{}],172:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],172:[function(require,module,exports){
+},{}],173:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -30679,7 +30889,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":171,"_process":138,"inherits":126}],173:[function(require,module,exports){
+},{"./support/isBuffer":172,"_process":138,"inherits":126}],174:[function(require,module,exports){
 var indexOf = require('indexof');
 
 var Object_keys = function (obj) {
@@ -30819,7 +31029,7 @@ exports.createContext = Script.createContext = function (context) {
     return copy;
 };
 
-},{"indexof":125}],174:[function(require,module,exports){
+},{"indexof":125}],175:[function(require,module,exports){
 (function(self) {
   'use strict';
 
@@ -31254,7 +31464,7 @@ exports.createContext = Script.createContext = function (context) {
   self.fetch.polyfill = true
 })(typeof self !== 'undefined' ? self : this);
 
-},{}],175:[function(require,module,exports){
+},{}],176:[function(require,module,exports){
 (function (Buffer){
 var bs58check = require('bs58check')
 
@@ -31312,7 +31522,7 @@ module.exports = {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"bs58check":69,"buffer":74}],176:[function(require,module,exports){
+},{"bs58check":69,"buffer":74}],177:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -31332,12 +31542,15 @@ function AccountInfo (object) {
     this._mobile = null;
   }
 
-  this._dialCode = object.dial_code;
+  this._countryCodeGuess = object.country_code; // Country guess by the backend
+  this._dialCode = object.dial_code; // Dialcode guess by the backend
 
   this._isEmailVerified = Boolean(object.email_verified);
   this._isMobileVerified = Boolean(object.sms_verified);
 
   this._currency = object.currency;
+
+  this._invited = object.invited || false;
 
   var notifications = {};
   if (object.notifications_type) {
@@ -31372,6 +31585,10 @@ Object.defineProperties(AccountInfo.prototype, {
         : '+' + this._mobile.countryCode + this._mobile.number.replace(/^0*/, '');
     }
   },
+  'countryCodeGuess': {
+    configurable: false,
+    get: function () { return this._countryCodeGuess; }
+  },
   'dialCode': {
     configurable: false,
     get: function () { return this._dialCode; }
@@ -31392,13 +31609,17 @@ Object.defineProperties(AccountInfo.prototype, {
     configurable: false,
     get: function () { return this._currency; }
   },
+  'invited': {
+    configurable: false,
+    get: function () { return this._invited; }
+  },
   'notifications': {
     configurable: false,
     get: function () { return this._notifications; }
   }
 });
 
-},{"./helpers":185,"assert":16}],177:[function(require,module,exports){
+},{"./helpers":195,"assert":16}],178:[function(require,module,exports){
 'use strict';
 
 module.exports = Address;
@@ -31670,7 +31891,7 @@ Address.prototype.persist = function () {
   return this;
 };
 
-},{"./helpers":185,"./import-export":186,"./rng":191,"./shared":192,"./wallet":201,"./wallet-crypto":195,"bitcoinjs-lib":33,"bs58":68}],178:[function(require,module,exports){
+},{"./helpers":195,"./import-export":196,"./rng":201,"./shared":202,"./wallet":211,"./wallet-crypto":205,"bitcoinjs-lib":33,"bs58":68}],179:[function(require,module,exports){
 'use strict';
 
 module.exports = new API();
@@ -31705,6 +31926,9 @@ API.prototype.encodeFormData = function (data) {
 /* Permitted extra headers:
    sessionToken -> "Authorization Bearer <token>" */
 API.prototype.request = function (action, method, data, extraHeaders) {
+  data = data || {};
+  if (this.API_CODE != null) data.api_code = this.API_CODE;
+
   var url = this.ROOT_URL + method;
   var body = data ? this.encodeFormData(data) : '';
   var time = (new Date()).getTime();
@@ -31795,8 +32019,7 @@ API.prototype.handleNTPResponse = function (obj, clientTime) {
 API.prototype.getBalances = function (addresses) {
   var data = {
     active: addresses.join('|'),
-    format: 'json',
-    api_code: this.API_CODE
+    format: 'json'
   };
   return this.retry(this.request.bind(this, 'POST', 'balance', data));
 };
@@ -31805,8 +32028,7 @@ API.prototype.getTransaction = function (txhash) {
   var transaction = 'tx/' + txhash;
   var data = {
     format: 'json',
-    cors: 'true',
-    api_code: this.API_CODE
+    cors: 'true'
   };
   return this.retry(this.request.bind(this, 'GET', transaction, data));
 };
@@ -31831,14 +32053,13 @@ API.prototype.getFiatAtTime = function (time, value, currencyCode) {
     currency: currencyCode,
     time: time,
     textual: false,
-    nosavecurrency: true,
-    api_code: this.API_CODE
+    nosavecurrency: true
   };
   return this.retry(this.request.bind(this, 'GET', 'frombtc', data));
 };
 
 API.prototype.getTicker = function () {
-  var data = { format: 'json', api_code: this.API_CODE };
+  var data = { format: 'json' };
   // return this.request('GET', 'ticker', data);
   return this.retry(this.request.bind(this, 'GET', 'ticker', data));
 };
@@ -31847,8 +32068,7 @@ API.prototype.getUnspent = function (fromAddresses, confirmations) {
   var data = {
     active: fromAddresses.join('|'),
     confirmations: Helpers.isPositiveNumber(confirmations) ? confirmations : -1,
-    format: 'json',
-    api_code: this.API_CODE
+    format: 'json'
   };
   return this.retry(this.request.bind(this, 'POST', 'unspent', data));
 };
@@ -31866,8 +32086,7 @@ API.prototype.getHistory = function (addresses, txFilter, offset, n, syncBool) {
     ct: clientTime,
     n: n,
     language: WalletStore.getLanguage(),
-    no_buttons: true,
-    api_code: this.API_CODE
+    no_buttons: true
   };
 
   if (txFilter !== undefined && txFilter !== null) {
@@ -31901,7 +32120,6 @@ API.prototype.securePost = function (url, data, extraHeaders) {
     clone.sKDebugOriginalClientTime = now;
     clone.sKDebugOriginalSharedKey = sharedKey;
   }
-  clone.api_code = this.API_CODE;
   clone.format = data.format ? data.format : 'plain';
 
   return this.retry(this.request.bind(this, 'POST', url, clone, extraHeaders));
@@ -31917,7 +32135,6 @@ API.prototype.pushTx = function (txHex, note) {
 
   var data = {
     tx: txHex,
-    api_code: this.API_CODE,
     format: 'plain'
   };
 
@@ -31960,10 +32177,10 @@ API.prototype.exportHistory = function (active, currency, options) {
   };
   if (options.start) data.start = options.start;
   if (options.end) data.end = options.end;
-  return this.request('GET', 'v2/export-history', data);
+  return this.request('POST', 'v2/export-history', data);
 };
 
-},{"./helpers":185,"./wallet":201,"./wallet-crypto":195,"./wallet-store":198,"assert":16,"bitcoinjs-lib":33}],179:[function(require,module,exports){
+},{"./helpers":195,"./wallet":211,"./wallet-crypto":205,"./wallet-store":208,"assert":16,"bitcoinjs-lib":33}],180:[function(require,module,exports){
 'use strict';
 
 module.exports = Block;
@@ -32013,7 +32230,7 @@ Block.fromJSON = function (json) {
   }
 };
 
-},{}],180:[function(require,module,exports){
+},{}],181:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -32212,6 +32429,7 @@ function resendEmailConfirmation (email, success, error) {
 function verifyEmail (code, success, error) {
   API.securePostCallbacks('wallet', { payload: code, length: code.length, method: 'verify-email' }, function (data) {
     WalletStore.sendEvent('msg', {type: 'success', message: data});
+    MyWallet.wallet.accountInfo.isEmailVerified = true;
     typeof (success) === 'function' && success(data);
   }, function (data) {
     WalletStore.sendEvent('msg', {type: 'error', message: data});
@@ -32365,7 +32583,7 @@ module.exports = {
   updateAuthType: updateAuthType
 };
 
-},{"./api":178,"./wallet-store.js":198,"./wallet.js":201,"assert":16}],181:[function(require,module,exports){
+},{"./api":179,"./wallet-store.js":208,"./wallet.js":211,"assert":16}],182:[function(require,module,exports){
 
 var WebSocket = require('ws');
 var Helpers = require('./helpers');
@@ -32472,7 +32690,7 @@ BlockchainSocket.prototype.msgOnOpen = function (guid, addresses, xpubs) {
 
 module.exports = BlockchainSocket;
 
-},{"./helpers":185,"ws":202}],182:[function(require,module,exports){
+},{"./helpers":195,"ws":212}],183:[function(require,module,exports){
 'use strict';
 
 module.exports = Wallet;
@@ -32494,6 +32712,7 @@ var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var KeyRing = require('./keyring');
 var TxList = require('./transaction-list');
 var Block = require('./bitcoin-block');
+var External = require('./external');
 var AccountInfo = require('./account-info');
 
 // Wallet
@@ -32547,6 +32766,7 @@ function Wallet (object) {
   this._txList = new TxList();
   this._latestBlock = null;
   this._accountInfo = null;
+  this._external = null;
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -32688,6 +32908,10 @@ Object.defineProperties(Wallet.prototype, {
     get: function () {
       return !(this._hd_wallets == null || this._hd_wallets.length === 0);
     }
+  },
+  'external': {
+    configurable: false,
+    get: function () { return this._external; }
   },
   'isEncryptionConsistent': {
     configurable: false,
@@ -33152,6 +33376,7 @@ Wallet.prototype.upgradeToV3 = function (firstAccountLabel, pw, success, error) 
   this._hd_wallets.push(hd);
   var label = firstAccountLabel || 'My Bitcoin Wallet';
   this.newAccount(label, pw, this._hd_wallets.length - 1, true);
+  this.loadExternal();
   MyWallet.syncWallet(function (res) {
     success();
   }, error);
@@ -33239,6 +33464,19 @@ Wallet.prototype.getPrivateKeyForAddress = function (address, secondPassword) {
   return pk;
 };
 
+Wallet.prototype.getWIFForAddress = function (address, secondPassword) {
+  assert(address, 'Error: address must be defined');
+  var pkString = this.getPrivateKeyForAddress(address, secondPassword);
+  if (pkString != null) {
+    var key = Helpers.privateKeyStringToKey(pkString, 'base58');
+    if (key.getAddress() !== address.address) {
+      key.compressed = !key.compressed;
+    }
+    return key.toWIF();
+  } else {
+    return null;
+  }
+};
 Wallet.prototype._getPrivateKey = function (accountIndex, path, secondPassword) {
   assert(this.hdwallet.isValidAccountIndex(accountIndex), 'Error: account non-existent');
   assert(Helpers.isString(path), 'Error: path must be an string of the form \'M/0/27\'');
@@ -33258,7 +33496,1549 @@ Wallet.prototype.fetchAccountInfo = function () {
   });
 };
 
-},{"./account-info":176,"./address":177,"./api":178,"./bitcoin-block":179,"./blockchain-settings-api":180,"./hd-wallet":184,"./helpers":185,"./keyring":188,"./rng":191,"./shared":192,"./transaction-list":193,"./wallet":201,"./wallet-crypto":195,"./wallet-store":198,"assert":16,"bip39":22}],183:[function(require,module,exports){
+Wallet.prototype.loadExternal = function () {
+  // patch (buy-sell does not work with double encryption for now)
+  if (this.isDoubleEncrypted === true || !this.isUpgradedToHD) {
+    return Promise.resolve();
+  } else {
+    this._external = new External();
+    return this._external.fetchOrCreate();
+  }
+};
+
+},{"./account-info":177,"./address":178,"./api":179,"./bitcoin-block":180,"./blockchain-settings-api":181,"./external":192,"./hd-wallet":194,"./helpers":195,"./keyring":198,"./rng":201,"./shared":202,"./transaction-list":203,"./wallet":211,"./wallet-crypto":205,"./wallet-store":208,"assert":16,"bip39":22}],184:[function(require,module,exports){
+'use strict';
+
+module.exports = Address;
+
+function Address (obj) {
+  this._street = obj.street;
+  this._city = obj.city;
+  this._state = obj.state;
+  this._zipcode = obj.zipcode;
+  this._country = obj.country;
+}
+
+Object.defineProperties(Address.prototype, {
+  'city': {
+    configurable: false,
+    get: function () {
+      return this._city;
+    }
+  },
+  'country': {
+    configurable: false,
+    get: function () {
+      return this._country;
+    }
+  },
+  'state': { // ISO 3166-2, the part after the dash
+    configurable: false,
+    get: function () {
+      return this._state;
+    }
+  },
+  'street': {
+    configurable: false,
+    get: function () {
+      return this._street;
+    }
+  },
+  'zipcode': {
+    configurable: false,
+    get: function () {
+      return this._zipcode;
+    }
+  }
+});
+
+},{}],185:[function(require,module,exports){
+'use strict';
+
+var Address = require('./address');
+
+module.exports = BankAccount;
+
+function BankAccount (obj) {
+  this._id = obj.id; // Not used in buy
+  this._type = obj.account.type; // Missing in API
+  this._currency = obj.account.currency; // Missing in API
+  this._bic = obj.account.bic;
+  this._number = obj.account.number;
+  this._bank_name = obj.bank.name;
+  this._bank_address = new Address(obj.bank.address);
+  this._holder_name = obj.bank.name;
+  this._holder_address = new Address(obj.holder.address);
+  this._referenceText = obj.referenceText;
+  this._updated_at = obj.updateTime; // Not used in buy
+  this._created_at = obj.createTime; // Not used in buy
+}
+
+Object.defineProperties(BankAccount.prototype, {
+  // 'id': {
+  //   configurable: false,
+  //   get: function () {
+  //     return this._id;
+  //   }
+  // },
+  'type': {
+    configurable: false,
+    get: function () {
+      return this._type;
+    }
+  },
+  'currency': {
+    configurable: false,
+    get: function () {
+      return this._currency;
+    }
+  },
+  'bic': {
+    configurable: false,
+    get: function () {
+      return this._bic;
+    }
+  },
+  'number': {
+    configurable: false,
+    get: function () {
+      return this._number;
+    }
+  },
+  'bankName': {
+    configurable: false,
+    get: function () {
+      return this._bank_name;
+    }
+  },
+  'bankAddress': {
+    configurable: false,
+    get: function () {
+      return this._bank_address;
+    }
+  },
+  'holderName': {
+    configurable: false,
+    get: function () {
+      return this._holder_name;
+    }
+  },
+  'holderAddress': {
+    configurable: false,
+    get: function () {
+      return this._holder_address;
+    }
+  },
+  'referenceText': {
+    configurable: false,
+    get: function () {
+      return this._referenceText;
+    }
+  }
+  // 'createdAt': {
+  //   configurable: false,
+  //   get: function () {
+  //     return this._created_at;
+  //   }
+  // },
+  // 'updatedAt': {
+  //   configurable: false,
+  //   get: function () {
+  //     return this._updated_at;
+  //   }
+  // }
+});
+
+},{"./address":184}],186:[function(require,module,exports){
+'use strict';
+
+var CoinifyProfile = require('./profile');
+var CoinifyTrade = require('./trade');
+var CoinifyKYC = require('./kyc');
+var PaymentMethod = require('./payment-method');
+var ExchangeRate = require('./exchange-rate');
+
+var MyWallet = require('../wallet');
+var Helpers = require('../helpers');
+var API = require('../api');
+
+var assert = require('assert');
+
+module.exports = Coinify;
+
+function Coinify (object, parent) {
+  var obj = object || {};
+  this._parent = parent; // parent this of external (for save)
+  this._partner_id = null;
+  this._user = obj.user;
+  this._offline_token = obj.offline_token;
+  this._auto_login = obj.auto_login;
+  this._rootURL = 'https://app-api.coinify.com/';
+
+  this._profile = new CoinifyProfile(this);
+  this._lastQuote = null;
+
+  this._loginExpiresAt = null;
+
+  this._trades = [];
+  if (obj.trades) {
+    for (var i = 0; i < obj.trades.length; i++) {
+      this._trades.push(new CoinifyTrade(obj.trades[i], this));
+    }
+  }
+
+  this._kycs = [];
+
+  this.exchangeRate = new ExchangeRate(this);
+}
+
+Object.defineProperties(Coinify.prototype, {
+  'user': {
+    configurable: false,
+    get: function () { return this._user; }
+  },
+  'autoLogin': {
+    configurable: false,
+    get: function () { return this._auto_login; },
+    set: function (value) {
+      assert(
+        Helpers.isBoolean(value),
+        'Boolean'
+      );
+      this._auto_login = value;
+      this.save();
+    }
+  },
+  'profile': {
+    configurable: false,
+    get: function () {
+      if (!this._profile._did_fetch) {
+        return null;
+      } else {
+        return this._profile;
+      }
+    }
+  },
+  'trades': {
+    configurable: false,
+    get: function () {
+      return this._trades;
+    }
+  },
+  'kycs': {
+    configurable: false,
+    get: function () {
+      return this._kycs;
+    }
+  },
+  'paymentMethods': {
+    configurable: false,
+    get: function () {
+      return this._payment_methods;
+    }
+  },
+  'isLoggedIn': {
+    configurable: false,
+    get: function () {
+      // Debug: + 60 * 19 * 1000 expires the login after 1 minute
+      var tenSecondsAgo = new Date(new Date().getTime() + 10000);
+      return Boolean(this._access_token) && this._loginExpiresAt > tenSecondsAgo;
+    }
+  },
+  'partnerId': {
+    configurable: false,
+    get: function () {
+      return this._partner_id;
+    },
+    set: function (value) {
+      this._partner_id = value;
+    }
+  }
+});
+
+Coinify.prototype.toJSON = function () {
+  var coinify = {
+    user: this._user,
+    offline_token: this._offline_token,
+    auto_login: this._auto_login,
+    trades: CoinifyTrade.filteredTrades(this._trades)
+  };
+
+  return coinify;
+};
+Coinify.prototype.save = function () {
+  return this._parent.save();
+};
+// Country and default currency must be set
+// Email must be set and verified
+Coinify.prototype.signup = function (countryCode) {
+  var runChecks = function () {
+    assert(!this.user, 'Already signed up');
+
+    assert(
+      countryCode &&
+      Helpers.isString(countryCode) &&
+      countryCode.length === 2 &&
+      countryCode.match(/[a-zA-Z]{2}/),
+      'ISO 3166-1 alpha-2'
+    );
+
+    assert(MyWallet.wallet.accountInfo.email, 'email required');
+    assert(MyWallet.wallet.accountInfo.isEmailVerified, 'email must be verified');
+    assert(MyWallet.wallet.accountInfo.currency, 'default currency required');
+  };
+
+  var doSignup = function (emailToken) {
+    assert(emailToken, 'email token missing');
+    return this.POST('signup/trader', {
+      email: MyWallet.wallet.accountInfo.email,
+      partnerId: this.partnerId,
+      defaultCurrency: MyWallet.wallet.accountInfo.currency, // ISO 4217
+      profile: {
+        address: {
+          country: countryCode.toUpperCase()
+        }
+      },
+      trustedEmailValidationToken: emailToken,
+      generateOfflineToken: true
+    });
+  };
+
+  var saveMetadata = function (res) {
+    this._user = res.trader.id;
+    this._offline_token = res.offlineToken;
+    return this.save().then(function () { return res; });
+  };
+
+  return Promise.resolve().then(runChecks.bind(this))
+                          .then(this.getEmailToken.bind(this))
+                          .then(doSignup.bind(this))
+                          .then(saveMetadata.bind(this));
+};
+
+Coinify.prototype.getEmailToken = function () {
+  return API.request(
+    'GET',
+    'wallet/signed-email-token',
+    {
+      guid: MyWallet.wallet.guid,
+      sharedKey: MyWallet.wallet.sharedKey
+    }
+  ).then(function (res) {
+    if (res.success) {
+      return res.token;
+    } else {
+      throw new Error('Unable to obtain email verification proof');
+    }
+  });
+};
+
+Coinify.prototype.login = function () {
+  var parentThis = this;
+
+  var promise = new Promise(function (resolve, reject) {
+    assert(parentThis._offline_token, 'Offline token required');
+
+    var loginSuccess = function (res) {
+      parentThis._access_token = res.access_token;
+      parentThis._loginExpiresAt = new Date(new Date().getTime() + res.expires_in * 1000);
+      resolve();
+    };
+
+    var loginFailed = function (e) {
+      reject(e);
+    };
+    parentThis.POST('auth', {
+      grant_type: 'offline_token',
+      offline_token: parentThis._offline_token
+    }).then(loginSuccess).catch(loginFailed);
+  });
+
+  return promise;
+};
+
+Coinify.prototype.fetchProfile = function () {
+  var parentThis = this;
+
+  if (this.isLoggedIn) {
+    return this._profile.fetch();
+  } else {
+    return this.login().then(function () {
+      return parentThis._profile.fetch();
+    });
+  }
+};
+
+Coinify.prototype.getBuyQuote = function (amount, baseCurrency) {
+  assert(baseCurrency, 'Specify currency');
+  // Use (and cache) getBuyCurrencies()
+  if (['BTC', 'EUR', 'GBP', 'USD', 'DKK'].indexOf(baseCurrency) === -1) {
+    return Promise.reject('base_currency_not_supported');
+  }
+
+  return this.getQuote(-amount, baseCurrency);
+};
+
+Coinify.prototype.getSellQuote = function (amount, baseCurrency) {
+  assert(baseCurrency, 'Specify currency');
+  // Use (and cache) getBuyCurrencies()
+  if (['BTC', 'EUR', 'GBP', 'USD', 'DKK'].indexOf(baseCurrency) === -1) {
+    return Promise.reject('base_currency_not_supported');
+  }
+
+  return this.getQuote(amount, baseCurrency);
+};
+
+Coinify.prototype.getQuote = function (amount, baseCurrency) {
+  var self = this;
+
+  var processQuote = function (quote) {
+    var expiresAt = new Date(quote.expiryTime);
+
+    // Debug, make quote expire in 15 seconds:
+    // expiresAt = new Date(new Date().getTime() + 15 * 1000);
+
+    self._lastQuote = {
+      id: quote.id,
+      baseCurrency: quote.baseCurrency,
+      quoteCurrency: quote.quoteCurrency,
+      baseAmount: quote.baseAmount,
+      quoteAmount: quote.quoteAmount,
+      expiresAt: expiresAt
+    };
+    return Promise.resolve(self._lastQuote);
+  };
+
+  var getQuote = function (profile) {
+    baseCurrency = baseCurrency || profile.defaultCurrency;
+    var quoteCurrency = baseCurrency === 'BTC' ? profile.defaultCurrency : 'BTC';
+
+    return self.POST('trades/quote', {
+      baseCurrency: baseCurrency,
+      quoteCurrency: quoteCurrency,
+      baseAmount: amount
+    });
+  };
+
+  if (this._offline_token == null) {
+    return getQuote();
+  }
+  if (this.profile === null) {
+    return this.fetchProfile().then(getQuote).then(processQuote);
+  } else {
+    if (!this.isLoggedIn) {
+      return this.login().then(function () { getQuote(self.profile); }).then(processQuote);
+    } else {
+      return getQuote(this.profile).then(processQuote);
+    }
+  }
+};
+
+Coinify.prototype.buy = function (amount, baseCurrency, medium) {
+  assert(this._lastQuote !== null, 'You must first obtain a quote');
+  assert(this._lastQuote.baseAmount === -amount, 'Amount must match last quote');
+  assert(this._lastQuote.baseCurrency === baseCurrency, 'Currency must match last quote');
+  assert(this._lastQuote.expiresAt > new Date(), 'Quote expired');
+  assert(medium === 'bank' || medium === 'card', 'Specify bank or card');
+
+  var self = this;
+
+  var doBuy = function () {
+    return CoinifyTrade.buy(self._lastQuote, medium, self);
+  };
+
+  if (!this.isLoggedIn) {
+    return this.login().then(doBuy);
+  } else {
+    return doBuy();
+  }
+};
+
+Coinify.prototype.getTrades = function () {
+  return CoinifyTrade.fetchAll(this);
+};
+
+Coinify.prototype.triggerKYC = function () {
+  var self = this;
+
+  var doKYC = function () {
+    return CoinifyKYC.trigger(self);
+  };
+
+  if (!this.isLoggedIn) {
+    return this.login().then(doKYC);
+  } else {
+    return doKYC();
+  }
+};
+
+Coinify.prototype.getKYCs = function () {
+  return CoinifyKYC.fetchAll(this);
+};
+
+Coinify.prototype.getPaymentMethods = function (inCurrency, outCurrency) {
+  assert(inCurrency, 'In currency required');
+  assert(outCurrency, 'Out currency required');
+  return PaymentMethod.fetchAll(inCurrency, outCurrency, this);
+};
+
+Coinify.prototype.getBuyMethods = function () {
+  return PaymentMethod.fetchAll(undefined, 'BTC', this);
+};
+
+Coinify.prototype.getBuyCurrencies = function () {
+  var getCurrencies = function (paymentMethods) {
+    var currencies = [];
+    for (var i = 0; i < paymentMethods.length; i++) {
+      var paymentMethod = paymentMethods[i];
+      for (var j = 0; j < paymentMethod.inCurrencies.length; j++) {
+        var inCurrency = paymentMethod.inCurrencies[j];
+        if (currencies.indexOf(inCurrency) === -1) {
+          currencies.push(paymentMethod.inCurrencies[j]);
+        }
+      }
+    }
+    return currencies;
+  };
+  return this.getBuyMethods().then(getCurrencies);
+};
+
+Coinify.prototype.getSellMethods = function () {
+  return PaymentMethod.fetchAll('BTC', undefined, this);
+};
+
+Coinify.prototype.getSellCurrencies = function () {
+  var getCurrencies = function (paymentMethods) {
+    var currencies = [];
+    for (var i = 0; i < paymentMethods.length; i++) {
+      var paymentMethod = paymentMethods[i];
+      for (var j = 0; j < paymentMethod.outCurrencies.length; j++) {
+        var outCurrency = paymentMethod.outCurrencies[j];
+        if (currencies.indexOf(outCurrency) === -1) {
+          currencies.push(paymentMethod.outCurrencies[j]);
+        }
+      }
+    }
+    return currencies;
+  };
+  return this.getSellMethods().then(getCurrencies);
+};
+
+Coinify.prototype.monitorPayments = function () {
+  CoinifyTrade.monitorPayments(this);
+};
+
+Coinify.prototype.GET = function (endpoint, data) {
+  return this.request('GET', endpoint, data);
+};
+
+Coinify.prototype.POST = function (endpoint, data) {
+  return this.request('POST', endpoint, data);
+};
+
+Coinify.prototype.PATCH = function (endpoint, data) {
+  return this.request('PATCH', endpoint, data);
+};
+
+Coinify.prototype.request = function (method, endpoint, data) {
+  var url = this._rootURL + endpoint;
+
+  var options = {
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'omit'
+  };
+
+  if (this.isLoggedIn) {
+    options.headers['Authorization'] = 'Bearer ' + this._access_token;
+  }
+
+  if (method === 'GET') {
+    url += '?' + API.encodeFormData(data);
+  } else {
+    options.body = JSON.stringify(data);
+  }
+
+  options.method = method;
+
+  var handleNetworkError = function (e) {
+    return Promise.reject({ error: 'COINIFY_CONNECT_ERROR', message: e });
+  };
+
+  var checkStatus = function (response) {
+    if (response.status === 204) {
+      return;
+    } else if (response.status >= 200 && response.status < 300) {
+      return response.json();
+    } else {
+      return response.text().then(Promise.reject.bind(Promise));
+    }
+  };
+
+  return fetch(url, options)
+    .catch(handleNetworkError)
+    .then(checkStatus);
+};
+
+Coinify.new = function (parent) {
+  var object = {
+    auto_login: true
+  };
+  var coinify = new Coinify(object, parent);
+  return coinify;
+};
+
+},{"../api":179,"../helpers":195,"../wallet":211,"./exchange-rate":187,"./kyc":188,"./payment-method":189,"./profile":190,"./trade":191,"assert":16}],187:[function(require,module,exports){
+'use strict';
+
+var assert = require('assert');
+
+module.exports = ExchangeRate;
+
+function ExchangeRate (coinify) {
+  this._coinify = coinify;
+}
+
+ExchangeRate.prototype.get = function (baseCurrency, quoteCurrency) {
+  var self = this;
+  var performChecks = function () {
+    assert(baseCurrency, 'Base currency required');
+    assert(quoteCurrency, 'Quote currency required');
+  };
+  var getRate = function () {
+    return self._coinify.GET('rates/approximate', {
+      baseCurrency: baseCurrency,
+      quoteCurrency: quoteCurrency
+    });
+  };
+  var processRate = function (res) {
+    return res.rate;
+  };
+  return Promise.resolve()
+    .then(performChecks)
+    .then(getRate)
+    .then(processRate);
+};
+
+},{"assert":16}],188:[function(require,module,exports){
+'use strict';
+
+module.exports = CoinifyKYC;
+
+function CoinifyKYC (obj, coinify) {
+  this._coinify = coinify;
+  this._id = obj.id;
+  this._createdAt = new Date(obj.createTime);
+  this.set(obj);
+}
+
+CoinifyKYC.prototype.set = function (obj) {
+  this._state = obj.state;
+  this._iSignThisID = obj.externalId;
+  this._updatedAt = new Date(obj.updateTime);
+};
+
+Object.defineProperties(CoinifyKYC.prototype, {
+  'id': {
+    configurable: false,
+    get: function () {
+      return this._id;
+    }
+  },
+  'state': {
+    configurable: false,
+    get: function () {
+      return this._state;
+    }
+  },
+  'iSignThisID': {
+    configurable: false,
+    get: function () {
+      return this._iSignThisID;
+    }
+  },
+  'createdAt': {
+    configurable: false,
+    get: function () {
+      return this._createdAt;
+    }
+  },
+  'updatedAt': {
+    configurable: false,
+    get: function () {
+      return this._updatedAt;
+    }
+  }
+});
+
+CoinifyKYC.prototype.refresh = function () {
+  var updateTrade = function () {
+    return this._coinify.GET('kyc/' + this._id).then(this.set.bind(this));
+  };
+  if (this._coinify.isLoggedIn) {
+    return updateTrade.bind(this)();
+  } else {
+    return this._coinify.login().then(updateTrade.bind(this));
+  }
+};
+
+CoinifyKYC.trigger = function (coinify) {
+  var processKYC = function (res) {
+    var kyc = new CoinifyKYC(res, coinify);
+    coinify._kycs.push(kyc);
+    return kyc;
+  };
+
+  return coinify.POST('traders/me/kyc').then(processKYC);
+};
+
+// Fetches the latest trades and updates coinify._trades
+CoinifyKYC.fetchAll = function (coinify) {
+  var getKycs = function () {
+    return coinify.GET('kyc').then(function (res) {
+      coinify._kycs.length = 0; // empty array without losing reference
+      for (var i = 0; i < res.length; i++) {
+        var kyc = new CoinifyKYC(res[i], coinify);
+        coinify._kycs.push(kyc);
+      }
+
+      return coinify._kycs;
+    });
+  };
+
+  if (coinify.isLoggedIn) {
+    return getKycs();
+  } else {
+    return coinify.login().then(getKycs);
+  }
+};
+
+},{}],189:[function(require,module,exports){
+'use strict';
+
+module.exports = PaymentMethod;
+
+function PaymentMethod (obj, coinify) {
+  this._coinify = coinify;
+  this._inMedium = obj.inMedium;
+  this._outMedium = obj.outMedium;
+  this._name = obj.name;
+
+  this._inCurrencies = obj.inCurrencies;
+  this._outCurrencies = obj.outCurrencies;
+
+  this._inCurrency = obj.inCurrency;
+  this._outCurrency = obj.outCurrency;
+
+  this._inFixedFee = obj.inFixedFee;
+  this._outFixedFee = obj.outFixedFee;
+  this._inPercentageFee = obj.inPercentageFee;
+  this._outPercentageFee = obj.outPercentageFee;
+}
+
+Object.defineProperties(PaymentMethod.prototype, {
+  'inMedium': {
+    configurable: false,
+    get: function () {
+      return this._inMedium;
+    }
+  },
+  'outMedium': {
+    configurable: false,
+    get: function () {
+      return this._outMedium;
+    }
+  },
+  'name': {
+    configurable: false,
+    get: function () {
+      return this._name;
+    }
+  },
+  'inCurrencies': {
+    configurable: false,
+    get: function () {
+      return this._inCurrencies;
+    }
+  },
+  'outCurrencies': {
+    configurable: false,
+    get: function () {
+      return this._outCurrencies;
+    }
+  },
+  'inCurrency': {
+    configurable: false,
+    get: function () {
+      return this._inCurrency;
+    }
+  },
+  'outCurrency': {
+    configurable: false,
+    get: function () {
+      return this._outCurrency;
+    }
+  },
+  'inFixedFee': {
+    configurable: false,
+    get: function () {
+      return this._inFixedFee;
+    }
+  },
+  'outFixedFee': {
+    configurable: false,
+    get: function () {
+      return this._outFixedFee;
+    }
+  },
+  'inPercentageFee': {
+    configurable: false,
+    get: function () {
+      return this._inPercentageFee;
+    }
+  },
+  'outPercentageFee': {
+    configurable: false,
+    get: function () {
+      return this._outPercentageFee;
+    }
+  }
+});
+
+PaymentMethod.fetchAll = function (inCurrency, outCurrency, coinify) {
+  var getPaymentMethods = function () {
+    var params = {};
+    if (inCurrency) { params.inCurrency = inCurrency; }
+    if (outCurrency) { params.outCurrency = outCurrency; }
+
+    var output = [];
+    return coinify.GET('trades/payment-methods', params).then(function (res) {
+      output.length = 0;
+      for (var i = 0; i < res.length; i++) {
+        output.push(new PaymentMethod(res[i], coinify));
+      }
+      return Promise.resolve(output);
+    });
+  };
+
+  if (coinify.isLoggedIn) {
+    return getPaymentMethods();
+  } else {
+    return coinify.login().then(getPaymentMethods);
+  }
+};
+
+},{}],190:[function(require,module,exports){
+'use strict';
+
+var assert = require('assert');
+
+module.exports = CoinifyProfile;
+
+function CoinifyProfile (coinify) {
+  this._coinify = coinify;
+  this._did_fetch;
+}
+
+Object.defineProperties(CoinifyProfile.prototype, {
+  'fullName': {
+    configurable: false,
+    get: function () {
+      return this._full_name;
+    }
+  },
+  'defaultCurrency': { // read-only
+    configurable: false,
+    get: function () {
+      return this._default_currency;
+    }
+  },
+  'email': { // ready-only
+    configurable: false,
+    get: function () {
+      return this._email;
+    }
+  },
+  'gender': {
+    configurable: false,
+    get: function () {
+      return this._gender;
+    }
+  },
+  'mobile': { // setter not implemented yet
+    configurable: false,
+    get: function () {
+      return this._mobile;
+    }
+  },
+  'city': {
+    configurable: false,
+    get: function () {
+      return this._city;
+    }
+  },
+  'country': {
+    configurable: false,
+    get: function () {
+      return this._country;
+    }
+  },
+  'state': { // ISO 3166-2, the part after the dash
+    configurable: false,
+    get: function () {
+      return this._state;
+    }
+  },
+  'street': {
+    configurable: false,
+    get: function () {
+      return this._street;
+    }
+  },
+  'zipcode': {
+    configurable: false,
+    get: function () {
+      return this._zipcode;
+    }
+  },
+  'level': {
+    configurable: false,
+    get: function () {
+      return this._level;
+    }
+  },
+  'nextLevel': {
+    configurable: false,
+    get: function () {
+      return this._nextLevel;
+    }
+  },
+  'currentLimits': {
+    configurable: false,
+    get: function () {
+      return this._currentLimits;
+    }
+  }
+});
+
+CoinifyProfile.prototype.fetch = function () {
+  var parentThis = this;
+  return this._coinify.GET('traders/me').then(function (res) {
+    parentThis._full_name = res.profile.name;
+    parentThis._gender = res.profile.gender;
+
+    parentThis._email = res.email;
+
+    if (res.profile.mobile.countryCode) {
+      parentThis._mobile = '+' + res.profile.mobile.countryCode + res.profile.mobile.number.replace('-', '');
+    }
+
+    parentThis._default_currency = res.defaultCurrency;
+
+    // TODO: use new Address(res.profile.address);
+    parentThis._street = res.profile.address.street;
+    parentThis._city = res.profile.address.city;
+    parentThis._state = res.profile.address.state;
+    parentThis._zipcode = res.profile.address.zipcode;
+    parentThis._country = res.profile.address.country;
+
+    parentThis._level = res.level;
+    parentThis._nextLevel = res.nextLevel;
+    parentThis._currentLimits = res.currentLimits;
+
+    parentThis._did_fetch = true;
+
+    return parentThis;
+  });
+};
+
+CoinifyProfile.prototype.setFullName = function (value) {
+  var parentThis = this;
+
+  return this.update({profile: {name: value}}).then(function (res) {
+    parentThis._full_name = res.profile.name;
+  });
+};
+
+CoinifyProfile.prototype.setGender = function (value) {
+  assert(value === null || value === 'male' || value === 'female', 'invalid gender');
+  var parentThis = this;
+
+  return this.update({profile: {gender: value}}).then(function (res) {
+    parentThis._gender = res.profile.gender;
+  });
+};
+
+CoinifyProfile.prototype.setCity = function (value) {
+  var parentThis = this;
+
+  return this.update({profile: {address: {city: value}}}).then(function (res) {
+    parentThis._city = res.profile.address.city;
+  });
+};
+
+CoinifyProfile.prototype.setCountry = function (value) {
+  var parentThis = this;
+
+  return this.update({profile: {address: {country: value}}}).then(function (res) {
+    parentThis._country = res.profile.address.country;
+  });
+};
+
+CoinifyProfile.prototype.setState = function (value) {
+  var parentThis = this;
+
+  return this.update({profile: {address: {state: value}}}).then(function (res) {
+    parentThis._state = res.profile.address.state;
+  });
+};
+
+CoinifyProfile.prototype.setStreet = function (value) {
+  var parentThis = this;
+
+  return this.update({profile: {address: {street: value}}}).then(function (res) {
+    parentThis._street = res.profile.address.street;
+  });
+};
+
+CoinifyProfile.prototype.setZipcode = function (value) {
+  var parentThis = this;
+  return this.update({profile: {address: {zipcode: value}}}).then(function (res) {
+    parentThis._zipcode = res.profile.address.zipcode;
+  });
+};
+
+CoinifyProfile.prototype.update = function (values) {
+  return this._coinify.PATCH('traders/me', values);
+};
+
+},{"assert":16}],191:[function(require,module,exports){
+'use strict';
+
+var WalletStore = require('../wallet-store');
+var API = require('../api');
+var assert = require('assert');
+var Helpers = require('../helpers');
+var MyWallet = require('../wallet');
+var TX = require('../wallet-transaction');
+
+var BankAccount = require('./bank-account');
+
+module.exports = CoinifyTrade;
+
+function CoinifyTrade (obj, coinify) {
+  this._coinify = coinify;
+  this._id = obj.id;
+  this.set(obj);
+}
+
+Object.defineProperties(CoinifyTrade.prototype, {
+  'id': {
+    configurable: false,
+    get: function () {
+      return this._id;
+    }
+  },
+  'iSignThisID': {
+    configurable: false,
+    get: function () {
+      return this._iSignThisID;
+    }
+  },
+  'bankAccount': {
+    configurable: false,
+    get: function () {
+      return this._bankAccount;
+    }
+  },
+  'createdAt': {
+    configurable: false,
+    get: function () {
+      return this._createdAt;
+    }
+  },
+  'inCurrency': {
+    configurable: false,
+    get: function () {
+      return this._inCurrency;
+    }
+  },
+  'outCurrency': {
+    configurable: false,
+    get: function () {
+      return this._outCurrency;
+    }
+  },
+  'inAmount': {
+    configurable: false,
+    get: function () {
+      return this._inAmount;
+    }
+  },
+  'medium': {
+    configurable: false,
+    get: function () {
+      return this._medium;
+    }
+  },
+  'state': {
+    configurable: false,
+    get: function () {
+      return this._state;
+    }
+  },
+  'outAmountExpected': {
+    configurable: false,
+    get: function () {
+      return this._outAmountExpected;
+    }
+  },
+  'receiptUrl': {
+    configurable: false,
+    get: function () {
+      return this._receiptUrl;
+    }
+  },
+  'receiveAddress': {
+    configurable: false,
+    get: function () {
+      return this._receiveAddress;
+    }
+  },
+  'bitcoinReceived': {
+    configurable: false,
+    get: function () {
+      return this._bitcoinReceived;
+    }
+  },
+  'confirmed': {
+    configurable: false,
+    get: function () {
+      return this._confirmed || this._confirmations >= 3;
+    }
+  },
+  'isBuy': {
+    configurable: false,
+    get: function () {
+      if (Boolean(this._is_buy) === this._is_buy) {
+        return this._is_buy;
+      } else if (this._is_buy === undefined && this.outCurrency === undefined) {
+        return true; // For older test wallets, can be safely removed later.
+      } else {
+        return this.outCurrency === 'BTC';
+      }
+    }
+  }
+});
+
+CoinifyTrade.prototype.set = function (obj) {
+  var account;
+  this._createdAt = new Date(obj.createTime);
+  this._state = obj.state;
+  this._is_buy = obj.is_buy;
+  if (obj.confirmed === Boolean(obj.confirmed)) { // Constructed from metadata JSON
+    if (Helpers.isPositiveInteger(obj.account_index)) {
+      account = MyWallet.wallet.hdwallet.accounts[obj.account_index];
+      this._receiveAddress = account.receiveAddressAtIndex(obj.receive_index);
+    }
+
+    this._confirmed = obj.confirmed;
+    if (obj.confirmed) {
+      this._bitcoinReceived = true;
+    }
+    this._txHash = obj.tx_hash;
+    this._account_index = obj.account_index;
+    this._receive_index = obj.receive_index;
+  } else { // Contructed from Coinify API
+    if (
+      Helpers.isPositiveInteger(this._account_index) &&
+      Helpers.isPositiveInteger(this._receive_index)
+    ) {
+      account = MyWallet.wallet.hdwallet.accounts[this._account_index];
+      var receiveAddress = account.receiveAddressAtIndex(this._receive_index);
+      assert(obj.transferOut.details.account === receiveAddress, 'Unexpected receive address');
+    } else {
+      this._receiveAddress = obj.transferOut.details.account;
+    }
+    this._inCurrency = obj.inCurrency;
+    this._outCurrency = obj.outCurrency;
+    this._inAmount = obj.inAmount;
+    this._medium = obj.transferIn.medium;
+    if (this._medium === 'bank') {
+      this._bankAccount = new BankAccount(obj.transferIn.details);
+    }
+    this._outAmountExpected = obj.outAmountExpected;
+    this._receiveAddress = obj.transferOut.details.account;
+    this._iSignThisID = obj.transferIn.details.paymentId;
+    this._receiptUrl = obj.receiptUrl;
+    if (!this.bitcoinReceived) {
+      this._bitcoinReceived = null;
+    }
+    return this;
+  }
+};
+
+CoinifyTrade.prototype.removeLabeledAddress = function () {
+  var account;
+  if (this._account_index && Helpers.isPositiveInteger(this._receive_index)) {
+    account = MyWallet.wallet.hdwallet.accounts[this._account_index];
+    account.removeLabelForReceivingAddress(this._receive_index);
+  }
+};
+
+CoinifyTrade.prototype.cancel = function () {
+  var self = this;
+
+  var processCancel = function (trade) {
+    self._state = trade.state;
+
+    self.removeLabeledAddress.bind(self)();
+
+    return self._coinify.save();
+  };
+
+  var cancelOrder = function () {
+    return self._coinify.PATCH('trades/' + self._id + '/cancel').then(processCancel);
+  };
+
+  if (this._coinify.isLoggedIn) {
+    return cancelOrder();
+  } else {
+    return this._coinify.login().then(cancelOrder);
+  }
+};
+
+// Checks the balance for the receive address and monitors the websocket if needed:
+// Call this method long before the user completes the purchase:
+// trade.watchAddress.then(() => ...);
+CoinifyTrade.prototype.watchAddress = function () {
+  var self = this;
+  var promise = new Promise(function (resolve, reject) {
+    self._watchAddressResolve = resolve;
+  });
+  return promise;
+};
+
+CoinifyTrade.prototype.btcExpected = function () {
+  var self = this;
+  if (this.isBuy) {
+    if ([
+      'completed',
+      'completed_test',
+      'cancelled',
+      'rejected'
+    ].indexOf(this.state) > -1) {
+      return Promise.resolve(this.outAmountExpected);
+    }
+
+    var fifteenMinutesAgo = new Date(new Date().getTime() - 15 * 60 * 1000);
+    var oneMinuteAgo = new Date(new Date().getTime() - 15 * 60 * 1000);
+    if (this.createdAt > fifteenMinutesAgo) {
+      // Quoted price still valid
+      // Note: trade creation date + 15 mins != quote expiration date
+      // TODO: Coinify adds quote expiration to trade object
+      return Promise.resolve(this.outAmountExpected);
+    } else {
+      // Estimate BTC expected based on current exchange rate:
+      if (this._lastBtcExpectedGuessAt > oneMinuteAgo) {
+        return Promise.resolve(this._lastBtcExpectedGuess);
+      } else {
+        var processQuote = function (quote) {
+          self._lastBtcExpectedGuess = quote.quoteAmount;
+          self._lastBtcExpectedGuessAt = new Date();
+          return self._lastBtcExpectedGuess;
+        };
+        return this._coinify.getBuyQuote(this.inAmount, this.inCurrency).then(processQuote);
+      }
+    }
+  } else {
+    return Promise.reject();
+  }
+};
+
+// QA tool:
+CoinifyTrade.prototype.fakeBankTransfer = function () {
+  var self = this;
+
+  var fakeBankTransfer = function () {
+    return self._coinify.POST('trades/' + self._id + '/test/bank-transfer', {
+      sendAmount: self.inAmount,
+      currency: self.inCurrency
+    });
+  };
+
+  if (this._coinify.isLoggedIn) {
+    return fakeBankTransfer();
+  } else {
+    return this._coinify.login().then(fakeBankTransfer);
+  }
+};
+
+// QA tool:
+CoinifyTrade.prototype.expireQuote = function () {
+  if (this.inAmount !== -this._coinify._lastQuote.baseAmount) {
+    console.log("Can't find corresponding quote.");
+  } else {
+    this._coinify._lastQuote.expiresAt = new Date();
+  }
+};
+
+CoinifyTrade.buy = function (quote, medium, coinify) {
+  assert(quote, 'Quote required');
+
+  var account = MyWallet.wallet.hdwallet.defaultAccount;
+
+  var receiveAddressIndex = account.receiveIndex;
+
+  // Respect the GAP limit:
+  if (receiveAddressIndex - account.lastUsedReceiveIndex >= 19) {
+    return Promise.reject('gap_limit');
+  }
+
+  var processTrade = function (res) {
+    var trade = new CoinifyTrade(res, coinify);
+    account.setLabelForReceivingAddress(receiveAddressIndex, 'Coinify order #' + trade.id);
+    trade._account_index = account.index;
+    trade._receive_index = receiveAddressIndex;
+    coinify._trades.push(trade);
+    return coinify.save().then(function () { return trade; });
+  };
+
+  return coinify.POST('trades', {
+    priceQuoteId: quote.id,
+    transferIn: {
+      medium: medium
+    },
+    transferOut: {
+      medium: 'blockchain',
+      details: {
+        account: account.receiveAddressAtIndex(receiveAddressIndex)
+      }
+    }
+  }).then(processTrade);
+};
+
+// Fetches the latest trades and updates coinify._trades
+CoinifyTrade.fetchAll = function (coinify) {
+  var getTrades = function () {
+    return coinify.GET('trades').then(function (res) {
+      for (var i = 0; i < res.length; i++) {
+        var trade;
+        for (var k = 0; k < coinify._trades.length; k++) {
+          if (coinify._trades[k]._id === res[i].id) {
+            trade = coinify._trades[k];
+            trade.set(res[i]);
+          }
+        }
+        if (trade === undefined) {
+          trade = new CoinifyTrade(res[i], coinify);
+          coinify._trades.push(trade);
+        }
+
+        // Remove labeled address if trade is cancelled, rejected or expired
+        if (Helpers.isPositiveInteger(trade._account_index)) {
+          var account = MyWallet.wallet.hdwallet.accounts[trade._account_index];
+          if (['rejected', 'cancelled', 'expired'].indexOf(trade.state) > -1) {
+            account.removeLabelForReceivingAddress(trade._receive_index);
+          }
+        }
+        trade = undefined;
+      }
+
+      return coinify.save().then(function () { return coinify._trades; });
+    });
+  };
+
+  if (coinify.isLoggedIn) {
+    return getTrades();
+  } else {
+    return coinify.login().then(getTrades);
+  }
+};
+
+CoinifyTrade.prototype.refresh = function () {
+  var updateTrade = function () {
+    return this._coinify.GET('trades/' + this._id).then(this.set.bind(this));
+  };
+  if (this._coinify.isLoggedIn) {
+    return updateTrade.bind(this)();
+  } else {
+    return this._coinify.login().then(updateTrade.bind(this));
+  }
+};
+
+CoinifyTrade._checkOnce = function (coinify, tradeFilter) {
+  var getReceiveAddress = function (obj) { return obj.receiveAddress; };
+
+  var trades = coinify._trades.filter(tradeFilter);
+
+  var receiveAddresses = trades.map(getReceiveAddress);
+
+  if (receiveAddresses.length === 0) {
+    return Promise.resolve();
+  }
+
+  var promises = [];
+
+  for (var i = 0; i < trades.length; i++) {
+    promises.push(CoinifyTrade._getTransactionHash(trades[i]));
+  }
+
+  var save = function () {
+    coinify.save.bind(coinify)();
+  };
+
+  return Promise.all(promises).then(save);
+};
+
+CoinifyTrade._getTransactionHash = function (trade) {
+  return API.getHistory([trade.receiveAddress]).then(function (res) {
+    if (res.txs && res.txs.length > 0) {
+      var tx = new TX(res.txs[0]);
+      trade._txHash = tx.hash;
+      trade._confirmations = tx.confirmations;
+      trade._bitcoinReceived = true;
+      if (trade.confirmed) {
+        trade._confirmed = true;
+      }
+    }
+  });
+};
+
+CoinifyTrade._monitorWebSockets = function (coinify, tradeFilter) {
+  var getReceiveAddress = function (obj) { return obj.receiveAddress; };
+
+  var saveTrade = function () {
+    coinify.save.bind(coinify)();
+  };
+
+  var tradeWasPaid = function (trade, amount) {
+    trade._watchAddressResolve && trade._watchAddressResolve(amount);
+
+    trade.refresh()
+      .then(CoinifyTrade._getTransactionHash)
+      .then(saveTrade);
+  };
+
+  WalletStore.addEventListener(function (event, data) {
+    if (event === 'on_tx_received') {
+      var trades = coinify._trades
+                    .filter(tradeFilter);
+      var receiveAddresses = trades.map(getReceiveAddress);
+      if (data['out']) {
+        for (var i = 0; i < data['out'].length; i++) {
+          var index = receiveAddresses.indexOf(data['out'][i].addr);
+          if (index > -1) {
+            var trade = trades[index];
+            trade._bitcoinReceived = true;
+            var amount = data['out'][i].value;
+            tradeWasPaid(trade, amount);
+          }
+        }
+      }
+    }
+  });
+};
+
+// Monitor the receive addresses for pending and completed trades.
+CoinifyTrade.monitorPayments = function (coinify) {
+  var tradeFilter = function (trade) {
+    return [
+      'awaiting_transfer_in',
+      'reviewing',
+      'processing',
+      'completed',
+      'completed_test'
+    ].indexOf(trade.state) > -1 && !trade.confirmed;
+  };
+
+  CoinifyTrade._checkOnce(coinify, tradeFilter).then(function () {
+    CoinifyTrade._monitorWebSockets(coinify, tradeFilter);
+  });
+};
+
+CoinifyTrade.prototype.toJSON = function () {
+  return {
+    id: this._id,
+    state: this._state,
+    tx_hash: this._txHash,
+    account_index: this._account_index,
+    receive_index: this._receive_index,
+    confirmed: this.confirmed,
+    is_buy: this.isBuy
+  };
+};
+
+CoinifyTrade.filteredTrades = function (trades) {
+  return trades.filter(function (trade) {
+    // Only consider transactions that are complete or that we're still
+    // expecting payment for:
+    return [
+      'awaiting_transfer_in',
+      'processing',
+      'reviewing',
+      'completed',
+      'completed_test'
+    ].indexOf(trade._state) > -1;
+  });
+};
+
+},{"../api":179,"../helpers":195,"../wallet":211,"../wallet-store":208,"../wallet-transaction":210,"./bank-account":185,"assert":16}],192:[function(require,module,exports){
+'use strict';
+
+var Coinify = require('./coinify/coinify');
+var Metadata = require('./metadata');
+var assert = require('assert');
+
+var METADATA_TYPE_EXTERNAL = 3;
+
+module.exports = External;
+
+function External () {
+  this._metadata = new Metadata(METADATA_TYPE_EXTERNAL);
+  this._coinify = undefined;
+}
+
+Object.defineProperties(External.prototype, {
+  'coinify': {
+    configurable: false,
+    get: function () { return this._coinify; }
+  }
+});
+
+External.prototype.toJSON = function () {
+  var external = {
+    coinify: this._coinify
+  };
+  return external;
+};
+
+External.prototype.fetchOrCreate = function () {
+  var createOrPopulate = function (object) {
+    if (object === null) { // entry non exitent
+      return this._metadata.create(this);
+    } else {
+      this._coinify = object.coinify ? new Coinify(object.coinify, this) : undefined;
+      return this;
+    }
+  };
+  return this._metadata.fetch().then(createOrPopulate.bind(this));
+};
+
+External.prototype.save = function () {
+  return this._metadata.update(this);
+};
+
+External.prototype.wipe = function () {
+  this._metadata.update({}).then(this.fetchOrCreate.bind(this));
+  this._coinify = undefined;
+};
+
+External.prototype.addCoinify = function () {
+  assert(!this._coinify, 'Already added');
+  this._coinify = Coinify.new(this);
+};
+
+},{"./coinify/coinify":186,"./metadata":199,"assert":16}],193:[function(require,module,exports){
 'use strict';
 
 module.exports = HDAccount;
@@ -33535,15 +35315,27 @@ HDAccount.prototype.incrementReceiveIndexIfLast = function (index) {
   }
   return this;
 };
+HDAccount.prototype.decrementReceiveIndex = function () {
+  this._receiveIndex--;
+  return this;
+};
+HDAccount.prototype.decrementReceiveIndexIfLast = function (index) {
+  if (this._receiveIndex === index + 1) {
+    this.decrementReceiveIndex();
+  }
+  return this;
+};
 
 // address labels
-HDAccount.prototype.setLabelForReceivingAddress = function (index, label) {
+HDAccount.prototype.setLabelForReceivingAddress = function (index, label, maxGap) {
+  maxGap = maxGap || 19;
+  assert(maxGap <= 19, 'Max gap must be less than 20');
   assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
 
   if (!Helpers.isValidLabel(label)) {
     return Promise.reject('NOT_ALPHANUMERIC');
     // Error: address label must be alphanumeric
-  } else if (index - this.lastUsedReceiveIndex >= 19) {
+  } else if (index - this.lastUsedReceiveIndex >= maxGap) {
     // Exceeds BIP 44 unused address gap limit
     return Promise.reject('GAP');
   } else {
@@ -33557,6 +35349,7 @@ HDAccount.prototype.setLabelForReceivingAddress = function (index, label) {
 HDAccount.prototype.removeLabelForReceivingAddress = function (index) {
   assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
   delete this._address_labels[index];
+  this.decrementReceiveIndexIfLast(index);
   MyWallet.syncWallet();
   return this;
 };
@@ -33594,7 +35387,7 @@ HDAccount.prototype.persist = function () {
   return this;
 };
 
-},{"./helpers":185,"./keyring":188,"./wallet":201,"assert":16,"bitcoinjs-lib":33}],184:[function(require,module,exports){
+},{"./helpers":195,"./keyring":198,"./wallet":211,"assert":16,"bitcoinjs-lib":33}],194:[function(require,module,exports){
 'use strict';
 
 module.exports = HDWallet;
@@ -33877,7 +35670,7 @@ HDWallet.prototype.isValidAccountIndex = function (index) {
   return Helpers.isPositiveInteger(index) && index < this._accounts.length;
 };
 
-},{"./hd-account":183,"./helpers":185,"./wallet":201,"assert":16,"bip39":22,"bitcoinjs-lib":33}],185:[function(require,module,exports){
+},{"./hd-account":193,"./helpers":195,"./wallet":211,"assert":16,"bip39":22,"bitcoinjs-lib":33}],195:[function(require,module,exports){
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -34012,6 +35805,20 @@ Helpers.asyncOnce = function (f, milliseconds, before) {
       f.apply(this, myArgs);
       oldArguments = [];
     }, milliseconds);
+  };
+};
+
+Helpers.exponentialBackoff = function (f) {
+  var timer;
+  var run = function (e) {
+    timer = setTimeout(function () {
+      f.call(f);
+      run(e + 1);
+    }, Math.pow(2, e) * 1000);
+  };
+  run(0);
+  return function () {
+    clearTimeout(timer);
   };
 };
 
@@ -34311,7 +36118,7 @@ Helpers.getMobileOperatingSystem = function () {
 
 module.exports = Helpers;
 
-},{"./import-export":186,"./shared":192,"bigi":20,"bip39":22,"bitcoinjs-lib":33,"bs58":68,"buffer":74}],186:[function(require,module,exports){
+},{"./import-export":196,"./shared":202,"bigi":20,"bip39":22,"bitcoinjs-lib":33,"bs58":68,"buffer":74}],196:[function(require,module,exports){
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -34461,7 +36268,7 @@ var ImportExport = new function () {
 
 module.exports = ImportExport;
 
-},{"./wallet-crypto":195,"bigi":20,"bitcoinjs-lib":33,"bs58":68,"buffer":74,"unorm":169}],187:[function(require,module,exports){
+},{"./wallet-crypto":205,"bigi":20,"bitcoinjs-lib":33,"bs58":68,"buffer":74,"unorm":170}],197:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyChain;
@@ -34523,7 +36330,7 @@ KeyChain.prototype.getPrivateKey = function (index) {
   return key || null;
 };
 
-},{"./helpers":185,"assert":16,"bitcoinjs-lib":33}],188:[function(require,module,exports){
+},{"./helpers":195,"assert":16,"bitcoinjs-lib":33}],198:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyRing;
@@ -34585,7 +36392,7 @@ KeyRing.prototype.toJSON = function () {
   return cacheJSON;
 };
 
-},{"./keychain":187,"assert":16}],189:[function(require,module,exports){
+},{"./keychain":197,"assert":16}],199:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -34682,6 +36489,7 @@ Metadata.prototype.fetch = function () {
     );
 
     if (verified) {
+      self._previousPayload = decryptedPayload;
       self._value = JSON.parse(decryptedPayload);
       self.setMagicHash(serverPayload.payload);
       return self._value;
@@ -34698,15 +36506,12 @@ metadata.update({
 */
 Metadata.prototype.update = function (data) {
   var self = this;
-
   var payload = JSON.stringify(data);
-
-  if (payload === JSON.stringify(self._value)) {
+  if (payload === this._previousPayload) {
     return Promise.resolve();
   }
-
+  this._previousPayload = payload;
   var encryptedPayload = WalletCrypto.encryptDataWithKey(payload, this._encryptionKey);
-
   var encryptedPayloadSignature = Bitcoin.message.sign(
     this._signatureKeyPair,
     encryptedPayload
@@ -34772,7 +36577,7 @@ Metadata.prototype.request = function (method, endpoint, data) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"./api":178,"./wallet":201,"./wallet-crypto":195,"bitcoinjs-lib":33,"buffer":74}],190:[function(require,module,exports){
+},{"./api":179,"./wallet":211,"./wallet-crypto":205,"bitcoinjs-lib":33,"buffer":74}],200:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -35324,7 +37129,7 @@ function getPrivateKeys (password, payment) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./api":178,"./helpers":185,"./keyring":188,"./transaction":194,"./wallet":201,"./wallet-crypto":195,"bitcoinjs-lib":33,"buffer":74,"events":116,"util":172}],191:[function(require,module,exports){
+},{"./api":179,"./helpers":195,"./keyring":198,"./transaction":204,"./wallet":211,"./wallet-crypto":205,"bitcoinjs-lib":33,"buffer":74,"events":116,"util":173}],201:[function(require,module,exports){
 'use strict';
 
 module.exports = new RNG();
@@ -35445,7 +37250,7 @@ RNG.prototype.getServerEntropy = function (nBytes) {
   }
 };
 
-},{"./api":178,"./helpers":185,"assert":16,"buffer":74,"randombytes":145}],192:[function(require,module,exports){
+},{"./api":179,"./helpers":195,"assert":16,"buffer":74,"randombytes":145}],202:[function(require,module,exports){
 /* eslint-disable camelcase */
 var satoshi = 100000000; // One satoshi
 var symbol_btc = {code: 'BTC', symbol: 'BTC', name: 'Bitcoin', conversion: satoshi, symbolAppearsAfter: true, local: false}; // Default BTC Currency Symbol object
@@ -35524,7 +37329,7 @@ try {
 }
 /* eslint-enable camelcase */
 
-},{}],193:[function(require,module,exports){
+},{}],203:[function(require,module,exports){
 'use strict';
 
 var EventEmitter = require('events');
@@ -35591,7 +37396,7 @@ TransactionList.prototype.subscribe = function (listener) {
 
 module.exports = TransactionList;
 
-},{"./helpers":185,"./wallet-transaction":200,"events":116}],194:[function(require,module,exports){
+},{"./helpers":195,"./wallet-transaction":210,"events":116}],204:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -35795,7 +37600,7 @@ Transaction.confirmationEstimation = function (absoluteFees, fee) {
 };
 module.exports = Transaction;
 
-},{"./helpers":185,"assert":16,"bitcoinjs-lib":33,"buffer":74}],195:[function(require,module,exports){
+},{"./helpers":195,"assert":16,"bitcoinjs-lib":33,"buffer":74}],205:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -36392,7 +38197,7 @@ module.exports = {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"assert":16,"buffer":74,"crypto":82,"sjcl":165}],196:[function(require,module,exports){
+},{"assert":16,"buffer":74,"crypto":82,"sjcl":166}],206:[function(require,module,exports){
 'use strict';
 
 var API = require('./api');
@@ -36423,8 +38228,7 @@ function handleResponse (obj) {
 function generateUUIDs (count) {
   var data = {
     format: 'json',
-    n: count,
-    api_code: API.API_CODE
+    n: count
   };
 
   var extractUUIDs = function (data) {
@@ -36451,8 +38255,7 @@ function resendTwoFactorSms (userGuid, sessionToken) {
   var data = {
     format: 'json',
     resend_code: true,
-    ct: Date.now(),
-    api_code: API.API_CODE
+    ct: Date.now()
   };
 
   var headers = {sessionToken: sessionToken};
@@ -36472,8 +38275,7 @@ function recoverGuid (sessionToken, userEmail, captcha) {
     method: 'recover-wallet',
     email: userEmail,
     captcha: captcha,
-    ct: Date.now(),
-    api_code: API.API_CODE
+    ct: Date.now()
   };
 
   var headers = {
@@ -36523,8 +38325,7 @@ function requestTwoFactorReset (
     secret_phrase: secret,
     message: message,
     kaptcha: captcha,
-    ct: Date.now(),
-    api_code: API.API_CODE
+    ct: Date.now()
   };
 
   var headers = {
@@ -36612,7 +38413,7 @@ function establishSession (token) {
 // token must be present if sharedKey isn't
 function callGetWalletEndpoint (guid, sharedKey, sessionToken) {
   var clientTime = (new Date()).getTime();
-  var data = { format: 'json', resend_code: null, ct: clientTime, api_code: API.API_CODE };
+  var data = { format: 'json', resend_code: null, ct: clientTime };
   var headers = {};
 
   if (sharedKey) {
@@ -36699,8 +38500,7 @@ function fetchWalletWithTwoFactor (guid, sessionToken, twoFactor) {
       payload: twoFactorAuthKey,
       length: twoFactorAuthKey.length,
       method: 'get-wallet',
-      format: 'plain',
-      api_code: API.API_CODE
+      format: 'plain'
     };
 
     var headers = {sessionToken: sessionToken};
@@ -36816,7 +38616,7 @@ module.exports = {
   getCaptchaImage: getCaptchaImage
 };
 
-},{"./api":178,"./helpers":185,"./wallet":201,"./wallet-crypto":195,"./wallet-store":198,"assert":16}],197:[function(require,module,exports){
+},{"./api":179,"./helpers":195,"./wallet":211,"./wallet-crypto":205,"./wallet-store":208,"assert":16}],207:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -36846,7 +38646,7 @@ module.exports = {
   generateNewWallet: generateNewWallet
 };
 
-},{"./blockchain-wallet":182,"./wallet-network":196,"assert":16}],198:[function(require,module,exports){
+},{"./blockchain-wallet":183,"./wallet-network":206,"assert":16}],208:[function(require,module,exports){
 'use strict';
 
 var MyWallet = require('./wallet');
@@ -36999,7 +38799,7 @@ var WalletStore = (function () {
 
 module.exports = WalletStore;
 
-},{"./wallet":201,"./wallet-crypto":195}],199:[function(require,module,exports){
+},{"./wallet":211,"./wallet-crypto":205}],209:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -37021,8 +38821,7 @@ function postTokenEndpoint (method, token, extraParams) {
 
   var params = {
     token: token,
-    method: method,
-    api_code: API.API_CODE
+    method: method
   };
 
   for (var k in extraParams) {
@@ -37076,7 +38875,7 @@ module.exports = {
   postTokenEndpoint: postTokenEndpoint // For tests
 };
 
-},{"./api":178,"./helpers":185,"assert":16}],200:[function(require,module,exports){
+},{"./api":179,"./helpers":195,"assert":16}],210:[function(require,module,exports){
 'use strict';
 
 module.exports = Tx;
@@ -37341,14 +39140,13 @@ Tx.setConfirmations = function (txBlockHeight) {
   return conf;
 };
 
-},{"./wallet":201}],201:[function(require,module,exports){
+},{"./wallet":211}],211:[function(require,module,exports){
 'use strict';
 
 var MyWallet = module.exports = {};
 
 var assert = require('assert');
 var Buffer = require('buffer').Buffer;
-
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var WalletSignup = require('./wallet-signup');
@@ -37419,7 +39217,7 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
       MyWallet.getWallet();
     }
   } else if (obj.op === 'utx') {
-    WalletStore.sendEvent('on_tx_received');
+    WalletStore.sendEvent('on_tx_received', obj.x);
     var sendOnTx = WalletStore.sendEvent.bind(null, 'on_tx');
     MyWallet.wallet.getHistory().then(sendOnTx);
   } else if (obj.op === 'block') {
@@ -37661,13 +39459,13 @@ MyWallet.didFetchWallet = function (obj) {
 };
 
 MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
-  var promise = new Promise(function (resolve, reject) {
+  var doInitialize = function () {
     if (isInitialized || WalletStore.isRestoringWallet()) {
       return;
     }
 
     function _success () {
-      resolve();
+      return;
     }
 
     function _error (e) {
@@ -37675,7 +39473,7 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
       WalletStore.sendEvent('msg', {type: 'error', message: e});
 
       WalletStore.sendEvent('error_restoring_wallet');
-      reject(e);
+      throw e;
     }
 
     WalletStore.setRestoringWallet(true);
@@ -37690,8 +39488,14 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
       , decryptSuccess
       , buildHdSuccess
     );
-  });
-  return promise;
+  };
+  // load metadata buy-sell
+
+  var loadExternal = function () {
+    MyWallet.wallet.loadExternal.bind(MyWallet.wallet)();
+  };
+
+  return Promise.resolve().then(doInitialize).then(loadExternal);
 };
 
 // used on iOS
@@ -37902,7 +39706,7 @@ MyWallet.logout = function (sessionToken, force) {
       console.log(e);
     }
   };
-  var data = {format: 'plain', api_code: API.API_CODE};
+  var data = { format: 'plain' };
   WalletStore.sendEvent('logging_out');
 
   var headers = {sessionToken: sessionToken};
@@ -37973,7 +39777,7 @@ MyWallet.browserCheckFast = function () {
   return true;
 };
 
-},{"./api":178,"./blockchain-settings-api":180,"./blockchain-socket":181,"./blockchain-wallet":182,"./helpers":185,"./rng":191,"./wallet-crypto":195,"./wallet-network":196,"./wallet-signup":197,"./wallet-store":198,"assert":16,"bip39":22,"bitcoinjs-lib":33,"buffer":74,"pbkdf2":136}],202:[function(require,module,exports){
+},{"./api":179,"./blockchain-settings-api":181,"./blockchain-socket":182,"./blockchain-wallet":183,"./helpers":195,"./rng":201,"./wallet-crypto":205,"./wallet-network":206,"./wallet-signup":207,"./wallet-store":208,"assert":16,"bip39":22,"bitcoinjs-lib":33,"buffer":74,"pbkdf2":136}],212:[function(require,module,exports){
 
 var global = (function () { return this; })();
 var WebSocket = global.WebSocket || global.MozWebSocket;
