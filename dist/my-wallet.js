@@ -44,7 +44,7 @@ module.exports = {
   BuySell: require('./src/buy-sell')
 };
 
-},{"./src/address":178,"./src/api":179,"./src/blockchain-settings-api":181,"./src/buy-sell":184,"./src/external":194,"./src/helpers":197,"./src/import-export":198,"./src/metadata":201,"./src/payment":202,"./src/rng":203,"./src/shared":204,"./src/transaction":206,"./src/wallet":213,"./src/wallet-crypto":207,"./src/wallet-network":208,"./src/wallet-store":210,"./src/wallet-token-endpoints":211,"./src/wallet-transaction":212,"bitcoinjs-lib":33,"buffer":74,"es6-promise":115,"isomorphic-fetch":129}],2:[function(require,module,exports){
+},{"./src/address":178,"./src/api":179,"./src/blockchain-settings-api":181,"./src/buy-sell":184,"./src/external":195,"./src/helpers":198,"./src/import-export":199,"./src/metadata":202,"./src/payment":203,"./src/rng":204,"./src/shared":205,"./src/transaction":207,"./src/wallet":214,"./src/wallet-crypto":208,"./src/wallet-network":209,"./src/wallet-store":211,"./src/wallet-token-endpoints":212,"./src/wallet-transaction":213,"bitcoinjs-lib":33,"buffer":74,"es6-promise":115,"isomorphic-fetch":129}],2:[function(require,module,exports){
 var asn1 = exports;
 
 asn1.bignum = require('bn.js');
@@ -31640,7 +31640,7 @@ Object.defineProperties(AccountInfo.prototype, {
   }
 });
 
-},{"./helpers":197,"assert":16}],178:[function(require,module,exports){
+},{"./helpers":198,"assert":16}],178:[function(require,module,exports){
 'use strict';
 
 module.exports = Address;
@@ -31912,7 +31912,7 @@ Address.prototype.persist = function () {
   return this;
 };
 
-},{"./helpers":197,"./import-export":198,"./rng":203,"./shared":204,"./wallet":213,"./wallet-crypto":207,"bitcoinjs-lib":33,"bs58":68}],179:[function(require,module,exports){
+},{"./helpers":198,"./import-export":199,"./rng":204,"./shared":205,"./wallet":214,"./wallet-crypto":208,"bitcoinjs-lib":33,"bs58":68}],179:[function(require,module,exports){
 'use strict';
 
 module.exports = new API();
@@ -32201,7 +32201,7 @@ API.prototype.exportHistory = function (active, currency, options) {
   return this.request('POST', 'v2/export-history', data);
 };
 
-},{"./helpers":197,"./wallet":213,"./wallet-crypto":207,"./wallet-store":210,"assert":16,"bitcoinjs-lib":33}],180:[function(require,module,exports){
+},{"./helpers":198,"./wallet":214,"./wallet-crypto":208,"./wallet-store":211,"assert":16,"bitcoinjs-lib":33}],180:[function(require,module,exports){
 'use strict';
 
 module.exports = Block;
@@ -32604,7 +32604,7 @@ module.exports = {
   updateAuthType: updateAuthType
 };
 
-},{"./api":179,"./wallet-store.js":210,"./wallet.js":213,"assert":16}],182:[function(require,module,exports){
+},{"./api":179,"./wallet-store.js":211,"./wallet.js":214,"assert":16}],182:[function(require,module,exports){
 
 var WebSocket = require('ws');
 var Helpers = require('./helpers');
@@ -32711,7 +32711,7 @@ BlockchainSocket.prototype.msgOnOpen = function (guid, addresses, xpubs) {
 
 module.exports = BlockchainSocket;
 
-},{"./helpers":197,"ws":214}],183:[function(require,module,exports){
+},{"./helpers":198,"ws":215}],183:[function(require,module,exports){
 'use strict';
 
 module.exports = Wallet;
@@ -33527,7 +33527,7 @@ Wallet.prototype.loadExternal = function () {
   }
 };
 
-},{"./account-info":177,"./address":178,"./api":179,"./bitcoin-block":180,"./blockchain-settings-api":181,"./external":194,"./hd-wallet":196,"./helpers":197,"./keyring":200,"./rng":203,"./shared":204,"./transaction-list":205,"./wallet":213,"./wallet-crypto":207,"./wallet-store":210,"assert":16,"bip39":22}],184:[function(require,module,exports){
+},{"./account-info":177,"./address":178,"./api":179,"./bitcoin-block":180,"./blockchain-settings-api":181,"./external":195,"./hd-wallet":197,"./helpers":198,"./keyring":201,"./rng":204,"./shared":205,"./transaction-list":206,"./wallet":214,"./wallet-crypto":208,"./wallet-store":211,"assert":16,"bip39":22}],184:[function(require,module,exports){
 
 module.exports = BuySell;
 
@@ -33538,15 +33538,31 @@ function BuySell (wallet) {
   // Stop if 2nd password is enabled
   if (wallet.external === null) return;
 
+  // Stop if meta data failed to load;
+  if (!wallet.external.success) {
+    return;
+  }
+
   // Add Coinify if not already added:
   if (!this._wallet.external.coinify) this._wallet.external.addCoinify();
 }
 
 Object.defineProperties(BuySell.prototype, {
+  'status': {
+    configurable: false,
+    get: function () {
+      return {
+        metaDataService: this._wallet.external.success
+      };
+    }
+  },
   'exchanges': {
     configurable: false,
     get: function () {
-      if (this._wallet.external === null) return;
+      if (
+        this._wallet.external === null ||
+        !this._wallet.external.success
+      ) return;
       return {
         coinify: this._wallet.external.coinify
       };
@@ -33733,6 +33749,7 @@ var CoinifyTrade = require('./trade');
 var CoinifyKYC = require('./kyc');
 var PaymentMethod = require('./payment-method');
 var ExchangeRate = require('./exchange-rate');
+var Quote = require('./quote');
 
 var assert = require('assert');
 
@@ -33951,7 +33968,12 @@ Coinify.prototype.getBuyQuote = function (amount, baseCurrency) {
     return Promise.reject('base_currency_not_supported');
   }
 
-  return this.getQuote(-amount, baseCurrency);
+  return Quote.getQuote(this, -amount, baseCurrency).then(this.setLastQuote.bind(this));
+};
+
+Coinify.prototype.setLastQuote = function (quote) {
+  this._lastQuote = quote;
+  return quote;
 };
 
 Coinify.prototype.getSellQuote = function (amount, baseCurrency) {
@@ -33961,52 +33983,7 @@ Coinify.prototype.getSellQuote = function (amount, baseCurrency) {
     return Promise.reject('base_currency_not_supported');
   }
 
-  return this.getQuote(amount, baseCurrency);
-};
-
-Coinify.prototype.getQuote = function (amount, baseCurrency) {
-  var self = this;
-
-  var processQuote = function (quote) {
-    var expiresAt = new Date(quote.expiryTime);
-
-    // Debug, make quote expire in 15 seconds:
-    // expiresAt = new Date(new Date().getTime() + 15 * 1000);
-
-    self._lastQuote = {
-      id: quote.id,
-      baseCurrency: quote.baseCurrency,
-      quoteCurrency: quote.quoteCurrency,
-      baseAmount: quote.baseAmount,
-      quoteAmount: quote.quoteAmount,
-      expiresAt: expiresAt
-    };
-    return Promise.resolve(self._lastQuote);
-  };
-
-  var getQuote = function (profile) {
-    baseCurrency = baseCurrency || profile.defaultCurrency;
-    var quoteCurrency = baseCurrency === 'BTC' ? profile.defaultCurrency : 'BTC';
-
-    return self.POST('trades/quote', {
-      baseCurrency: baseCurrency,
-      quoteCurrency: quoteCurrency,
-      baseAmount: amount
-    });
-  };
-
-  if (this._offline_token == null) {
-    return getQuote();
-  }
-  if (this.profile === null) {
-    return this.fetchProfile().then(getQuote).then(processQuote);
-  } else {
-    if (!this.isLoggedIn) {
-      return this.login().then(function () { getQuote(self.profile); }).then(processQuote);
-    } else {
-      return getQuote(this.profile).then(processQuote);
-    }
-  }
+  return Quote.getQuote(this, amount, baseCurrency).then(this.setLastQuote.bind(this));
 };
 
 Coinify.prototype.buy = function (amount, baseCurrency, medium) {
@@ -34171,7 +34148,7 @@ Coinify.new = function (parent, delegate) {
   return coinify;
 };
 
-},{"./exchange-rate":188,"./kyc":189,"./payment-method":190,"./profile":191,"./trade":192,"assert":16}],188:[function(require,module,exports){
+},{"./exchange-rate":188,"./kyc":189,"./payment-method":190,"./profile":191,"./quote":192,"./trade":193,"assert":16}],188:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -34598,6 +34575,100 @@ CoinifyProfile.prototype.update = function (values) {
 },{"assert":16}],192:[function(require,module,exports){
 'use strict';
 
+module.exports = Quote;
+
+function Quote (obj) {
+  var expiresAt = new Date(obj.expiryTime);
+
+  // Debug, make quote expire in 15 seconds:
+  // expiresAt = new Date(new Date().getTime() + 15 * 1000);
+
+  this._id = obj.id;
+  this._baseCurrency = obj.baseCurrency;
+  this._quoteCurrency = obj.quoteCurrency;
+  this._baseAmount = obj.baseAmount;
+  this._quoteAmount = obj.quoteAmount;
+  this._expiresAt = expiresAt;
+}
+
+Object.defineProperties(Quote.prototype, {
+  'id': {
+    configurable: false,
+    get: function () {
+      return this._id;
+    }
+  },
+  'baseCurrency': {
+    configurable: false,
+    get: function () {
+      return this._baseCurrency;
+    }
+  },
+  'quoteCurrency': {
+    configurable: false,
+    get: function () {
+      return this._quoteCurrency;
+    }
+  },
+  'baseAmount': {
+    configurable: false,
+    get: function () {
+      return this._baseAmount;
+    }
+  },
+  'quoteAmount': {
+    configurable: false,
+    get: function () {
+      return this._quoteAmount;
+    }
+  },
+  'expiresAt': {
+    configurable: false,
+    get: function () {
+      return this._expiresAt;
+    }
+  }
+});
+
+Quote.getQuote = function (coinify, amount, baseCurrency) {
+  var processQuote = function (quote) {
+    quote = new Quote(quote);
+    return quote;
+  };
+
+  var getQuote = function (profile) {
+    baseCurrency = baseCurrency || profile.defaultCurrency;
+    var quoteCurrency = baseCurrency === 'BTC' ? profile.defaultCurrency : 'BTC';
+
+    return coinify.POST('trades/quote', {
+      baseCurrency: baseCurrency,
+      quoteCurrency: quoteCurrency,
+      baseAmount: amount
+    });
+  };
+
+  if (coinify._offline_token == null) {
+    return getQuote();
+  }
+  if (coinify.profile === null) {
+    return coinify.fetchProfile().then(getQuote).then(processQuote);
+  } else {
+    if (!coinify.isLoggedIn) {
+      return coinify.login().then(function () { getQuote(coinify.profile); }).then(processQuote);
+    } else {
+      return getQuote(coinify.profile).then(processQuote);
+    }
+  }
+};
+
+// QA tool
+Quote.prototype.expire = function () {
+  this._expiresAt = new Date(new Date().getTime() + 3 * 1000);
+};
+
+},{}],193:[function(require,module,exports){
+'use strict';
+
 var assert = require('assert');
 
 var BankAccount = require('./bank-account');
@@ -34665,6 +34736,12 @@ Object.defineProperties(CoinifyTrade.prototype, {
       return this._state;
     }
   },
+  'sendAmount': {
+    configurable: false,
+    get: function () {
+      return this._sendAmount;
+    }
+  },
   'outAmountExpected': {
     configurable: false,
     get: function () {
@@ -34681,6 +34758,12 @@ Object.defineProperties(CoinifyTrade.prototype, {
     configurable: false,
     get: function () {
       return this._receiveAddress;
+    }
+  },
+  'accountIndex': {
+    configurable: false,
+    get: function () {
+      return this._account_index;
     }
   },
   'bitcoinReceived': {
@@ -34727,6 +34810,7 @@ CoinifyTrade.prototype.set = function (obj) {
     this._outCurrency = obj.outCurrency;
     this._inAmount = obj.inAmount;
     this._medium = obj.transferIn.medium;
+    this._sendAmount = obj.transferIn.sendAmount;
     if (this._medium === 'bank') {
       this._bankAccount = new BankAccount(obj.transferIn.details);
     }
@@ -34747,7 +34831,7 @@ CoinifyTrade.prototype.cancel = function () {
   var processCancel = function (trade) {
     self._state = trade.state;
 
-    self._coinify.delegate.releaseReceiveAddress(self);
+    self._coinify.delegate.releaseReceiveAddress(self, CoinifyTrade.filteredTrades(self._coinify.trades));
 
     return self._coinify.save();
   };
@@ -34834,18 +34918,18 @@ CoinifyTrade.prototype.expireQuote = function () {
   if (this.inAmount !== -this._coinify._lastQuote.baseAmount) {
     console.log("Can't find corresponding quote.");
   } else {
-    this._coinify._lastQuote.expiresAt = new Date();
+    this._coinify._lastQuote.expire();
   }
 };
 
 CoinifyTrade.buy = function (quote, medium, coinify) {
   assert(quote, 'Quote required');
 
-  var receiveAddress = coinify.delegate.reserveReceiveAddress();
+  var reservation = coinify.delegate.reserveReceiveAddress(CoinifyTrade.filteredTrades(coinify.trades));
 
   var processTrade = function (res) {
     var trade = new CoinifyTrade(res, coinify);
-    coinify.delegate.commitReceiveAddress(trade);
+    reservation.commit(trade);
     coinify._trades.push(trade);
     trade._monitorAddress.bind(trade)();
     return coinify.save().then(function () { return trade; });
@@ -34859,7 +34943,7 @@ CoinifyTrade.buy = function (quote, medium, coinify) {
     transferOut: {
       medium: 'blockchain',
       details: {
-        account: receiveAddress
+        account: reservation.receiveAddress
       }
     }
   }).then(processTrade);
@@ -34884,7 +34968,7 @@ CoinifyTrade.fetchAll = function (coinify) {
         }
 
         if (['rejected', 'cancelled', 'expired'].indexOf(trade.state) > -1) {
-          coinify.delegate.releaseReceiveAddress(trade);
+          coinify.delegate.releaseReceiveAddress(trade, CoinifyTrade.filteredTrades(coinify.trades));
         }
       }
 
@@ -35024,7 +35108,7 @@ CoinifyTrade.filteredTrades = function (trades) {
   });
 };
 
-},{"./bank-account":186,"assert":16}],193:[function(require,module,exports){
+},{"./bank-account":186,"assert":16}],194:[function(require,module,exports){
 var API = require('./api');
 var WalletStore = require('./wallet-store');
 var TX = require('./wallet-transaction');
@@ -35086,38 +35170,63 @@ ExchangeDelegate.prototype.checkAddress = function (address) {
 };
 
 ExchangeDelegate.prototype.getReceiveAddress = function (trade) {
-  var account = this._wallet.hdwallet.accounts[trade._account_index];
-  return account.receiveAddressAtIndex(trade._receive_index);
+  if (Helpers.isPositiveInteger(trade._account_index)) {
+    var account = this._wallet.hdwallet.accounts[trade._account_index];
+    return account.receiveAddressAtIndex(trade._receive_index);
+  }
 };
 
-ExchangeDelegate.prototype.reserveReceiveAddress = function (trade) {
-  // TODO: make sure the wallet doesn't use it unless trade creation fails
+ExchangeDelegate.prototype.reserveReceiveAddress = function (trades) {
   var account = this._wallet.hdwallet.defaultAccount;
-
   var receiveAddressIndex = account.receiveIndex;
 
   // Respect the GAP limit:
   if (receiveAddressIndex - account.lastUsedReceiveIndex >= 19) {
-    throw new Error('gap_limit');
+    receiveAddressIndex = findLastExchangeIndex(account.receiveIndex);
+    if (receiveAddressIndex == null) throw new Error('gap_limit');
   }
 
-  return account.receiveAddressAtIndex(receiveAddressIndex);
+  var receiveAddress = account.receiveAddressAtIndex(receiveAddressIndex);
+
+  function findLastExchangeIndex (currentReceiveIndex) {
+    var receiveIndexes = trades.map(Helpers.pluck('_receive_index'));
+    var index = currentReceiveIndex;
+    for (var i = index - 1; i > index - 20; i--) {
+      if (receiveIndexes.filter(Helpers.eq(i)).length > 0) return i;
+    }
+    return null;
+  }
+
+  function commitAddressLabel (trade) {
+    var labelBase = 'Coinify order';
+    var ids = trades
+      .filter(Helpers.propEq('receiveAddress', receiveAddress))
+      .map(Helpers.pluck('id')).concat(trade.id);
+
+    account.setLabelForReceivingAddress(receiveAddressIndex, labelBase + ' #' + ids.join(', #'));
+    trade._account_index = account.index;
+    trade._receive_index = receiveAddressIndex;
+  }
+
+  return {
+    receiveAddress: receiveAddress,
+    commit: commitAddressLabel
+  };
 };
 
-ExchangeDelegate.prototype.commitReceiveAddress = function (trade) {
-  var account = this._wallet.hdwallet.defaultAccount;
-  var receiveAddressIndex = account.receiveIndex;
-
-  account.setLabelForReceivingAddress(receiveAddressIndex, 'Coinify order #' + trade.id);
-
-  trade._account_index = account.index;
-  trade._receive_index = receiveAddressIndex;
-};
-
-ExchangeDelegate.prototype.releaseReceiveAddress = function (trade) {
+ExchangeDelegate.prototype.releaseReceiveAddress = function (trade, trades) {
+  var labelBase = 'Coinify order';
   if (Helpers.isPositiveInteger(trade._account_index) && Helpers.isPositiveInteger(trade._receive_index)) {
     var account = this._wallet.hdwallet.accounts[trade._account_index];
-    account.removeLabelForReceivingAddress(trade._receive_index);
+
+    var ids = trades
+      .filter(Helpers.propEq('receiveAddress', trade.receiveAddress))
+      .map(Helpers.pluck('id'))
+      .filter(Helpers.notEq(trade.id));
+
+    Helpers.isEmptyArray(ids)
+      ? account.removeLabelForReceivingAddress(trade._receive_index)
+      : account.setLabelForReceivingAddress(trade._receive_index, labelBase + ' #' + ids.join(', #'));
   }
 };
 
@@ -35131,7 +35240,7 @@ ExchangeDelegate.prototype.deserializeExtraFields = function (obj, trade) {
   trade._receive_index = obj.receive_index;
 };
 
-},{"./api":179,"./helpers":197,"./wallet-store":210,"./wallet-transaction":212}],194:[function(require,module,exports){
+},{"./api":179,"./helpers":198,"./wallet-store":211,"./wallet-transaction":213}],195:[function(require,module,exports){
 'use strict';
 
 var Coinify = require('./coinify/coinify');
@@ -35165,6 +35274,7 @@ External.prototype.toJSON = function () {
 
 External.prototype.fetchOrCreate = function () {
   var createOrPopulate = function (object) {
+    this.success = true;
     if (object === null) { // entry non exitent
       return this._metadata.create(this);
     } else {
@@ -35172,7 +35282,12 @@ External.prototype.fetchOrCreate = function () {
       return this;
     }
   };
-  return this._metadata.fetch().then(createOrPopulate.bind(this));
+  var fetchFailed = function (e) {
+    // Metadata service is down or unreachable.
+    this.success = false;
+    return Promise.reject(e);
+  };
+  return this._metadata.fetch().then(createOrPopulate.bind(this)).catch(fetchFailed.bind(this));
 };
 
 External.prototype.save = function () {
@@ -35189,7 +35304,7 @@ External.prototype.addCoinify = function () {
   this._coinify = Coinify.new(this, this._delegate);
 };
 
-},{"./coinify/coinify":187,"./exchange-delegate":193,"./metadata":201,"assert":16}],195:[function(require,module,exports){
+},{"./coinify/coinify":187,"./exchange-delegate":194,"./metadata":202,"assert":16}],196:[function(require,module,exports){
 'use strict';
 
 module.exports = HDAccount;
@@ -35538,7 +35653,7 @@ HDAccount.prototype.persist = function () {
   return this;
 };
 
-},{"./helpers":197,"./keyring":200,"./wallet":213,"assert":16,"bitcoinjs-lib":33}],196:[function(require,module,exports){
+},{"./helpers":198,"./keyring":201,"./wallet":214,"assert":16,"bitcoinjs-lib":33}],197:[function(require,module,exports){
 'use strict';
 
 module.exports = HDWallet;
@@ -35821,7 +35936,7 @@ HDWallet.prototype.isValidAccountIndex = function (index) {
   return Helpers.isPositiveInteger(index) && index < this._accounts.length;
 };
 
-},{"./hd-account":195,"./helpers":197,"./wallet":213,"assert":16,"bip39":22,"bitcoinjs-lib":33}],197:[function(require,module,exports){
+},{"./hd-account":196,"./helpers":198,"./wallet":214,"assert":16,"bip39":22,"bitcoinjs-lib":33}],198:[function(require,module,exports){
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -35904,6 +36019,18 @@ Helpers.add = function (x, y) {
 };
 Helpers.and = function (x, y) {
   return x && y;
+};
+Helpers.pluck = function (prop) {
+  return function (o) { return o[prop]; };
+};
+Helpers.eq = function (value1) {
+  return function (value0) { return value0 === value1; };
+};
+Helpers.notEq = function (value1) {
+  return function (value0) { return value0 !== value1; };
+};
+Helpers.propEq = function (prop, value) {
+  return function (o) { return o[prop] === value; };
 };
 Helpers.o = function (pred1, pred2) {
   return function (element) {
@@ -36269,7 +36396,7 @@ Helpers.getMobileOperatingSystem = function () {
 
 module.exports = Helpers;
 
-},{"./import-export":198,"./shared":204,"bigi":20,"bip39":22,"bitcoinjs-lib":33,"bs58":68,"buffer":74}],198:[function(require,module,exports){
+},{"./import-export":199,"./shared":205,"bigi":20,"bip39":22,"bitcoinjs-lib":33,"bs58":68,"buffer":74}],199:[function(require,module,exports){
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -36419,7 +36546,7 @@ var ImportExport = new function () {
 
 module.exports = ImportExport;
 
-},{"./wallet-crypto":207,"bigi":20,"bitcoinjs-lib":33,"bs58":68,"buffer":74,"unorm":170}],199:[function(require,module,exports){
+},{"./wallet-crypto":208,"bigi":20,"bitcoinjs-lib":33,"bs58":68,"buffer":74,"unorm":170}],200:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyChain;
@@ -36481,7 +36608,7 @@ KeyChain.prototype.getPrivateKey = function (index) {
   return key || null;
 };
 
-},{"./helpers":197,"assert":16,"bitcoinjs-lib":33}],200:[function(require,module,exports){
+},{"./helpers":198,"assert":16,"bitcoinjs-lib":33}],201:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyRing;
@@ -36543,7 +36670,7 @@ KeyRing.prototype.toJSON = function () {
   return cacheJSON;
 };
 
-},{"./keychain":199,"assert":16}],201:[function(require,module,exports){
+},{"./keychain":200,"assert":16}],202:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -36626,6 +36753,7 @@ Metadata.prototype.create = function (data) {
 
 Metadata.prototype.fetch = function () {
   var self = this;
+
   return this.GET(this._address).then(function (serverPayload) {
     if (serverPayload === null) {
       return null;
@@ -36647,6 +36775,9 @@ Metadata.prototype.fetch = function () {
     } else {
       throw new Error('METADATA_SIGNATURE_VERIFICATION_ERROR');
     }
+  }).catch(function (e) {
+    console.log(e);
+    return Promise.reject('METADATA_FETCH_FAILED');
   });
 };
 
@@ -36683,6 +36814,9 @@ Metadata.prototype.update = function (data) {
 };
 
 Metadata.prototype.GET = function (endpoint, data) {
+  // if (this._payloadTypeId === 3) {
+  //   return Promise.reject('DEBUG: simulate meta data service failure');
+  // }
   return this.request('GET', endpoint, data);
 };
 
@@ -36728,7 +36862,7 @@ Metadata.prototype.request = function (method, endpoint, data) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"./api":179,"./wallet":213,"./wallet-crypto":207,"bitcoinjs-lib":33,"buffer":74}],202:[function(require,module,exports){
+},{"./api":179,"./wallet":214,"./wallet-crypto":208,"bitcoinjs-lib":33,"buffer":74}],203:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -37280,7 +37414,7 @@ function getPrivateKeys (password, payment) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./api":179,"./helpers":197,"./keyring":200,"./transaction":206,"./wallet":213,"./wallet-crypto":207,"bitcoinjs-lib":33,"buffer":74,"events":116,"util":173}],203:[function(require,module,exports){
+},{"./api":179,"./helpers":198,"./keyring":201,"./transaction":207,"./wallet":214,"./wallet-crypto":208,"bitcoinjs-lib":33,"buffer":74,"events":116,"util":173}],204:[function(require,module,exports){
 'use strict';
 
 module.exports = new RNG();
@@ -37401,7 +37535,7 @@ RNG.prototype.getServerEntropy = function (nBytes) {
   }
 };
 
-},{"./api":179,"./helpers":197,"assert":16,"buffer":74,"randombytes":145}],204:[function(require,module,exports){
+},{"./api":179,"./helpers":198,"assert":16,"buffer":74,"randombytes":145}],205:[function(require,module,exports){
 /* eslint-disable camelcase */
 var satoshi = 100000000; // One satoshi
 var symbol_btc = {code: 'BTC', symbol: 'BTC', name: 'Bitcoin', conversion: satoshi, symbolAppearsAfter: true, local: false}; // Default BTC Currency Symbol object
@@ -37480,7 +37614,7 @@ try {
 }
 /* eslint-enable camelcase */
 
-},{}],205:[function(require,module,exports){
+},{}],206:[function(require,module,exports){
 'use strict';
 
 var EventEmitter = require('events');
@@ -37547,7 +37681,7 @@ TransactionList.prototype.subscribe = function (listener) {
 
 module.exports = TransactionList;
 
-},{"./helpers":197,"./wallet-transaction":212,"events":116}],206:[function(require,module,exports){
+},{"./helpers":198,"./wallet-transaction":213,"events":116}],207:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -37751,7 +37885,7 @@ Transaction.confirmationEstimation = function (absoluteFees, fee) {
 };
 module.exports = Transaction;
 
-},{"./helpers":197,"assert":16,"bitcoinjs-lib":33,"buffer":74}],207:[function(require,module,exports){
+},{"./helpers":198,"assert":16,"bitcoinjs-lib":33,"buffer":74}],208:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -38348,7 +38482,7 @@ module.exports = {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"assert":16,"buffer":74,"crypto":82,"sjcl":166}],208:[function(require,module,exports){
+},{"assert":16,"buffer":74,"crypto":82,"sjcl":166}],209:[function(require,module,exports){
 'use strict';
 
 var API = require('./api');
@@ -38767,7 +38901,7 @@ module.exports = {
   getCaptchaImage: getCaptchaImage
 };
 
-},{"./api":179,"./helpers":197,"./wallet":213,"./wallet-crypto":207,"./wallet-store":210,"assert":16}],209:[function(require,module,exports){
+},{"./api":179,"./helpers":198,"./wallet":214,"./wallet-crypto":208,"./wallet-store":211,"assert":16}],210:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -38797,7 +38931,7 @@ module.exports = {
   generateNewWallet: generateNewWallet
 };
 
-},{"./blockchain-wallet":183,"./wallet-network":208,"assert":16}],210:[function(require,module,exports){
+},{"./blockchain-wallet":183,"./wallet-network":209,"assert":16}],211:[function(require,module,exports){
 'use strict';
 
 var MyWallet = require('./wallet');
@@ -38950,7 +39084,7 @@ var WalletStore = (function () {
 
 module.exports = WalletStore;
 
-},{"./wallet":213,"./wallet-crypto":207}],211:[function(require,module,exports){
+},{"./wallet":214,"./wallet-crypto":208}],212:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -39026,7 +39160,7 @@ module.exports = {
   postTokenEndpoint: postTokenEndpoint // For tests
 };
 
-},{"./api":179,"./helpers":197,"assert":16}],212:[function(require,module,exports){
+},{"./api":179,"./helpers":198,"assert":16}],213:[function(require,module,exports){
 'use strict';
 
 module.exports = Tx;
@@ -39291,7 +39425,7 @@ Tx.setConfirmations = function (txBlockHeight) {
   return conf;
 };
 
-},{"./wallet":213}],213:[function(require,module,exports){
+},{"./wallet":214}],214:[function(require,module,exports){
 'use strict';
 
 var MyWallet = module.exports = {};
@@ -39928,7 +40062,7 @@ MyWallet.browserCheckFast = function () {
   return true;
 };
 
-},{"./api":179,"./blockchain-settings-api":181,"./blockchain-socket":182,"./blockchain-wallet":183,"./helpers":197,"./rng":203,"./wallet-crypto":207,"./wallet-network":208,"./wallet-signup":209,"./wallet-store":210,"assert":16,"bip39":22,"bitcoinjs-lib":33,"buffer":74,"pbkdf2":136}],214:[function(require,module,exports){
+},{"./api":179,"./blockchain-settings-api":181,"./blockchain-socket":182,"./blockchain-wallet":183,"./helpers":198,"./rng":204,"./wallet-crypto":208,"./wallet-network":209,"./wallet-signup":210,"./wallet-store":211,"assert":16,"bip39":22,"bitcoinjs-lib":33,"buffer":74,"pbkdf2":136}],215:[function(require,module,exports){
 
 var global = (function () { return this; })();
 var WebSocket = global.WebSocket || global.MozWebSocket;
