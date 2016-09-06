@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2016-09-02)
+#   (2016-09-06)
 
 
 
@@ -8,22 +8,22 @@ __Blockchain Wallet V3__
 
 ## Bug Fixes
 
-- **account index:** add account index to trade object (#259)
-  ([f6033439](https://github.com/blockchain/My-Wallet-V3/commit/f60334391823149ba58fb69734cee5ea79a40291))
-- **delegate:** handle gap limit error by appending id to existing label (#258)
-  ([309388b0](https://github.com/blockchain/My-Wallet-V3/commit/309388b026426e254ae20fba52a09d219587908f))
+- **quote:** call processQuote with quote instead of undefined
+  ([79cf5a4a](https://github.com/blockchain/My-Wallet-V3/commit/79cf5a4aeb2d8ce10bf624a9f71fe4460f9890f1))
+- **trade:** expose txHash property, only trigger watch after trade has been updated (#264)
+  ([31eccee3](https://github.com/blockchain/My-Wallet-V3/commit/31eccee3c26fc455853ee50c29c1cda555128ea9))
 
 
-## Features
+## Chore
 
-- **trade:** add sendAmount (#261)
-  ([2aa08e9d](https://github.com/blockchain/My-Wallet-V3/commit/2aa08e9d1172e6730d90db6c715fbf8f9f16a54e))
+- **release:** v3.22.11
+  ([81cbd54f](https://github.com/blockchain/My-Wallet-V3/commit/81cbd54f7fca8f4f47bc6f349f705d62fec1501f))
 
 
-## Refactor
+## Pull requests merged
 
-- **quote:** has its own class (#263)
-  ([81e9fc6b](https://github.com/blockchain/My-Wallet-V3/commit/81e9fc6b87c6ef6b5dcb1871f52de6423580eda3))
+- Merge pull request #266 from blockchain/login-get-quote
+  ([d5e6f4fb](https://github.com/blockchain/My-Wallet-V3/commit/d5e6f4fb8604cc19075b976681cc7f3caa73b724))
 
 
 

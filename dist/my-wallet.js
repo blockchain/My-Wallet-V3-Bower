@@ -34654,7 +34654,7 @@ Quote.getQuote = function (coinify, amount, baseCurrency) {
     return coinify.fetchProfile().then(getQuote).then(processQuote);
   } else {
     if (!coinify.isLoggedIn) {
-      return coinify.login().then(function () { getQuote(coinify.profile); }).then(processQuote);
+      return coinify.login().then(function () { return getQuote(coinify.profile); }).then(processQuote);
     } else {
       return getQuote(coinify.profile).then(processQuote);
     }
@@ -34789,6 +34789,10 @@ Object.defineProperties(CoinifyTrade.prototype, {
         return this.outCurrency === 'BTC';
       }
     }
+  },
+  'txHash': {
+    configurable: false,
+    get: function () { return this._txHash || null; }
   }
 });
 
@@ -35002,11 +35006,13 @@ CoinifyTrade.prototype._monitorAddress = function () {
   };
 
   var tradeWasPaid = function (amount) {
-    self._watchAddressResolve && self._watchAddressResolve(amount);
-
+    var resolve = function () {
+      self._watchAddressResolve && self._watchAddressResolve(amount);
+    };
     self.refresh()
       .then(CoinifyTrade._getTransactionHash)
-      .then(saveTrade);
+      .then(saveTrade)
+      .then(resolve);
   };
 
   self._coinify.delegate.monitorAddress(self.receiveAddress, function (amount) {
