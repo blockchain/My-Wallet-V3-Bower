@@ -33552,7 +33552,7 @@ Object.defineProperties(BuySell.prototype, {
     configurable: false,
     get: function () {
       return {
-        metaDataService: this._wallet.external.success
+        metaDataService: this._wallet.external && this._wallet.external.success
       };
     }
   },
