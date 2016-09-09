@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.22.11",
+  "version": "3.22.14",
   "dependencies": {
     "abbrev": {
       "version": "1.0.9",
@@ -370,9 +370,9 @@
       "resolved": "https://registry.npmjs.org/braces/-/braces-1.8.5.tgz"
     },
     "brorand": {
-      "version": "1.0.5",
+      "version": "1.0.6",
       "from": "brorand@>=1.0.1 <2.0.0",
-      "resolved": "https://registry.npmjs.org/brorand/-/brorand-1.0.5.tgz"
+      "resolved": "https://registry.npmjs.org/brorand/-/brorand-1.0.6.tgz"
     },
     "browser-pack": {
       "version": "6.0.1",
@@ -2258,7 +2258,14 @@
     "http-errors": {
       "version": "1.5.0",
       "from": "http-errors@>=1.5.0 <1.6.0",
-      "resolved": "https://registry.npmjs.org/http-errors/-/http-errors-1.5.0.tgz"
+      "resolved": "https://registry.npmjs.org/http-errors/-/http-errors-1.5.0.tgz",
+      "dependencies": {
+        "inherits": {
+          "version": "2.0.1",
+          "from": "inherits@2.0.1",
+          "resolved": "https://registry.npmjs.org/inherits/-/inherits-2.0.1.tgz"
+        }
+      }
     },
     "http-proxy": {
       "version": "1.14.0",
@@ -2500,9 +2507,9 @@
       "resolved": "https://registry.npmjs.org/inflight/-/inflight-1.0.5.tgz"
     },
     "inherits": {
-      "version": "2.0.1",
+      "version": "2.0.3",
       "from": "inherits@>=2.0.1 <3.0.0",
-      "resolved": "https://registry.npmjs.org/inherits/-/inherits-2.0.1.tgz"
+      "resolved": "https://registry.npmjs.org/inherits/-/inherits-2.0.3.tgz"
     },
     "ini": {
       "version": "1.3.4",
@@ -2685,9 +2692,9 @@
       "resolved": "https://registry.npmjs.org/istanbul/-/istanbul-0.3.22.tgz"
     },
     "jasmine-core": {
-      "version": "2.5.0",
+      "version": "2.5.1",
       "from": "jasmine-core@>=2.2.0 <3.0.0",
-      "resolved": "https://registry.npmjs.org/jasmine-core/-/jasmine-core-2.5.0.tgz"
+      "resolved": "https://registry.npmjs.org/jasmine-core/-/jasmine-core-2.5.1.tgz"
     },
     "jasmine-es6-promise-matchers": {
       "version": "2.0.1",
@@ -4257,9 +4264,9 @@
       "resolved": "https://registry.npmjs.org/signal-exit/-/signal-exit-3.0.0.tgz"
     },
     "sjcl": {
-      "version": "1.0.3",
+      "version": "1.0.5",
       "from": "sjcl@>=1.0.0 <1.1.0",
-      "resolved": "https://registry.npmjs.org/sjcl/-/sjcl-1.0.3.tgz"
+      "resolved": "https://registry.npmjs.org/sjcl/-/sjcl-1.0.5.tgz"
     },
     "slice-ansi": {
       "version": "0.0.4",
@@ -4409,9 +4416,9 @@
       "resolved": "https://registry.npmjs.org/stream-combiner2/-/stream-combiner2-1.1.1.tgz"
     },
     "stream-http": {
-      "version": "2.3.1",
+      "version": "2.4.0",
       "from": "stream-http@>=2.0.0 <3.0.0",
-      "resolved": "https://registry.npmjs.org/stream-http/-/stream-http-2.3.1.tgz"
+      "resolved": "https://registry.npmjs.org/stream-http/-/stream-http-2.4.0.tgz"
     },
     "stream-splicer": {
       "version": "2.0.0",
@@ -4703,7 +4710,14 @@
     "util": {
       "version": "0.10.3",
       "from": "util@>=0.10.1 <0.11.0",
-      "resolved": "https://registry.npmjs.org/util/-/util-0.10.3.tgz"
+      "resolved": "https://registry.npmjs.org/util/-/util-0.10.3.tgz",
+      "dependencies": {
+        "inherits": {
+          "version": "2.0.1",
+          "from": "inherits@2.0.1",
+          "resolved": "https://registry.npmjs.org/inherits/-/inherits-2.0.1.tgz"
+        }
+      }
     },
     "util-deprecate": {
       "version": "1.0.2",
