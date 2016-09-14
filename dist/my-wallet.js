@@ -16319,7 +16319,7 @@ CipherBase.prototype._finalOrDigest = function (outputEnc) {
   return outData
 }
 
-CipherBase.prototype._toString = function (value, enc, final) {
+CipherBase.prototype._toString = function (value, enc, fin) {
   if (!this._decoder) {
     this._decoder = new StringDecoder(enc)
     this._encoding = enc
@@ -16328,7 +16328,7 @@ CipherBase.prototype._toString = function (value, enc, final) {
     throw new Error('can\'t switch encodings')
   }
   var out = this._decoder.write(value)
-  if (final) {
+  if (fin) {
     out += this._decoder.end()
   }
   return out
@@ -22563,961 +22563,1155 @@ module.exports={
  * @overview es6-promise - a tiny implementation of Promises/A+.
  * @copyright Copyright (c) 2014 Yehuda Katz, Tom Dale, Stefan Penner and contributors (Conversion to ES6 API by Jake Archibald)
  * @license   Licensed under MIT license
- *            See https://raw.githubusercontent.com/jakearchibald/es6-promise/master/LICENSE
- * @version   3.2.1
+ *            See https://raw.githubusercontent.com/stefanpenner/es6-promise/master/LICENSE
+ * @version   3.3.0
  */
 
-(function() {
-    "use strict";
-    function lib$es6$promise$utils$$objectOrFunction(x) {
-      return typeof x === 'function' || (typeof x === 'object' && x !== null);
-    }
+(function (global, factory) {
+    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+    typeof define === 'function' && define.amd ? define(factory) :
+    (global.ES6Promise = factory());
+}(this, (function () { 'use strict';
 
-    function lib$es6$promise$utils$$isFunction(x) {
-      return typeof x === 'function';
-    }
+function objectOrFunction(x) {
+  return typeof x === 'function' || typeof x === 'object' && x !== null;
+}
 
-    function lib$es6$promise$utils$$isMaybeThenable(x) {
-      return typeof x === 'object' && x !== null;
-    }
+function isFunction(x) {
+  return typeof x === 'function';
+}
 
-    var lib$es6$promise$utils$$_isArray;
-    if (!Array.isArray) {
-      lib$es6$promise$utils$$_isArray = function (x) {
-        return Object.prototype.toString.call(x) === '[object Array]';
-      };
+var _isArray = undefined;
+if (!Array.isArray) {
+  _isArray = function (x) {
+    return Object.prototype.toString.call(x) === '[object Array]';
+  };
+} else {
+  _isArray = Array.isArray;
+}
+
+var isArray = _isArray;
+
+var len = 0;
+var vertxNext = undefined;
+var customSchedulerFn = undefined;
+
+var asap = function asap(callback, arg) {
+  queue[len] = callback;
+  queue[len + 1] = arg;
+  len += 2;
+  if (len === 2) {
+    // If len is 2, that means that we need to schedule an async flush.
+    // If additional callbacks are queued before the queue is flushed, they
+    // will be processed by this flush that we are scheduling.
+    if (customSchedulerFn) {
+      customSchedulerFn(flush);
     } else {
-      lib$es6$promise$utils$$_isArray = Array.isArray;
+      scheduleFlush();
     }
+  }
+};
+
+function setScheduler(scheduleFn) {
+  customSchedulerFn = scheduleFn;
+}
+
+function setAsap(asapFn) {
+  asap = asapFn;
+}
+
+var browserWindow = typeof window !== 'undefined' ? window : undefined;
+var browserGlobal = browserWindow || {};
+var BrowserMutationObserver = browserGlobal.MutationObserver || browserGlobal.WebKitMutationObserver;
+var isNode = typeof self === 'undefined' && typeof process !== 'undefined' && ({}).toString.call(process) === '[object process]';
+
+// test for web worker but not in IE10
+var isWorker = typeof Uint8ClampedArray !== 'undefined' && typeof importScripts !== 'undefined' && typeof MessageChannel !== 'undefined';
+
+// node
+function useNextTick() {
+  // node version 0.10.x displays a deprecation warning when nextTick is used recursively
+  // see https://github.com/cujojs/when/issues/410 for details
+  return function () {
+    return process.nextTick(flush);
+  };
+}
+
+// vertx
+function useVertxTimer() {
+  return function () {
+    vertxNext(flush);
+  };
+}
+
+function useMutationObserver() {
+  var iterations = 0;
+  var observer = new BrowserMutationObserver(flush);
+  var node = document.createTextNode('');
+  observer.observe(node, { characterData: true });
+
+  return function () {
+    node.data = iterations = ++iterations % 2;
+  };
+}
+
+// web worker
+function useMessageChannel() {
+  var channel = new MessageChannel();
+  channel.port1.onmessage = flush;
+  return function () {
+    return channel.port2.postMessage(0);
+  };
+}
+
+function useSetTimeout() {
+  // Store setTimeout reference so es6-promise will be unaffected by
+  // other code modifying setTimeout (like sinon.useFakeTimers())
+  var globalSetTimeout = setTimeout;
+  return function () {
+    return globalSetTimeout(flush, 1);
+  };
+}
+
+var queue = new Array(1000);
+function flush() {
+  for (var i = 0; i < len; i += 2) {
+    var callback = queue[i];
+    var arg = queue[i + 1];
+
+    callback(arg);
+
+    queue[i] = undefined;
+    queue[i + 1] = undefined;
+  }
+
+  len = 0;
+}
+
+function attemptVertx() {
+  try {
+    var r = require;
+    var vertx = r('vertx');
+    vertxNext = vertx.runOnLoop || vertx.runOnContext;
+    return useVertxTimer();
+  } catch (e) {
+    return useSetTimeout();
+  }
+}
+
+var scheduleFlush = undefined;
+// Decide what async method to use to triggering processing of queued callbacks:
+if (isNode) {
+  scheduleFlush = useNextTick();
+} else if (BrowserMutationObserver) {
+  scheduleFlush = useMutationObserver();
+} else if (isWorker) {
+  scheduleFlush = useMessageChannel();
+} else if (browserWindow === undefined && typeof require === 'function') {
+  scheduleFlush = attemptVertx();
+} else {
+  scheduleFlush = useSetTimeout();
+}
 
-    var lib$es6$promise$utils$$isArray = lib$es6$promise$utils$$_isArray;
-    var lib$es6$promise$asap$$len = 0;
-    var lib$es6$promise$asap$$vertxNext;
-    var lib$es6$promise$asap$$customSchedulerFn;
-
-    var lib$es6$promise$asap$$asap = function asap(callback, arg) {
-      lib$es6$promise$asap$$queue[lib$es6$promise$asap$$len] = callback;
-      lib$es6$promise$asap$$queue[lib$es6$promise$asap$$len + 1] = arg;
-      lib$es6$promise$asap$$len += 2;
-      if (lib$es6$promise$asap$$len === 2) {
-        // If len is 2, that means that we need to schedule an async flush.
-        // If additional callbacks are queued before the queue is flushed, they
-        // will be processed by this flush that we are scheduling.
-        if (lib$es6$promise$asap$$customSchedulerFn) {
-          lib$es6$promise$asap$$customSchedulerFn(lib$es6$promise$asap$$flush);
-        } else {
-          lib$es6$promise$asap$$scheduleFlush();
-        }
-      }
-    }
-
-    function lib$es6$promise$asap$$setScheduler(scheduleFn) {
-      lib$es6$promise$asap$$customSchedulerFn = scheduleFn;
-    }
-
-    function lib$es6$promise$asap$$setAsap(asapFn) {
-      lib$es6$promise$asap$$asap = asapFn;
-    }
-
-    var lib$es6$promise$asap$$browserWindow = (typeof window !== 'undefined') ? window : undefined;
-    var lib$es6$promise$asap$$browserGlobal = lib$es6$promise$asap$$browserWindow || {};
-    var lib$es6$promise$asap$$BrowserMutationObserver = lib$es6$promise$asap$$browserGlobal.MutationObserver || lib$es6$promise$asap$$browserGlobal.WebKitMutationObserver;
-    var lib$es6$promise$asap$$isNode = typeof self === 'undefined' && typeof process !== 'undefined' && {}.toString.call(process) === '[object process]';
-
-    // test for web worker but not in IE10
-    var lib$es6$promise$asap$$isWorker = typeof Uint8ClampedArray !== 'undefined' &&
-      typeof importScripts !== 'undefined' &&
-      typeof MessageChannel !== 'undefined';
-
-    // node
-    function lib$es6$promise$asap$$useNextTick() {
-      // node version 0.10.x displays a deprecation warning when nextTick is used recursively
-      // see https://github.com/cujojs/when/issues/410 for details
-      return function() {
-        process.nextTick(lib$es6$promise$asap$$flush);
-      };
-    }
-
-    // vertx
-    function lib$es6$promise$asap$$useVertxTimer() {
-      return function() {
-        lib$es6$promise$asap$$vertxNext(lib$es6$promise$asap$$flush);
-      };
-    }
-
-    function lib$es6$promise$asap$$useMutationObserver() {
-      var iterations = 0;
-      var observer = new lib$es6$promise$asap$$BrowserMutationObserver(lib$es6$promise$asap$$flush);
-      var node = document.createTextNode('');
-      observer.observe(node, { characterData: true });
-
-      return function() {
-        node.data = (iterations = ++iterations % 2);
-      };
-    }
-
-    // web worker
-    function lib$es6$promise$asap$$useMessageChannel() {
-      var channel = new MessageChannel();
-      channel.port1.onmessage = lib$es6$promise$asap$$flush;
-      return function () {
-        channel.port2.postMessage(0);
-      };
-    }
-
-    function lib$es6$promise$asap$$useSetTimeout() {
-      return function() {
-        setTimeout(lib$es6$promise$asap$$flush, 1);
-      };
-    }
-
-    var lib$es6$promise$asap$$queue = new Array(1000);
-    function lib$es6$promise$asap$$flush() {
-      for (var i = 0; i < lib$es6$promise$asap$$len; i+=2) {
-        var callback = lib$es6$promise$asap$$queue[i];
-        var arg = lib$es6$promise$asap$$queue[i+1];
-
-        callback(arg);
-
-        lib$es6$promise$asap$$queue[i] = undefined;
-        lib$es6$promise$asap$$queue[i+1] = undefined;
-      }
-
-      lib$es6$promise$asap$$len = 0;
-    }
-
-    function lib$es6$promise$asap$$attemptVertx() {
-      try {
-        var r = require;
-        var vertx = r('vertx');
-        lib$es6$promise$asap$$vertxNext = vertx.runOnLoop || vertx.runOnContext;
-        return lib$es6$promise$asap$$useVertxTimer();
-      } catch(e) {
-        return lib$es6$promise$asap$$useSetTimeout();
-      }
-    }
-
-    var lib$es6$promise$asap$$scheduleFlush;
-    // Decide what async method to use to triggering processing of queued callbacks:
-    if (lib$es6$promise$asap$$isNode) {
-      lib$es6$promise$asap$$scheduleFlush = lib$es6$promise$asap$$useNextTick();
-    } else if (lib$es6$promise$asap$$BrowserMutationObserver) {
-      lib$es6$promise$asap$$scheduleFlush = lib$es6$promise$asap$$useMutationObserver();
-    } else if (lib$es6$promise$asap$$isWorker) {
-      lib$es6$promise$asap$$scheduleFlush = lib$es6$promise$asap$$useMessageChannel();
-    } else if (lib$es6$promise$asap$$browserWindow === undefined && typeof require === 'function') {
-      lib$es6$promise$asap$$scheduleFlush = lib$es6$promise$asap$$attemptVertx();
-    } else {
-      lib$es6$promise$asap$$scheduleFlush = lib$es6$promise$asap$$useSetTimeout();
-    }
-    function lib$es6$promise$then$$then(onFulfillment, onRejection) {
-      var parent = this;
-
-      var child = new this.constructor(lib$es6$promise$$internal$$noop);
-
-      if (child[lib$es6$promise$$internal$$PROMISE_ID] === undefined) {
-        lib$es6$promise$$internal$$makePromise(child);
-      }
-
-      var state = parent._state;
-
-      if (state) {
-        var callback = arguments[state - 1];
-        lib$es6$promise$asap$$asap(function(){
-          lib$es6$promise$$internal$$invokeCallback(state, child, callback, parent._result);
-        });
-      } else {
-        lib$es6$promise$$internal$$subscribe(parent, child, onFulfillment, onRejection);
-      }
-
-      return child;
-    }
-    var lib$es6$promise$then$$default = lib$es6$promise$then$$then;
-    function lib$es6$promise$promise$resolve$$resolve(object) {
-      /*jshint validthis:true */
-      var Constructor = this;
-
-      if (object && typeof object === 'object' && object.constructor === Constructor) {
-        return object;
-      }
-
-      var promise = new Constructor(lib$es6$promise$$internal$$noop);
-      lib$es6$promise$$internal$$resolve(promise, object);
-      return promise;
-    }
-    var lib$es6$promise$promise$resolve$$default = lib$es6$promise$promise$resolve$$resolve;
-    var lib$es6$promise$$internal$$PROMISE_ID = Math.random().toString(36).substring(16);
-
-    function lib$es6$promise$$internal$$noop() {}
-
-    var lib$es6$promise$$internal$$PENDING   = void 0;
-    var lib$es6$promise$$internal$$FULFILLED = 1;
-    var lib$es6$promise$$internal$$REJECTED  = 2;
-
-    var lib$es6$promise$$internal$$GET_THEN_ERROR = new lib$es6$promise$$internal$$ErrorObject();
-
-    function lib$es6$promise$$internal$$selfFulfillment() {
-      return new TypeError("You cannot resolve a promise with itself");
-    }
-
-    function lib$es6$promise$$internal$$cannotReturnOwn() {
-      return new TypeError('A promises callback cannot return that same promise.');
-    }
-
-    function lib$es6$promise$$internal$$getThen(promise) {
-      try {
-        return promise.then;
-      } catch(error) {
-        lib$es6$promise$$internal$$GET_THEN_ERROR.error = error;
-        return lib$es6$promise$$internal$$GET_THEN_ERROR;
-      }
-    }
-
-    function lib$es6$promise$$internal$$tryThen(then, value, fulfillmentHandler, rejectionHandler) {
-      try {
-        then.call(value, fulfillmentHandler, rejectionHandler);
-      } catch(e) {
-        return e;
-      }
-    }
-
-    function lib$es6$promise$$internal$$handleForeignThenable(promise, thenable, then) {
-       lib$es6$promise$asap$$asap(function(promise) {
-        var sealed = false;
-        var error = lib$es6$promise$$internal$$tryThen(then, thenable, function(value) {
-          if (sealed) { return; }
-          sealed = true;
-          if (thenable !== value) {
-            lib$es6$promise$$internal$$resolve(promise, value);
-          } else {
-            lib$es6$promise$$internal$$fulfill(promise, value);
-          }
-        }, function(reason) {
-          if (sealed) { return; }
-          sealed = true;
-
-          lib$es6$promise$$internal$$reject(promise, reason);
-        }, 'Settle: ' + (promise._label || ' unknown promise'));
-
-        if (!sealed && error) {
-          sealed = true;
-          lib$es6$promise$$internal$$reject(promise, error);
-        }
-      }, promise);
-    }
-
-    function lib$es6$promise$$internal$$handleOwnThenable(promise, thenable) {
-      if (thenable._state === lib$es6$promise$$internal$$FULFILLED) {
-        lib$es6$promise$$internal$$fulfill(promise, thenable._result);
-      } else if (thenable._state === lib$es6$promise$$internal$$REJECTED) {
-        lib$es6$promise$$internal$$reject(promise, thenable._result);
-      } else {
-        lib$es6$promise$$internal$$subscribe(thenable, undefined, function(value) {
-          lib$es6$promise$$internal$$resolve(promise, value);
-        }, function(reason) {
-          lib$es6$promise$$internal$$reject(promise, reason);
-        });
-      }
-    }
-
-    function lib$es6$promise$$internal$$handleMaybeThenable(promise, maybeThenable, then) {
-      if (maybeThenable.constructor === promise.constructor &&
-          then === lib$es6$promise$then$$default &&
-          constructor.resolve === lib$es6$promise$promise$resolve$$default) {
-        lib$es6$promise$$internal$$handleOwnThenable(promise, maybeThenable);
-      } else {
-        if (then === lib$es6$promise$$internal$$GET_THEN_ERROR) {
-          lib$es6$promise$$internal$$reject(promise, lib$es6$promise$$internal$$GET_THEN_ERROR.error);
-        } else if (then === undefined) {
-          lib$es6$promise$$internal$$fulfill(promise, maybeThenable);
-        } else if (lib$es6$promise$utils$$isFunction(then)) {
-          lib$es6$promise$$internal$$handleForeignThenable(promise, maybeThenable, then);
-        } else {
-          lib$es6$promise$$internal$$fulfill(promise, maybeThenable);
-        }
-      }
-    }
-
-    function lib$es6$promise$$internal$$resolve(promise, value) {
-      if (promise === value) {
-        lib$es6$promise$$internal$$reject(promise, lib$es6$promise$$internal$$selfFulfillment());
-      } else if (lib$es6$promise$utils$$objectOrFunction(value)) {
-        lib$es6$promise$$internal$$handleMaybeThenable(promise, value, lib$es6$promise$$internal$$getThen(value));
-      } else {
-        lib$es6$promise$$internal$$fulfill(promise, value);
-      }
-    }
-
-    function lib$es6$promise$$internal$$publishRejection(promise) {
-      if (promise._onerror) {
-        promise._onerror(promise._result);
-      }
-
-      lib$es6$promise$$internal$$publish(promise);
-    }
-
-    function lib$es6$promise$$internal$$fulfill(promise, value) {
-      if (promise._state !== lib$es6$promise$$internal$$PENDING) { return; }
-
-      promise._result = value;
-      promise._state = lib$es6$promise$$internal$$FULFILLED;
-
-      if (promise._subscribers.length !== 0) {
-        lib$es6$promise$asap$$asap(lib$es6$promise$$internal$$publish, promise);
-      }
-    }
-
-    function lib$es6$promise$$internal$$reject(promise, reason) {
-      if (promise._state !== lib$es6$promise$$internal$$PENDING) { return; }
-      promise._state = lib$es6$promise$$internal$$REJECTED;
-      promise._result = reason;
-
-      lib$es6$promise$asap$$asap(lib$es6$promise$$internal$$publishRejection, promise);
-    }
-
-    function lib$es6$promise$$internal$$subscribe(parent, child, onFulfillment, onRejection) {
-      var subscribers = parent._subscribers;
-      var length = subscribers.length;
-
-      parent._onerror = null;
-
-      subscribers[length] = child;
-      subscribers[length + lib$es6$promise$$internal$$FULFILLED] = onFulfillment;
-      subscribers[length + lib$es6$promise$$internal$$REJECTED]  = onRejection;
-
-      if (length === 0 && parent._state) {
-        lib$es6$promise$asap$$asap(lib$es6$promise$$internal$$publish, parent);
-      }
-    }
-
-    function lib$es6$promise$$internal$$publish(promise) {
-      var subscribers = promise._subscribers;
-      var settled = promise._state;
-
-      if (subscribers.length === 0) { return; }
-
-      var child, callback, detail = promise._result;
-
-      for (var i = 0; i < subscribers.length; i += 3) {
-        child = subscribers[i];
-        callback = subscribers[i + settled];
-
-        if (child) {
-          lib$es6$promise$$internal$$invokeCallback(settled, child, callback, detail);
-        } else {
-          callback(detail);
-        }
-      }
-
-      promise._subscribers.length = 0;
-    }
-
-    function lib$es6$promise$$internal$$ErrorObject() {
-      this.error = null;
-    }
-
-    var lib$es6$promise$$internal$$TRY_CATCH_ERROR = new lib$es6$promise$$internal$$ErrorObject();
-
-    function lib$es6$promise$$internal$$tryCatch(callback, detail) {
-      try {
-        return callback(detail);
-      } catch(e) {
-        lib$es6$promise$$internal$$TRY_CATCH_ERROR.error = e;
-        return lib$es6$promise$$internal$$TRY_CATCH_ERROR;
-      }
-    }
-
-    function lib$es6$promise$$internal$$invokeCallback(settled, promise, callback, detail) {
-      var hasCallback = lib$es6$promise$utils$$isFunction(callback),
-          value, error, succeeded, failed;
-
-      if (hasCallback) {
-        value = lib$es6$promise$$internal$$tryCatch(callback, detail);
-
-        if (value === lib$es6$promise$$internal$$TRY_CATCH_ERROR) {
-          failed = true;
-          error = value.error;
-          value = null;
-        } else {
-          succeeded = true;
-        }
-
-        if (promise === value) {
-          lib$es6$promise$$internal$$reject(promise, lib$es6$promise$$internal$$cannotReturnOwn());
-          return;
-        }
-
-      } else {
-        value = detail;
-        succeeded = true;
-      }
-
-      if (promise._state !== lib$es6$promise$$internal$$PENDING) {
-        // noop
-      } else if (hasCallback && succeeded) {
-        lib$es6$promise$$internal$$resolve(promise, value);
-      } else if (failed) {
-        lib$es6$promise$$internal$$reject(promise, error);
-      } else if (settled === lib$es6$promise$$internal$$FULFILLED) {
-        lib$es6$promise$$internal$$fulfill(promise, value);
-      } else if (settled === lib$es6$promise$$internal$$REJECTED) {
-        lib$es6$promise$$internal$$reject(promise, value);
-      }
-    }
-
-    function lib$es6$promise$$internal$$initializePromise(promise, resolver) {
-      try {
-        resolver(function resolvePromise(value){
-          lib$es6$promise$$internal$$resolve(promise, value);
-        }, function rejectPromise(reason) {
-          lib$es6$promise$$internal$$reject(promise, reason);
-        });
-      } catch(e) {
-        lib$es6$promise$$internal$$reject(promise, e);
-      }
-    }
-
-    var lib$es6$promise$$internal$$id = 0;
-    function lib$es6$promise$$internal$$nextId() {
-      return lib$es6$promise$$internal$$id++;
-    }
-
-    function lib$es6$promise$$internal$$makePromise(promise) {
-      promise[lib$es6$promise$$internal$$PROMISE_ID] = lib$es6$promise$$internal$$id++;
-      promise._state = undefined;
-      promise._result = undefined;
-      promise._subscribers = [];
-    }
-
-    function lib$es6$promise$promise$all$$all(entries) {
-      return new lib$es6$promise$enumerator$$default(this, entries).promise;
-    }
-    var lib$es6$promise$promise$all$$default = lib$es6$promise$promise$all$$all;
-    function lib$es6$promise$promise$race$$race(entries) {
-      /*jshint validthis:true */
-      var Constructor = this;
-
-      if (!lib$es6$promise$utils$$isArray(entries)) {
-        return new Constructor(function(resolve, reject) {
-          reject(new TypeError('You must pass an array to race.'));
-        });
-      } else {
-        return new Constructor(function(resolve, reject) {
-          var length = entries.length;
-          for (var i = 0; i < length; i++) {
-            Constructor.resolve(entries[i]).then(resolve, reject);
-          }
-        });
-      }
-    }
-    var lib$es6$promise$promise$race$$default = lib$es6$promise$promise$race$$race;
-    function lib$es6$promise$promise$reject$$reject(reason) {
-      /*jshint validthis:true */
-      var Constructor = this;
-      var promise = new Constructor(lib$es6$promise$$internal$$noop);
-      lib$es6$promise$$internal$$reject(promise, reason);
-      return promise;
-    }
-    var lib$es6$promise$promise$reject$$default = lib$es6$promise$promise$reject$$reject;
-
-
-    function lib$es6$promise$promise$$needsResolver() {
-      throw new TypeError('You must pass a resolver function as the first argument to the promise constructor');
-    }
-
-    function lib$es6$promise$promise$$needsNew() {
-      throw new TypeError("Failed to construct 'Promise': Please use the 'new' operator, this object constructor cannot be called as a function.");
-    }
-
-    var lib$es6$promise$promise$$default = lib$es6$promise$promise$$Promise;
-    /**
-      Promise objects represent the eventual result of an asynchronous operation. The
-      primary way of interacting with a promise is through its `then` method, which
-      registers callbacks to receive either a promise's eventual value or the reason
-      why the promise cannot be fulfilled.
-
-      Terminology
-      -----------
-
-      - `promise` is an object or function with a `then` method whose behavior conforms to this specification.
-      - `thenable` is an object or function that defines a `then` method.
-      - `value` is any legal JavaScript value (including undefined, a thenable, or a promise).
-      - `exception` is a value that is thrown using the throw statement.
-      - `reason` is a value that indicates why a promise was rejected.
-      - `settled` the final resting state of a promise, fulfilled or rejected.
-
-      A promise can be in one of three states: pending, fulfilled, or rejected.
-
-      Promises that are fulfilled have a fulfillment value and are in the fulfilled
-      state.  Promises that are rejected have a rejection reason and are in the
-      rejected state.  A fulfillment value is never a thenable.
-
-      Promises can also be said to *resolve* a value.  If this value is also a
-      promise, then the original promise's settled state will match the value's
-      settled state.  So a promise that *resolves* a promise that rejects will
-      itself reject, and a promise that *resolves* a promise that fulfills will
-      itself fulfill.
-
-
-      Basic Usage:
-      ------------
-
-      ```js
-      var promise = new Promise(function(resolve, reject) {
-        // on success
-        resolve(value);
-
-        // on failure
-        reject(reason);
+function then(onFulfillment, onRejection) {
+  var _arguments = arguments;
+
+  var parent = this;
+
+  var child = new this.constructor(noop);
+
+  if (child[PROMISE_ID] === undefined) {
+    makePromise(child);
+  }
+
+  var _state = parent._state;
+
+  if (_state) {
+    (function () {
+      var callback = _arguments[_state - 1];
+      asap(function () {
+        return invokeCallback(_state, child, callback, parent._result);
       });
-
-      promise.then(function(value) {
-        // on fulfillment
-      }, function(reason) {
-        // on rejection
-      });
-      ```
-
-      Advanced Usage:
-      ---------------
-
-      Promises shine when abstracting away asynchronous interactions such as
-      `XMLHttpRequest`s.
-
-      ```js
-      function getJSON(url) {
-        return new Promise(function(resolve, reject){
-          var xhr = new XMLHttpRequest();
-
-          xhr.open('GET', url);
-          xhr.onreadystatechange = handler;
-          xhr.responseType = 'json';
-          xhr.setRequestHeader('Accept', 'application/json');
-          xhr.send();
-
-          function handler() {
-            if (this.readyState === this.DONE) {
-              if (this.status === 200) {
-                resolve(this.response);
-              } else {
-                reject(new Error('getJSON: `' + url + '` failed with status: [' + this.status + ']'));
-              }
-            }
-          };
-        });
-      }
-
-      getJSON('/posts.json').then(function(json) {
-        // on fulfillment
-      }, function(reason) {
-        // on rejection
-      });
-      ```
-
-      Unlike callbacks, promises are great composable primitives.
-
-      ```js
-      Promise.all([
-        getJSON('/posts'),
-        getJSON('/comments')
-      ]).then(function(values){
-        values[0] // => postsJSON
-        values[1] // => commentsJSON
-
-        return values;
-      });
-      ```
-
-      @class Promise
-      @param {function} resolver
-      Useful for tooling.
-      @constructor
-    */
-    function lib$es6$promise$promise$$Promise(resolver) {
-      this[lib$es6$promise$$internal$$PROMISE_ID] = lib$es6$promise$$internal$$nextId();
-      this._result = this._state = undefined;
-      this._subscribers = [];
-
-      if (lib$es6$promise$$internal$$noop !== resolver) {
-        typeof resolver !== 'function' && lib$es6$promise$promise$$needsResolver();
-        this instanceof lib$es6$promise$promise$$Promise ? lib$es6$promise$$internal$$initializePromise(this, resolver) : lib$es6$promise$promise$$needsNew();
-      }
-    }
-
-    lib$es6$promise$promise$$Promise.all = lib$es6$promise$promise$all$$default;
-    lib$es6$promise$promise$$Promise.race = lib$es6$promise$promise$race$$default;
-    lib$es6$promise$promise$$Promise.resolve = lib$es6$promise$promise$resolve$$default;
-    lib$es6$promise$promise$$Promise.reject = lib$es6$promise$promise$reject$$default;
-    lib$es6$promise$promise$$Promise._setScheduler = lib$es6$promise$asap$$setScheduler;
-    lib$es6$promise$promise$$Promise._setAsap = lib$es6$promise$asap$$setAsap;
-    lib$es6$promise$promise$$Promise._asap = lib$es6$promise$asap$$asap;
-
-    lib$es6$promise$promise$$Promise.prototype = {
-      constructor: lib$es6$promise$promise$$Promise,
-
-    /**
-      The primary way of interacting with a promise is through its `then` method,
-      which registers callbacks to receive either a promise's eventual value or the
-      reason why the promise cannot be fulfilled.
-
-      ```js
-      findUser().then(function(user){
-        // user is available
-      }, function(reason){
-        // user is unavailable, and you are given the reason why
-      });
-      ```
-
-      Chaining
-      --------
-
-      The return value of `then` is itself a promise.  This second, 'downstream'
-      promise is resolved with the return value of the first promise's fulfillment
-      or rejection handler, or rejected if the handler throws an exception.
-
-      ```js
-      findUser().then(function (user) {
-        return user.name;
-      }, function (reason) {
-        return 'default name';
-      }).then(function (userName) {
-        // If `findUser` fulfilled, `userName` will be the user's name, otherwise it
-        // will be `'default name'`
-      });
-
-      findUser().then(function (user) {
-        throw new Error('Found user, but still unhappy');
-      }, function (reason) {
-        throw new Error('`findUser` rejected and we're unhappy');
-      }).then(function (value) {
-        // never reached
-      }, function (reason) {
-        // if `findUser` fulfilled, `reason` will be 'Found user, but still unhappy'.
-        // If `findUser` rejected, `reason` will be '`findUser` rejected and we're unhappy'.
-      });
-      ```
-      If the downstream promise does not specify a rejection handler, rejection reasons will be propagated further downstream.
-
-      ```js
-      findUser().then(function (user) {
-        throw new PedagogicalException('Upstream error');
-      }).then(function (value) {
-        // never reached
-      }).then(function (value) {
-        // never reached
-      }, function (reason) {
-        // The `PedgagocialException` is propagated all the way down to here
-      });
-      ```
-
-      Assimilation
-      ------------
-
-      Sometimes the value you want to propagate to a downstream promise can only be
-      retrieved asynchronously. This can be achieved by returning a promise in the
-      fulfillment or rejection handler. The downstream promise will then be pending
-      until the returned promise is settled. This is called *assimilation*.
-
-      ```js
-      findUser().then(function (user) {
-        return findCommentsByAuthor(user);
-      }).then(function (comments) {
-        // The user's comments are now available
-      });
-      ```
-
-      If the assimliated promise rejects, then the downstream promise will also reject.
-
-      ```js
-      findUser().then(function (user) {
-        return findCommentsByAuthor(user);
-      }).then(function (comments) {
-        // If `findCommentsByAuthor` fulfills, we'll have the value here
-      }, function (reason) {
-        // If `findCommentsByAuthor` rejects, we'll have the reason here
-      });
-      ```
-
-      Simple Example
-      --------------
-
-      Synchronous Example
-
-      ```javascript
-      var result;
-
-      try {
-        result = findResult();
-        // success
-      } catch(reason) {
-        // failure
-      }
-      ```
-
-      Errback Example
-
-      ```js
-      findResult(function(result, err){
-        if (err) {
-          // failure
-        } else {
-          // success
-        }
-      });
-      ```
-
-      Promise Example;
-
-      ```javascript
-      findResult().then(function(result){
-        // success
-      }, function(reason){
-        // failure
-      });
-      ```
-
-      Advanced Example
-      --------------
-
-      Synchronous Example
-
-      ```javascript
-      var author, books;
-
-      try {
-        author = findAuthor();
-        books  = findBooksByAuthor(author);
-        // success
-      } catch(reason) {
-        // failure
-      }
-      ```
-
-      Errback Example
-
-      ```js
-
-      function foundBooks(books) {
-
-      }
-
-      function failure(reason) {
-
-      }
-
-      findAuthor(function(author, err){
-        if (err) {
-          failure(err);
-          // failure
-        } else {
-          try {
-            findBoooksByAuthor(author, function(books, err) {
-              if (err) {
-                failure(err);
-              } else {
-                try {
-                  foundBooks(books);
-                } catch(reason) {
-                  failure(reason);
-                }
-              }
-            });
-          } catch(error) {
-            failure(err);
-          }
-          // success
-        }
-      });
-      ```
-
-      Promise Example;
-
-      ```javascript
-      findAuthor().
-        then(findBooksByAuthor).
-        then(function(books){
-          // found books
-      }).catch(function(reason){
-        // something went wrong
-      });
-      ```
-
-      @method then
-      @param {Function} onFulfilled
-      @param {Function} onRejected
-      Useful for tooling.
-      @return {Promise}
-    */
-      then: lib$es6$promise$then$$default,
-
-    /**
-      `catch` is simply sugar for `then(undefined, onRejection)` which makes it the same
-      as the catch block of a try/catch statement.
-
-      ```js
-      function findAuthor(){
-        throw new Error('couldn't find that author');
-      }
-
-      // synchronous
-      try {
-        findAuthor();
-      } catch(reason) {
-        // something went wrong
-      }
-
-      // async with promises
-      findAuthor().catch(function(reason){
-        // something went wrong
-      });
-      ```
-
-      @method catch
-      @param {Function} onRejection
-      Useful for tooling.
-      @return {Promise}
-    */
-      'catch': function(onRejection) {
-        return this.then(null, onRejection);
-      }
-    };
-    var lib$es6$promise$enumerator$$default = lib$es6$promise$enumerator$$Enumerator;
-    function lib$es6$promise$enumerator$$Enumerator(Constructor, input) {
-      this._instanceConstructor = Constructor;
-      this.promise = new Constructor(lib$es6$promise$$internal$$noop);
-
-      if (!this.promise[lib$es6$promise$$internal$$PROMISE_ID]) {
-        lib$es6$promise$$internal$$makePromise(this.promise);
-      }
-
-      if (lib$es6$promise$utils$$isArray(input)) {
-        this._input     = input;
-        this.length     = input.length;
-        this._remaining = input.length;
-
-        this._result = new Array(this.length);
-
-        if (this.length === 0) {
-          lib$es6$promise$$internal$$fulfill(this.promise, this._result);
-        } else {
-          this.length = this.length || 0;
-          this._enumerate();
-          if (this._remaining === 0) {
-            lib$es6$promise$$internal$$fulfill(this.promise, this._result);
-          }
-        }
-      } else {
-        lib$es6$promise$$internal$$reject(this.promise, lib$es6$promise$enumerator$$validationError());
-      }
-    }
-
-    function lib$es6$promise$enumerator$$validationError() {
-      return new Error('Array Methods must be provided an Array');
-    }
-
-    lib$es6$promise$enumerator$$Enumerator.prototype._enumerate = function() {
-      var length  = this.length;
-      var input   = this._input;
-
-      for (var i = 0; this._state === lib$es6$promise$$internal$$PENDING && i < length; i++) {
-        this._eachEntry(input[i], i);
-      }
-    };
-
-    lib$es6$promise$enumerator$$Enumerator.prototype._eachEntry = function(entry, i) {
-      var c = this._instanceConstructor;
-      var resolve = c.resolve;
-
-      if (resolve === lib$es6$promise$promise$resolve$$default) {
-        var then = lib$es6$promise$$internal$$getThen(entry);
-
-        if (then === lib$es6$promise$then$$default &&
-            entry._state !== lib$es6$promise$$internal$$PENDING) {
-          this._settledAt(entry._state, i, entry._result);
-        } else if (typeof then !== 'function') {
-          this._remaining--;
-          this._result[i] = entry;
-        } else if (c === lib$es6$promise$promise$$default) {
-          var promise = new c(lib$es6$promise$$internal$$noop);
-          lib$es6$promise$$internal$$handleMaybeThenable(promise, entry, then);
-          this._willSettleAt(promise, i);
-        } else {
-          this._willSettleAt(new c(function(resolve) { resolve(entry); }), i);
-        }
-      } else {
-        this._willSettleAt(resolve(entry), i);
-      }
-    };
-
-    lib$es6$promise$enumerator$$Enumerator.prototype._settledAt = function(state, i, value) {
-      var promise = this.promise;
-
-      if (promise._state === lib$es6$promise$$internal$$PENDING) {
-        this._remaining--;
-
-        if (state === lib$es6$promise$$internal$$REJECTED) {
-          lib$es6$promise$$internal$$reject(promise, value);
-        } else {
-          this._result[i] = value;
-        }
-      }
-
-      if (this._remaining === 0) {
-        lib$es6$promise$$internal$$fulfill(promise, this._result);
-      }
-    };
-
-    lib$es6$promise$enumerator$$Enumerator.prototype._willSettleAt = function(promise, i) {
-      var enumerator = this;
-
-      lib$es6$promise$$internal$$subscribe(promise, undefined, function(value) {
-        enumerator._settledAt(lib$es6$promise$$internal$$FULFILLED, i, value);
-      }, function(reason) {
-        enumerator._settledAt(lib$es6$promise$$internal$$REJECTED, i, reason);
-      });
-    };
-    function lib$es6$promise$polyfill$$polyfill() {
-      var local;
-
-      if (typeof global !== 'undefined') {
-          local = global;
-      } else if (typeof self !== 'undefined') {
-          local = self;
-      } else {
-          try {
-              local = Function('return this')();
-          } catch (e) {
-              throw new Error('polyfill failed because global object is unavailable in this environment');
-          }
-      }
-
-      var P = local.Promise;
-
-      if (P && Object.prototype.toString.call(P.resolve()) === '[object Promise]' && !P.cast) {
+    })();
+  } else {
+    subscribe(parent, child, onFulfillment, onRejection);
+  }
+
+  return child;
+}
+
+/**
+  `Promise.resolve` returns a promise that will become resolved with the
+  passed `value`. It is shorthand for the following:
+
+  ```javascript
+  let promise = new Promise(function(resolve, reject){
+    resolve(1);
+  });
+
+  promise.then(function(value){
+    // value === 1
+  });
+  ```
+
+  Instead of writing the above, your code now simply becomes the following:
+
+  ```javascript
+  let promise = Promise.resolve(1);
+
+  promise.then(function(value){
+    // value === 1
+  });
+  ```
+
+  @method resolve
+  @static
+  @param {Any} value value that the returned promise will be resolved with
+  Useful for tooling.
+  @return {Promise} a promise that will become fulfilled with the given
+  `value`
+*/
+function resolve(object) {
+  /*jshint validthis:true */
+  var Constructor = this;
+
+  if (object && typeof object === 'object' && object.constructor === Constructor) {
+    return object;
+  }
+
+  var promise = new Constructor(noop);
+  _resolve(promise, object);
+  return promise;
+}
+
+var PROMISE_ID = Math.random().toString(36).substring(16);
+
+function noop() {}
+
+var PENDING = void 0;
+var FULFILLED = 1;
+var REJECTED = 2;
+
+var GET_THEN_ERROR = new ErrorObject();
+
+function selfFulfillment() {
+  return new TypeError("You cannot resolve a promise with itself");
+}
+
+function cannotReturnOwn() {
+  return new TypeError('A promises callback cannot return that same promise.');
+}
+
+function getThen(promise) {
+  try {
+    return promise.then;
+  } catch (error) {
+    GET_THEN_ERROR.error = error;
+    return GET_THEN_ERROR;
+  }
+}
+
+function tryThen(then, value, fulfillmentHandler, rejectionHandler) {
+  try {
+    then.call(value, fulfillmentHandler, rejectionHandler);
+  } catch (e) {
+    return e;
+  }
+}
+
+function handleForeignThenable(promise, thenable, then) {
+  asap(function (promise) {
+    var sealed = false;
+    var error = tryThen(then, thenable, function (value) {
+      if (sealed) {
         return;
       }
+      sealed = true;
+      if (thenable !== value) {
+        _resolve(promise, value);
+      } else {
+        fulfill(promise, value);
+      }
+    }, function (reason) {
+      if (sealed) {
+        return;
+      }
+      sealed = true;
 
-      local.Promise = lib$es6$promise$promise$$default;
+      _reject(promise, reason);
+    }, 'Settle: ' + (promise._label || ' unknown promise'));
+
+    if (!sealed && error) {
+      sealed = true;
+      _reject(promise, error);
     }
-    var lib$es6$promise$polyfill$$default = lib$es6$promise$polyfill$$polyfill;
+  }, promise);
+}
 
-    var lib$es6$promise$umd$$ES6Promise = {
-      'Promise': lib$es6$promise$promise$$default,
-      'polyfill': lib$es6$promise$polyfill$$default
-    };
+function handleOwnThenable(promise, thenable) {
+  if (thenable._state === FULFILLED) {
+    fulfill(promise, thenable._result);
+  } else if (thenable._state === REJECTED) {
+    _reject(promise, thenable._result);
+  } else {
+    subscribe(thenable, undefined, function (value) {
+      return _resolve(promise, value);
+    }, function (reason) {
+      return _reject(promise, reason);
+    });
+  }
+}
 
-    /* global define:true module:true window: true */
-    if (typeof define === 'function' && define['amd']) {
-      define(function() { return lib$es6$promise$umd$$ES6Promise; });
-    } else if (typeof module !== 'undefined' && module['exports']) {
-      module['exports'] = lib$es6$promise$umd$$ES6Promise;
-    } else if (typeof this !== 'undefined') {
-      this['ES6Promise'] = lib$es6$promise$umd$$ES6Promise;
+function handleMaybeThenable(promise, maybeThenable, then$$) {
+  if (maybeThenable.constructor === promise.constructor && then$$ === then && maybeThenable.constructor.resolve === resolve) {
+    handleOwnThenable(promise, maybeThenable);
+  } else {
+    if (then$$ === GET_THEN_ERROR) {
+      _reject(promise, GET_THEN_ERROR.error);
+    } else if (then$$ === undefined) {
+      fulfill(promise, maybeThenable);
+    } else if (isFunction(then$$)) {
+      handleForeignThenable(promise, maybeThenable, then$$);
+    } else {
+      fulfill(promise, maybeThenable);
+    }
+  }
+}
+
+function _resolve(promise, value) {
+  if (promise === value) {
+    _reject(promise, selfFulfillment());
+  } else if (objectOrFunction(value)) {
+    handleMaybeThenable(promise, value, getThen(value));
+  } else {
+    fulfill(promise, value);
+  }
+}
+
+function publishRejection(promise) {
+  if (promise._onerror) {
+    promise._onerror(promise._result);
+  }
+
+  publish(promise);
+}
+
+function fulfill(promise, value) {
+  if (promise._state !== PENDING) {
+    return;
+  }
+
+  promise._result = value;
+  promise._state = FULFILLED;
+
+  if (promise._subscribers.length !== 0) {
+    asap(publish, promise);
+  }
+}
+
+function _reject(promise, reason) {
+  if (promise._state !== PENDING) {
+    return;
+  }
+  promise._state = REJECTED;
+  promise._result = reason;
+
+  asap(publishRejection, promise);
+}
+
+function subscribe(parent, child, onFulfillment, onRejection) {
+  var _subscribers = parent._subscribers;
+  var length = _subscribers.length;
+
+  parent._onerror = null;
+
+  _subscribers[length] = child;
+  _subscribers[length + FULFILLED] = onFulfillment;
+  _subscribers[length + REJECTED] = onRejection;
+
+  if (length === 0 && parent._state) {
+    asap(publish, parent);
+  }
+}
+
+function publish(promise) {
+  var subscribers = promise._subscribers;
+  var settled = promise._state;
+
+  if (subscribers.length === 0) {
+    return;
+  }
+
+  var child = undefined,
+      callback = undefined,
+      detail = promise._result;
+
+  for (var i = 0; i < subscribers.length; i += 3) {
+    child = subscribers[i];
+    callback = subscribers[i + settled];
+
+    if (child) {
+      invokeCallback(settled, child, callback, detail);
+    } else {
+      callback(detail);
+    }
+  }
+
+  promise._subscribers.length = 0;
+}
+
+function ErrorObject() {
+  this.error = null;
+}
+
+var TRY_CATCH_ERROR = new ErrorObject();
+
+function tryCatch(callback, detail) {
+  try {
+    return callback(detail);
+  } catch (e) {
+    TRY_CATCH_ERROR.error = e;
+    return TRY_CATCH_ERROR;
+  }
+}
+
+function invokeCallback(settled, promise, callback, detail) {
+  var hasCallback = isFunction(callback),
+      value = undefined,
+      error = undefined,
+      succeeded = undefined,
+      failed = undefined;
+
+  if (hasCallback) {
+    value = tryCatch(callback, detail);
+
+    if (value === TRY_CATCH_ERROR) {
+      failed = true;
+      error = value.error;
+      value = null;
+    } else {
+      succeeded = true;
     }
 
-    lib$es6$promise$polyfill$$default();
-}).call(this);
+    if (promise === value) {
+      _reject(promise, cannotReturnOwn());
+      return;
+    }
+  } else {
+    value = detail;
+    succeeded = true;
+  }
 
+  if (promise._state !== PENDING) {
+    // noop
+  } else if (hasCallback && succeeded) {
+      _resolve(promise, value);
+    } else if (failed) {
+      _reject(promise, error);
+    } else if (settled === FULFILLED) {
+      fulfill(promise, value);
+    } else if (settled === REJECTED) {
+      _reject(promise, value);
+    }
+}
+
+function initializePromise(promise, resolver) {
+  try {
+    resolver(function resolvePromise(value) {
+      _resolve(promise, value);
+    }, function rejectPromise(reason) {
+      _reject(promise, reason);
+    });
+  } catch (e) {
+    _reject(promise, e);
+  }
+}
+
+var id = 0;
+function nextId() {
+  return id++;
+}
+
+function makePromise(promise) {
+  promise[PROMISE_ID] = id++;
+  promise._state = undefined;
+  promise._result = undefined;
+  promise._subscribers = [];
+}
+
+function Enumerator(Constructor, input) {
+  this._instanceConstructor = Constructor;
+  this.promise = new Constructor(noop);
+
+  if (!this.promise[PROMISE_ID]) {
+    makePromise(this.promise);
+  }
+
+  if (isArray(input)) {
+    this._input = input;
+    this.length = input.length;
+    this._remaining = input.length;
+
+    this._result = new Array(this.length);
+
+    if (this.length === 0) {
+      fulfill(this.promise, this._result);
+    } else {
+      this.length = this.length || 0;
+      this._enumerate();
+      if (this._remaining === 0) {
+        fulfill(this.promise, this._result);
+      }
+    }
+  } else {
+    _reject(this.promise, validationError());
+  }
+}
+
+function validationError() {
+  return new Error('Array Methods must be provided an Array');
+};
+
+Enumerator.prototype._enumerate = function () {
+  var length = this.length;
+  var _input = this._input;
+
+  for (var i = 0; this._state === PENDING && i < length; i++) {
+    this._eachEntry(_input[i], i);
+  }
+};
+
+Enumerator.prototype._eachEntry = function (entry, i) {
+  var c = this._instanceConstructor;
+  var resolve$$ = c.resolve;
+
+  if (resolve$$ === resolve) {
+    var _then = getThen(entry);
+
+    if (_then === then && entry._state !== PENDING) {
+      this._settledAt(entry._state, i, entry._result);
+    } else if (typeof _then !== 'function') {
+      this._remaining--;
+      this._result[i] = entry;
+    } else if (c === Promise) {
+      var promise = new c(noop);
+      handleMaybeThenable(promise, entry, _then);
+      this._willSettleAt(promise, i);
+    } else {
+      this._willSettleAt(new c(function (resolve$$) {
+        return resolve$$(entry);
+      }), i);
+    }
+  } else {
+    this._willSettleAt(resolve$$(entry), i);
+  }
+};
+
+Enumerator.prototype._settledAt = function (state, i, value) {
+  var promise = this.promise;
+
+  if (promise._state === PENDING) {
+    this._remaining--;
+
+    if (state === REJECTED) {
+      _reject(promise, value);
+    } else {
+      this._result[i] = value;
+    }
+  }
+
+  if (this._remaining === 0) {
+    fulfill(promise, this._result);
+  }
+};
+
+Enumerator.prototype._willSettleAt = function (promise, i) {
+  var enumerator = this;
+
+  subscribe(promise, undefined, function (value) {
+    return enumerator._settledAt(FULFILLED, i, value);
+  }, function (reason) {
+    return enumerator._settledAt(REJECTED, i, reason);
+  });
+};
+
+/**
+  `Promise.all` accepts an array of promises, and returns a new promise which
+  is fulfilled with an array of fulfillment values for the passed promises, or
+  rejected with the reason of the first passed promise to be rejected. It casts all
+  elements of the passed iterable to promises as it runs this algorithm.
+
+  Example:
+
+  ```javascript
+  let promise1 = resolve(1);
+  let promise2 = resolve(2);
+  let promise3 = resolve(3);
+  let promises = [ promise1, promise2, promise3 ];
+
+  Promise.all(promises).then(function(array){
+    // The array here would be [ 1, 2, 3 ];
+  });
+  ```
+
+  If any of the `promises` given to `all` are rejected, the first promise
+  that is rejected will be given as an argument to the returned promises's
+  rejection handler. For example:
+
+  Example:
+
+  ```javascript
+  let promise1 = resolve(1);
+  let promise2 = reject(new Error("2"));
+  let promise3 = reject(new Error("3"));
+  let promises = [ promise1, promise2, promise3 ];
+
+  Promise.all(promises).then(function(array){
+    // Code here never runs because there are rejected promises!
+  }, function(error) {
+    // error.message === "2"
+  });
+  ```
+
+  @method all
+  @static
+  @param {Array} entries array of promises
+  @param {String} label optional string for labeling the promise.
+  Useful for tooling.
+  @return {Promise} promise that is fulfilled when all `promises` have been
+  fulfilled, or rejected if any of them become rejected.
+  @static
+*/
+function all(entries) {
+  return new Enumerator(this, entries).promise;
+}
+
+/**
+  `Promise.race` returns a new promise which is settled in the same way as the
+  first passed promise to settle.
+
+  Example:
+
+  ```javascript
+  let promise1 = new Promise(function(resolve, reject){
+    setTimeout(function(){
+      resolve('promise 1');
+    }, 200);
+  });
+
+  let promise2 = new Promise(function(resolve, reject){
+    setTimeout(function(){
+      resolve('promise 2');
+    }, 100);
+  });
+
+  Promise.race([promise1, promise2]).then(function(result){
+    // result === 'promise 2' because it was resolved before promise1
+    // was resolved.
+  });
+  ```
+
+  `Promise.race` is deterministic in that only the state of the first
+  settled promise matters. For example, even if other promises given to the
+  `promises` array argument are resolved, but the first settled promise has
+  become rejected before the other promises became fulfilled, the returned
+  promise will become rejected:
+
+  ```javascript
+  let promise1 = new Promise(function(resolve, reject){
+    setTimeout(function(){
+      resolve('promise 1');
+    }, 200);
+  });
+
+  let promise2 = new Promise(function(resolve, reject){
+    setTimeout(function(){
+      reject(new Error('promise 2'));
+    }, 100);
+  });
+
+  Promise.race([promise1, promise2]).then(function(result){
+    // Code here never runs
+  }, function(reason){
+    // reason.message === 'promise 2' because promise 2 became rejected before
+    // promise 1 became fulfilled
+  });
+  ```
+
+  An example real-world use case is implementing timeouts:
+
+  ```javascript
+  Promise.race([ajax('foo.json'), timeout(5000)])
+  ```
+
+  @method race
+  @static
+  @param {Array} promises array of promises to observe
+  Useful for tooling.
+  @return {Promise} a promise which settles in the same way as the first passed
+  promise to settle.
+*/
+function race(entries) {
+  /*jshint validthis:true */
+  var Constructor = this;
+
+  if (!isArray(entries)) {
+    return new Constructor(function (_, reject) {
+      return reject(new TypeError('You must pass an array to race.'));
+    });
+  } else {
+    return new Constructor(function (resolve, reject) {
+      var length = entries.length;
+      for (var i = 0; i < length; i++) {
+        Constructor.resolve(entries[i]).then(resolve, reject);
+      }
+    });
+  }
+}
+
+/**
+  `Promise.reject` returns a promise rejected with the passed `reason`.
+  It is shorthand for the following:
+
+  ```javascript
+  let promise = new Promise(function(resolve, reject){
+    reject(new Error('WHOOPS'));
+  });
+
+  promise.then(function(value){
+    // Code here doesn't run because the promise is rejected!
+  }, function(reason){
+    // reason.message === 'WHOOPS'
+  });
+  ```
+
+  Instead of writing the above, your code now simply becomes the following:
+
+  ```javascript
+  let promise = Promise.reject(new Error('WHOOPS'));
+
+  promise.then(function(value){
+    // Code here doesn't run because the promise is rejected!
+  }, function(reason){
+    // reason.message === 'WHOOPS'
+  });
+  ```
+
+  @method reject
+  @static
+  @param {Any} reason value that the returned promise will be rejected with.
+  Useful for tooling.
+  @return {Promise} a promise rejected with the given `reason`.
+*/
+function reject(reason) {
+  /*jshint validthis:true */
+  var Constructor = this;
+  var promise = new Constructor(noop);
+  _reject(promise, reason);
+  return promise;
+}
+
+function needsResolver() {
+  throw new TypeError('You must pass a resolver function as the first argument to the promise constructor');
+}
+
+function needsNew() {
+  throw new TypeError("Failed to construct 'Promise': Please use the 'new' operator, this object constructor cannot be called as a function.");
+}
+
+/**
+  Promise objects represent the eventual result of an asynchronous operation. The
+  primary way of interacting with a promise is through its `then` method, which
+  registers callbacks to receive either a promise's eventual value or the reason
+  why the promise cannot be fulfilled.
+
+  Terminology
+  -----------
+
+  - `promise` is an object or function with a `then` method whose behavior conforms to this specification.
+  - `thenable` is an object or function that defines a `then` method.
+  - `value` is any legal JavaScript value (including undefined, a thenable, or a promise).
+  - `exception` is a value that is thrown using the throw statement.
+  - `reason` is a value that indicates why a promise was rejected.
+  - `settled` the final resting state of a promise, fulfilled or rejected.
+
+  A promise can be in one of three states: pending, fulfilled, or rejected.
+
+  Promises that are fulfilled have a fulfillment value and are in the fulfilled
+  state.  Promises that are rejected have a rejection reason and are in the
+  rejected state.  A fulfillment value is never a thenable.
+
+  Promises can also be said to *resolve* a value.  If this value is also a
+  promise, then the original promise's settled state will match the value's
+  settled state.  So a promise that *resolves* a promise that rejects will
+  itself reject, and a promise that *resolves* a promise that fulfills will
+  itself fulfill.
+
+
+  Basic Usage:
+  ------------
+
+  ```js
+  let promise = new Promise(function(resolve, reject) {
+    // on success
+    resolve(value);
+
+    // on failure
+    reject(reason);
+  });
+
+  promise.then(function(value) {
+    // on fulfillment
+  }, function(reason) {
+    // on rejection
+  });
+  ```
+
+  Advanced Usage:
+  ---------------
+
+  Promises shine when abstracting away asynchronous interactions such as
+  `XMLHttpRequest`s.
+
+  ```js
+  function getJSON(url) {
+    return new Promise(function(resolve, reject){
+      let xhr = new XMLHttpRequest();
+
+      xhr.open('GET', url);
+      xhr.onreadystatechange = handler;
+      xhr.responseType = 'json';
+      xhr.setRequestHeader('Accept', 'application/json');
+      xhr.send();
+
+      function handler() {
+        if (this.readyState === this.DONE) {
+          if (this.status === 200) {
+            resolve(this.response);
+          } else {
+            reject(new Error('getJSON: `' + url + '` failed with status: [' + this.status + ']'));
+          }
+        }
+      };
+    });
+  }
+
+  getJSON('/posts.json').then(function(json) {
+    // on fulfillment
+  }, function(reason) {
+    // on rejection
+  });
+  ```
+
+  Unlike callbacks, promises are great composable primitives.
+
+  ```js
+  Promise.all([
+    getJSON('/posts'),
+    getJSON('/comments')
+  ]).then(function(values){
+    values[0] // => postsJSON
+    values[1] // => commentsJSON
+
+    return values;
+  });
+  ```
+
+  @class Promise
+  @param {function} resolver
+  Useful for tooling.
+  @constructor
+*/
+function Promise(resolver) {
+  this[PROMISE_ID] = nextId();
+  this._result = this._state = undefined;
+  this._subscribers = [];
+
+  if (noop !== resolver) {
+    typeof resolver !== 'function' && needsResolver();
+    this instanceof Promise ? initializePromise(this, resolver) : needsNew();
+  }
+}
+
+Promise.all = all;
+Promise.race = race;
+Promise.resolve = resolve;
+Promise.reject = reject;
+Promise._setScheduler = setScheduler;
+Promise._setAsap = setAsap;
+Promise._asap = asap;
+
+Promise.prototype = {
+  constructor: Promise,
+
+  /**
+    The primary way of interacting with a promise is through its `then` method,
+    which registers callbacks to receive either a promise's eventual value or the
+    reason why the promise cannot be fulfilled.
+  
+    ```js
+    findUser().then(function(user){
+      // user is available
+    }, function(reason){
+      // user is unavailable, and you are given the reason why
+    });
+    ```
+  
+    Chaining
+    --------
+  
+    The return value of `then` is itself a promise.  This second, 'downstream'
+    promise is resolved with the return value of the first promise's fulfillment
+    or rejection handler, or rejected if the handler throws an exception.
+  
+    ```js
+    findUser().then(function (user) {
+      return user.name;
+    }, function (reason) {
+      return 'default name';
+    }).then(function (userName) {
+      // If `findUser` fulfilled, `userName` will be the user's name, otherwise it
+      // will be `'default name'`
+    });
+  
+    findUser().then(function (user) {
+      throw new Error('Found user, but still unhappy');
+    }, function (reason) {
+      throw new Error('`findUser` rejected and we're unhappy');
+    }).then(function (value) {
+      // never reached
+    }, function (reason) {
+      // if `findUser` fulfilled, `reason` will be 'Found user, but still unhappy'.
+      // If `findUser` rejected, `reason` will be '`findUser` rejected and we're unhappy'.
+    });
+    ```
+    If the downstream promise does not specify a rejection handler, rejection reasons will be propagated further downstream.
+  
+    ```js
+    findUser().then(function (user) {
+      throw new PedagogicalException('Upstream error');
+    }).then(function (value) {
+      // never reached
+    }).then(function (value) {
+      // never reached
+    }, function (reason) {
+      // The `PedgagocialException` is propagated all the way down to here
+    });
+    ```
+  
+    Assimilation
+    ------------
+  
+    Sometimes the value you want to propagate to a downstream promise can only be
+    retrieved asynchronously. This can be achieved by returning a promise in the
+    fulfillment or rejection handler. The downstream promise will then be pending
+    until the returned promise is settled. This is called *assimilation*.
+  
+    ```js
+    findUser().then(function (user) {
+      return findCommentsByAuthor(user);
+    }).then(function (comments) {
+      // The user's comments are now available
+    });
+    ```
+  
+    If the assimliated promise rejects, then the downstream promise will also reject.
+  
+    ```js
+    findUser().then(function (user) {
+      return findCommentsByAuthor(user);
+    }).then(function (comments) {
+      // If `findCommentsByAuthor` fulfills, we'll have the value here
+    }, function (reason) {
+      // If `findCommentsByAuthor` rejects, we'll have the reason here
+    });
+    ```
+  
+    Simple Example
+    --------------
+  
+    Synchronous Example
+  
+    ```javascript
+    let result;
+  
+    try {
+      result = findResult();
+      // success
+    } catch(reason) {
+      // failure
+    }
+    ```
+  
+    Errback Example
+  
+    ```js
+    findResult(function(result, err){
+      if (err) {
+        // failure
+      } else {
+        // success
+      }
+    });
+    ```
+  
+    Promise Example;
+  
+    ```javascript
+    findResult().then(function(result){
+      // success
+    }, function(reason){
+      // failure
+    });
+    ```
+  
+    Advanced Example
+    --------------
+  
+    Synchronous Example
+  
+    ```javascript
+    let author, books;
+  
+    try {
+      author = findAuthor();
+      books  = findBooksByAuthor(author);
+      // success
+    } catch(reason) {
+      // failure
+    }
+    ```
+  
+    Errback Example
+  
+    ```js
+  
+    function foundBooks(books) {
+  
+    }
+  
+    function failure(reason) {
+  
+    }
+  
+    findAuthor(function(author, err){
+      if (err) {
+        failure(err);
+        // failure
+      } else {
+        try {
+          findBoooksByAuthor(author, function(books, err) {
+            if (err) {
+              failure(err);
+            } else {
+              try {
+                foundBooks(books);
+              } catch(reason) {
+                failure(reason);
+              }
+            }
+          });
+        } catch(error) {
+          failure(err);
+        }
+        // success
+      }
+    });
+    ```
+  
+    Promise Example;
+  
+    ```javascript
+    findAuthor().
+      then(findBooksByAuthor).
+      then(function(books){
+        // found books
+    }).catch(function(reason){
+      // something went wrong
+    });
+    ```
+  
+    @method then
+    @param {Function} onFulfilled
+    @param {Function} onRejected
+    Useful for tooling.
+    @return {Promise}
+  */
+  then: then,
+
+  /**
+    `catch` is simply sugar for `then(undefined, onRejection)` which makes it the same
+    as the catch block of a try/catch statement.
+  
+    ```js
+    function findAuthor(){
+      throw new Error('couldn't find that author');
+    }
+  
+    // synchronous
+    try {
+      findAuthor();
+    } catch(reason) {
+      // something went wrong
+    }
+  
+    // async with promises
+    findAuthor().catch(function(reason){
+      // something went wrong
+    });
+    ```
+  
+    @method catch
+    @param {Function} onRejection
+    Useful for tooling.
+    @return {Promise}
+  */
+  'catch': function _catch(onRejection) {
+    return this.then(null, onRejection);
+  }
+};
+
+function polyfill() {
+    var local = undefined;
+
+    if (typeof global !== 'undefined') {
+        local = global;
+    } else if (typeof self !== 'undefined') {
+        local = self;
+    } else {
+        try {
+            local = Function('return this')();
+        } catch (e) {
+            throw new Error('polyfill failed because global object is unavailable in this environment');
+        }
+    }
+
+    var P = local.Promise;
+
+    if (P) {
+        var promiseToString = null;
+        try {
+            promiseToString = Object.prototype.toString.call(P.resolve());
+        } catch (e) {
+            // silently ignored
+        }
+
+        if (promiseToString === '[object Promise]' && !P.cast) {
+            return;
+        }
+    }
+
+    local.Promise = Promise;
+}
+
+polyfill();
+// Strange compat..
+Promise.polyfill = polyfill;
+Promise.Promise = Promise;
+
+return Promise;
+
+})));
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"_process":138}],116:[function(require,module,exports){
@@ -29072,68 +29266,63 @@ module.exports = Sha512
 
 }).call(this,require("buffer").Buffer)
 },{"./hash":158,"buffer":74,"inherits":126}],166:[function(require,module,exports){
-"use strict";var sjcl={cipher:{},hash:{},keyexchange:{},mode:{},misc:{},codec:{},exception:{corrupt:function(a){this.toString=function(){return"CORRUPT: "+this.message};this.message=a},invalid:function(a){this.toString=function(){return"INVALID: "+this.message};this.message=a},bug:function(a){this.toString=function(){return"BUG: "+this.message};this.message=a},notReady:function(a){this.toString=function(){return"NOT READY: "+this.message};this.message=a}}};
-sjcl.cipher.aes=function(a){this.A[0][0][0]||this.R();var b,c,d,e,f=this.A[0][4],g=this.A[1];b=a.length;var h=1;if(4!==b&&6!==b&&8!==b)throw new sjcl.exception.invalid("invalid aes key size");this.b=[d=a.slice(0),e=[]];for(a=b;a<4*b+28;a++){c=d[a-1];if(0===a%b||8===b&&4===a%b)c=f[c>>>24]<<24^f[c>>16&255]<<16^f[c>>8&255]<<8^f[c&255],0===a%b&&(c=c<<8^c>>>24^h<<24,h=h<<1^283*(h>>7));d[a]=d[a-b]^c}for(b=0;a;b++,a--)c=d[b&3?a:a-4],e[b]=4>=a||4>b?c:g[0][f[c>>>24]]^g[1][f[c>>16&255]]^g[2][f[c>>8&255]]^g[3][f[c&
-255]]};
-sjcl.cipher.aes.prototype={encrypt:function(a){return t(this,a,0)},decrypt:function(a){return t(this,a,1)},A:[[[],[],[],[],[]],[[],[],[],[],[]]],R:function(){var a=this.A[0],b=this.A[1],c=a[4],d=b[4],e,f,g,h=[],k=[],l,m,n,p;for(e=0;0x100>e;e++)k[(h[e]=e<<1^283*(e>>7))^e]=e;for(f=g=0;!c[f];f^=l||1,g=k[g]||1)for(n=g^g<<1^g<<2^g<<3^g<<4,n=n>>8^n&255^99,c[f]=n,d[n]=f,m=h[e=h[l=h[f]]],p=0x1010101*m^0x10001*e^0x101*l^0x1010100*f,m=0x101*h[n]^0x1010100*n,e=0;4>e;e++)a[e][f]=m=m<<24^m>>>8,b[e][n]=p=p<<24^p>>>8;for(e=
-0;5>e;e++)a[e]=a[e].slice(0),b[e]=b[e].slice(0)}};
-function t(a,b,c){if(4!==b.length)throw new sjcl.exception.invalid("invalid aes block size");var d=a.b[c],e=b[0]^d[0],f=b[c?3:1]^d[1],g=b[2]^d[2];b=b[c?1:3]^d[3];var h,k,l,m=d.length/4-2,n,p=4,r=[0,0,0,0];h=a.A[c];a=h[0];var q=h[1],v=h[2],w=h[3],x=h[4];for(n=0;n<m;n++)h=a[e>>>24]^q[f>>16&255]^v[g>>8&255]^w[b&255]^d[p],k=a[f>>>24]^q[g>>16&255]^v[b>>8&255]^w[e&255]^d[p+1],l=a[g>>>24]^q[b>>16&255]^v[e>>8&255]^w[f&255]^d[p+2],b=a[b>>>24]^q[e>>16&255]^v[f>>8&255]^w[g&255]^d[p+3],p+=4,e=h,f=k,g=l;for(n=
-0;4>n;n++)r[c?3&-n:n]=x[e>>>24]<<24^x[f>>16&255]<<16^x[g>>8&255]<<8^x[b&255]^d[p++],h=e,e=f,f=g,g=b,b=h;return r}
-sjcl.bitArray={bitSlice:function(a,b,c){a=sjcl.bitArray.aa(a.slice(b/32),32-(b&31)).slice(1);return void 0===c?a:sjcl.bitArray.clamp(a,c-b)},extract:function(a,b,c){var d=Math.floor(-b-c&31);return((b+c-1^b)&-32?a[b/32|0]<<32-d^a[b/32+1|0]>>>d:a[b/32|0]>>>d)&(1<<c)-1},concat:function(a,b){if(0===a.length||0===b.length)return a.concat(b);var c=a[a.length-1],d=sjcl.bitArray.getPartial(c);return 32===d?a.concat(b):sjcl.bitArray.aa(b,d,c|0,a.slice(0,a.length-1))},bitLength:function(a){var b=a.length;
-return 0===b?0:32*(b-1)+sjcl.bitArray.getPartial(a[b-1])},clamp:function(a,b){if(32*a.length<b)return a;a=a.slice(0,Math.ceil(b/32));var c=a.length;b=b&31;0<c&&b&&(a[c-1]=sjcl.bitArray.partial(b,a[c-1]&2147483648>>b-1,1));return a},partial:function(a,b,c){return 32===a?b:(c?b|0:b<<32-a)+0x10000000000*a},getPartial:function(a){return Math.round(a/0x10000000000)||32},equal:function(a,b){if(sjcl.bitArray.bitLength(a)!==sjcl.bitArray.bitLength(b))return!1;var c=0,d;for(d=0;d<a.length;d++)c|=a[d]^b[d];
-return 0===c},aa:function(a,b,c,d){var e;e=0;for(void 0===d&&(d=[]);32<=b;b-=32)d.push(c),c=0;if(0===b)return d.concat(a);for(e=0;e<a.length;e++)d.push(c|a[e]>>>b),c=a[e]<<32-b;e=a.length?a[a.length-1]:0;a=sjcl.bitArray.getPartial(e);d.push(sjcl.bitArray.partial(b+a&31,32<b+a?c:d.pop(),1));return d},o:function(a,b){return[a[0]^b[0],a[1]^b[1],a[2]^b[2],a[3]^b[3]]},byteswapM:function(a){var b,c;for(b=0;b<a.length;++b)c=a[b],a[b]=c>>>24|c>>>8&0xff00|(c&0xff00)<<8|c<<24;return a}};
-sjcl.codec.utf8String={fromBits:function(a){var b="",c=sjcl.bitArray.bitLength(a),d,e;for(d=0;d<c/8;d++)0===(d&3)&&(e=a[d/4]),b+=String.fromCharCode(e>>>24),e<<=8;return decodeURIComponent(escape(b))},toBits:function(a){a=unescape(encodeURIComponent(a));var b=[],c,d=0;for(c=0;c<a.length;c++)d=d<<8|a.charCodeAt(c),3===(c&3)&&(b.push(d),d=0);c&3&&b.push(sjcl.bitArray.partial(8*(c&3),d));return b}};
-sjcl.codec.hex={fromBits:function(a){var b="",c;for(c=0;c<a.length;c++)b+=((a[c]|0)+0xf00000000000).toString(16).substr(4);return b.substr(0,sjcl.bitArray.bitLength(a)/4)},toBits:function(a){var b,c=[],d;a=a.replace(/\s|0x/g,"");d=a.length;a=a+"00000000";for(b=0;b<a.length;b+=8)c.push(parseInt(a.substr(b,8),16)^0);return sjcl.bitArray.clamp(c,4*d)}};
-sjcl.codec.base32={D:"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567",Z:"0123456789ABCDEFGHIJKLMNOPQRSTUV",BITS:32,BASE:5,REMAINING:27,fromBits:function(a,b,c){var d=sjcl.codec.base32.BASE,e=sjcl.codec.base32.REMAINING,f="",g=0,h=sjcl.codec.base32.D,k=0,l=sjcl.bitArray.bitLength(a);c&&(h=sjcl.codec.base32.Z);for(c=0;f.length*d<l;)f+=h.charAt((k^a[c]>>>g)>>>e),g<d?(k=a[c]<<d-g,g+=e,c++):(k<<=d,g-=d);for(;f.length&7&&!b;)f+="=";return f},toBits:function(a,b){a=a.replace(/\s|=/g,"").toUpperCase();var c=sjcl.codec.base32.BITS,
-d=sjcl.codec.base32.BASE,e=sjcl.codec.base32.REMAINING,f=[],g,h=0,k=sjcl.codec.base32.D,l=0,m,n="base32";b&&(k=sjcl.codec.base32.Z,n="base32hex");for(g=0;g<a.length;g++){m=k.indexOf(a.charAt(g));if(0>m){if(!b)try{return sjcl.codec.base32hex.toBits(a)}catch(p){}throw new sjcl.exception.invalid("this isn't "+n+"!");}h>e?(h-=e,f.push(l^m>>>h),l=m<<c-h):(h+=d,l^=m<<c-h)}h&56&&f.push(sjcl.bitArray.partial(h&56,l,1));return f}};
-sjcl.codec.base32hex={fromBits:function(a,b){return sjcl.codec.base32.fromBits(a,b,1)},toBits:function(a){return sjcl.codec.base32.toBits(a,1)}};
-sjcl.codec.base64={D:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",fromBits:function(a,b,c){var d="",e=0,f=sjcl.codec.base64.D,g=0,h=sjcl.bitArray.bitLength(a);c&&(f=f.substr(0,62)+"-_");for(c=0;6*d.length<h;)d+=f.charAt((g^a[c]>>>e)>>>26),6>e?(g=a[c]<<6-e,e+=26,c++):(g<<=6,e-=6);for(;d.length&3&&!b;)d+="=";return d},toBits:function(a,b){a=a.replace(/\s|=/g,"");var c=[],d,e=0,f=sjcl.codec.base64.D,g=0,h;b&&(f=f.substr(0,62)+"-_");for(d=0;d<a.length;d++){h=f.indexOf(a.charAt(d));
-if(0>h)throw new sjcl.exception.invalid("this isn't base64!");26<e?(e-=26,c.push(g^h>>>e),g=h<<32-e):(e+=6,g^=h<<32-e)}e&56&&c.push(sjcl.bitArray.partial(e&56,g,1));return c}};sjcl.codec.base64url={fromBits:function(a){return sjcl.codec.base64.fromBits(a,1,1)},toBits:function(a){return sjcl.codec.base64.toBits(a,1)}};sjcl.hash.sha256=function(a){this.b[0]||this.R();a?(this.g=a.g.slice(0),this.f=a.f.slice(0),this.c=a.c):this.reset()};sjcl.hash.sha256.hash=function(a){return(new sjcl.hash.sha256).update(a).finalize()};
-sjcl.hash.sha256.prototype={blockSize:512,reset:function(){this.g=this.H.slice(0);this.f=[];this.c=0;return this},update:function(a){"string"===typeof a&&(a=sjcl.codec.utf8String.toBits(a));var b,c=this.f=sjcl.bitArray.concat(this.f,a);b=this.c;a=this.c=b+sjcl.bitArray.bitLength(a);if(0x1fffffffffffff<a)throw new sjcl.exception.invalid("Cannot hash more than 2^53 - 1 bits");if("undefined"!==typeof Uint32Array){var d=new Uint32Array(c),e=0;for(b=512+b-(512+b&0x1ff);b<=a;b+=512)this.l(d.subarray(16*e,
-16*(e+1))),e+=1;c.splice(0,16*e)}else for(b=512+b-(512+b&0x1ff);b<=a;b+=512)this.l(c.splice(0,16));return this},finalize:function(){var a,b=this.f,c=this.g,b=sjcl.bitArray.concat(b,[sjcl.bitArray.partial(1,1)]);for(a=b.length+2;a&15;a++)b.push(0);b.push(Math.floor(this.c/0x100000000));for(b.push(this.c|0);b.length;)this.l(b.splice(0,16));this.reset();return c},H:[],b:[],R:function(){function a(a){return 0x100000000*(a-Math.floor(a))|0}for(var b=0,c=2,d,e;64>b;c++){e=!0;for(d=2;d*d<=c;d++)if(0===c%d){e=
-!1;break}e&&(8>b&&(this.H[b]=a(Math.pow(c,.5))),this.b[b]=a(Math.pow(c,1/3)),b++)}},l:function(a){var b,c,d,e=this.g,f=this.b,g=e[0],h=e[1],k=e[2],l=e[3],m=e[4],n=e[5],p=e[6],r=e[7];for(b=0;64>b;b++)16>b?c=a[b]:(c=a[b+1&15],d=a[b+14&15],c=a[b&15]=(c>>>7^c>>>18^c>>>3^c<<25^c<<14)+(d>>>17^d>>>19^d>>>10^d<<15^d<<13)+a[b&15]+a[b+9&15]|0),c=c+r+(m>>>6^m>>>11^m>>>25^m<<26^m<<21^m<<7)+(p^m&(n^p))+f[b],r=p,p=n,n=m,m=l+c|0,l=k,k=h,h=g,g=c+(h&k^l&(h^k))+(h>>>2^h>>>13^h>>>22^h<<30^h<<19^h<<10)|0;e[0]=e[0]+g|
-0;e[1]=e[1]+h|0;e[2]=e[2]+k|0;e[3]=e[3]+l|0;e[4]=e[4]+m|0;e[5]=e[5]+n|0;e[6]=e[6]+p|0;e[7]=e[7]+r|0}};sjcl.hash.sha1=function(a){a?(this.g=a.g.slice(0),this.f=a.f.slice(0),this.c=a.c):this.reset()};sjcl.hash.sha1.hash=function(a){return(new sjcl.hash.sha1).update(a).finalize()};
-sjcl.hash.sha1.prototype={blockSize:512,reset:function(){this.g=this.H.slice(0);this.f=[];this.c=0;return this},update:function(a){"string"===typeof a&&(a=sjcl.codec.utf8String.toBits(a));var b,c=this.f=sjcl.bitArray.concat(this.f,a);b=this.c;a=this.c=b+sjcl.bitArray.bitLength(a);if(0x1fffffffffffff<a)throw new sjcl.exception.invalid("Cannot hash more than 2^53 - 1 bits");if("undefined"!==typeof Uint32Array){var d=new Uint32Array(c),e=0;for(b=this.blockSize+b-(this.blockSize+b&this.blockSize-1);b<=
-a;b+=this.blockSize)this.l(d.subarray(16*e,16*(e+1))),e+=1;c.splice(0,16*e)}else for(b=this.blockSize+b-(this.blockSize+b&this.blockSize-1);b<=a;b+=this.blockSize)this.l(c.splice(0,16));return this},finalize:function(){var a,b=this.f,c=this.g,b=sjcl.bitArray.concat(b,[sjcl.bitArray.partial(1,1)]);for(a=b.length+2;a&15;a++)b.push(0);b.push(Math.floor(this.c/0x100000000));for(b.push(this.c|0);b.length;)this.l(b.splice(0,16));this.reset();return c},H:[1732584193,4023233417,2562383102,271733878,3285377520],
-b:[1518500249,1859775393,2400959708,3395469782],l:function(a){var b,c,d,e,f,g,h=this.g,k;if("undefined"!==typeof Uint32Array)for(k=Array(80),c=0;16>c;c++)k[c]=a[c];else k=a;c=h[0];d=h[1];e=h[2];f=h[3];g=h[4];for(a=0;79>=a;a++)16<=a&&(b=k[a-3]^k[a-8]^k[a-14]^k[a-16],k[a]=b<<1|b>>>31),b=19>=a?d&e|~d&f:39>=a?d^e^f:59>=a?d&e|d&f|e&f:79>=a?d^e^f:void 0,b=(c<<5|c>>>27)+b+g+k[a]+this.b[Math.floor(a/20)]|0,g=f,f=e,e=d<<30|d>>>2,d=c,c=b;h[0]=h[0]+c|0;h[1]=h[1]+d|0;h[2]=h[2]+e|0;h[3]=h[3]+f|0;h[4]=h[4]+g|0}};
-sjcl.mode.ccm={name:"ccm",I:[],listenProgress:function(a){sjcl.mode.ccm.I.push(a)},unListenProgress:function(a){a=sjcl.mode.ccm.I.indexOf(a);-1<a&&sjcl.mode.ccm.I.splice(a,1)},ga:function(a){var b=sjcl.mode.ccm.I.slice(),c;for(c=0;c<b.length;c+=1)b[c](a)},encrypt:function(a,b,c,d,e){var f,g=b.slice(0),h=sjcl.bitArray,k=h.bitLength(c)/8,l=h.bitLength(g)/8;e=e||64;d=d||[];if(7>k)throw new sjcl.exception.invalid("ccm: iv must be at least 7 bytes");for(f=2;4>f&&l>>>8*f;f++);f<15-k&&(f=15-k);c=h.clamp(c,
-8*(15-f));b=sjcl.mode.ccm.X(a,b,c,d,e,f);g=sjcl.mode.ccm.F(a,g,c,b,e,f);return h.concat(g.data,g.tag)},decrypt:function(a,b,c,d,e){e=e||64;d=d||[];var f=sjcl.bitArray,g=f.bitLength(c)/8,h=f.bitLength(b),k=f.clamp(b,h-e),l=f.bitSlice(b,h-e),h=(h-e)/8;if(7>g)throw new sjcl.exception.invalid("ccm: iv must be at least 7 bytes");for(b=2;4>b&&h>>>8*b;b++);b<15-g&&(b=15-g);c=f.clamp(c,8*(15-b));k=sjcl.mode.ccm.F(a,k,c,l,e,b);a=sjcl.mode.ccm.X(a,k.data,c,d,e,b);if(!f.equal(k.tag,a))throw new sjcl.exception.corrupt("ccm: tag doesn't match");
-return k.data},oa:function(a,b,c,d,e,f){var g=[],h=sjcl.bitArray,k=h.o;d=[h.partial(8,(b.length?64:0)|d-2<<2|f-1)];d=h.concat(d,c);d[3]|=e;d=a.encrypt(d);if(b.length)for(c=h.bitLength(b)/8,65279>=c?g=[h.partial(16,c)]:0xffffffff>=c&&(g=h.concat([h.partial(16,65534)],[c])),g=h.concat(g,b),b=0;b<g.length;b+=4)d=a.encrypt(k(d,g.slice(b,b+4).concat([0,0,0])));return d},X:function(a,b,c,d,e,f){var g=sjcl.bitArray,h=g.o;e/=8;if(e%2||4>e||16<e)throw new sjcl.exception.invalid("ccm: invalid tag length");
-if(0xffffffff<d.length||0xffffffff<b.length)throw new sjcl.exception.bug("ccm: can't deal with 4GiB or more data");c=sjcl.mode.ccm.oa(a,d,c,e,g.bitLength(b)/8,f);for(d=0;d<b.length;d+=4)c=a.encrypt(h(c,b.slice(d,d+4).concat([0,0,0])));return g.clamp(c,8*e)},F:function(a,b,c,d,e,f){var g,h=sjcl.bitArray;g=h.o;var k=b.length,l=h.bitLength(b),m=k/50,n=m;c=h.concat([h.partial(8,f-1)],c).concat([0,0,0]).slice(0,4);d=h.bitSlice(g(d,a.encrypt(c)),0,e);if(!k)return{tag:d,data:[]};for(g=0;g<k;g+=4)g>m&&(sjcl.mode.ccm.ga(g/
-k),m+=n),c[3]++,e=a.encrypt(c),b[g]^=e[0],b[g+1]^=e[1],b[g+2]^=e[2],b[g+3]^=e[3];return{tag:d,data:h.clamp(b,l)}}};
-sjcl.mode.ocb2={name:"ocb2",encrypt:function(a,b,c,d,e,f){if(128!==sjcl.bitArray.bitLength(c))throw new sjcl.exception.invalid("ocb iv must be 128 bits");var g,h=sjcl.mode.ocb2.U,k=sjcl.bitArray,l=k.o,m=[0,0,0,0];c=h(a.encrypt(c));var n,p=[];d=d||[];e=e||64;for(g=0;g+4<b.length;g+=4)n=b.slice(g,g+4),m=l(m,n),p=p.concat(l(c,a.encrypt(l(c,n)))),c=h(c);n=b.slice(g);b=k.bitLength(n);g=a.encrypt(l(c,[0,0,0,b]));n=k.clamp(l(n.concat([0,0,0]),g),b);m=l(m,l(n.concat([0,0,0]),g));m=a.encrypt(l(m,l(c,h(c))));
-d.length&&(m=l(m,f?d:sjcl.mode.ocb2.pmac(a,d)));return p.concat(k.concat(n,k.clamp(m,e)))},decrypt:function(a,b,c,d,e,f){if(128!==sjcl.bitArray.bitLength(c))throw new sjcl.exception.invalid("ocb iv must be 128 bits");e=e||64;var g=sjcl.mode.ocb2.U,h=sjcl.bitArray,k=h.o,l=[0,0,0,0],m=g(a.encrypt(c)),n,p,r=sjcl.bitArray.bitLength(b)-e,q=[];d=d||[];for(c=0;c+4<r/32;c+=4)n=k(m,a.decrypt(k(m,b.slice(c,c+4)))),l=k(l,n),q=q.concat(n),m=g(m);p=r-32*c;n=a.encrypt(k(m,[0,0,0,p]));n=k(n,h.clamp(b.slice(c),p).concat([0,
-0,0]));l=k(l,n);l=a.encrypt(k(l,k(m,g(m))));d.length&&(l=k(l,f?d:sjcl.mode.ocb2.pmac(a,d)));if(!h.equal(h.clamp(l,e),h.bitSlice(b,r)))throw new sjcl.exception.corrupt("ocb: tag doesn't match");return q.concat(h.clamp(n,p))},pmac:function(a,b){var c,d=sjcl.mode.ocb2.U,e=sjcl.bitArray,f=e.o,g=[0,0,0,0],h=a.encrypt([0,0,0,0]),h=f(h,d(d(h)));for(c=0;c+4<b.length;c+=4)h=d(h),g=f(g,a.encrypt(f(h,b.slice(c,c+4))));c=b.slice(c);128>e.bitLength(c)&&(h=f(h,d(h)),c=e.concat(c,[-2147483648,0,0,0]));g=f(g,c);
-return a.encrypt(f(d(f(h,d(h))),g))},U:function(a){return[a[0]<<1^a[1]>>>31,a[1]<<1^a[2]>>>31,a[2]<<1^a[3]>>>31,a[3]<<1^135*(a[0]>>>31)]}};
-sjcl.mode.gcm={name:"gcm",encrypt:function(a,b,c,d,e){var f=b.slice(0);b=sjcl.bitArray;d=d||[];a=sjcl.mode.gcm.F(!0,a,f,d,c,e||128);return b.concat(a.data,a.tag)},decrypt:function(a,b,c,d,e){var f=b.slice(0),g=sjcl.bitArray,h=g.bitLength(f);e=e||128;d=d||[];e<=h?(b=g.bitSlice(f,h-e),f=g.bitSlice(f,0,h-e)):(b=f,f=[]);a=sjcl.mode.gcm.F(!1,a,f,d,c,e);if(!g.equal(a.tag,b))throw new sjcl.exception.corrupt("gcm: tag doesn't match");return a.data},la:function(a,b){var c,d,e,f,g,h=sjcl.bitArray.o;e=[0,0,
-0,0];f=b.slice(0);for(c=0;128>c;c++){(d=0!==(a[Math.floor(c/32)]&1<<31-c%32))&&(e=h(e,f));g=0!==(f[3]&1);for(d=3;0<d;d--)f[d]=f[d]>>>1|(f[d-1]&1)<<31;f[0]>>>=1;g&&(f[0]^=-0x1f000000)}return e},s:function(a,b,c){var d,e=c.length;b=b.slice(0);for(d=0;d<e;d+=4)b[0]^=0xffffffff&c[d],b[1]^=0xffffffff&c[d+1],b[2]^=0xffffffff&c[d+2],b[3]^=0xffffffff&c[d+3],b=sjcl.mode.gcm.la(b,a);return b},F:function(a,b,c,d,e,f){var g,h,k,l,m,n,p,r,q=sjcl.bitArray;n=c.length;p=q.bitLength(c);r=q.bitLength(d);h=q.bitLength(e);
-g=b.encrypt([0,0,0,0]);96===h?(e=e.slice(0),e=q.concat(e,[1])):(e=sjcl.mode.gcm.s(g,[0,0,0,0],e),e=sjcl.mode.gcm.s(g,e,[0,0,Math.floor(h/0x100000000),h&0xffffffff]));h=sjcl.mode.gcm.s(g,[0,0,0,0],d);m=e.slice(0);d=h.slice(0);a||(d=sjcl.mode.gcm.s(g,h,c));for(l=0;l<n;l+=4)m[3]++,k=b.encrypt(m),c[l]^=k[0],c[l+1]^=k[1],c[l+2]^=k[2],c[l+3]^=k[3];c=q.clamp(c,p);a&&(d=sjcl.mode.gcm.s(g,h,c));a=[Math.floor(r/0x100000000),r&0xffffffff,Math.floor(p/0x100000000),p&0xffffffff];d=sjcl.mode.gcm.s(g,d,a);k=b.encrypt(e);
-d[0]^=k[0];d[1]^=k[1];d[2]^=k[2];d[3]^=k[3];return{tag:q.bitSlice(d,0,f),data:c}}};sjcl.misc.hmac=function(a,b){this.Y=b=b||sjcl.hash.sha256;var c=[[],[]],d,e=b.prototype.blockSize/32;this.C=[new b,new b];a.length>e&&(a=b.hash(a));for(d=0;d<e;d++)c[0][d]=a[d]^909522486,c[1][d]=a[d]^1549556828;this.C[0].update(c[0]);this.C[1].update(c[1]);this.T=new b(this.C[0])};
-sjcl.misc.hmac.prototype.encrypt=sjcl.misc.hmac.prototype.mac=function(a){if(this.ba)throw new sjcl.exception.invalid("encrypt on already updated hmac called!");this.update(a);return this.digest(a)};sjcl.misc.hmac.prototype.reset=function(){this.T=new this.Y(this.C[0]);this.ba=!1};sjcl.misc.hmac.prototype.update=function(a){this.ba=!0;this.T.update(a)};sjcl.misc.hmac.prototype.digest=function(){var a=this.T.finalize(),a=(new this.Y(this.C[1])).update(a).finalize();this.reset();return a};
-sjcl.misc.pbkdf2=function(a,b,c,d,e){c=c||1E4;if(0>d||0>c)throw new sjcl.exception.invalid("invalid params to pbkdf2");"string"===typeof a&&(a=sjcl.codec.utf8String.toBits(a));"string"===typeof b&&(b=sjcl.codec.utf8String.toBits(b));e=e||sjcl.misc.hmac;a=new e(a);var f,g,h,k,l=[],m=sjcl.bitArray;for(k=1;32*l.length<(d||1);k++){e=f=a.encrypt(m.concat(b,[k]));for(g=1;g<c;g++)for(f=a.encrypt(f),h=0;h<f.length;h++)e[h]^=f[h];l=l.concat(e)}d&&(l=m.clamp(l,d));return l};
-sjcl.prng=function(a){this.h=[new sjcl.hash.sha256];this.u=[0];this.S=0;this.J={};this.P=0;this.W={};this.$=this.i=this.w=this.ia=0;this.b=[0,0,0,0,0,0,0,0];this.m=[0,0,0,0];this.N=void 0;this.O=a;this.G=!1;this.M={progress:{},seeded:{}};this.B=this.ha=0;this.K=1;this.L=2;this.da=0x10000;this.V=[0,48,64,96,128,192,0x100,384,512,768,1024];this.ea=3E4;this.ca=80};
-sjcl.prng.prototype={randomWords:function(a,b){var c=[],d;d=this.isReady(b);var e;if(d===this.B)throw new sjcl.exception.notReady("generator isn't seeded");if(d&this.L){d=!(d&this.K);e=[];var f=0,g;this.$=e[0]=(new Date).valueOf()+this.ea;for(g=0;16>g;g++)e.push(0x100000000*Math.random()|0);for(g=0;g<this.h.length&&(e=e.concat(this.h[g].finalize()),f+=this.u[g],this.u[g]=0,d||!(this.S&1<<g));g++);this.S>=1<<this.h.length&&(this.h.push(new sjcl.hash.sha256),this.u.push(0));this.i-=f;f>this.w&&(this.w=
-f);this.S++;this.b=sjcl.hash.sha256.hash(this.b.concat(e));this.N=new sjcl.cipher.aes(this.b);for(d=0;4>d&&(this.m[d]=this.m[d]+1|0,!this.m[d]);d++);}for(d=0;d<a;d+=4)0===(d+1)%this.da&&u(this),e=y(this),c.push(e[0],e[1],e[2],e[3]);u(this);return c.slice(0,a)},setDefaultParanoia:function(a,b){if(0===a&&"Setting paranoia=0 will ruin your security; use it only for testing"!==b)throw new sjcl.exception.invalid("Setting paranoia=0 will ruin your security; use it only for testing");this.O=a},addEntropy:function(a,
-b,c){c=c||"user";var d,e,f=(new Date).valueOf(),g=this.J[c],h=this.isReady(),k=0;d=this.W[c];void 0===d&&(d=this.W[c]=this.ia++);void 0===g&&(g=this.J[c]=0);this.J[c]=(this.J[c]+1)%this.h.length;switch(typeof a){case "number":void 0===b&&(b=1);this.h[g].update([d,this.P++,1,b,f,1,a|0]);break;case "object":c=Object.prototype.toString.call(a);if("[object Uint32Array]"===c){e=[];for(c=0;c<a.length;c++)e.push(a[c]);a=e}else for("[object Array]"!==c&&(k=1),c=0;c<a.length&&!k;c++)"number"!==typeof a[c]&&
-(k=1);if(!k){if(void 0===b)for(c=b=0;c<a.length;c++)for(e=a[c];0<e;)b++,e=e>>>1;this.h[g].update([d,this.P++,2,b,f,a.length].concat(a))}break;case "string":void 0===b&&(b=a.length);this.h[g].update([d,this.P++,3,b,f,a.length]);this.h[g].update(a);break;default:k=1}if(k)throw new sjcl.exception.bug("random: addEntropy only supports number, array of numbers or string");this.u[g]+=b;this.i+=b;h===this.B&&(this.isReady()!==this.B&&z("seeded",Math.max(this.w,this.i)),z("progress",this.getProgress()))},
-isReady:function(a){a=this.V[void 0!==a?a:this.O];return this.w&&this.w>=a?this.u[0]>this.ca&&(new Date).valueOf()>this.$?this.L|this.K:this.K:this.i>=a?this.L|this.B:this.B},getProgress:function(a){a=this.V[a?a:this.O];return this.w>=a?1:this.i>a?1:this.i/a},startCollectors:function(){if(!this.G){this.a={loadTimeCollector:A(this,this.na),mouseCollector:A(this,this.pa),keyboardCollector:A(this,this.ma),accelerometerCollector:A(this,this.fa),touchCollector:A(this,this.ra)};if(window.addEventListener)window.addEventListener("load",
-this.a.loadTimeCollector,!1),window.addEventListener("mousemove",this.a.mouseCollector,!1),window.addEventListener("keypress",this.a.keyboardCollector,!1),window.addEventListener("devicemotion",this.a.accelerometerCollector,!1),window.addEventListener("touchmove",this.a.touchCollector,!1);else if(document.attachEvent)document.attachEvent("onload",this.a.loadTimeCollector),document.attachEvent("onmousemove",this.a.mouseCollector),document.attachEvent("keypress",this.a.keyboardCollector);else throw new sjcl.exception.bug("can't attach event");
-this.G=!0}},stopCollectors:function(){this.G&&(window.removeEventListener?(window.removeEventListener("load",this.a.loadTimeCollector,!1),window.removeEventListener("mousemove",this.a.mouseCollector,!1),window.removeEventListener("keypress",this.a.keyboardCollector,!1),window.removeEventListener("devicemotion",this.a.accelerometerCollector,!1),window.removeEventListener("touchmove",this.a.touchCollector,!1)):document.detachEvent&&(document.detachEvent("onload",this.a.loadTimeCollector),document.detachEvent("onmousemove",
-this.a.mouseCollector),document.detachEvent("keypress",this.a.keyboardCollector)),this.G=!1)},addEventListener:function(a,b){this.M[a][this.ha++]=b},removeEventListener:function(a,b){var c,d,e=this.M[a],f=[];for(d in e)e.hasOwnProperty(d)&&e[d]===b&&f.push(d);for(c=0;c<f.length;c++)d=f[c],delete e[d]},ma:function(){B(this,1)},pa:function(a){var b,c;try{b=a.x||a.clientX||a.offsetX||0,c=a.y||a.clientY||a.offsetY||0}catch(d){c=b=0}0!=b&&0!=c&&this.addEntropy([b,c],2,"mouse");B(this,0)},ra:function(a){a=
-a.touches[0]||a.changedTouches[0];this.addEntropy([a.pageX||a.clientX,a.pageY||a.clientY],1,"touch");B(this,0)},na:function(){B(this,2)},fa:function(a){a=a.accelerationIncludingGravity.x||a.accelerationIncludingGravity.y||a.accelerationIncludingGravity.z;if(window.orientation){var b=window.orientation;"number"===typeof b&&this.addEntropy(b,1,"accelerometer")}a&&this.addEntropy(a,2,"accelerometer");B(this,0)}};
-function z(a,b){var c,d=sjcl.random.M[a],e=[];for(c in d)d.hasOwnProperty(c)&&e.push(d[c]);for(c=0;c<e.length;c++)e[c](b)}function B(a,b){"undefined"!==typeof window&&window.performance&&"function"===typeof window.performance.now?a.addEntropy(window.performance.now(),b,"loadtime"):a.addEntropy((new Date).valueOf(),b,"loadtime")}function u(a){a.b=y(a).concat(y(a));a.N=new sjcl.cipher.aes(a.b)}function y(a){for(var b=0;4>b&&(a.m[b]=a.m[b]+1|0,!a.m[b]);b++);return a.N.encrypt(a.m)}
-function A(a,b){return function(){b.apply(a,arguments)}}sjcl.random=new sjcl.prng(6);
-a:try{var C,D,E,F;if(F="undefined"!==typeof module&&module.exports){var G;try{G=require("crypto")}catch(a){G=null}F=D=G}if(F&&D.randomBytes)C=D.randomBytes(128),C=new Uint32Array((new Uint8Array(C)).buffer),sjcl.random.addEntropy(C,1024,"crypto['randomBytes']");else if("undefined"!==typeof window&&"undefined"!==typeof Uint32Array){E=new Uint32Array(32);if(window.crypto&&window.crypto.getRandomValues)window.crypto.getRandomValues(E);else if(window.msCrypto&&window.msCrypto.getRandomValues)window.msCrypto.getRandomValues(E);
-else break a;sjcl.random.addEntropy(E,1024,"crypto['getRandomValues']")}}catch(a){"undefined"!==typeof window&&window.console&&(console.log("There was an error collecting entropy from the browser:"),console.log(a))}
-sjcl.json={defaults:{v:1,iter:1E4,ks:128,ts:64,mode:"ccm",adata:"",cipher:"aes"},ka:function(a,b,c,d){c=c||{};d=d||{};var e=sjcl.json,f=e.j({iv:sjcl.random.randomWords(4,0)},e.defaults),g;e.j(f,c);c=f.adata;"string"===typeof f.salt&&(f.salt=sjcl.codec.base64.toBits(f.salt));"string"===typeof f.iv&&(f.iv=sjcl.codec.base64.toBits(f.iv));if(!sjcl.mode[f.mode]||!sjcl.cipher[f.cipher]||"string"===typeof a&&100>=f.iter||64!==f.ts&&96!==f.ts&&128!==f.ts||128!==f.ks&&192!==f.ks&&0x100!==f.ks||2>f.iv.length||
-4<f.iv.length)throw new sjcl.exception.invalid("json encrypt: invalid parameters");"string"===typeof a?(g=sjcl.misc.cachedPbkdf2(a,f),a=g.key.slice(0,f.ks/32),f.salt=g.salt):sjcl.ecc&&a instanceof sjcl.ecc.elGamal.publicKey&&(g=a.kem(),f.kemtag=g.tag,a=g.key.slice(0,f.ks/32));"string"===typeof b&&(b=sjcl.codec.utf8String.toBits(b));"string"===typeof c&&(f.adata=c=sjcl.codec.utf8String.toBits(c));g=new sjcl.cipher[f.cipher](a);e.j(d,f);d.key=a;f.ct="ccm"===f.mode&&sjcl.arrayBuffer&&sjcl.arrayBuffer.ccm&&
-b instanceof ArrayBuffer?sjcl.arrayBuffer.ccm.encrypt(g,b,f.iv,c,f.ts):sjcl.mode[f.mode].encrypt(g,b,f.iv,c,f.ts);return f},encrypt:function(a,b,c,d){var e=sjcl.json,f=e.ka.apply(e,arguments);return e.encode(f)},ja:function(a,b,c,d){c=c||{};d=d||{};var e=sjcl.json;b=e.j(e.j(e.j({},e.defaults),b),c,!0);var f,g;f=b.adata;"string"===typeof b.salt&&(b.salt=sjcl.codec.base64.toBits(b.salt));"string"===typeof b.iv&&(b.iv=sjcl.codec.base64.toBits(b.iv));if(!sjcl.mode[b.mode]||!sjcl.cipher[b.cipher]||"string"===
-typeof a&&100>=b.iter||64!==b.ts&&96!==b.ts&&128!==b.ts||128!==b.ks&&192!==b.ks&&0x100!==b.ks||!b.iv||2>b.iv.length||4<b.iv.length)throw new sjcl.exception.invalid("json decrypt: invalid parameters");"string"===typeof a?(g=sjcl.misc.cachedPbkdf2(a,b),a=g.key.slice(0,b.ks/32),b.salt=g.salt):sjcl.ecc&&a instanceof sjcl.ecc.elGamal.secretKey&&(a=a.unkem(sjcl.codec.base64.toBits(b.kemtag)).slice(0,b.ks/32));"string"===typeof f&&(f=sjcl.codec.utf8String.toBits(f));g=new sjcl.cipher[b.cipher](a);f="ccm"===
-b.mode&&sjcl.arrayBuffer&&sjcl.arrayBuffer.ccm&&b.ct instanceof ArrayBuffer?sjcl.arrayBuffer.ccm.decrypt(g,b.ct,b.iv,b.tag,f,b.ts):sjcl.mode[b.mode].decrypt(g,b.ct,b.iv,f,b.ts);e.j(d,b);d.key=a;return 1===c.raw?f:sjcl.codec.utf8String.fromBits(f)},decrypt:function(a,b,c,d){var e=sjcl.json;return e.ja(a,e.decode(b),c,d)},encode:function(a){var b,c="{",d="";for(b in a)if(a.hasOwnProperty(b)){if(!b.match(/^[a-z0-9]+$/i))throw new sjcl.exception.invalid("json encode: invalid property name");c+=d+'"'+
-b+'":';d=",";switch(typeof a[b]){case "number":case "boolean":c+=a[b];break;case "string":c+='"'+escape(a[b])+'"';break;case "object":c+='"'+sjcl.codec.base64.fromBits(a[b],0)+'"';break;default:throw new sjcl.exception.bug("json encode: unsupported type");}}return c+"}"},decode:function(a){a=a.replace(/\s/g,"");if(!a.match(/^\{.*\}$/))throw new sjcl.exception.invalid("json decode: this isn't json!");a=a.replace(/^\{|\}$/g,"").split(/,/);var b={},c,d;for(c=0;c<a.length;c++){if(!(d=a[c].match(/^\s*(?:(["']?)([a-z][a-z0-9]*)\1)\s*:\s*(?:(-?\d+)|"([a-z0-9+\/%*_.@=\-]*)"|(true|false))$/i)))throw new sjcl.exception.invalid("json decode: this isn't json!");
-null!=d[3]?b[d[2]]=parseInt(d[3],10):null!=d[4]?b[d[2]]=d[2].match(/^(ct|adata|salt|iv)$/)?sjcl.codec.base64.toBits(d[4]):unescape(d[4]):null!=d[5]&&(b[d[2]]="true"===d[5])}return b},j:function(a,b,c){void 0===a&&(a={});if(void 0===b)return a;for(var d in b)if(b.hasOwnProperty(d)){if(c&&void 0!==a[d]&&a[d]!==b[d])throw new sjcl.exception.invalid("required parameter overridden");a[d]=b[d]}return a},ta:function(a,b){var c={},d;for(d in a)a.hasOwnProperty(d)&&a[d]!==b[d]&&(c[d]=a[d]);return c},sa:function(a,
-b){var c={},d;for(d=0;d<b.length;d++)void 0!==a[b[d]]&&(c[b[d]]=a[b[d]]);return c}};sjcl.encrypt=sjcl.json.encrypt;sjcl.decrypt=sjcl.json.decrypt;sjcl.misc.qa={};sjcl.misc.cachedPbkdf2=function(a,b){var c=sjcl.misc.qa,d;b=b||{};d=b.iter||1E3;c=c[a]=c[a]||{};d=c[d]=c[d]||{firstSalt:b.salt&&b.salt.length?b.salt.slice(0):sjcl.random.randomWords(2,0)};c=void 0===b.salt?d.firstSalt:b.salt;d[c]=d[c]||sjcl.misc.pbkdf2(a,c,b.iter);return{key:d[c].slice(0),salt:c.slice(0)}};
+"use strict";function q(a){throw a;}var r=void 0,s=!1;var sjcl={cipher:{},hash:{},keyexchange:{},mode:{},misc:{},codec:{},exception:{corrupt:function(a){this.toString=function(){return"CORRUPT: "+this.message};this.message=a},invalid:function(a){this.toString=function(){return"INVALID: "+this.message};this.message=a},bug:function(a){this.toString=function(){return"BUG: "+this.message};this.message=a},notReady:function(a){this.toString=function(){return"NOT READY: "+this.message};this.message=a}}};
 "undefined"!==typeof module&&module.exports&&(module.exports=sjcl);"function"===typeof define&&define([],function(){return sjcl});
+sjcl.cipher.aes=function(a){this.n[0][0][0]||this.H();var b,c,d,e,f=this.n[0][4],g=this.n[1];b=a.length;var h=1;4!==b&&(6!==b&&8!==b)&&q(new sjcl.exception.invalid("invalid aes key size"));this.b=[d=a.slice(0),e=[]];for(a=b;a<4*b+28;a++){c=d[a-1];if(0===a%b||8===b&&4===a%b)c=f[c>>>24]<<24^f[c>>16&255]<<16^f[c>>8&255]<<8^f[c&255],0===a%b&&(c=c<<8^c>>>24^h<<24,h=h<<1^283*(h>>7));d[a]=d[a-b]^c}for(b=0;a;b++,a--)c=d[b&3?a:a-4],e[b]=4>=a||4>b?c:g[0][f[c>>>24]]^g[1][f[c>>16&255]]^g[2][f[c>>8&255]]^g[3][f[c&
+255]]};
+sjcl.cipher.aes.prototype={encrypt:function(a){return v(this,a,0)},decrypt:function(a){return v(this,a,1)},n:[[[],[],[],[],[]],[[],[],[],[],[]]],H:function(){var a=this.n[0],b=this.n[1],c=a[4],d=b[4],e,f,g,h=[],k=[],l,m,n,p;for(e=0;0x100>e;e++)k[(h[e]=e<<1^283*(e>>7))^e]=e;for(f=g=0;!c[f];f^=l||1,g=k[g]||1){n=g^g<<1^g<<2^g<<3^g<<4;n=n>>8^n&255^99;c[f]=n;d[n]=f;m=h[e=h[l=h[f]]];p=0x1010101*m^0x10001*e^0x101*l^0x1010100*f;m=0x101*h[n]^0x1010100*n;for(e=0;4>e;e++)a[e][f]=m=m<<24^m>>>8,b[e][n]=p=p<<24^p>>>8}for(e=
+0;5>e;e++)a[e]=a[e].slice(0),b[e]=b[e].slice(0)}};
+function v(a,b,c){4!==b.length&&q(new sjcl.exception.invalid("invalid aes block size"));var d=a.b[c],e=b[0]^d[0],f=b[c?3:1]^d[1],g=b[2]^d[2];b=b[c?1:3]^d[3];var h,k,l,m=d.length/4-2,n,p=4,u=[0,0,0,0];h=a.n[c];a=h[0];var t=h[1],x=h[2],y=h[3],z=h[4];for(n=0;n<m;n++)h=a[e>>>24]^t[f>>16&255]^x[g>>8&255]^y[b&255]^d[p],k=a[f>>>24]^t[g>>16&255]^x[b>>8&255]^y[e&255]^d[p+1],l=a[g>>>24]^t[b>>16&255]^x[e>>8&255]^y[f&255]^d[p+2],b=a[b>>>24]^t[e>>16&255]^x[f>>8&255]^y[g&255]^d[p+3],p+=4,e=h,f=k,g=l;for(n=0;4>
+n;n++)u[c?3&-n:n]=z[e>>>24]<<24^z[f>>16&255]<<16^z[g>>8&255]<<8^z[b&255]^d[p++],h=e,e=f,f=g,g=b,b=h;return u}
+sjcl.bitArray={bitSlice:function(a,b,c){a=sjcl.bitArray.R(a.slice(b/32),32-(b&31)).slice(1);return c===r?a:sjcl.bitArray.clamp(a,c-b)},extract:function(a,b,c){var d=Math.floor(-b-c&31);return((b+c-1^b)&-32?a[b/32|0]<<32-d^a[b/32+1|0]>>>d:a[b/32|0]>>>d)&(1<<c)-1},concat:function(a,b){if(0===a.length||0===b.length)return a.concat(b);var c=a[a.length-1],d=sjcl.bitArray.getPartial(c);return 32===d?a.concat(b):sjcl.bitArray.R(b,d,c|0,a.slice(0,a.length-1))},bitLength:function(a){var b=a.length;return 0===
+b?0:32*(b-1)+sjcl.bitArray.getPartial(a[b-1])},clamp:function(a,b){if(32*a.length<b)return a;a=a.slice(0,Math.ceil(b/32));var c=a.length;b&=31;0<c&&b&&(a[c-1]=sjcl.bitArray.partial(b,a[c-1]&2147483648>>b-1,1));return a},partial:function(a,b,c){return 32===a?b:(c?b|0:b<<32-a)+0x10000000000*a},getPartial:function(a){return Math.round(a/0x10000000000)||32},equal:function(a,b){if(sjcl.bitArray.bitLength(a)!==sjcl.bitArray.bitLength(b))return s;var c=0,d;for(d=0;d<a.length;d++)c|=a[d]^b[d];return 0===
+c},R:function(a,b,c,d){var e;e=0;for(d===r&&(d=[]);32<=b;b-=32)d.push(c),c=0;if(0===b)return d.concat(a);for(e=0;e<a.length;e++)d.push(c|a[e]>>>b),c=a[e]<<32-b;e=a.length?a[a.length-1]:0;a=sjcl.bitArray.getPartial(e);d.push(sjcl.bitArray.partial(b+a&31,32<b+a?c:d.pop(),1));return d},j:function(a,b){return[a[0]^b[0],a[1]^b[1],a[2]^b[2],a[3]^b[3]]},byteswapM:function(a){var b,c;for(b=0;b<a.length;++b)c=a[b],a[b]=c>>>24|c>>>8&0xff00|(c&0xff00)<<8|c<<24;return a}};
+sjcl.codec.utf8String={fromBits:function(a){var b="",c=sjcl.bitArray.bitLength(a),d,e;for(d=0;d<c/8;d++)0===(d&3)&&(e=a[d/4]),b+=String.fromCharCode(e>>>24),e<<=8;return decodeURIComponent(escape(b))},toBits:function(a){a=unescape(encodeURIComponent(a));var b=[],c,d=0;for(c=0;c<a.length;c++)d=d<<8|a.charCodeAt(c),3===(c&3)&&(b.push(d),d=0);c&3&&b.push(sjcl.bitArray.partial(8*(c&3),d));return b}};
+sjcl.codec.hex={fromBits:function(a){var b="",c;for(c=0;c<a.length;c++)b+=((a[c]|0)+0xf00000000000).toString(16).substr(4);return b.substr(0,sjcl.bitArray.bitLength(a)/4)},toBits:function(a){var b,c=[],d;a=a.replace(/\s|0x/g,"");d=a.length;a+="00000000";for(b=0;b<a.length;b+=8)c.push(parseInt(a.substr(b,8),16)^0);return sjcl.bitArray.clamp(c,4*d)}};
+sjcl.codec.base64={M:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",fromBits:function(a,b,c){var d="",e=0,f=sjcl.codec.base64.M,g=0,h=sjcl.bitArray.bitLength(a);c&&(f=f.substr(0,62)+"-_");for(c=0;6*d.length<h;)d+=f.charAt((g^a[c]>>>e)>>>26),6>e?(g=a[c]<<6-e,e+=26,c++):(g<<=6,e-=6);for(;d.length&3&&!b;)d+="=";return d},toBits:function(a,b){a=a.replace(/\s|=/g,"");var c=[],d,e=0,f=sjcl.codec.base64.M,g=0,h;b&&(f=f.substr(0,62)+"-_");for(d=0;d<a.length;d++)h=f.indexOf(a.charAt(d)),
+0>h&&q(new sjcl.exception.invalid("this isn't base64!")),26<e?(e-=26,c.push(g^h>>>e),g=h<<32-e):(e+=6,g^=h<<32-e);e&56&&c.push(sjcl.bitArray.partial(e&56,g,1));return c}};sjcl.codec.base64url={fromBits:function(a){return sjcl.codec.base64.fromBits(a,1,1)},toBits:function(a){return sjcl.codec.base64.toBits(a,1)}};sjcl.hash.sha256=function(a){this.b[0]||this.H();a?(this.e=a.e.slice(0),this.d=a.d.slice(0),this.c=a.c):this.reset()};sjcl.hash.sha256.hash=function(a){return(new sjcl.hash.sha256).update(a).finalize()};
+sjcl.hash.sha256.prototype={blockSize:512,reset:function(){this.e=this.t.slice(0);this.d=[];this.c=0;return this},update:function(a){"string"===typeof a&&(a=sjcl.codec.utf8String.toBits(a));var b,c=this.d=sjcl.bitArray.concat(this.d,a);b=this.c;a=this.c=b+sjcl.bitArray.bitLength(a);for(b=512+b&-512;b<=a;b+=512)this.q(c.splice(0,16));return this},finalize:function(){var a,b=this.d,c=this.e,b=sjcl.bitArray.concat(b,[sjcl.bitArray.partial(1,1)]);for(a=b.length+2;a&15;a++)b.push(0);b.push(Math.floor(this.c/
+4294967296));for(b.push(this.c|0);b.length;)this.q(b.splice(0,16));this.reset();return c},t:[],b:[],H:function(){function a(a){return 0x100000000*(a-Math.floor(a))|0}var b=0,c=2,d;a:for(;64>b;c++){for(d=2;d*d<=c;d++)if(0===c%d)continue a;8>b&&(this.t[b]=a(Math.pow(c,0.5)));this.b[b]=a(Math.pow(c,1/3));b++}},q:function(a){var b,c,d=a.slice(0),e=this.e,f=this.b,g=e[0],h=e[1],k=e[2],l=e[3],m=e[4],n=e[5],p=e[6],u=e[7];for(a=0;64>a;a++)16>a?b=d[a]:(b=d[a+1&15],c=d[a+14&15],b=d[a&15]=(b>>>7^b>>>18^b>>>3^
+b<<25^b<<14)+(c>>>17^c>>>19^c>>>10^c<<15^c<<13)+d[a&15]+d[a+9&15]|0),b=b+u+(m>>>6^m>>>11^m>>>25^m<<26^m<<21^m<<7)+(p^m&(n^p))+f[a],u=p,p=n,n=m,m=l+b|0,l=k,k=h,h=g,g=b+(h&k^l&(h^k))+(h>>>2^h>>>13^h>>>22^h<<30^h<<19^h<<10)|0;e[0]=e[0]+g|0;e[1]=e[1]+h|0;e[2]=e[2]+k|0;e[3]=e[3]+l|0;e[4]=e[4]+m|0;e[5]=e[5]+n|0;e[6]=e[6]+p|0;e[7]=e[7]+u|0}};sjcl.hash.sha1=function(a){a?(this.e=a.e.slice(0),this.d=a.d.slice(0),this.c=a.c):this.reset()};sjcl.hash.sha1.hash=function(a){return(new sjcl.hash.sha1).update(a).finalize()};
+sjcl.hash.sha1.prototype={blockSize:512,reset:function(){this.e=this.t.slice(0);this.d=[];this.c=0;return this},update:function(a){"string"===typeof a&&(a=sjcl.codec.utf8String.toBits(a));var b,c=this.d=sjcl.bitArray.concat(this.d,a);b=this.c;a=this.c=b+sjcl.bitArray.bitLength(a);for(b=this.blockSize+b&-this.blockSize;b<=a;b+=this.blockSize)this.q(c.splice(0,16));return this},finalize:function(){var a,b=this.d,c=this.e,b=sjcl.bitArray.concat(b,[sjcl.bitArray.partial(1,1)]);for(a=b.length+2;a&15;a++)b.push(0);
+b.push(Math.floor(this.c/0x100000000));for(b.push(this.c|0);b.length;)this.q(b.splice(0,16));this.reset();return c},t:[1732584193,4023233417,2562383102,271733878,3285377520],b:[1518500249,1859775393,2400959708,3395469782],q:function(a){var b,c,d,e,f,g,h=a.slice(0),k=this.e;c=k[0];d=k[1];e=k[2];f=k[3];g=k[4];for(a=0;79>=a;a++)16<=a&&(h[a]=(h[a-3]^h[a-8]^h[a-14]^h[a-16])<<1|(h[a-3]^h[a-8]^h[a-14]^h[a-16])>>>31),b=19>=a?d&e|~d&f:39>=a?d^e^f:59>=a?d&e|d&f|e&f:79>=a?d^e^f:r,b=(c<<5|c>>>27)+b+g+h[a]+this.b[Math.floor(a/
+20)]|0,g=f,f=e,e=d<<30|d>>>2,d=c,c=b;k[0]=k[0]+c|0;k[1]=k[1]+d|0;k[2]=k[2]+e|0;k[3]=k[3]+f|0;k[4]=k[4]+g|0}};
+sjcl.mode.ccm={name:"ccm",u:[],listenProgress:function(a){sjcl.mode.ccm.u.push(a)},unListenProgress:function(a){a=sjcl.mode.ccm.u.indexOf(a);-1<a&&sjcl.mode.ccm.u.splice(a,1)},X:function(a){var b=sjcl.mode.ccm.u.slice(),c;for(c=0;c<b.length;c+=1)b[c](a)},encrypt:function(a,b,c,d,e){var f,g=b.slice(0),h=sjcl.bitArray,k=h.bitLength(c)/8,l=h.bitLength(g)/8;e=e||64;d=d||[];7>k&&q(new sjcl.exception.invalid("ccm: iv must be at least 7 bytes"));for(f=2;4>f&&l>>>8*f;f++);f<15-k&&(f=15-k);c=h.clamp(c,8*(15-
+f));b=sjcl.mode.ccm.O(a,b,c,d,e,f);g=sjcl.mode.ccm.r(a,g,c,b,e,f);return h.concat(g.data,g.tag)},decrypt:function(a,b,c,d,e){e=e||64;d=d||[];var f=sjcl.bitArray,g=f.bitLength(c)/8,h=f.bitLength(b),k=f.clamp(b,h-e),l=f.bitSlice(b,h-e),h=(h-e)/8;7>g&&q(new sjcl.exception.invalid("ccm: iv must be at least 7 bytes"));for(b=2;4>b&&h>>>8*b;b++);b<15-g&&(b=15-g);c=f.clamp(c,8*(15-b));k=sjcl.mode.ccm.r(a,k,c,l,e,b);a=sjcl.mode.ccm.O(a,k.data,c,d,e,b);f.equal(k.tag,a)||q(new sjcl.exception.corrupt("ccm: tag doesn't match"));
+return k.data},ea:function(a,b,c,d,e,f){var g=[],h=sjcl.bitArray,k=h.j;d=[h.partial(8,(b.length?64:0)|d-2<<2|f-1)];d=h.concat(d,c);d[3]|=e;d=a.encrypt(d);if(b.length){c=h.bitLength(b)/8;65279>=c?g=[h.partial(16,c)]:0xffffffff>=c&&(g=h.concat([h.partial(16,65534)],[c]));g=h.concat(g,b);for(b=0;b<g.length;b+=4)d=a.encrypt(k(d,g.slice(b,b+4).concat([0,0,0])))}return d},O:function(a,b,c,d,e,f){var g=sjcl.bitArray,h=g.j;e/=8;(e%2||4>e||16<e)&&q(new sjcl.exception.invalid("ccm: invalid tag length"));(0xffffffff<
+d.length||0xffffffff<b.length)&&q(new sjcl.exception.bug("ccm: can't deal with 4GiB or more data"));c=sjcl.mode.ccm.ea(a,d,c,e,g.bitLength(b)/8,f);for(d=0;d<b.length;d+=4)c=a.encrypt(h(c,b.slice(d,d+4).concat([0,0,0])));return g.clamp(c,8*e)},r:function(a,b,c,d,e,f){var g,h=sjcl.bitArray;g=h.j;var k=b.length,l=h.bitLength(b),m=k/50,n=m;c=h.concat([h.partial(8,f-1)],c).concat([0,0,0]).slice(0,4);d=h.bitSlice(g(d,a.encrypt(c)),0,e);if(!k)return{tag:d,data:[]};for(g=0;g<k;g+=4)g>m&&(sjcl.mode.ccm.X(g/
+k),m+=n),c[3]++,e=a.encrypt(c),b[g]^=e[0],b[g+1]^=e[1],b[g+2]^=e[2],b[g+3]^=e[3];return{tag:d,data:h.clamp(b,l)}}};
+sjcl.mode.ocb2={name:"ocb2",encrypt:function(a,b,c,d,e,f){128!==sjcl.bitArray.bitLength(c)&&q(new sjcl.exception.invalid("ocb iv must be 128 bits"));var g,h=sjcl.mode.ocb2.K,k=sjcl.bitArray,l=k.j,m=[0,0,0,0];c=h(a.encrypt(c));var n,p=[];d=d||[];e=e||64;for(g=0;g+4<b.length;g+=4)n=b.slice(g,g+4),m=l(m,n),p=p.concat(l(c,a.encrypt(l(c,n)))),c=h(c);n=b.slice(g);b=k.bitLength(n);g=a.encrypt(l(c,[0,0,0,b]));n=k.clamp(l(n.concat([0,0,0]),g),b);m=l(m,l(n.concat([0,0,0]),g));m=a.encrypt(l(m,l(c,h(c))));d.length&&
+(m=l(m,f?d:sjcl.mode.ocb2.pmac(a,d)));return p.concat(k.concat(n,k.clamp(m,e)))},decrypt:function(a,b,c,d,e,f){128!==sjcl.bitArray.bitLength(c)&&q(new sjcl.exception.invalid("ocb iv must be 128 bits"));e=e||64;var g=sjcl.mode.ocb2.K,h=sjcl.bitArray,k=h.j,l=[0,0,0,0],m=g(a.encrypt(c)),n,p,u=sjcl.bitArray.bitLength(b)-e,t=[];d=d||[];for(c=0;c+4<u/32;c+=4)n=k(m,a.decrypt(k(m,b.slice(c,c+4)))),l=k(l,n),t=t.concat(n),m=g(m);p=u-32*c;n=a.encrypt(k(m,[0,0,0,p]));n=k(n,h.clamp(b.slice(c),p).concat([0,0,0]));
+l=k(l,n);l=a.encrypt(k(l,k(m,g(m))));d.length&&(l=k(l,f?d:sjcl.mode.ocb2.pmac(a,d)));h.equal(h.clamp(l,e),h.bitSlice(b,u))||q(new sjcl.exception.corrupt("ocb: tag doesn't match"));return t.concat(h.clamp(n,p))},pmac:function(a,b){var c,d=sjcl.mode.ocb2.K,e=sjcl.bitArray,f=e.j,g=[0,0,0,0],h=a.encrypt([0,0,0,0]),h=f(h,d(d(h)));for(c=0;c+4<b.length;c+=4)h=d(h),g=f(g,a.encrypt(f(h,b.slice(c,c+4))));c=b.slice(c);128>e.bitLength(c)&&(h=f(h,d(h)),c=e.concat(c,[-2147483648,0,0,0]));g=f(g,c);return a.encrypt(f(d(f(h,
+d(h))),g))},K:function(a){return[a[0]<<1^a[1]>>>31,a[1]<<1^a[2]>>>31,a[2]<<1^a[3]>>>31,a[3]<<1^135*(a[0]>>>31)]}};
+sjcl.mode.gcm={name:"gcm",encrypt:function(a,b,c,d,e){var f=b.slice(0);b=sjcl.bitArray;d=d||[];a=sjcl.mode.gcm.r(!0,a,f,d,c,e||128);return b.concat(a.data,a.tag)},decrypt:function(a,b,c,d,e){var f=b.slice(0),g=sjcl.bitArray,h=g.bitLength(f);e=e||128;d=d||[];e<=h?(b=g.bitSlice(f,h-e),f=g.bitSlice(f,0,h-e)):(b=f,f=[]);a=sjcl.mode.gcm.r(s,a,f,d,c,e);g.equal(a.tag,b)||q(new sjcl.exception.corrupt("gcm: tag doesn't match"));return a.data},ba:function(a,b){var c,d,e,f,g,h=sjcl.bitArray.j;e=[0,0,0,0];f=
+b.slice(0);for(c=0;128>c;c++){(d=0!==(a[Math.floor(c/32)]&1<<31-c%32))&&(e=h(e,f));g=0!==(f[3]&1);for(d=3;0<d;d--)f[d]=f[d]>>>1|(f[d-1]&1)<<31;f[0]>>>=1;g&&(f[0]^=-0x1f000000)}return e},k:function(a,b,c){var d,e=c.length;b=b.slice(0);for(d=0;d<e;d+=4)b[0]^=0xffffffff&c[d],b[1]^=0xffffffff&c[d+1],b[2]^=0xffffffff&c[d+2],b[3]^=0xffffffff&c[d+3],b=sjcl.mode.gcm.ba(b,a);return b},r:function(a,b,c,d,e,f){var g,h,k,l,m,n,p,u,t=sjcl.bitArray;n=c.length;p=t.bitLength(c);u=t.bitLength(d);h=t.bitLength(e);g=
+b.encrypt([0,0,0,0]);96===h?(e=e.slice(0),e=t.concat(e,[1])):(e=sjcl.mode.gcm.k(g,[0,0,0,0],e),e=sjcl.mode.gcm.k(g,e,[0,0,Math.floor(h/0x100000000),h&0xffffffff]));h=sjcl.mode.gcm.k(g,[0,0,0,0],d);m=e.slice(0);d=h.slice(0);a||(d=sjcl.mode.gcm.k(g,h,c));for(l=0;l<n;l+=4)m[3]++,k=b.encrypt(m),c[l]^=k[0],c[l+1]^=k[1],c[l+2]^=k[2],c[l+3]^=k[3];c=t.clamp(c,p);a&&(d=sjcl.mode.gcm.k(g,h,c));a=[Math.floor(u/0x100000000),u&0xffffffff,Math.floor(p/0x100000000),p&0xffffffff];d=sjcl.mode.gcm.k(g,d,a);k=b.encrypt(e);
+d[0]^=k[0];d[1]^=k[1];d[2]^=k[2];d[3]^=k[3];return{tag:t.bitSlice(d,0,f),data:c}}};sjcl.misc.hmac=function(a,b){this.P=b=b||sjcl.hash.sha256;var c=[[],[]],d,e=b.prototype.blockSize/32;this.p=[new b,new b];a.length>e&&(a=b.hash(a));for(d=0;d<e;d++)c[0][d]=a[d]^909522486,c[1][d]=a[d]^1549556828;this.p[0].update(c[0]);this.p[1].update(c[1]);this.J=new b(this.p[0])};
+sjcl.misc.hmac.prototype.encrypt=sjcl.misc.hmac.prototype.mac=function(a){this.S&&q(new sjcl.exception.invalid("encrypt on already updated hmac called!"));this.update(a);return this.digest(a)};sjcl.misc.hmac.prototype.reset=function(){this.J=new this.P(this.p[0]);this.S=s};sjcl.misc.hmac.prototype.update=function(a){this.S=!0;this.J.update(a)};sjcl.misc.hmac.prototype.digest=function(){var a=this.J.finalize(),a=(new this.P(this.p[1])).update(a).finalize();this.reset();return a};
+sjcl.misc.pbkdf2=function(a,b,c,d,e){c=c||1E3;(0>d||0>c)&&q(sjcl.exception.invalid("invalid params to pbkdf2"));"string"===typeof a&&(a=sjcl.codec.utf8String.toBits(a));"string"===typeof b&&(b=sjcl.codec.utf8String.toBits(b));e=e||sjcl.misc.hmac;a=new e(a);var f,g,h,k,l=[],m=sjcl.bitArray;for(k=1;32*l.length<(d||1);k++){e=f=a.encrypt(m.concat(b,[k]));for(g=1;g<c;g++){f=a.encrypt(f);for(h=0;h<f.length;h++)e[h]^=f[h]}l=l.concat(e)}d&&(l=m.clamp(l,d));return l};
+sjcl.prng=function(a){this.f=[new sjcl.hash.sha256];this.l=[0];this.I=0;this.w={};this.G=0;this.N={};this.Q=this.g=this.m=this.Z=0;this.b=[0,0,0,0,0,0,0,0];this.i=[0,0,0,0];this.D=r;this.F=a;this.s=s;this.C={progress:{},seeded:{}};this.o=this.Y=0;this.A=1;this.B=2;this.U=0x10000;this.L=[0,48,64,96,128,192,0x100,384,512,768,1024];this.V=3E4;this.T=80};
+sjcl.prng.prototype={randomWords:function(a,b){var c=[],d;d=this.isReady(b);var e;d===this.o&&q(new sjcl.exception.notReady("generator isn't seeded"));if(d&this.B){d=!(d&this.A);e=[];var f=0,g;this.Q=e[0]=(new Date).valueOf()+this.V;for(g=0;16>g;g++)e.push(0x100000000*Math.random()|0);for(g=0;g<this.f.length&&!(e=e.concat(this.f[g].finalize()),f+=this.l[g],this.l[g]=0,!d&&this.I&1<<g);g++);this.I>=1<<this.f.length&&(this.f.push(new sjcl.hash.sha256),this.l.push(0));this.g-=f;f>this.m&&(this.m=f);this.I++;
+this.b=sjcl.hash.sha256.hash(this.b.concat(e));this.D=new sjcl.cipher.aes(this.b);for(d=0;4>d&&!(this.i[d]=this.i[d]+1|0,this.i[d]);d++);}for(d=0;d<a;d+=4)0===(d+1)%this.U&&w(this),e=A(this),c.push(e[0],e[1],e[2],e[3]);w(this);return c.slice(0,a)},setDefaultParanoia:function(a,b){0===a&&"Setting paranoia=0 will ruin your security; use it only for testing"!==b&&q("Setting paranoia=0 will ruin your security; use it only for testing");this.F=a},addEntropy:function(a,b,c){c=c||"user";var d,e,f=(new Date).valueOf(),
+g=this.w[c],h=this.isReady(),k=0;d=this.N[c];d===r&&(d=this.N[c]=this.Z++);g===r&&(g=this.w[c]=0);this.w[c]=(this.w[c]+1)%this.f.length;switch(typeof a){case "number":b===r&&(b=1);this.f[g].update([d,this.G++,1,b,f,1,a|0]);break;case "object":c=Object.prototype.toString.call(a);if("[object Uint32Array]"===c){e=[];for(c=0;c<a.length;c++)e.push(a[c]);a=e}else{"[object Array]"!==c&&(k=1);for(c=0;c<a.length&&!k;c++)"number"!==typeof a[c]&&(k=1)}if(!k){if(b===r)for(c=b=0;c<a.length;c++)for(e=a[c];0<e;)b++,
+e>>>=1;this.f[g].update([d,this.G++,2,b,f,a.length].concat(a))}break;case "string":b===r&&(b=a.length);this.f[g].update([d,this.G++,3,b,f,a.length]);this.f[g].update(a);break;default:k=1}k&&q(new sjcl.exception.bug("random: addEntropy only supports number, array of numbers or string"));this.l[g]+=b;this.g+=b;h===this.o&&(this.isReady()!==this.o&&B("seeded",Math.max(this.m,this.g)),B("progress",this.getProgress()))},isReady:function(a){a=this.L[a!==r?a:this.F];return this.m&&this.m>=a?this.l[0]>this.T&&
+(new Date).valueOf()>this.Q?this.B|this.A:this.A:this.g>=a?this.B|this.o:this.o},getProgress:function(a){a=this.L[a?a:this.F];return this.m>=a?1:this.g>a?1:this.g/a},startCollectors:function(){this.s||(this.a={loadTimeCollector:C(this,this.da),mouseCollector:C(this,this.fa),keyboardCollector:C(this,this.ca),accelerometerCollector:C(this,this.W),touchCollector:C(this,this.ha)},window.addEventListener?(window.addEventListener("load",this.a.loadTimeCollector,s),window.addEventListener("mousemove",this.a.mouseCollector,
+s),window.addEventListener("keypress",this.a.keyboardCollector,s),window.addEventListener("devicemotion",this.a.accelerometerCollector,s),window.addEventListener("touchmove",this.a.touchCollector,s)):document.attachEvent?(document.attachEvent("onload",this.a.loadTimeCollector),document.attachEvent("onmousemove",this.a.mouseCollector),document.attachEvent("keypress",this.a.keyboardCollector)):q(new sjcl.exception.bug("can't attach event")),this.s=!0)},stopCollectors:function(){this.s&&(window.removeEventListener?
+(window.removeEventListener("load",this.a.loadTimeCollector,s),window.removeEventListener("mousemove",this.a.mouseCollector,s),window.removeEventListener("keypress",this.a.keyboardCollector,s),window.removeEventListener("devicemotion",this.a.accelerometerCollector,s),window.removeEventListener("touchmove",this.a.touchCollector,s)):document.detachEvent&&(document.detachEvent("onload",this.a.loadTimeCollector),document.detachEvent("onmousemove",this.a.mouseCollector),document.detachEvent("keypress",
+this.a.keyboardCollector)),this.s=s)},addEventListener:function(a,b){this.C[a][this.Y++]=b},removeEventListener:function(a,b){var c,d,e=this.C[a],f=[];for(d in e)e.hasOwnProperty(d)&&e[d]===b&&f.push(d);for(c=0;c<f.length;c++)d=f[c],delete e[d]},ca:function(){D(1)},fa:function(a){var b,c;try{b=a.x||a.clientX||a.offsetX||0,c=a.y||a.clientY||a.offsetY||0}catch(d){c=b=0}0!=b&&0!=c&&sjcl.random.addEntropy([b,c],2,"mouse");D(0)},ha:function(a){a=a.touches[0]||a.changedTouches[0];sjcl.random.addEntropy([a.pageX||
+a.clientX,a.pageY||a.clientY],1,"touch");D(0)},da:function(){D(2)},W:function(a){a=a.accelerationIncludingGravity.x||a.accelerationIncludingGravity.y||a.accelerationIncludingGravity.z;if(window.orientation){var b=window.orientation;"number"===typeof b&&sjcl.random.addEntropy(b,1,"accelerometer")}a&&sjcl.random.addEntropy(a,2,"accelerometer");D(0)}};function B(a,b){var c,d=sjcl.random.C[a],e=[];for(c in d)d.hasOwnProperty(c)&&e.push(d[c]);for(c=0;c<e.length;c++)e[c](b)}
+function D(a){"undefined"!==typeof window&&window.performance&&"function"===typeof window.performance.now?sjcl.random.addEntropy(window.performance.now(),a,"loadtime"):sjcl.random.addEntropy((new Date).valueOf(),a,"loadtime")}function w(a){a.b=A(a).concat(A(a));a.D=new sjcl.cipher.aes(a.b)}function A(a){for(var b=0;4>b&&!(a.i[b]=a.i[b]+1|0,a.i[b]);b++);return a.D.encrypt(a.i)}function C(a,b){return function(){b.apply(a,arguments)}}sjcl.random=new sjcl.prng(6);
+a:try{var E,F,G,H;if(H="undefined"!==typeof module){var I;if(I=module.exports){var J;try{J=require("crypto")}catch(K){J=null}I=(F=J)&&F.randomBytes}H=I}if(H)E=F.randomBytes(128),E=new Uint32Array((new Uint8Array(E)).buffer),sjcl.random.addEntropy(E,1024,"crypto['randomBytes']");else if("undefined"!==typeof window&&"undefined"!==typeof Uint32Array){G=new Uint32Array(32);if(window.crypto&&window.crypto.getRandomValues)window.crypto.getRandomValues(G);else if(window.msCrypto&&window.msCrypto.getRandomValues)window.msCrypto.getRandomValues(G);
+else break a;sjcl.random.addEntropy(G,1024,"crypto['getRandomValues']")}}catch(L){"undefined"!==typeof window&&window.console&&(console.log("There was an error collecting entropy from the browser:"),console.log(L))}
+sjcl.json={defaults:{v:1,iter:1E3,ks:128,ts:64,mode:"ccm",adata:"",cipher:"aes"},aa:function(a,b,c,d){c=c||{};d=d||{};var e=sjcl.json,f=e.h({iv:sjcl.random.randomWords(4,0)},e.defaults),g;e.h(f,c);c=f.adata;"string"===typeof f.salt&&(f.salt=sjcl.codec.base64.toBits(f.salt));"string"===typeof f.iv&&(f.iv=sjcl.codec.base64.toBits(f.iv));(!sjcl.mode[f.mode]||!sjcl.cipher[f.cipher]||"string"===typeof a&&100>=f.iter||64!==f.ts&&96!==f.ts&&128!==f.ts||128!==f.ks&&192!==f.ks&&0x100!==f.ks||2>f.iv.length||
+4<f.iv.length)&&q(new sjcl.exception.invalid("json encrypt: invalid parameters"));"string"===typeof a?(g=sjcl.misc.cachedPbkdf2(a,f),a=g.key.slice(0,f.ks/32),f.salt=g.salt):sjcl.ecc&&a instanceof sjcl.ecc.elGamal.publicKey&&(g=a.kem(),f.kemtag=g.tag,a=g.key.slice(0,f.ks/32));"string"===typeof b&&(b=sjcl.codec.utf8String.toBits(b));"string"===typeof c&&(f.adata=c=sjcl.codec.utf8String.toBits(c));g=new sjcl.cipher[f.cipher](a);e.h(d,f);d.key=a;f.ct="ccm"===f.mode&&sjcl.arrayBuffer&&sjcl.arrayBuffer.ccm&&
+b instanceof ArrayBuffer?sjcl.arrayBuffer.ccm.encrypt(g,b,f.iv,c,f.ts):sjcl.mode[f.mode].encrypt(g,b,f.iv,c,f.ts);return f},encrypt:function(a,b,c,d){var e=sjcl.json,f=e.aa.apply(e,arguments);return e.encode(f)},$:function(a,b,c,d){c=c||{};d=d||{};var e=sjcl.json;b=e.h(e.h(e.h({},e.defaults),b),c,!0);var f,g;f=b.adata;"string"===typeof b.salt&&(b.salt=sjcl.codec.base64.toBits(b.salt));"string"===typeof b.iv&&(b.iv=sjcl.codec.base64.toBits(b.iv));(!sjcl.mode[b.mode]||!sjcl.cipher[b.cipher]||"string"===
+typeof a&&100>=b.iter||64!==b.ts&&96!==b.ts&&128!==b.ts||128!==b.ks&&192!==b.ks&&0x100!==b.ks||!b.iv||2>b.iv.length||4<b.iv.length)&&q(new sjcl.exception.invalid("json decrypt: invalid parameters"));"string"===typeof a?(g=sjcl.misc.cachedPbkdf2(a,b),a=g.key.slice(0,b.ks/32),b.salt=g.salt):sjcl.ecc&&a instanceof sjcl.ecc.elGamal.secretKey&&(a=a.unkem(sjcl.codec.base64.toBits(b.kemtag)).slice(0,b.ks/32));"string"===typeof f&&(f=sjcl.codec.utf8String.toBits(f));g=new sjcl.cipher[b.cipher](a);f="ccm"===
+b.mode&&sjcl.arrayBuffer&&sjcl.arrayBuffer.ccm&&b.ct instanceof ArrayBuffer?sjcl.arrayBuffer.ccm.decrypt(g,b.ct,b.iv,b.tag,f,b.ts):sjcl.mode[b.mode].decrypt(g,b.ct,b.iv,f,b.ts);e.h(d,b);d.key=a;return 1===c.raw?f:sjcl.codec.utf8String.fromBits(f)},decrypt:function(a,b,c,d){var e=sjcl.json;return e.$(a,e.decode(b),c,d)},encode:function(a){var b,c="{",d="";for(b in a)if(a.hasOwnProperty(b))switch(b.match(/^[a-z0-9]+$/i)||q(new sjcl.exception.invalid("json encode: invalid property name")),c+=d+'"'+b+
+'":',d=",",typeof a[b]){case "number":case "boolean":c+=a[b];break;case "string":c+='"'+escape(a[b])+'"';break;case "object":c+='"'+sjcl.codec.base64.fromBits(a[b],0)+'"';break;default:q(new sjcl.exception.bug("json encode: unsupported type"))}return c+"}"},decode:function(a){a=a.replace(/\s/g,"");a.match(/^\{.*\}$/)||q(new sjcl.exception.invalid("json decode: this isn't json!"));a=a.replace(/^\{|\}$/g,"").split(/,/);var b={},c,d;for(c=0;c<a.length;c++)(d=a[c].match(/^\s*(?:(["']?)([a-z][a-z0-9]*)\1)\s*:\s*(?:(-?\d+)|"([a-z0-9+\/%*_.@=\-]*)"|(true|false))$/i))||
+q(new sjcl.exception.invalid("json decode: this isn't json!")),null!=d[3]?b[d[2]]=parseInt(d[3],10):null!=d[4]?b[d[2]]=d[2].match(/^(ct|adata|salt|iv)$/)?sjcl.codec.base64.toBits(d[4]):unescape(d[4]):null!=d[5]&&(b[d[2]]="true"===d[5]);return b},h:function(a,b,c){a===r&&(a={});if(b===r)return a;for(var d in b)b.hasOwnProperty(d)&&(c&&(a[d]!==r&&a[d]!==b[d])&&q(new sjcl.exception.invalid("required parameter overridden")),a[d]=b[d]);return a},ja:function(a,b){var c={},d;for(d in a)a.hasOwnProperty(d)&&
+a[d]!==b[d]&&(c[d]=a[d]);return c},ia:function(a,b){var c={},d;for(d=0;d<b.length;d++)a[b[d]]!==r&&(c[b[d]]=a[b[d]]);return c}};sjcl.encrypt=sjcl.json.encrypt;sjcl.decrypt=sjcl.json.decrypt;sjcl.misc.ga={};sjcl.misc.cachedPbkdf2=function(a,b){var c=sjcl.misc.ga,d;b=b||{};d=b.iter||1E3;c=c[a]=c[a]||{};d=c[d]=c[d]||{firstSalt:b.salt&&b.salt.length?b.salt.slice(0):sjcl.random.randomWords(2,0)};c=b.salt===r?d.firstSalt:b.salt;d[c]=d[c]||sjcl.misc.pbkdf2(a,c,b.iter);return{key:d[c].slice(0),salt:c.slice(0)}};
 
 },{"crypto":82}],167:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
@@ -33560,7 +33749,7 @@ function BuySell (wallet) {
   if (wallet.external === null) return;
 
   // Stop if meta data failed to load;
-  if (!wallet.external.success) {
+  if (!wallet.external.loaded) {
     return;
   }
 
@@ -33573,7 +33762,7 @@ Object.defineProperties(BuySell.prototype, {
     configurable: false,
     get: function () {
       return {
-        metaDataService: this._wallet.external && this._wallet.external.success
+        metaDataService: this._wallet.external && this._wallet.external.loaded
       };
     }
   },
@@ -33582,7 +33771,7 @@ Object.defineProperties(BuySell.prototype, {
     get: function () {
       if (
         this._wallet.external === null ||
-        !this._wallet.external.success
+        !this._wallet.external.loaded
       ) return;
       return {
         coinify: this._wallet.external.coinify
@@ -33857,10 +34046,10 @@ Object.defineProperties(Coinify.prototype, {
       return this._kycs;
     }
   },
-  'paymentMethods': {
+  'hasAccount': {
     configurable: false,
     get: function () {
-      return this._payment_methods;
+      return Boolean(this._offline_token);
     }
   },
   'isLoggedIn': {
@@ -33971,15 +34160,7 @@ Coinify.prototype.login = function () {
 };
 
 Coinify.prototype.fetchProfile = function () {
-  var parentThis = this;
-
-  if (this.isLoggedIn) {
-    return this._profile.fetch();
-  } else {
-    return this.login().then(function () {
-      return parentThis._profile.fetch();
-    });
-  }
+  return this._profile.fetch();
 };
 
 Coinify.prototype.getBuyQuote = function (amount, baseCurrency, quoteCurrency) {
@@ -34006,15 +34187,7 @@ Coinify.prototype.buy = function (amount, baseCurrency, medium) {
 
   var self = this;
 
-  var doBuy = function () {
-    return CoinifyTrade.buy(self._lastQuote, medium, self);
-  };
-
-  if (!this.isLoggedIn) {
-    return this.login().then(doBuy);
-  } else {
-    return doBuy();
-  }
+  return CoinifyTrade.buy(self._lastQuote, medium, self);
 };
 
 Coinify.prototype.getTrades = function () {
@@ -34024,29 +34197,27 @@ Coinify.prototype.getTrades = function () {
 Coinify.prototype.triggerKYC = function () {
   var self = this;
 
-  var doKYC = function () {
-    return CoinifyKYC.trigger(self);
-  };
-
-  if (!this.isLoggedIn) {
-    return this.login().then(doKYC);
-  } else {
-    return doKYC();
-  }
+  return CoinifyKYC.trigger(self);
 };
 
 Coinify.prototype.getKYCs = function () {
   return CoinifyKYC.fetchAll(this);
 };
 
+// DEPRECATED, used get[Buy/Sell]Methods() or quote.getPaymentMethods()
 Coinify.prototype.getPaymentMethods = function (inCurrency, outCurrency) {
-  assert(inCurrency, 'In currency required');
+  console.warn('coinify.getPaymentMethods() is deprecated');
+  assert(inCurrency || outCurrency, 'In or out currency required');
   assert(outCurrency, 'Out currency required');
   return PaymentMethod.fetchAll(inCurrency, outCurrency, this);
 };
 
 Coinify.prototype.getBuyMethods = function () {
   return PaymentMethod.fetchAll(undefined, 'BTC', this);
+};
+
+Coinify.prototype.getSellMethods = function () {
+  return PaymentMethod.fetchAll('BTC', undefined, this);
 };
 
 Coinify.prototype.getBuyCurrencies = function () {
@@ -34064,10 +34235,6 @@ Coinify.prototype.getBuyCurrencies = function () {
     return currencies;
   };
   return this.getBuyMethods().then(getCurrencies);
-};
-
-Coinify.prototype.getSellMethods = function () {
-  return PaymentMethod.fetchAll('BTC', undefined, this);
 };
 
 Coinify.prototype.getSellCurrencies = function () {
@@ -34095,12 +34262,48 @@ Coinify.prototype.GET = function (endpoint, data) {
   return this.request('GET', endpoint, data);
 };
 
+Coinify.prototype.authGET = function (endpoint, data) {
+  var doGET = function () {
+    return this.GET(endpoint, data);
+  };
+
+  if (this.isLoggedIn) {
+    return doGET.bind(this)();
+  } else {
+    return this.login().then(doGET.bind(this));
+  }
+};
+
 Coinify.prototype.POST = function (endpoint, data) {
   return this.request('POST', endpoint, data);
 };
 
+Coinify.prototype.authPOST = function (endpoint, data) {
+  var doPOST = function () {
+    return this.POST(endpoint, data);
+  };
+
+  if (this.isLoggedIn) {
+    return doPOST.bind(this)();
+  } else {
+    return this.login().then(doPOST.bind(this));
+  }
+};
+
 Coinify.prototype.PATCH = function (endpoint, data) {
   return this.request('PATCH', endpoint, data);
+};
+
+Coinify.prototype.authPATCH = function (endpoint, data) {
+  var doPATCH = function () {
+    return this.PATCH(endpoint, data);
+  };
+
+  if (this.isLoggedIn) {
+    return doPATCH.bind(this)();
+  } else {
+    return this.login().then(doPATCH.bind(this));
+  }
 };
 
 Coinify.prototype.request = function (method, endpoint, data) {
@@ -34222,6 +34425,20 @@ function CoinifyKYC (obj, coinify) {
 }
 
 CoinifyKYC.prototype.set = function (obj) {
+  if ([
+    'pending',
+    'rejected',
+    'declined',
+    'failed',
+    'expired',
+    'completed',
+    'completed_test',
+    'manualReviewing',
+    'manualHold',
+    'manualRejected'
+  ].indexOf(obj.state) === -1) {
+    console.warn('Unknown state:', obj.state);
+  }
   this._state = obj.state;
   this._iSignThisID = obj.externalId;
   this._updatedAt = new Date(obj.updateTime);
@@ -34261,14 +34478,7 @@ Object.defineProperties(CoinifyKYC.prototype, {
 });
 
 CoinifyKYC.prototype.refresh = function () {
-  var updateTrade = function () {
-    return this._coinify.GET('kyc/' + this._id).then(this.set.bind(this));
-  };
-  if (this._coinify.isLoggedIn) {
-    return updateTrade.bind(this)();
-  } else {
-    return this._coinify.login().then(updateTrade.bind(this));
-  }
+  return this._coinify.authGET('kyc/' + this._id).then(this.set.bind(this));
 };
 
 CoinifyKYC.trigger = function (coinify) {
@@ -34278,28 +34488,20 @@ CoinifyKYC.trigger = function (coinify) {
     return kyc;
   };
 
-  return coinify.POST('traders/me/kyc').then(processKYC);
+  return coinify.authPOST('traders/me/kyc').then(processKYC);
 };
 
 // Fetches the latest trades and updates coinify._trades
 CoinifyKYC.fetchAll = function (coinify) {
-  var getKycs = function () {
-    return coinify.GET('kyc').then(function (res) {
-      coinify._kycs.length = 0; // empty array without losing reference
-      for (var i = 0; i < res.length; i++) {
-        var kyc = new CoinifyKYC(res[i], coinify);
-        coinify._kycs.push(kyc);
-      }
+  return coinify.authGET('kyc').then(function (res) {
+    coinify._kycs.length = 0; // empty array without losing reference
+    for (var i = 0; i < res.length; i++) {
+      var kyc = new CoinifyKYC(res[i], coinify);
+      coinify._kycs.push(kyc);
+    }
 
-      return coinify._kycs;
-    });
-  };
-
-  if (coinify.isLoggedIn) {
-    return getKycs();
-  } else {
-    return coinify.login().then(getKycs);
-  }
+    return coinify._kycs;
+  });
 };
 
 },{}],192:[function(require,module,exports){
@@ -34535,26 +34737,18 @@ Object.defineProperties(PaymentMethod.prototype, {
 });
 
 PaymentMethod.fetchAll = function (inCurrency, outCurrency, coinify) {
-  var getPaymentMethods = function () {
-    var params = {};
-    if (inCurrency) { params.inCurrency = inCurrency; }
-    if (outCurrency) { params.outCurrency = outCurrency; }
+  var params = {};
+  if (inCurrency) { params.inCurrency = inCurrency; }
+  if (outCurrency) { params.outCurrency = outCurrency; }
 
-    var output = [];
-    return coinify.GET('trades/payment-methods', params).then(function (res) {
-      output.length = 0;
-      for (var i = 0; i < res.length; i++) {
-        output.push(new PaymentMethod(res[i], coinify));
-      }
-      return Promise.resolve(output);
-    });
-  };
-
-  if (coinify.isLoggedIn) {
-    return getPaymentMethods();
-  } else {
-    return coinify.login().then(getPaymentMethods);
-  }
+  var output = [];
+  return coinify.authGET('trades/payment-methods', params).then(function (res) {
+    output.length = 0;
+    for (var i = 0; i < res.length; i++) {
+      output.push(new PaymentMethod(res[i], coinify));
+    }
+    return Promise.resolve(output);
+  });
 };
 
 PaymentMethod.prototype.calculateFee = function (quote) {
@@ -34659,7 +34853,7 @@ Object.defineProperties(CoinifyProfile.prototype, {
 
 CoinifyProfile.prototype.fetch = function () {
   var parentThis = this;
-  return this._coinify.GET('traders/me').then(function (res) {
+  return this._coinify.authGET('traders/me').then(function (res) {
     parentThis._full_name = res.profile.name;
     parentThis._gender = res.profile.gender;
 
@@ -34745,12 +34939,13 @@ CoinifyProfile.prototype.setZipcode = function (value) {
 };
 
 CoinifyProfile.prototype.update = function (values) {
-  return this._coinify.PATCH('traders/me', values);
+  return this._coinify.authPATCH('traders/me', values);
 };
 
 },{"./level":192,"./limits":194,"assert":16}],197:[function(require,module,exports){
 'use strict';
 
+var PaymentMethod = require('./payment-method');
 var Helpers = require('./helpers');
 var assert = require('assert');
 
@@ -34848,7 +35043,7 @@ Quote.getQuote = function (coinify, amount, baseCurrency, quoteCurrency) {
     return quote;
   };
 
-  var getQuote = function () {
+  var getAnonymousQuote = function () {
     return coinify.POST('trades/quote', {
       baseCurrency: baseCurrency,
       quoteCurrency: quoteCurrency,
@@ -34856,11 +35051,16 @@ Quote.getQuote = function (coinify, amount, baseCurrency, quoteCurrency) {
     });
   };
 
-  if (coinify._offline_token == null) {
-    return getQuote().then(processQuote);
-  }
-  if (!coinify.isLoggedIn) {
-    return coinify.login().then(getQuote).then(processQuote);
+  var getQuote = function () {
+    return coinify.authPOST('trades/quote', {
+      baseCurrency: baseCurrency,
+      quoteCurrency: quoteCurrency,
+      baseAmount: parseFloat(baseAmount)
+    });
+  };
+
+  if (!coinify.hasAccount) {
+    return getAnonymousQuote().then(processQuote);
   } else {
     return getQuote().then(processQuote);
   }
@@ -34882,7 +35082,7 @@ Quote.prototype.getPaymentMethods = function () {
   if (this.paymentMethods) {
     return Promise.resolve(this.paymentMethods);
   } else {
-    return self._coinify.getPaymentMethods(this.baseCurrency, this.quoteCurrency)
+    return PaymentMethod.fetchAll(this.baseCurrency, this.quoteCurrency, this._coinify)
                         .then(setPaymentMethods);
   }
 };
@@ -34892,7 +35092,7 @@ Quote.prototype.expire = function () {
   this._expiresAt = new Date(new Date().getTime() + 3 * 1000);
 };
 
-},{"./helpers":190,"assert":16}],198:[function(require,module,exports){
+},{"./helpers":190,"./payment-method":195,"assert":16}],198:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -35001,7 +35201,7 @@ Object.defineProperties(CoinifyTrade.prototype, {
   'bitcoinReceived': {
     configurable: false,
     get: function () {
-      return this._bitcoinReceived;
+      return Boolean(this._txHash);
     }
   },
   'confirmed': {
@@ -35030,16 +35230,24 @@ Object.defineProperties(CoinifyTrade.prototype, {
 
 CoinifyTrade.prototype.set = function (obj) {
   this._createdAt = new Date(obj.createTime);
+  if ([
+    'awaiting_transfer_in',
+    'processing',
+    'reviewing',
+    'completed',
+    'completed_test',
+    'cancelled',
+    'rejected',
+    'expired'
+  ].indexOf(obj.state) === -1) {
+    console.warn('Unknown state:', obj.state);
+  }
   this._state = obj.state;
   this._is_buy = obj.is_buy;
   if (obj.confirmed === Boolean(obj.confirmed)) {
     this._coinify.delegate.deserializeExtraFields(obj, this);
     this._receiveAddress = this._coinify.delegate.getReceiveAddress(this);
-
     this._confirmed = obj.confirmed;
-    if (obj.confirmed) {
-      this._bitcoinReceived = true;
-    }
     this._txHash = obj.tx_hash;
   } else { // Contructed from Coinify API
     this._inCurrency = obj.inCurrency;
@@ -35068,10 +35276,6 @@ CoinifyTrade.prototype.set = function (obj) {
 
       this._receiveAddress = obj.transferOut.details.account;
       this._iSignThisID = obj.transferIn.details.paymentId;
-
-      if (!this.bitcoinReceived) {
-        this._bitcoinReceived = null;
-      }
     }
 
     this._receiptUrl = obj.receiptUrl;
@@ -35091,15 +35295,7 @@ CoinifyTrade.prototype.cancel = function () {
     return self._coinify.save();
   };
 
-  var cancelOrder = function () {
-    return self._coinify.PATCH('trades/' + self._id + '/cancel').then(processCancel);
-  };
-
-  if (this._coinify.isLoggedIn) {
-    return cancelOrder();
-  } else {
-    return this._coinify.login().then(cancelOrder);
-  }
+  return self._coinify.authPATCH('trades/' + self._id + '/cancel').then(processCancel);
 };
 
 // Checks the balance for the receive address and monitors the websocket if needed:
@@ -35154,18 +35350,10 @@ CoinifyTrade.prototype.btcExpected = function () {
 CoinifyTrade.prototype.fakeBankTransfer = function () {
   var self = this;
 
-  var fakeBankTransfer = function () {
-    return self._coinify.POST('trades/' + self._id + '/test/bank-transfer', {
-      sendAmount: parseFloat((self.inAmount / 100).toFixed(2)),
-      currency: self.inCurrency
-    });
-  };
-
-  if (this._coinify.isLoggedIn) {
-    return fakeBankTransfer();
-  } else {
-    return this._coinify.login().then(fakeBankTransfer);
-  }
+  return self._coinify.authPOST('trades/' + self._id + '/test/bank-transfer', {
+    sendAmount: parseFloat((self.inAmount / 100).toFixed(2)),
+    currency: self.inCurrency
+  });
 };
 
 // QA tool:
@@ -35190,7 +35378,7 @@ CoinifyTrade.buy = function (quote, medium, coinify) {
     return coinify.save().then(function () { return trade; });
   };
 
-  return coinify.POST('trades', {
+  return coinify.authPOST('trades', {
     priceQuoteId: quote.id,
     transferIn: {
       medium: medium
@@ -35206,47 +35394,32 @@ CoinifyTrade.buy = function (quote, medium, coinify) {
 
 // Fetches the latest trades and updates coinify._trades
 CoinifyTrade.fetchAll = function (coinify) {
-  var getTrades = function () {
-    return coinify.GET('trades').then(function (res) {
-      var trade;
-      for (var i = 0; i < res.length; i++) {
-        trade = undefined;
-        for (var k = 0; k < coinify._trades.length; k++) {
-          if (coinify._trades[k]._id === res[i].id) {
-            trade = coinify._trades[k];
-            trade.set.bind(trade)(res[i]);
-          }
-        }
-        if (trade === undefined) {
-          trade = new CoinifyTrade(res[i], coinify);
-          coinify._trades.push(trade);
-        }
-
-        if (['rejected', 'cancelled', 'expired'].indexOf(trade.state) > -1) {
-          coinify.delegate.releaseReceiveAddress(trade, CoinifyTrade.filteredTrades(coinify.trades));
+  return coinify.authGET('trades').then(function (res) {
+    var trade;
+    for (var i = 0; i < res.length; i++) {
+      trade = undefined;
+      for (var k = 0; k < coinify._trades.length; k++) {
+        if (coinify._trades[k]._id === res[i].id) {
+          trade = coinify._trades[k];
+          trade.set.bind(trade)(res[i]);
         }
       }
+      if (trade === undefined) {
+        trade = new CoinifyTrade(res[i], coinify);
+        coinify._trades.push(trade);
+      }
 
-      return coinify.save().then(function () { return coinify._trades; });
-    });
-  };
+      if (['rejected', 'cancelled', 'expired'].indexOf(trade.state) > -1) {
+        coinify.delegate.releaseReceiveAddress(trade, CoinifyTrade.filteredTrades(coinify.trades));
+      }
+    }
 
-  if (coinify.isLoggedIn) {
-    return getTrades();
-  } else {
-    return coinify.login().then(getTrades);
-  }
+    return coinify.save().then(function () { return coinify._trades; });
+  });
 };
 
 CoinifyTrade.prototype.refresh = function () {
-  var updateTrade = function () {
-    return this._coinify.GET('trades/' + this._id).then(this.set.bind(this));
-  };
-  if (this._coinify.isLoggedIn) {
-    return updateTrade.bind(this)();
-  } else {
-    return this._coinify.login().then(updateTrade.bind(this));
-  }
+  return this._coinify.authGET('trades/' + this._id).then(this.set.bind(this));
 };
 
 CoinifyTrade.prototype._monitorAddress = function () {
@@ -35266,7 +35439,6 @@ CoinifyTrade.prototype._monitorAddress = function () {
         // set. Instead use the hash for the incoming transaction. This will not
         // work correctly with address reuse.
         self._txHash = hash;
-        self._bitcoinReceived = true;
         tradeWasPaid(amount);
       } else if (self.state === 'completed' || self.state === 'processing') {
         if (self._txHash) {
@@ -35278,7 +35450,6 @@ CoinifyTrade.prototype._monitorAddress = function () {
           // missing if in the processing state.
           self._txHash = hash;
         }
-        self._bitcoinReceived = true;
         tradeWasPaid(amount);
       }
     };
@@ -35332,7 +35503,6 @@ CoinifyTrade._getTransactionHash = function (trade) {
           return;
         }
         trade._confirmations = tx.confirmations;
-        trade._bitcoinReceived = true;
         if (trade.confirmed) {
           trade._confirmed = true;
         }
@@ -35559,28 +35729,9 @@ External.prototype.toJSON = function () {
   return external;
 };
 
-External.prototype.fetchOrCreate = function () {
-  var createOrPopulate = function (object) {
-    this.success = true;
-    if (object === null) { // entry non exitent
-      return this._metadata.create(this);
-    } else {
-      this._coinify = object.coinify ? new Coinify(object.coinify, this, this._delegate) : undefined;
-      return this;
-    }
-  };
-  var fetchFailed = function (e) {
-    // Metadata service is down or unreachable.
-    this.success = false;
-    // Login should still resolve
-    return Promise.resolve();
-  };
-  return this._metadata.fetch().then(createOrPopulate.bind(this)).catch(fetchFailed.bind(this));
-};
-
 External.prototype.fetch = function () {
   var Populate = function (object) {
-    this.success = true;
+    this.loaded = true;
     if (object !== null) {
       this._coinify = object.coinify ? new Coinify(object.coinify, this, this._delegate) : undefined;
     }
@@ -35588,7 +35739,7 @@ External.prototype.fetch = function () {
   };
   var fetchFailed = function (e) {
     // Metadata service is down or unreachable.
-    this.success = false;
+    this.loaded = false;
     return Promise.reject(e);
   };
   return this._metadata.fetch().then(Populate.bind(this)).catch(fetchFailed.bind(this));
@@ -35603,7 +35754,7 @@ External.prototype.save = function () {
 };
 
 External.prototype.wipe = function () {
-  this._metadata.update({}).then(this.fetchOrCreate.bind(this));
+  this._metadata.update({}).then(this.fetch.bind(this));
   this._coinify = undefined;
 };
 
@@ -37095,7 +37246,7 @@ Metadata.prototype.fetch = function () {
         throw new Error('METADATA_SIGNATURE_VERIFICATION_ERROR');
       }
     }).catch(function (e) {
-      console.log(e);
+      console.error(e);
       return Promise.reject('METADATA_FETCH_FAILED');
     });
   });
@@ -39817,8 +39968,7 @@ var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var RNG = require('./rng');
 var BIP39 = require('bip39');
 var Bitcoin = require('bitcoinjs-lib');
-// Intentionally not directly included in package.json:
-var pbkdf2 = require('pbkdf2').pbkdf2Sync;
+var pbkdf2 = require('pbkdf2');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -40147,13 +40297,16 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
       , buildHdSuccess
     );
   };
-  // load metadata buy-sell
 
-  var loadExternal = function () {
-    return MyWallet.wallet.loadExternal.bind(MyWallet.wallet)();
+  // Attempt to load metadata for buy-sell
+  var tryLoadExternal = function () {
+    var loadExternalFailed = function (message) {
+      console.warn('wallet.external not set:', message);
+    };
+    return MyWallet.wallet.loadExternal.bind(MyWallet.wallet)().catch(loadExternalFailed);
   };
 
-  return Promise.resolve().then(doInitialize).then(loadExternal);
+  return Promise.resolve().then(doInitialize).then(tryLoadExternal);
 };
 
 // used on iOS
@@ -40388,7 +40541,7 @@ MyWallet.browserCheck = function () {
 MyWallet.browserCheckFast = function () {
   var mnemonic = 'daughter size twenty place alter glass small bid purse october faint beyond';
 
-  var seed = pbkdf2(mnemonic, 'mnemonic', 100, 64, 'sha512');
+  var seed = pbkdf2.pbkdf2Sync(mnemonic, 'mnemonic', 100, 64, 'sha512');
   var seedString = seed.toString('hex');
 
   if (seedString !== '25357208f6fcbde803b4f333e59ce7a0ebe8b77b0390fa8b72899496f50fcc3707c65debf6102b19912cd0ccb36a2332cfebecb53e61b5fa79f11592c825bdda') {
