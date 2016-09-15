@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2016-09-14)
+#   (2016-09-15)
 
 
 
@@ -8,14 +8,25 @@ __Blockchain Wallet V3__
 
 ## Bug Fixes
 
-- **dep:** revert back to pbkdf 3.0.4, 3.0.6 causes tests to fail
-  ([71b33ebf](https://github.com/blockchain/My-Wallet-V3/commit/71b33ebf55ad3d03fff6c6d1d253e17e3eb0e2fd))
+- **deps:** stick to older sjcl and pbkdf2 versions
+  ([26288a20](https://github.com/blockchain/My-Wallet-V3/commit/26288a20f71eca5a26c7caf05b4584c59b5a3a48))
+
+
+## Features
+
+- **blockchainwallet:** add function to get note placeholder
+  ([a8828d79](https://github.com/blockchain/My-Wallet-V3/commit/a8828d79e5642988e7762ae2003a28be924504e4))
+- **wallettransaction:**
+  - add note and fee to iOS factory
+  ([98ea19f3](https://github.com/blockchain/My-Wallet-V3/commit/98ea19f31668945753e896f11c0d32a20be8473a))
+  - compute To and From
+  ([19b539da](https://github.com/blockchain/My-Wallet-V3/commit/19b539da054908bbeeefe5b51b58ef5971b5ebd0))
 
 
 ## Chore
 
-- **release:** v3.22.16
-  ([0ed54743](https://github.com/blockchain/My-Wallet-V3/commit/0ed547434fe0df5b8e984122127f0bf2aef6e7f2))
+- **release:** v3.21.2
+  ([0665e0d6](https://github.com/blockchain/My-Wallet-V3/commit/0665e0d60a900b4714b5766a1b58b823c0fe076b))
 
 
 
