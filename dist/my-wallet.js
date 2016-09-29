@@ -32273,7 +32273,7 @@ API.prototype.getBalanceForRedeemCode = function (privatekey) {
 API.prototype.getFiatAtTime = function (time, value, currencyCode) {
   var data = {
     value: value,
-    currency: currencyCode,
+    currency: currencyCode.toUpperCase(),
     time: time,
     textual: false,
     nosavecurrency: true
@@ -35107,6 +35107,7 @@ var assert = require('assert');
 module.exports = Quote;
 
 function Quote (obj, api) {
+  assert(obj, 'Missing quote object');
   this._api = api;
 
   var expiresAt = new Date(obj.expiryTime);
@@ -35539,7 +35540,7 @@ CoinifyTrade.prototype.btcExpected = function () {
           self._lastBtcExpectedGuessAt = new Date();
           return self._lastBtcExpectedGuess;
         };
-        return Quote.getQuote(this._api, -this.inAmount, this.inCurrency).then(processQuote);
+        return Quote.getQuote(this._api, -this.inAmount, this.inCurrency, this.outCurrency).then(processQuote);
       }
     }
   } else {
@@ -35655,7 +35656,7 @@ CoinifyTrade.prototype._monitorAddress = function () {
     var resolve = function () {
       self._watchAddressResolve && self._watchAddressResolve(amount);
     };
-    self._coinifyDelegate.save.bind(self._coinifyDelegate)().then(resolve);
+    self._coinifyDelegate.save().then(resolve);
   };
 
   self._coinifyDelegate.monitorAddress(self.receiveAddress, function (hash, amount) {
@@ -35709,12 +35710,10 @@ CoinifyTrade.prototype._monitorAddress = function () {
   });
 };
 
-CoinifyTrade._checkOnce = function (unfilteredTrades, tradeFilter, coinifyDelegate) {
+CoinifyTrade._checkOnce = function (trades, coinifyDelegate) {
   assert(coinifyDelegate, '_checkOnce needs delegate');
 
   var getReceiveAddress = function (obj) { return obj.receiveAddress; };
-
-  var trades = unfilteredTrades.filter(tradeFilter);
 
   var receiveAddresses = trades.map(getReceiveAddress);
 
@@ -35758,10 +35757,7 @@ CoinifyTrade._setTransactionHash = function (trade, coinifyDelegate) {
     });
 };
 
-CoinifyTrade._monitorWebSockets = function (unfilteredTrades, tradeFilter) {
-  var trades = unfilteredTrades
-                .filter(tradeFilter);
-
+CoinifyTrade._monitorWebSockets = function (trades) {
   for (var i = 0; i < trades.length; i++) {
     var trade = trades[i];
     trade._monitorAddress.bind(trade)();
@@ -35770,7 +35766,6 @@ CoinifyTrade._monitorWebSockets = function (unfilteredTrades, tradeFilter) {
 
 // Monitor the receive addresses for pending and completed trades.
 CoinifyTrade.monitorPayments = function (trades, coinifyDelegate) {
-  // TODO: refactor, apply filter here instead of passing it on
   assert(coinifyDelegate, '_monitorPayments needs delegate');
 
   var tradeFilter = function (trade) {
@@ -35783,8 +35778,10 @@ CoinifyTrade.monitorPayments = function (trades, coinifyDelegate) {
     ].indexOf(trade.state) > -1 && !trade.confirmed;
   };
 
-  CoinifyTrade._checkOnce(trades, tradeFilter, coinifyDelegate).then(function () {
-    CoinifyTrade._monitorWebSockets(trades, tradeFilter);
+  var filteredTrades = trades.filter(tradeFilter);
+
+  CoinifyTrade._checkOnce(filteredTrades, coinifyDelegate).then(function () {
+    CoinifyTrade._monitorWebSockets(filteredTrades);
   });
 };
 
@@ -39982,20 +39979,6 @@ function Tx (object) {
   this.confirmations = Tx.setConfirmations(this.block_height);
 
   // computed properties
-  var initialOut = {
-    taggedOuts: [],
-    toWatchOnly: false,
-    totalOut: 0,
-    internalReceive: 0,
-    changeAmount: 0
-  };
-  var pouts = this.out.reduce(procOuts, initialOut);
-  this.processedOutputs = pouts.taggedOuts;
-  this.toWatchOnly = pouts.toWatchOnly;
-  this.totalOut = pouts.totalOut;
-  this.internalReceive = pouts.internalReceive;
-  this.changeAmount = pouts.changeAmount;
-
   var initialIn = {
     taggedIns: [],
     fromWatchOnly: false,
@@ -40007,6 +39990,20 @@ function Tx (object) {
   this.totalIn = pins.totalIn;
   this.internalSpend = pins.internalSpend;
   this.fromWatchOnly = pins.fromWatchOnly;
+
+  var initialOut = {
+    taggedOuts: [],
+    toWatchOnly: false,
+    totalOut: 0,
+    internalReceive: 0,
+    changeAmount: 0
+  };
+  var pouts = this.out.reduce(procOuts.bind(this), initialOut);
+  this.processedOutputs = pouts.taggedOuts;
+  this.toWatchOnly = pouts.toWatchOnly;
+  this.totalOut = pouts.totalOut;
+  this.internalReceive = pouts.internalReceive;
+  this.changeAmount = pouts.changeAmount;
 
   this.fee = isCoinBase(this.inputs[0]) ? 0 : this.totalIn - this.totalOut;
   this.result = this._result ? this._result : this.internalReceive - this.internalSpend;
@@ -40049,6 +40046,11 @@ function procOuts (acc, output) {
   acc.toWatchOnly = acc.toWatchOnly || tagOut.isWatchOnly || false;
   if (tagOut.coinType !== 'external') {
     acc.internalReceive = acc.internalReceive + tagOut.amount;
+    if (tagOut.coinType === 'legacy' && !tagOut.change) {
+      tagOut.change = this.processedInputs.some(function (input) {
+        return input.address === tagOut.address;
+      });
+    }
     if (tagOut.change === true) {
       acc.changeAmount = acc.changeAmount + tagOut.amount;
     }
@@ -40142,7 +40144,8 @@ function tagCoin (x) {
 
 function unpackInput (input) {
   if (isCoinBase(input)) {
-    return {addr: 'Coinbase', value: this.totalOut};
+    var totalOut = this.out.reduce(function (sum, out) { return sum + out.value; }, 0);
+    return {addr: 'Coinbase', value: totalOut};
   } else {
     return input.prev_out;
   }
@@ -40818,29 +40821,22 @@ MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic
 };
 
 // used frontend and mywallet
-MyWallet.logout = function (force, beforeLogout) {
-  beforeLogout = beforeLogout || function () {};
-
+MyWallet.logout = function (sessionToken, force) {
   if (!force && WalletStore.isLogoutDisabled()) {
-    return Promise.reject('LOGOUT_PREVENTED');
+    return;
   }
 
   var reload = function () {
-    try {
-      window.location.reload();
-    } catch (e) {
+    try { window.location.reload(); } catch (e) {
       console.log(e);
     }
   };
-
-  WalletStore.sendEvent('logging_out');
-  return Promise.resolve(beforeLogout()).then(reload);
-};
-
-MyWallet.endSession = function (sessionToken) {
   var data = { format: 'plain' };
-  var headers = { sessionToken: sessionToken };
-  return API.request('GET', 'wallet/logout', data, headers);
+  WalletStore.sendEvent('logging_out');
+
+  var headers = {sessionToken: sessionToken};
+
+  API.request('GET', 'wallet/logout', data, headers).then(reload).catch(reload);
 };
 
 // In case of a non-mainstream browser, ensure it correctly implements the
