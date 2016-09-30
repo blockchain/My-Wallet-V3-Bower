@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.22.20",
+  "version": "3.22.21",
   "dependencies": {
     "abbrev": {
       "version": "1.0.9",
@@ -99,9 +99,9 @@
       "resolved": "https://registry.npmjs.org/anymatch/-/anymatch-1.3.0.tgz"
     },
     "argparse": {
-      "version": "1.0.7",
+      "version": "1.0.9",
       "from": "argparse@>=1.0.7 <2.0.0",
-      "resolved": "https://registry.npmjs.org/argparse/-/argparse-1.0.7.tgz"
+      "resolved": "https://registry.npmjs.org/argparse/-/argparse-1.0.9.tgz"
     },
     "arr-diff": {
       "version": "2.0.0",
@@ -119,9 +119,9 @@
       "resolved": "https://registry.npmjs.org/array-filter/-/array-filter-0.0.1.tgz"
     },
     "array-find-index": {
-      "version": "1.0.1",
+      "version": "1.0.2",
       "from": "array-find-index@>=1.0.1 <2.0.0",
-      "resolved": "https://registry.npmjs.org/array-find-index/-/array-find-index-1.0.1.tgz"
+      "resolved": "https://registry.npmjs.org/array-find-index/-/array-find-index-1.0.2.tgz"
     },
     "array-map": {
       "version": "0.0.0",
@@ -467,9 +467,9 @@
       "resolved": "https://registry.npmjs.org/buffer-crc32/-/buffer-crc32-0.1.1.tgz"
     },
     "buffer-equals": {
-      "version": "1.0.3",
+      "version": "1.0.4",
       "from": "buffer-equals@>=1.0.3 <2.0.0",
-      "resolved": "https://registry.npmjs.org/buffer-equals/-/buffer-equals-1.0.3.tgz"
+      "resolved": "https://registry.npmjs.org/buffer-equals/-/buffer-equals-1.0.4.tgz"
     },
     "buffer-reverse": {
       "version": "1.0.1",
@@ -608,9 +608,9 @@
       "resolved": "https://registry.npmjs.org/co/-/co-4.6.0.tgz"
     },
     "code-point-at": {
-      "version": "1.0.0",
+      "version": "1.0.1",
       "from": "code-point-at@>=1.0.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/code-point-at/-/code-point-at-1.0.0.tgz"
+      "resolved": "https://registry.npmjs.org/code-point-at/-/code-point-at-1.0.1.tgz"
     },
     "coffee-script": {
       "version": "1.8.0",
@@ -816,9 +816,9 @@
       "resolved": "https://registry.npmjs.org/debug/-/debug-2.2.0.tgz"
     },
     "debug-log": {
-      "version": "1.0.0",
+      "version": "1.0.1",
       "from": "debug-log@>=1.0.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/debug-log/-/debug-log-1.0.0.tgz"
+      "resolved": "https://registry.npmjs.org/debug-log/-/debug-log-1.0.1.tgz"
     },
     "decamelize": {
       "version": "1.2.0",
@@ -1302,9 +1302,9 @@
       }
     },
     "espree": {
-      "version": "3.3.1",
+      "version": "3.3.2",
       "from": "espree@>=3.1.6 <4.0.0",
-      "resolved": "https://registry.npmjs.org/espree/-/espree-3.3.1.tgz",
+      "resolved": "https://registry.npmjs.org/espree/-/espree-3.3.2.tgz",
       "dependencies": {
         "acorn": {
           "version": "4.0.3",
@@ -2573,9 +2573,9 @@
       "resolved": "https://registry.npmjs.org/is-extglob/-/is-extglob-1.0.0.tgz"
     },
     "is-finite": {
-      "version": "1.0.1",
+      "version": "1.0.2",
       "from": "is-finite@>=1.0.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/is-finite/-/is-finite-1.0.1.tgz"
+      "resolved": "https://registry.npmjs.org/is-finite/-/is-finite-1.0.2.tgz"
     },
     "is-fullwidth-code-point": {
       "version": "1.0.0",
@@ -3360,9 +3360,9 @@
       "resolved": "https://registry.npmjs.org/npm-which/-/npm-which-2.0.0.tgz"
     },
     "number-is-nan": {
-      "version": "1.0.0",
+      "version": "1.0.1",
       "from": "number-is-nan@>=1.0.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/number-is-nan/-/number-is-nan-1.0.0.tgz"
+      "resolved": "https://registry.npmjs.org/number-is-nan/-/number-is-nan-1.0.1.tgz"
     },
     "oauth-sign": {
       "version": "0.8.2",
@@ -3444,9 +3444,9 @@
       "resolved": "https://registry.npmjs.org/os-browserify/-/os-browserify-0.1.2.tgz"
     },
     "os-homedir": {
-      "version": "1.0.1",
+      "version": "1.0.2",
       "from": "os-homedir@>=1.0.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/os-homedir/-/os-homedir-1.0.1.tgz"
+      "resolved": "https://registry.npmjs.org/os-homedir/-/os-homedir-1.0.2.tgz"
     },
     "os-shim": {
       "version": "0.1.3",
@@ -3514,9 +3514,9 @@
       "resolved": "https://registry.npmjs.org/path-exists/-/path-exists-2.1.0.tgz"
     },
     "path-is-absolute": {
-      "version": "1.0.0",
+      "version": "1.0.1",
       "from": "path-is-absolute@>=1.0.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/path-is-absolute/-/path-is-absolute-1.0.0.tgz"
+      "resolved": "https://registry.npmjs.org/path-is-absolute/-/path-is-absolute-1.0.1.tgz"
     },
     "path-is-inside": {
       "version": "1.0.2",
@@ -4623,9 +4623,9 @@
       "resolved": "https://registry.npmjs.org/typedarray/-/typedarray-0.0.6.tgz"
     },
     "typeforce": {
-      "version": "1.6.2",
+      "version": "1.8.1",
       "from": "typeforce@>=1.5.5 <2.0.0",
-      "resolved": "https://registry.npmjs.org/typeforce/-/typeforce-1.6.2.tgz"
+      "resolved": "https://registry.npmjs.org/typeforce/-/typeforce-1.8.1.tgz"
     },
     "uglify-js": {
       "version": "2.7.3",
