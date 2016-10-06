@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2016-09-30)
+#   (2016-10-06)
 
 
 
@@ -8,20 +8,26 @@ __Blockchain Wallet V3__
 
 ## Bug Fixes
 
-- **coinifytrade:** improved transaction detection
-  ([403a4173](https://github.com/blockchain/My-Wallet-V3/commit/403a4173d640fae864a6428a1059ad8804baff9b))
+- **mini-key:** mini-key will import non-compressed address if no funds on compressed and funds on non-compressed
+  ([31aa5dcc](https://github.com/blockchain/My-Wallet-V3/commit/31aa5dcc48e464fe531f88d071ea263b5024f7bb))
+
+
+## Test
+
+- importing uncompressed mini-key when no funds on comp
+  ([309fe4ea](https://github.com/blockchain/My-Wallet-V3/commit/309fe4ea14973b868593fc0c7f88d8ddc98d907d))
 
 
 ## Chore
 
-- **release:** v3.22.21
-  ([5afa28e2](https://github.com/blockchain/My-Wallet-V3/commit/5afa28e2bf3dd302f96d366647689617ff8807cd))
+- **release:** v3.22.22
+  ([7f4cc842](https://github.com/blockchain/My-Wallet-V3/commit/7f4cc842760427d308671f9e29b093359754644c))
 
 
 ## Pull requests merged
 
-- Merge pull request #288 from blockchain/tx-from-imported
-  ([98541a09](https://github.com/blockchain/My-Wallet-V3/commit/98541a092b614654914642f4352bc7226d3fbb6d))
+- Merge pull request #291 from blockchain/mini-key-import
+  ([40e13f7b](https://github.com/blockchain/My-Wallet-V3/commit/40e13f7b56621a736962bcabc910aa9442773c53))
 
 
 

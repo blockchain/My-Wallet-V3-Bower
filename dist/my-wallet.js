@@ -29686,64 +29686,33 @@ function base64DetectIncompleteChar(buffer) {
 var inherits = require('inherits')
 var native = require('./native')
 
-function getFunctionName (fn) {
-  return fn.name || fn.toString().match(/function (.*?)\s*\(/)[1]
-}
-
-function getValueTypeName (value) {
-  if (native.Null(value)) return ''
-
-  return getFunctionName(value.constructor)
-}
-
-function getValue (value) {
-  if (native.Function(value)) return ''
-  if (native.String(value)) return JSON.stringify(value)
-  if (value && native.Object(value)) return ''
-
-  return value
-}
-
-function tfJSON (type) {
-  if (native.Function(type)) return type.toJSON ? type.toJSON() : getFunctionName(type)
-  if (native.Array(type)) return 'Array'
-  if (type && native.Object(type)) return 'Object'
-
-  return type !== undefined ? type : ''
-}
-
-function stfJSON (type) {
-  type = tfJSON(type)
-
-  return native.Object(type) ? JSON.stringify(type) : type
-}
-
-function TfTypeError (type, value) {
-  this.tfError = Error.call(this)
-  this.tfType = type
-  this.tfValue = value
+function TfTypeError (type, value, valueTypeName) {
+  this.__error = Error.call(this)
+  this.__type = type
+  this.__value = value
+  this.__valueTypeName = valueTypeName
 
   var message
   Object.defineProperty(this, 'message', {
     enumerable: true,
     get: function () {
       if (message) return message
-      message = tfErrorString(type, value)
+
+      valueTypeName = valueTypeName || getValueTypeName(value)
+      message = tfErrorString(type, value, valueTypeName)
 
       return message
     }
   })
 }
 
-inherits(TfTypeError, Error)
-Object.defineProperty(TfTypeError, 'stack', { get: function () { return this.tfError.stack } })
-
-function TfPropertyTypeError (type, property, side, value, error) {
-  this.tfError = error || Error.call(this)
-  this.tfProperty = property
-  this.tfSide = side
-  this.tfType = type
-  this.tfValue = value
+function TfPropertyTypeError (type, property, label, value, error, valueTypeName) {
+  this.__error = error || Error.call(this)
+  this.__label = label
+  this.__property = property
+  this.__type = type
+  this.__value = value
+  this.__valueTypeName = valueTypeName
 
   var message
   Object.defineProperty(this, 'message', {
@@ -29751,7 +29720,8 @@ function TfPropertyTypeError (type, property, side, value, error) {
     get: function () {
       if (message) return message
       if (type) {
-        message = tfPropertyErrorString(type, side, property, value)
+        valueTypeName = valueTypeName || getValueTypeName(value)
+        message = tfPropertyErrorString(type, label, property, value, valueTypeName)
       } else {
         message = 'Unexpected property "' + property + '"'
       }
@@ -29761,47 +29731,83 @@ function TfPropertyTypeError (type, property, side, value, error) {
   })
 }
 
-inherits(TfPropertyTypeError, Error)
-Object.defineProperty(TfPropertyTypeError, 'stack', {
-  get: function () { return this.tfError.stack }
+// inherit from Error, assign stack
+[TfTypeError, TfPropertyTypeError].forEach(function (tfErrorType) {
+  inherits(tfErrorType, Error)
+  Object.defineProperty(tfErrorType, 'stack', {
+    get: function () { return this.__error.stack }
+  })
 })
 
-TfPropertyTypeError.prototype.asChildOf = function (property) {
-  return new TfPropertyTypeError(this.tfType, property + '.' + this.tfProperty, this.tfSide, this.tfValue, this.tfError)
+function tfCustomError (expected, actual) {
+  return new TfTypeError(expected, {}, actual)
 }
 
-function tfErrorString (type, value) {
-  var valueTypeName = getValueTypeName(value)
-  var valueValue = getValue(value)
+function tfSubError (e, property, label) {
+  // sub child?
+  if (e instanceof TfPropertyTypeError) {
+    property = property + '.' + e.__property
+    label = e.__label
 
-  return 'Expected ' + stfJSON(type) + ', got' +
-    (valueTypeName !== '' ? ' ' + valueTypeName : '') +
-    (valueValue !== '' ? ' ' + valueValue : '')
-}
+    return new TfPropertyTypeError(
+      e.__type, property, label, e.__value, e.__error, e.__valueTypeName
+    )
+  }
 
-function tfPropertyErrorString (type, side, name, value) {
-  var description = '" of type '
-  if (side === 'key') description = '" with key type '
-
-  return tfErrorString('property "' + stfJSON(name) + description + stfJSON(type), value)
-}
-
-function tfSubError (e, propertyName, sideLabel) {
-  if (e instanceof TfPropertyTypeError) return e.asChildOf(propertyName)
+  // child?
   if (e instanceof TfTypeError) {
-    return new TfPropertyTypeError(e.tfType, propertyName, sideLabel, e.tfValue, e.tfError)
+    return new TfPropertyTypeError(
+      e.__type, property, label, e.__value, e.__error, e.__valueTypeName
+    )
   }
 
   return e
 }
 
+function getTypeName (fn) {
+  return fn.name || fn.toString().match(/function (.*?)\s*\(/)[1]
+}
+
+function getValueTypeName (value) {
+  return native.Null(value) ? '' : getTypeName(value.constructor)
+}
+
+function getValue (value) {
+  if (native.Function(value)) return ''
+  if (native.String(value)) return JSON.stringify(value)
+  if (value && native.Object(value)) return ''
+  return value
+}
+
+function tfJSON (type) {
+  if (native.Function(type)) return type.toJSON ? type.toJSON() : getTypeName(type)
+  if (native.Array(type)) return 'Array'
+  if (type && native.Object(type)) return 'Object'
+
+  return type !== undefined ? type : ''
+}
+
+function tfErrorString (type, value, valueTypeName) {
+  var valueJson = getValue(value)
+
+  return 'Expected ' + tfJSON(type) + ', got' +
+    (valueTypeName !== '' ? ' ' + valueTypeName : '') +
+    (valueJson !== '' ? ' ' + valueJson : '')
+}
+
+function tfPropertyErrorString (type, label, name, value, valueTypeName) {
+  var description = '" of type '
+  if (label === 'key') description = '" with key type '
+
+  return tfErrorString('property "' + tfJSON(name) + description + tfJSON(type), value, valueTypeName)
+}
+
 module.exports = {
   TfTypeError: TfTypeError,
   TfPropertyTypeError: TfPropertyTypeError,
+  tfCustomError: tfCustomError,
   tfSubError: tfSubError,
   tfJSON: tfJSON,
-  stfJSON: stfJSON,
-  getFunctionName: getFunctionName,
   getValueTypeName: getValueTypeName
 }
 
@@ -29818,7 +29824,7 @@ function BufferN (length) {
   function BufferN (value) {
     if (!Buffer.isBuffer(value)) return false
     if (value.length !== length) {
-      throw new errors.TfTypeError('Buffer(Length: ' + length + ')', 'Buffer(Length: ' + value.length + ')')
+      throw errors.tfCustomError('Buffer(Length: ' + length + ')', 'Buffer(Length: ' + value.length + ')')
     }
 
     return true
@@ -29868,7 +29874,6 @@ var native = require('./native')
 
 // short-hand
 var tfJSON = errors.tfJSON
-var stfJSON = errors.stfJSON
 var TfTypeError = errors.TfTypeError
 var TfPropertyTypeError = errors.TfPropertyTypeError
 var tfSubError = errors.tfSubError
@@ -29878,7 +29883,7 @@ var types = {
   arrayOf: function arrayOf (type) {
     type = compile(type)
 
-    function arrayOf (array, strict) {
+    function _arrayOf (array, strict) {
       if (!native.Array(array)) return false
 
       return array.every(function (value, i) {
@@ -29889,24 +29894,69 @@ var types = {
         }
       })
     }
-    arrayOf.toJSON = function () { return [tfJSON(type)] }
+    _arrayOf.toJSON = function () { return '[' + tfJSON(type) + ']' }
 
-    return arrayOf
+    return _arrayOf
   },
 
   maybe: function maybe (type) {
     type = compile(type)
 
-    function maybe (value, strict) {
+    function _maybe (value, strict) {
       return native.Null(value) || type(value, strict, maybe)
     }
-    maybe.toJSON = function () { return '?' + stfJSON(type) }
+    _maybe.toJSON = function () { return '?' + tfJSON(type) }
 
-    return maybe
+    return _maybe
   },
 
-  object: function object (type) {
-    function object (value, strict) {
+  map: function map (propertyType, propertyKeyType) {
+    propertyType = compile(propertyType)
+    if (propertyKeyType) propertyKeyType = compile(propertyKeyType)
+
+    function _map (value, strict) {
+      if (!native.Object(value, strict)) return false
+      if (native.Null(value, strict)) return false
+
+      for (var propertyName in value) {
+        try {
+          if (propertyKeyType) {
+            typeforce(propertyKeyType, propertyName, strict)
+          }
+        } catch (e) {
+          throw tfSubError(e, propertyName, 'key')
+        }
+
+        try {
+          var propertyValue = value[propertyName]
+          typeforce(propertyType, propertyValue, strict)
+        } catch (e) {
+          throw tfSubError(e, propertyName)
+        }
+      }
+
+      return true
+    }
+
+    if (propertyKeyType) {
+      _map.toJSON = function () {
+        return '{' + tfJSON(propertyKeyType) + ': ' + tfJSON(propertyType) + '}'
+      }
+    } else {
+      _map.toJSON = function () { return '{' + tfJSON(propertyType) + '}' }
+    }
+
+    return _map
+  },
+
+  object: function object (uncompiled) {
+    var type = {}
+
+    for (var propertyName in uncompiled) {
+      type[propertyName] = compile(uncompiled[propertyName])
+    }
+
+    function _object (value, strict) {
       if (!native.Object(value)) return false
       if (native.Null(value)) return false
 
@@ -29933,76 +29983,41 @@ var types = {
 
       return true
     }
-    object.toJSON = function () { return tfJSON(type) }
+    _object.toJSON = function () { return tfJSON(type) }
 
-    return object
-  },
-
-  map: function map (propertyType, propertyKeyType) {
-    propertyType = compile(propertyType)
-    if (propertyKeyType) propertyKeyType = compile(propertyKeyType)
-
-    function map (value, strict) {
-      if (!native.Object(value, strict)) return false
-      if (native.Null(value, strict)) return false
-
-      for (var propertyName in value) {
-        try {
-          if (propertyKeyType) {
-            typeforce(propertyKeyType, propertyName, strict)
-          }
-        } catch (e) {
-          throw tfSubError(e, propertyName, 'key')
-        }
-
-        try {
-          var propertyValue = value[propertyName]
-          typeforce(propertyType, propertyValue, strict)
-        } catch (e) {
-          throw tfSubError(e, propertyName)
-        }
-      }
-
-      return true
-    }
-
-    if (propertyKeyType) {
-      map.toJSON = function () {
-        return '{' + stfJSON(propertyKeyType) + ': ' + stfJSON(propertyType) + '}'
-      }
-    } else {
-      map.toJSON = function () { return '{' + stfJSON(propertyType) + '}' }
-    }
-
-    return map
+    return _object
   },
 
   oneOf: function oneOf () {
     var types = [].slice.call(arguments).map(compile)
 
-    function oneOf (value, strict) {
+    function _oneOf (value, strict) {
       return types.some(function (type) {
-        return type(value, strict)
+        try {
+          return typeforce(type, value, strict)
+        } catch (e) {
+          return false
+        }
       })
     }
-    oneOf.toJSON = function () { return types.map(stfJSON).join('|') }
+    _oneOf.toJSON = function () { return types.map(tfJSON).join('|') }
 
-    return oneOf
+    return _oneOf
   },
 
   quacksLike: function quacksLike (type) {
-    function quacksLike (value) {
+    function _quacksLike (value) {
       return type === getValueTypeName(value)
     }
-    quacksLike.toJSON = function () { return type }
+    _quacksLike.toJSON = function () { return type }
 
-    return quacksLike
+    return _quacksLike
   },
 
   tuple: function tuple () {
     var types = [].slice.call(arguments).map(compile)
 
-    function tuple (values, strict) {
+    function _tuple (values, strict) {
       return types.every(function (type, i) {
         try {
           return typeforce(type, values[i], strict)
@@ -30011,18 +30026,18 @@ var types = {
         }
       })
     }
-    tuple.toJSON = function () { return '(' + types.map(stfJSON).join(', ') + ')' }
+    _tuple.toJSON = function () { return '(' + types.map(tfJSON).join(', ') + ')' }
 
-    return tuple
+    return _tuple
   },
 
   value: function value (expected) {
-    function value (actual) {
+    function _value (actual) {
       return actual === expected
     }
-    value.toJSON = function () { return expected }
+    _value.toJSON = function () { return expected }
 
-    return value
+    return _value
   }
 }
 
@@ -30034,13 +30049,7 @@ function compile (type) {
   } else if (type && native.Object(type)) {
     if (native.Array(type)) return types.arrayOf(compile(type[0]))
 
-    var compiled = {}
-
-    for (var propertyName in type) {
-      compiled[propertyName] = compile(type[propertyName])
-    }
-
-    return types.object(compiled)
+    return types.object(type)
   } else if (native.Function(type)) {
     return type
   }
@@ -31950,6 +31959,7 @@ module.exports = Address;
 
 var Base58 = require('bs58');
 var RNG = require('./rng');
+var API = require('./api');
 var Bitcoin = require('bitcoinjs-lib');
 var Helpers = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
@@ -32098,7 +32108,6 @@ Address.import = function (key, label) {
     created_device_name: shared.APP_NAME,
     created_device_version: shared.APP_VERSION
   };
-
   switch (true) {
     case Helpers.isBitcoinAddress(key):
       object.addr = key;
@@ -32125,30 +32134,59 @@ Address.import = function (key, label) {
 };
 
 Address.fromString = function (keyOrAddr, label, bipPass) {
-  var asyncParse = function (resolve, reject) {
-    if (Helpers.isBitcoinAddress(keyOrAddr)) {
-      return resolve(Address.import(keyOrAddr, label));
-    } else {
-      // Import private key
-      var format = Helpers.detectPrivateKeyFormat(keyOrAddr);
-      var okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
+  if (Helpers.isBitcoinAddress(keyOrAddr)) {
+    return Promise.resolve(Address.import(keyOrAddr, label));
+  } else {
+    // Import private key
+    var format = Helpers.detectPrivateKeyFormat(keyOrAddr);
+    var okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
+    if (format === 'bip38') {
+      if (bipPass === undefined || bipPass === null || bipPass === '') {
+        return Promise.reject('needsBip38');
+      }
 
-      if (format === 'bip38') {
-        if (bipPass === undefined || bipPass === null || bipPass === '') {
-          return reject('needsBip38');
-        }
+      var parseBIP38Wrapper = function (resolve, reject) {
         ImportExport.parseBIP38toECPair(keyOrAddr, bipPass,
           function (key) { resolve(Address.import(key, label)); },
           function () { reject('wrongBipPass'); },
           function () { reject('importError'); }
         );
-      } else if (okFormats.indexOf(format) > -1) {
-        var k = Helpers.privateKeyStringToKey(keyOrAddr, format);
-        return resolve(Address.import(k, label));
-      } else { reject('unknown key format'); }
+      };
+      return new Promise(parseBIP38Wrapper);
+    } else if (format === 'mini' || format === 'base58') {
+      try {
+        var myk = Helpers.privateKeyStringToKey(keyOrAddr, format);
+      } catch (e) {
+        return Promise.reject(e);
+      }
+      myk.compressed = true;
+      var cad = myk.getAddress();
+      myk.compressed = false;
+      var uad = myk.getAddress();
+      return API.getBalances([cad, uad]).then(
+        function (o) {
+          var compBalance = o[cad].final_balance;
+          var ucompBalance = o[uad].final_balance;
+          if (compBalance === 0 && ucompBalance > 0) {
+            myk.compressed = false;
+          } else {
+            myk.compressed = true;
+          }
+          return Address.import(myk, label);
+        }
+      ).catch(
+        function (e) {
+          myk.compressed = true;
+          return Promise.resolve(Address.import(myk, label));
+        }
+      );
+    } else if (okFormats.indexOf(format) > -1) {
+      var k = Helpers.privateKeyStringToKey(keyOrAddr, format);
+      return Promise.resolve(Address.import(k, label));
+    } else {
+      return Promise.reject('unknown key format');
     }
-  };
-  return new Promise(asyncParse);
+  }
 };
 
 Address.new = function (label) {
@@ -32215,7 +32253,7 @@ Address.prototype.persist = function () {
   return this;
 };
 
-},{"./helpers":207,"./import-export":208,"./rng":213,"./shared":214,"./wallet":223,"./wallet-crypto":217,"bitcoinjs-lib":33,"bs58":68}],183:[function(require,module,exports){
+},{"./api":183,"./helpers":207,"./import-export":208,"./rng":213,"./shared":214,"./wallet":223,"./wallet-crypto":217,"bitcoinjs-lib":33,"bs58":68}],183:[function(require,module,exports){
 'use strict';
 
 module.exports = new API();
