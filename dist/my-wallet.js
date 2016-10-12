@@ -32263,8 +32263,6 @@ var Helpers = require('./helpers');
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var MyWallet = require('./wallet');
-var Bitcoin = require('bitcoinjs-lib');
-var ECPair = Bitcoin.ECPair;
 
 // API class
 function API () {
@@ -32393,20 +32391,6 @@ API.prototype.getTransaction = function (txhash) {
     cors: 'true'
   };
   return this.retry(this.request.bind(this, 'GET', transaction, data));
-};
-
-API.prototype.getBalanceForRedeemCode = function (privatekey) {
-  var format = Helpers.detectPrivateKeyFormat(privatekey);
-  if (format == null) { return Promise.reject('Unknown private key format'); }
-  var privateKeyToSweep = Helpers.privateKeyStringToKey(privatekey, format);
-  var aC = new ECPair(privateKeyToSweep.d, null, {compressed: true}).getAddress();
-  var aU = new ECPair(privateKeyToSweep.d, null, {compressed: false}).getAddress();
-  var totalBalance = function (data) {
-    return Object.keys(data)
-                 .map(function (a) { return data[a].final_balance; })
-                 .reduce(Helpers.add, 0);
-  };
-  return this.getBalances([aC, aU]).then(totalBalance);
 };
 
 API.prototype.getFiatAtTime = function (time, value, currencyCode) {
@@ -32542,7 +32526,7 @@ API.prototype.exportHistory = function (active, currency, options) {
   return this.request('POST', 'v2/export-history', data);
 };
 
-},{"./helpers":207,"./wallet":223,"./wallet-crypto":217,"./wallet-store":220,"assert":16,"bitcoinjs-lib":33}],184:[function(require,module,exports){
+},{"./helpers":207,"./wallet":223,"./wallet-crypto":217,"./wallet-store":220,"assert":16}],184:[function(require,module,exports){
 'use strict';
 
 module.exports = Block;
@@ -33973,7 +33957,7 @@ Object.defineProperties(BuySell.prototype, {
 
 module.exports = Address;
 
-function Address (obj) {
+function Address(obj) {
   this._street = obj.street;
   this._city = obj.city;
   this._state = obj.state;
@@ -33984,42 +33968,44 @@ function Address (obj) {
 Object.defineProperties(Address.prototype, {
   'city': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._city;
     }
   },
   'country': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._country;
     }
   },
   'state': { // ISO 3166-2, the part after the dash
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._state;
     }
   },
   'street': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._street;
     }
   },
   'zipcode': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._zipcode;
     }
   }
 });
 
 },{}],190:[function(require,module,exports){
+'use strict';
+
 var assert = require('assert');
 
 module.exports = API;
 
-function API () {
+function API() {
   this._offlineToken = null;
   this._rootURL = 'https://app-api.coinify.com/';
   this._loginExpiresAt = null;
@@ -34028,7 +34014,7 @@ function API () {
 Object.defineProperties(API.prototype, {
   'isLoggedIn': {
     configurable: false,
-    get: function () {
+    get: function get() {
       // Debug: + 60 * 19 * 1000 expires the login after 1 minute
       var tenSecondsFromNow = new Date(new Date().getTime() + 10000);
       return Boolean(this._access_token) && this._loginExpiresAt > tenSecondsFromNow;
@@ -34036,13 +34022,13 @@ Object.defineProperties(API.prototype, {
   },
   'offlineToken': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._offlineToken;
     }
   },
   'hasAccount': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return Boolean(this.offlineToken);
     }
   }
@@ -34054,13 +34040,13 @@ API.prototype.login = function () {
   var promise = new Promise(function (resolve, reject) {
     assert(self._offlineToken, 'Offline token required');
 
-    var loginSuccess = function (res) {
+    var loginSuccess = function loginSuccess(res) {
       self._access_token = res.access_token;
       self._loginExpiresAt = new Date(new Date().getTime() + res.expires_in * 1000);
       resolve();
     };
 
-    var loginFailed = function (e) {
+    var loginFailed = function loginFailed(e) {
       reject(e);
     };
     self.POST('auth', {
@@ -34077,7 +34063,7 @@ API.prototype.GET = function (endpoint, data) {
 };
 
 API.prototype.authGET = function (endpoint, data) {
-  var doGET = function () {
+  var doGET = function doGET() {
     return this._request('GET', endpoint, data, true);
   };
 
@@ -34093,7 +34079,7 @@ API.prototype.POST = function (endpoint, data) {
 };
 
 API.prototype.authPOST = function (endpoint, data) {
-  var doPOST = function () {
+  var doPOST = function doPOST() {
     return this._request('POST', endpoint, data, true);
   };
 
@@ -34109,7 +34095,7 @@ API.prototype.PATCH = function (endpoint, data) {
 };
 
 API.prototype.authPATCH = function (endpoint, data) {
-  var doPATCH = function () {
+  var doPATCH = function doPATCH() {
     return this._request('PATCH', endpoint, data, true);
   };
 
@@ -34135,7 +34121,7 @@ API.prototype._request = function (method, endpoint, data, authorized) {
   }
 
   // encodeFormData :: Object -> url encoded params
-  var encodeFormData = function (data) {
+  var encodeFormData = function encodeFormData(data) {
     if (!data) return '';
     var encoded = Object.keys(data).map(function (k) {
       return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]);
@@ -34153,11 +34139,11 @@ API.prototype._request = function (method, endpoint, data, authorized) {
 
   options.method = method;
 
-  var handleNetworkError = function (e) {
+  var handleNetworkError = function handleNetworkError(e) {
     return Promise.reject({ error: 'COINIFY_CONNECT_ERROR', message: e });
   };
 
-  var checkStatus = function (response) {
+  var checkStatus = function checkStatus(response) {
     if (response.status === 204) {
       return;
     } else if (response.status >= 200 && response.status < 300) {
@@ -34167,9 +34153,7 @@ API.prototype._request = function (method, endpoint, data, authorized) {
     }
   };
 
-  return fetch(url, options)
-    .catch(handleNetworkError)
-    .then(checkStatus);
+  return fetch(url, options).catch(handleNetworkError).then(checkStatus);
 };
 
 },{"assert":16}],191:[function(require,module,exports){
@@ -34179,7 +34163,7 @@ var Address = require('./address');
 
 module.exports = BankAccount;
 
-function BankAccount (obj) {
+function BankAccount(obj) {
   this._id = obj.id; // Not used in buy
   this._type = obj.account.type; // Missing in API
   this._currency = obj.account.currency; // Missing in API
@@ -34203,55 +34187,55 @@ Object.defineProperties(BankAccount.prototype, {
   // },
   'type': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._type;
     }
   },
   'currency': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._currency;
     }
   },
   'bic': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._bic;
     }
   },
   'number': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._number;
     }
   },
   'bankName': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._bank_name;
     }
   },
   'bankAddress': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._bank_address;
     }
   },
   'holderName': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._holder_name;
     }
   },
   'holderAddress': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._holder_address;
     }
   },
   'referenceText': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._referenceText;
     }
   }
@@ -34306,17 +34290,17 @@ var API = require('./api');
 
 var assert = require('assert');
 
-var isBoolean = function (value) {
-  return typeof (value) === 'boolean';
+var isBoolean = function isBoolean(value) {
+  return typeof value === 'boolean';
 };
 
-var isString = function (str) {
+var isString = function isString(str) {
   return typeof str === 'string' || str instanceof String;
 };
 
 module.exports = Coinify;
 
-function Coinify (object, delegate) {
+function Coinify(object, delegate) {
   assert(delegate, 'ExchangeDelegate required');
   this._delegate = delegate;
   var obj = object || {};
@@ -34336,10 +34320,31 @@ function Coinify (object, delegate) {
 
   this._trades = [];
   if (obj.trades) {
-    for (var i = 0; i < obj.trades.length; i++) {
-      var trade = new CoinifyTrade(obj.trades[i], this._api, delegate, this);
-      trade.debug = this._debug;
-      this._trades.push(trade);
+    var _iteratorNormalCompletion = true;
+    var _didIteratorError = false;
+    var _iteratorError = undefined;
+
+    try {
+      for (var _iterator = obj.trades[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        var tradeObj = _step.value;
+
+        var trade = new CoinifyTrade(tradeObj, this._api, delegate, this);
+        trade.debug = this._debug;
+        this._trades.push(trade);
+      }
+    } catch (err) {
+      _didIteratorError = true;
+      _iteratorError = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion && _iterator.return) {
+          _iterator.return();
+        }
+      } finally {
+        if (_didIteratorError) {
+          throw _iteratorError;
+        }
+      }
     }
   }
 
@@ -34351,8 +34356,10 @@ function Coinify (object, delegate) {
 Object.defineProperties(Coinify.prototype, {
   'debug': {
     configurable: false,
-    get: function () { return this._debug; },
-    set: function (value) {
+    get: function get() {
+      return this._debug;
+    },
+    set: function set(value) {
       this._debug = Boolean(value);
       this._delegate.debug = Boolean(value);
       for (var i = 0; i < this.trades.length; i++) {
@@ -34362,27 +34369,30 @@ Object.defineProperties(Coinify.prototype, {
   },
   'delegate': {
     configurable: false,
-    get: function () { return this._delegate; }
+    get: function get() {
+      return this._delegate;
+    }
   },
   'user': {
     configurable: false,
-    get: function () { return this._user; }
+    get: function get() {
+      return this._user;
+    }
   },
   'autoLogin': {
     configurable: false,
-    get: function () { return this._auto_login; },
-    set: function (value) {
-      assert(
-        isBoolean(value),
-        'Boolean'
-      );
+    get: function get() {
+      return this._auto_login;
+    },
+    set: function set(value) {
+      assert(isBoolean(value), 'Boolean');
       this._auto_login = value;
       this.delegate.save.bind(this.delegate)();
     }
   },
   'profile': {
     configurable: false,
-    get: function () {
+    get: function get() {
       if (!this._profile._did_fetch) {
         return null;
       } else {
@@ -34392,40 +34402,40 @@ Object.defineProperties(Coinify.prototype, {
   },
   'trades': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._trades;
     }
   },
   'kycs': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._kycs;
     }
   },
   'hasAccount': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return Boolean(this._offlineToken);
     }
   },
   'partnerId': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._partner_id;
     },
-    set: function (value) {
+    set: function set(value) {
       this._partner_id = value;
     }
   },
   'buyCurrencies': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._buyCurrencies;
     }
   },
   'sellCurrencies': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._sellCurrencies;
     }
   }
@@ -34445,18 +34455,12 @@ Coinify.prototype.toJSON = function () {
 // Email must be set and verified
 Coinify.prototype.signup = function (countryCode, currencyCode) {
   var self = this;
-  var runChecks = function () {
+  var runChecks = function runChecks() {
     assert(!self.user, 'Already signed up');
 
     assert(self.delegate, 'ExchangeDelegate required');
 
-    assert(
-      countryCode &&
-      isString(countryCode) &&
-      countryCode.length === 2 &&
-      countryCode.match(/[a-zA-Z]{2}/),
-      'ISO 3166-1 alpha-2'
-    );
+    assert(countryCode && isString(countryCode) && countryCode.length === 2 && countryCode.match(/[a-zA-Z]{2}/), 'ISO 3166-1 alpha-2');
 
     assert(currencyCode, 'currency required');
 
@@ -34464,7 +34468,7 @@ Coinify.prototype.signup = function (countryCode, currencyCode) {
     assert(self.delegate.isEmailVerified(), 'email must be verified');
   };
 
-  var doSignup = function (emailToken) {
+  var doSignup = function doSignup(emailToken) {
     assert(emailToken, 'email token missing');
     return this._api.POST('signup/trader', {
       email: self.delegate.email(),
@@ -34480,17 +34484,16 @@ Coinify.prototype.signup = function (countryCode, currencyCode) {
     });
   };
 
-  var saveMetadata = function (res) {
+  var saveMetadata = function saveMetadata(res) {
     this._user = res.trader.id;
     this._offlineToken = res.offlineToken;
     this._api._offlineToken = this._offlineToken;
-    return this._delegate.save.bind(this._delegate)().then(function () { return res; });
+    return this._delegate.save.bind(this._delegate)().then(function () {
+      return res;
+    });
   };
 
-  return Promise.resolve().then(runChecks.bind(this))
-                          .then(this.delegate.getEmailToken.bind(this.delegate))
-                          .then(doSignup.bind(this))
-                          .then(saveMetadata.bind(this));
+  return Promise.resolve().then(runChecks.bind(this)).then(this.delegate.getEmailToken.bind(this.delegate)).then(doSignup.bind(this)).then(saveMetadata.bind(this));
 };
 
 Coinify.prototype.fetchProfile = function () {
@@ -34503,8 +34506,7 @@ Coinify.prototype.getBuyQuote = function (amount, baseCurrency, quoteCurrency) {
   if (baseCurrency !== 'BTC') {
     quoteCurrency = 'BTC';
   }
-  return Quote.getQuote(this._api, -amount, baseCurrency, quoteCurrency)
-              .then(this.setLastQuote.bind(this));
+  return Quote.getQuote(this._api, -amount, baseCurrency, quoteCurrency).then(this.setLastQuote.bind(this));
 };
 
 Coinify.prototype.setLastQuote = function (quote) {
@@ -34520,19 +34522,15 @@ Coinify.prototype.buy = function (amount, baseCurrency, medium) {
   assert(this._lastQuote.expiresAt > new Date(), 'LAST_QUOTE_EXPIRED');
   assert(medium === 'bank' || medium === 'card', 'Specify bank or card');
 
-  var addTrade = function (trade) {
+  var addTrade = function addTrade(trade) {
     trade.debug = this._debug;
     this._trades.push(trade);
-    return this.delegate.save.bind(this.delegate)().then(function () { return trade; });
+    return this.delegate.save.bind(this.delegate)().then(function () {
+      return trade;
+    });
   };
 
-  return CoinifyTrade.buy(
-    this._lastQuote,
-    medium,
-    this._api,
-    this.delegate,
-    this
-  ).then(addTrade.bind(this));
+  return CoinifyTrade.buy(this._lastQuote, medium, this._api, this.delegate, this).then(addTrade.bind(this));
 };
 
 Coinify.prototype.updateList = function (list, items, ListClass) {
@@ -34555,45 +34553,68 @@ Coinify.prototype.updateList = function (list, items, ListClass) {
 };
 
 Coinify.prototype.getTrades = function () {
-  var self = this;
-  var save = function () {
-    return this.delegate.save.bind(this.delegate)().then(function () { return self._trades; });
+  var _this = this;
+
+  var save = function save() {
+    return _this.delegate.save.bind(_this.delegate)().then(function () {
+      return _this._trades;
+    });
   };
-  var update = function (trades) {
-    this.updateList(this._trades, trades, CoinifyTrade);
+  var update = function update(trades) {
+    _this.updateList(_this._trades, trades, CoinifyTrade);
   };
-  var process = function () {
-    for (var i = 0; i < this._trades.length; i++) {
-      var trade = this._trades[i];
-      trade.process(this._trades);
+  var process = function process() {
+    var _iteratorNormalCompletion2 = true;
+    var _didIteratorError2 = false;
+    var _iteratorError2 = undefined;
+
+    try {
+      for (var _iterator2 = _this._trades[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+        var trade = _step2.value;
+
+        trade.process(_this._trades);
+      }
+    } catch (err) {
+      _didIteratorError2 = true;
+      _iteratorError2 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion2 && _iterator2.return) {
+          _iterator2.return();
+        }
+      } finally {
+        if (_didIteratorError2) {
+          throw _iteratorError2;
+        }
+      }
     }
   };
-  return CoinifyTrade.fetchAll(this._api)
-                     .then(update.bind(this))
-                     .then(process.bind(this))
-                     .then(save.bind(this));
+  return CoinifyTrade.fetchAll(this._api).then(update).then(process).then(save);
 };
 
 Coinify.prototype.triggerKYC = function () {
-  var addKYC = function (kyc) {
-    this._kycs.push(kyc);
+  var _this2 = this;
+
+  var addKYC = function addKYC(kyc) {
+    _this2._kycs.push(kyc);
     return kyc;
   };
 
-  return CoinifyKYC.trigger(this._api).then(addKYC.bind(this));
+  return CoinifyKYC.trigger(this._api).then(addKYC);
 };
 
 Coinify.prototype.getKYCs = function () {
-  var self = this;
-  var save = function () {
-    return this.delegate.save.bind(this.delegate)().then(function () { return self._kycs; });
+  var _this3 = this;
+
+  var save = function save() {
+    return _this3.delegate.save.bind(_this3.delegate)().then(function () {
+      return _this3._kycs;
+    });
   };
-  var update = function (kycs) {
-    this.updateList(this._kycs, kycs, CoinifyKYC);
+  var update = function update(kycs) {
+    _this3.updateList(_this3._kycs, kycs, CoinifyKYC);
   };
-  return CoinifyKYC.fetchAll(this._api, this)
-                     .then(update.bind(this))
-                     .then(save.bind(this));
+  return CoinifyKYC.fetchAll(this._api, this).then(update).then(save);
 };
 
 Coinify.prototype.getBuyMethods = function () {
@@ -34605,17 +34626,57 @@ Coinify.prototype.getSellMethods = function () {
 };
 
 Coinify.prototype.getBuyCurrencies = function () {
-  var getCurrencies = function (paymentMethods) {
+  var getCurrencies = function getCurrencies(paymentMethods) {
     var currencies = [];
-    for (var i = 0; i < paymentMethods.length; i++) {
-      var paymentMethod = paymentMethods[i];
-      for (var j = 0; j < paymentMethod.inCurrencies.length; j++) {
-        var inCurrency = paymentMethod.inCurrencies[j];
-        if (currencies.indexOf(inCurrency) === -1) {
-          currencies.push(paymentMethod.inCurrencies[j]);
+    var _iteratorNormalCompletion3 = true;
+    var _didIteratorError3 = false;
+    var _iteratorError3 = undefined;
+
+    try {
+      for (var _iterator3 = paymentMethods[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+        var paymentMethod = _step3.value;
+        var _iteratorNormalCompletion4 = true;
+        var _didIteratorError4 = false;
+        var _iteratorError4 = undefined;
+
+        try {
+          for (var _iterator4 = paymentMethod.inCurrencies[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+            var inCurrency = _step4.value;
+
+            if (currencies.indexOf(inCurrency) === -1) {
+              currencies.push(inCurrency);
+            }
+          }
+        } catch (err) {
+          _didIteratorError4 = true;
+          _iteratorError4 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion4 && _iterator4.return) {
+              _iterator4.return();
+            }
+          } finally {
+            if (_didIteratorError4) {
+              throw _iteratorError4;
+            }
+          }
+        }
+      }
+    } catch (err) {
+      _didIteratorError3 = true;
+      _iteratorError3 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion3 && _iterator3.return) {
+          _iterator3.return();
+        }
+      } finally {
+        if (_didIteratorError3) {
+          throw _iteratorError3;
         }
       }
     }
+
     this._buyCurrencies = JSON.parse(JSON.stringify(currencies));
     return currencies;
   };
@@ -34623,17 +34684,57 @@ Coinify.prototype.getBuyCurrencies = function () {
 };
 
 Coinify.prototype.getSellCurrencies = function () {
-  var getCurrencies = function (paymentMethods) {
+  var getCurrencies = function getCurrencies(paymentMethods) {
     var currencies = [];
-    for (var i = 0; i < paymentMethods.length; i++) {
-      var paymentMethod = paymentMethods[i];
-      for (var j = 0; j < paymentMethod.outCurrencies.length; j++) {
-        var outCurrency = paymentMethod.outCurrencies[j];
-        if (currencies.indexOf(outCurrency) === -1) {
-          currencies.push(paymentMethod.outCurrencies[j]);
+    var _iteratorNormalCompletion5 = true;
+    var _didIteratorError5 = false;
+    var _iteratorError5 = undefined;
+
+    try {
+      for (var _iterator5 = paymentMethods[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+        var paymentMethod = _step5.value;
+        var _iteratorNormalCompletion6 = true;
+        var _didIteratorError6 = false;
+        var _iteratorError6 = undefined;
+
+        try {
+          for (var _iterator6 = paymentMethod.outCurrencies[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+            var outCurrency = _step6.value;
+
+            if (currencies.indexOf(outCurrency) === -1) {
+              currencies.push(outCurrency);
+            }
+          }
+        } catch (err) {
+          _didIteratorError6 = true;
+          _iteratorError6 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion6 && _iterator6.return) {
+              _iterator6.return();
+            }
+          } finally {
+            if (_didIteratorError6) {
+              throw _iteratorError6;
+            }
+          }
+        }
+      }
+    } catch (err) {
+      _didIteratorError5 = true;
+      _iteratorError5 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion5 && _iterator5.return) {
+          _iterator5.return();
+        }
+      } finally {
+        if (_didIteratorError5) {
+          throw _iteratorError5;
         }
       }
     }
+
     this._sellCurrencies = JSON.parse(JSON.stringify(currencies));
     return currencies;
   };
@@ -34660,32 +34761,31 @@ var assert = require('assert');
 
 module.exports = ExchangeRate;
 
-function ExchangeRate (coinify) {
+function ExchangeRate(coinify) {
   this._coinify = coinify;
 }
 
 ExchangeRate.prototype.get = function (baseCurrency, quoteCurrency) {
   var self = this;
-  var performChecks = function () {
+  var performChecks = function performChecks() {
     assert(baseCurrency, 'Base currency required');
     assert(quoteCurrency, 'Quote currency required');
   };
-  var getRate = function () {
+  var getRate = function getRate() {
     return self._coinify.GET('rates/approximate', {
       baseCurrency: baseCurrency,
       quoteCurrency: quoteCurrency
     });
   };
-  var processRate = function (res) {
+  var processRate = function processRate(res) {
     return res.rate;
   };
-  return Promise.resolve()
-    .then(performChecks)
-    .then(getRate)
-    .then(processRate);
+  return Promise.resolve().then(performChecks).then(getRate).then(processRate);
 };
 
 },{"assert":16}],194:[function(require,module,exports){
+'use strict';
+
 var Helpers = {};
 
 Helpers.isNumber = function (num) {
@@ -34720,7 +34820,7 @@ module.exports = Helpers;
 
 module.exports = CoinifyKYC;
 
-function CoinifyKYC (obj, api, delegate, coinify) {
+function CoinifyKYC(obj, api, delegate, coinify) {
   // delegate and coinify are not used
   this._api = api;
   this._id = obj.id;
@@ -34730,15 +34830,7 @@ function CoinifyKYC (obj, api, delegate, coinify) {
 }
 
 CoinifyKYC.prototype.set = function (obj) {
-  if ([
-    'pending',
-    'rejected',
-    'failed',
-    'expired',
-    'completed',
-    'reviewing',
-    'documentsRequested'
-  ].indexOf(obj.state) === -1) {
+  if (['pending', 'rejected', 'failed', 'expired', 'completed', 'reviewing', 'documentsRequested'].indexOf(obj.state) === -1) {
     console.warn('Unknown state:', obj.state);
   }
   this._state = obj.state;
@@ -34750,43 +34842,42 @@ CoinifyKYC.prototype.set = function (obj) {
 Object.defineProperties(CoinifyKYC.prototype, {
   'id': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._id;
     }
   },
   'state': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._state;
     }
   },
   'iSignThisID': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._iSignThisID;
     }
   },
   'createdAt': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._createdAt;
     }
   },
   'updatedAt': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._updatedAt;
     }
   }
 });
 
 CoinifyKYC.prototype.refresh = function () {
-  return this._api.authGET('kyc/' + this._id)
-                  .then(this.set.bind(this));
+  return this._api.authGET('kyc/' + this._id).then(this.set.bind(this));
 };
 
 CoinifyKYC.trigger = function (api) {
-  var processKYC = function (res) {
+  var processKYC = function processKYC(res) {
     var kyc = new CoinifyKYC(res, api, null, null);
     return kyc;
   };
@@ -34804,7 +34895,7 @@ CoinifyKYC.fetchAll = function (api) {
 module.exports = Level;
 var Limits = require('./limits');
 
-function Level (obj) {
+function Level(obj) {
   this._currency = obj.currency;
   this._feePercentage = obj.feePercentage;
   this._limits = new Limits(obj.limits);
@@ -34815,31 +34906,31 @@ function Level (obj) {
 Object.defineProperties(Level.prototype, {
   'currency': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._currency;
     }
   },
   'feePercentage': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._feePercentage;
     }
   },
   'limits': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._limits;
     }
   },
   'name': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._name;
     }
   },
   'requirements': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._requirements;
     }
   }
@@ -34852,9 +34943,9 @@ var Helpers = require('./helpers');
 
 module.exports = Limit;
 
-function Limit (obj) {
+function Limit(obj) {
   // Is this the amount remaining at this moment, or the daily/weekly limit?
-  if ((obj.in && Helpers.isPositiveNumber(obj.in.daily)) || (obj.out && Helpers.isPositiveNumber(obj.out.daily))) {
+  if (obj.in && Helpers.isPositiveNumber(obj.in.daily) || obj.out && Helpers.isPositiveNumber(obj.out.daily)) {
     if (obj.in) {
       this._inDaily = obj.in.daily;
     }
@@ -34870,25 +34961,25 @@ function Limit (obj) {
 Object.defineProperties(Limit.prototype, {
   'inRemaining': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._inRemaining;
     }
   },
   'outRemaining': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._inRemaining;
     }
   },
   'inDaily': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._inDaily;
     }
   },
   'outDaily': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._outDaily;
     }
   }
@@ -34901,7 +34992,7 @@ var Limit = require('./limit');
 
 module.exports = Limits;
 
-function Limits (obj) {
+function Limits(obj) {
   this._card = new Limit(obj.card);
   this._bank = new Limit(obj.bank);
 }
@@ -34909,13 +35000,13 @@ function Limits (obj) {
 Object.defineProperties(Limits.prototype, {
   'card': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._card;
     }
   },
   'bank': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._bank;
     }
   }
@@ -34926,7 +35017,7 @@ Object.defineProperties(Limits.prototype, {
 
 module.exports = PaymentMethod;
 
-function PaymentMethod (obj, api) {
+function PaymentMethod(obj, api) {
   this._api = api;
   this._inMedium = obj.inMedium;
   this._outMedium = obj.outMedium;
@@ -34952,79 +35043,79 @@ function PaymentMethod (obj, api) {
 Object.defineProperties(PaymentMethod.prototype, {
   'inMedium': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._inMedium;
     }
   },
   'outMedium': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._outMedium;
     }
   },
   'name': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._name;
     }
   },
   'inCurrencies': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._inCurrencies;
     }
   },
   'outCurrencies': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._outCurrencies;
     }
   },
   'inCurrency': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._inCurrency;
     }
   },
   'outCurrency': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._outCurrency;
     }
   },
   'inFixedFee': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._inFixedFee;
     }
   },
   'outFixedFee': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._outFixedFee;
     }
   },
   'inPercentageFee': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._inPercentageFee;
     }
   },
   'outPercentageFee': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._outPercentageFee;
     }
   },
   'fee': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._fee;
     }
   },
   'total': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._total;
     }
   }
@@ -35032,8 +35123,12 @@ Object.defineProperties(PaymentMethod.prototype, {
 
 PaymentMethod.fetchAll = function (inCurrency, outCurrency, api) {
   var params = {};
-  if (inCurrency) { params.inCurrency = inCurrency; }
-  if (outCurrency) { params.outCurrency = outCurrency; }
+  if (inCurrency) {
+    params.inCurrency = inCurrency;
+  }
+  if (outCurrency) {
+    params.outCurrency = outCurrency;
+  }
 
   var output = [];
   return api.authGET('trades/payment-methods', params).then(function (res) {
@@ -35059,7 +35154,7 @@ var Level = require('./level');
 
 module.exports = CoinifyProfile;
 
-function CoinifyProfile (api) {
+function CoinifyProfile(api) {
   this._api = api;
   this._did_fetch;
 }
@@ -35067,79 +35162,79 @@ function CoinifyProfile (api) {
 Object.defineProperties(CoinifyProfile.prototype, {
   'fullName': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._full_name;
     }
   },
   'defaultCurrency': { // read-only
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._default_currency;
     }
   },
   'email': { // ready-only
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._email;
     }
   },
   'gender': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._gender;
     }
   },
   'mobile': { // setter not implemented yet
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._mobile;
     }
   },
   'city': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._city;
     }
   },
   'country': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._country;
     }
   },
   'state': { // ISO 3166-2, the part after the dash
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._state;
     }
   },
   'street': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._street;
     }
   },
   'zipcode': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._zipcode;
     }
   },
   'level': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._level;
     }
   },
   'nextLevel': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._nextLevel;
     }
   },
   'currentLimits': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._currentLimits;
     }
   }
@@ -35179,7 +35274,7 @@ CoinifyProfile.prototype.fetch = function () {
 CoinifyProfile.prototype.setFullName = function (value) {
   var parentThis = this;
 
-  return this.update({profile: {name: value}}).then(function (res) {
+  return this.update({ profile: { name: value } }).then(function (res) {
     parentThis._full_name = res.profile.name;
   });
 };
@@ -35188,7 +35283,7 @@ CoinifyProfile.prototype.setGender = function (value) {
   assert(value === null || value === 'male' || value === 'female', 'invalid gender');
   var parentThis = this;
 
-  return this.update({profile: {gender: value}}).then(function (res) {
+  return this.update({ profile: { gender: value } }).then(function (res) {
     parentThis._gender = res.profile.gender;
   });
 };
@@ -35196,7 +35291,7 @@ CoinifyProfile.prototype.setGender = function (value) {
 CoinifyProfile.prototype.setCity = function (value) {
   var parentThis = this;
 
-  return this.update({profile: {address: {city: value}}}).then(function (res) {
+  return this.update({ profile: { address: { city: value } } }).then(function (res) {
     parentThis._city = res.profile.address.city;
   });
 };
@@ -35204,7 +35299,7 @@ CoinifyProfile.prototype.setCity = function (value) {
 CoinifyProfile.prototype.setCountry = function (value) {
   var parentThis = this;
 
-  return this.update({profile: {address: {country: value}}}).then(function (res) {
+  return this.update({ profile: { address: { country: value } } }).then(function (res) {
     parentThis._country = res.profile.address.country;
   });
 };
@@ -35212,7 +35307,7 @@ CoinifyProfile.prototype.setCountry = function (value) {
 CoinifyProfile.prototype.setState = function (value) {
   var parentThis = this;
 
-  return this.update({profile: {address: {state: value}}}).then(function (res) {
+  return this.update({ profile: { address: { state: value } } }).then(function (res) {
     parentThis._state = res.profile.address.state;
   });
 };
@@ -35220,14 +35315,14 @@ CoinifyProfile.prototype.setState = function (value) {
 CoinifyProfile.prototype.setStreet = function (value) {
   var parentThis = this;
 
-  return this.update({profile: {address: {street: value}}}).then(function (res) {
+  return this.update({ profile: { address: { street: value } } }).then(function (res) {
     parentThis._street = res.profile.address.street;
   });
 };
 
 CoinifyProfile.prototype.setZipcode = function (value) {
   var parentThis = this;
-  return this.update({profile: {address: {zipcode: value}}}).then(function (res) {
+  return this.update({ profile: { address: { zipcode: value } } }).then(function (res) {
     parentThis._zipcode = res.profile.address.zipcode;
   });
 };
@@ -35245,7 +35340,7 @@ var assert = require('assert');
 
 module.exports = Quote;
 
-function Quote (obj, api) {
+function Quote(obj, api) {
   assert(obj, 'Missing quote object');
   this._api = api;
 
@@ -35273,37 +35368,37 @@ function Quote (obj, api) {
 Object.defineProperties(Quote.prototype, {
   'id': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._id;
     }
   },
   'baseCurrency': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._baseCurrency;
     }
   },
   'quoteCurrency': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._quoteCurrency;
     }
   },
   'baseAmount': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._baseAmount;
     }
   },
   'quoteAmount': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._quoteAmount;
     }
   },
   'expiresAt': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._expiresAt;
     }
   }
@@ -35333,12 +35428,12 @@ Quote.getQuote = function (api, amount, baseCurrency, quoteCurrency) {
     baseAmount = (amount / 100).toFixed(2);
   }
 
-  var processQuote = function (quote) {
+  var processQuote = function processQuote(quote) {
     quote = new Quote(quote, api);
     return quote;
   };
 
-  var getAnonymousQuote = function () {
+  var getAnonymousQuote = function getAnonymousQuote() {
     return api.POST('trades/quote', {
       baseCurrency: baseCurrency,
       quoteCurrency: quoteCurrency,
@@ -35346,7 +35441,7 @@ Quote.getQuote = function (api, amount, baseCurrency, quoteCurrency) {
     });
   };
 
-  var getQuote = function () {
+  var getQuote = function getQuote() {
     return api.authPOST('trades/quote', {
       baseCurrency: baseCurrency,
       quoteCurrency: quoteCurrency,
@@ -35364,7 +35459,7 @@ Quote.getQuote = function (api, amount, baseCurrency, quoteCurrency) {
 Quote.prototype.getPaymentMethods = function () {
   var self = this;
 
-  var setPaymentMethods = function (paymentMethods) {
+  var setPaymentMethods = function setPaymentMethods(paymentMethods) {
     self.paymentMethods = {};
     for (var i = 0; i < paymentMethods.length; i++) {
       var paymentMethod = paymentMethods[i];
@@ -35377,8 +35472,7 @@ Quote.prototype.getPaymentMethods = function () {
   if (this.paymentMethods) {
     return Promise.resolve(this.paymentMethods);
   } else {
-    return PaymentMethod.fetchAll(this.baseCurrency, this.quoteCurrency, this._api)
-                        .then(setPaymentMethods);
+    return PaymentMethod.fetchAll(this.baseCurrency, this.quoteCurrency, this._api).then(setPaymentMethods);
   }
 };
 
@@ -35398,7 +35492,7 @@ var Quote = require('./quote');
 
 module.exports = CoinifyTrade;
 
-function CoinifyTrade (obj, api, coinifyDelegate) {
+function CoinifyTrade(obj, api, coinifyDelegate) {
   assert(obj, 'JSON missing');
   assert(api, 'Coinify API missing');
   assert(coinifyDelegate, 'coinifyDelegate missing');
@@ -35412,128 +35506,130 @@ function CoinifyTrade (obj, api, coinifyDelegate) {
 Object.defineProperties(CoinifyTrade.prototype, {
   'debug': {
     configurable: false,
-    get: function () { return this._debug; },
-    set: function (value) {
+    get: function get() {
+      return this._debug;
+    },
+    set: function set(value) {
       this._debug = Boolean(value);
     }
   },
   'id': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._id;
     }
   },
   'iSignThisID': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._iSignThisID;
     }
   },
   'quoteExpireTime': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._quoteExpireTime;
     }
   },
   'bankAccount': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._bankAccount;
     }
   },
   'createdAt': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._createdAt;
     }
   },
   'updatedAt': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._updatedAt;
     }
   },
   'inCurrency': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._inCurrency;
     }
   },
   'outCurrency': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._outCurrency;
     }
   },
   'inAmount': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._inAmount;
     }
   },
   'medium': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._medium;
     }
   },
   'state': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._state;
     }
   },
   'sendAmount': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._sendAmount;
     }
   },
   'outAmount': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._outAmount;
     }
   },
   'outAmountExpected': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._outAmountExpected;
     }
   },
   'receiptUrl': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._receiptUrl;
     }
   },
   'receiveAddress': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._receiveAddress;
     }
   },
   'accountIndex': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._account_index;
     }
   },
   'bitcoinReceived': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return Boolean(this._txHash);
     }
   },
   'confirmed': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._confirmed || this._confirmations >= 3;
     }
   },
   'isBuy': {
     configurable: false,
-    get: function () {
+    get: function get() {
       if (Boolean(this._is_buy) === this._is_buy) {
         return this._is_buy;
       } else if (this._is_buy === undefined && this.outCurrency === undefined) {
@@ -35545,21 +35641,14 @@ Object.defineProperties(CoinifyTrade.prototype, {
   },
   'txHash': {
     configurable: false,
-    get: function () { return this._txHash || null; }
+    get: function get() {
+      return this._txHash || null;
+    }
   }
 });
 
 CoinifyTrade.prototype.set = function (obj) {
-  if ([
-    'awaiting_transfer_in',
-    'processing',
-    'reviewing',
-    'completed',
-    'completed_test',
-    'cancelled',
-    'rejected',
-    'expired'
-  ].indexOf(obj.state) === -1) {
+  if (['awaiting_transfer_in', 'processing', 'reviewing', 'completed', 'completed_test', 'cancelled', 'rejected', 'expired'].indexOf(obj.state) === -1) {
     console.warn('Unknown state:', obj.state);
   }
   if (this._isDeclined && obj.state === 'awaiting_transfer_in') {
@@ -35575,9 +35664,7 @@ CoinifyTrade.prototype.set = function (obj) {
 
   if (obj.transferIn) {
     this._medium = obj.transferIn.medium;
-    this._sendAmount = this._inCurrency === 'BTC'
-      ? Helpers.toSatoshi(obj.transferIn.sendAmount)
-      : Helpers.toCents(obj.transferIn.sendAmount);
+    this._sendAmount = this._inCurrency === 'BTC' ? Helpers.toSatoshi(obj.transferIn.sendAmount) : Helpers.toCents(obj.transferIn.sendAmount);
   }
 
   if (this._inCurrency === 'BTC') {
@@ -35595,7 +35682,8 @@ CoinifyTrade.prototype.set = function (obj) {
     this._receiveAddress = this._coinifyDelegate.getReceiveAddress(this);
     this._confirmed = obj.confirmed;
     this._txHash = obj.tx_hash;
-  } else { // Contructed from Coinify API
+  } else {
+    // Contructed from Coinify API
     /* istanbul ignore if */
     if (this.debug) {
       // This log only happens if .set() is called after .debug is set.
@@ -35627,7 +35715,7 @@ CoinifyTrade.prototype.set = function (obj) {
 CoinifyTrade.prototype.cancel = function () {
   var self = this;
 
-  var processCancel = function (trade) {
+  var processCancel = function processCancel(trade) {
     self._state = trade.state;
 
     self._coinifyDelegate.releaseReceiveAddress(self);
@@ -35664,12 +35752,7 @@ CoinifyTrade.prototype.watchAddress = function () {
 CoinifyTrade.prototype.btcExpected = function () {
   var self = this;
   if (this.isBuy) {
-    if ([
-      'completed',
-      'completed_test',
-      'cancelled',
-      'rejected'
-    ].indexOf(this.state) > -1) {
+    if (['completed', 'completed_test', 'cancelled', 'rejected'].indexOf(this.state) > -1) {
       return Promise.resolve(this.outAmountExpected);
     }
 
@@ -35682,7 +35765,7 @@ CoinifyTrade.prototype.btcExpected = function () {
       if (this._lastBtcExpectedGuessAt > oneMinuteAgo) {
         return Promise.resolve(this._lastBtcExpectedGuess);
       } else {
-        var processQuote = function (quote) {
+        var processQuote = function processQuote(quote) {
           self._lastBtcExpectedGuess = quote.quoteAmount;
           self._lastBtcExpectedGuessAt = new Date();
           return self._lastBtcExpectedGuess;
@@ -35719,7 +35802,7 @@ CoinifyTrade.buy = function (quote, medium, api, coinifyDelegate, debug) {
   }
   var reservation = coinifyDelegate.reserveReceiveAddress();
 
-  var processTrade = function (res) {
+  var processTrade = function processTrade(res) {
     var trade = new CoinifyTrade(res, api, coinifyDelegate);
     trade.debug = debug;
 
@@ -35737,7 +35820,7 @@ CoinifyTrade.buy = function (quote, medium, api, coinifyDelegate, debug) {
     return trade;
   };
 
-  var error = function (e) {
+  var error = function error(e) {
     console.error(e);
     return Promise.reject(e);
   };
@@ -35779,10 +35862,7 @@ CoinifyTrade.prototype.refresh = function () {
   if (this.debug) {
     console.info('Refresh ' + this.state + ' trade ' + this.id);
   }
-  return this._api.authGET('trades/' + this._id)
-          .then(this.set.bind(this))
-          .then(this._coinifyDelegate.save.bind(this._coinifyDelegate))
-          .then(this.self.bind(this));
+  return this._api.authGET('trades/' + this._id).then(this.set.bind(this)).then(this._coinifyDelegate.save.bind(this._coinifyDelegate)).then(this.self.bind(this));
 };
 
 // Call this if the iSignThis iframe says the card is declined. It may take a
@@ -35795,13 +35875,13 @@ CoinifyTrade.prototype.declined = function () {
 CoinifyTrade.prototype._monitorAddress = function () {
   var self = this;
 
-  var save = function () {
+  var save = function save() {
     return self._coinifyDelegate.save.bind(self._coinifyDelegate)();
   };
 
   self._coinifyDelegate.monitorAddress(self.receiveAddress, function (hash, amount) {
-    var checkAddress = function () {
-      return self._setTransactionHash({hash: hash}, amount, self._coinifyDelegate);
+    var checkAddress = function checkAddress() {
+      return self._setTransactionHash({ hash: hash }, amount, self._coinifyDelegate);
     };
     if (self.state === 'completed' || self.state === 'processing' || self.state === 'completed_test') {
       return checkAddress().then(save);
@@ -35820,7 +35900,9 @@ CoinifyTrade._checkOnce = function (trades, coinifyDelegate) {
 
   /* istanbul ignore if */
   if (coinifyDelegate.debug) {
-    console.info('_checkOnce', trades.map(function (trade) { return trade.id; }).join(', '));
+    console.info('_checkOnce', trades.map(function (trade) {
+      return trade.id;
+    }).join(', '));
   }
 
   // DO NOT DO THIS: // for (var i = 0; i < trades.length; i++) {
@@ -35833,7 +35915,7 @@ CoinifyTrade._checkOnce = function (trades, coinifyDelegate) {
         console.info('checkAddress', trade.receiveAddress, 'found transaction');
       }
 
-      var setTransactionHash = function () {
+      var setTransactionHash = function setTransactionHash() {
         return trade._setTransactionHash(tx, amount, coinifyDelegate);
       };
 
@@ -35851,7 +35933,7 @@ CoinifyTrade._checkOnce = function (trades, coinifyDelegate) {
 //
 CoinifyTrade.prototype._setTransactionHash = function (tx, amount, coinifyDelegate) {
   var self = this;
-  var setConfirmations = function (tx) {
+  var setConfirmations = function setConfirmations(tx) {
     self._confirmations = tx.confirmations;
     // TODO: refactor
     if (self.confirmed) {
@@ -35932,14 +36014,8 @@ CoinifyTrade.monitorPayments = function (trades, coinifyDelegate) {
 
   assert(coinifyDelegate, '_monitorPayments needs delegate');
 
-  var tradeFilter = function (trade) {
-    return [
-      'awaiting_transfer_in',
-      'reviewing',
-      'processing',
-      'completed',
-      'completed_test'
-    ].indexOf(trade.state) > -1 && !trade.confirmed;
+  var tradeFilter = function tradeFilter(trade) {
+    return ['awaiting_transfer_in', 'reviewing', 'processing', 'completed', 'completed_test'].indexOf(trade.state) > -1 && !trade.confirmed;
   };
 
   var filteredTrades = trades.filter(tradeFilter);
@@ -35967,13 +36043,7 @@ CoinifyTrade.filteredTrades = function (trades) {
   return trades.filter(function (trade) {
     // Only consider transactions that are complete or that we're still
     // expecting payment for:
-    return [
-      'awaiting_transfer_in',
-      'processing',
-      'reviewing',
-      'completed',
-      'completed_test'
-    ].indexOf(trade.state) > -1;
+    return ['awaiting_transfer_in', 'processing', 'reviewing', 'completed', 'completed_test'].indexOf(trade.state) > -1;
   });
 };
 
@@ -36024,10 +36094,11 @@ ExchangeDelegate.prototype.getEmailToken = function () {
   var self = this;
   return API.request(
     'GET',
-    'wallet/signed-email-token',
+    'wallet/signed-token',
     {
       guid: self._wallet.guid,
-      sharedKey: self._wallet.sharedKey
+      sharedKey: self._wallet.sharedKey,
+      fields: 'email'
     }
   ).then(function (res) {
     if (res.success) {
@@ -39902,7 +39973,7 @@ var WalletStore = (function () {
   var counter = 0;
   var syncPubkeys = false;
   var isSynchronizedWithServer = true;
-  var eventListeners = []; // Emits Did decrypt wallet event (used on claim page)
+  var eventListeners = [];
 
   return {
     setPbkdf2Iterations: function (iterations) {
@@ -40524,6 +40595,8 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
   } else if (obj.op === 'email_verified') {
     MyWallet.wallet.accountInfo.isEmailVerified = Boolean(obj.x);
     WalletStore.sendEvent('on_email_verified', obj.x);
+  } else if (obj.op === 'wallet_logout') {
+    WalletStore.sendEvent('wallet_logout', obj.x);
   }
 };
 
@@ -40985,22 +41058,24 @@ MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic
 };
 
 // used frontend and mywallet
-MyWallet.logout = function (sessionToken, force) {
+MyWallet.logout = function (force) {
   if (!force && WalletStore.isLogoutDisabled()) {
+    console.log('logout_prevented');
     return;
   }
 
-  var reload = function () {
-    try { window.location.reload(); } catch (e) {
-      console.log(e);
-    }
-  };
+  try {
+    WalletStore.sendEvent('logging_out');
+    window.location.reload();
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+MyWallet.endSession = function (sessionToken) {
   var data = { format: 'plain' };
-  WalletStore.sendEvent('logging_out');
-
-  var headers = {sessionToken: sessionToken};
-
-  API.request('GET', 'wallet/logout', data, headers).then(reload).catch(reload);
+  var headers = { sessionToken: sessionToken };
+  return API.request('GET', 'wallet/logout', data, headers);
 };
 
 // In case of a non-mainstream browser, ensure it correctly implements the
