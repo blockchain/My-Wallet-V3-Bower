@@ -18302,7 +18302,7 @@ Point.prototype.twice = function () {
   var x1 = this.x
   var y1 = this.y
 
-  var y1z1 = y1.multiply(this.z)
+  var y1z1 = y1.multiply(this.z).mod(this.curve.p)
   var y1sqz1 = y1z1.multiply(y1).mod(this.curve.p)
   var a = this.curve.a
 
@@ -35141,8 +35141,9 @@ PaymentMethod.fetchAll = function (inCurrency, outCurrency, api) {
 };
 
 PaymentMethod.prototype.calculateFee = function (quote) {
-  this._fee = Math.round(this.inFixedFee + -quote.baseAmount * (this.inPercentageFee / 100));
-  this._total = -quote.baseAmount + this._fee;
+  var amt = quote.baseCurrency === 'BTC' ? quote.quoteAmount : quote.baseAmount;
+  this._fee = Math.round(this.inFixedFee + -amt * (this.inPercentageFee / 100));
+  this._total = -amt + this._fee;
 };
 
 },{}],200:[function(require,module,exports){
@@ -35469,10 +35470,17 @@ Quote.prototype.getPaymentMethods = function () {
     return self.paymentMethods;
   };
 
+  var inCurrency = this.baseCurrency;
+  var outCurrency = this.quoteCurrency;
+  if (this.baseCurrency === 'BTC' && this.baseAmount > 0) {
+    inCurrency = this.quoteCurrency;
+    outCurrency = this.baseCurrency;
+  }
+
   if (this.paymentMethods) {
     return Promise.resolve(this.paymentMethods);
   } else {
-    return PaymentMethod.fetchAll(this.baseCurrency, this.quoteCurrency, this._api).then(setPaymentMethods);
+    return PaymentMethod.fetchAll(inCurrency, outCurrency, this._api).then(setPaymentMethods);
   }
 };
 
