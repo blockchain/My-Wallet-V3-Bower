@@ -1,15 +1,15 @@
 __Blockchain Wallet V3__
 
-#   (2016-10-25)
+#   (2016-10-31)
 
 
 
 ---
 
-## Bug Fixes
+## Features
 
-- **payment methods:** get payment methods when buy quote baseCurrency is btc (#298)
-  ([8a61f3b4](https://github.com/blockchain/My-Wallet-V3/commit/8a61f3b4dddfa0a989c3b36aa6bdf2af8afe509d))
+- **testnet:** support testnet
+  ([f64c0f89](https://github.com/blockchain/My-Wallet-V3/commit/f64c0f89b4e298fdd2bc547e984bafddf69d53be))
 
 
 
