@@ -1314,25 +1314,10 @@
       "resolved": "https://registry.npmjs.org/esformatter-ignore/-/esformatter-ignore-0.1.3.tgz"
     },
     "esformatter-jsx": {
-      "version": "7.1.0",
+      "version": "7.2.0",
       "from": "esformatter-jsx@>=7.0.0 <8.0.0",
-      "resolved": "https://registry.npmjs.org/esformatter-jsx/-/esformatter-jsx-7.1.0.tgz",
+      "resolved": "https://registry.npmjs.org/esformatter-jsx/-/esformatter-jsx-7.2.0.tgz",
       "dependencies": {
-        "babel-runtime": {
-          "version": "5.8.38",
-          "from": "babel-runtime@>=5.0.0 <6.0.0",
-          "resolved": "https://registry.npmjs.org/babel-runtime/-/babel-runtime-5.8.38.tgz"
-        },
-        "babylon": {
-          "version": "6.1.21",
-          "from": "babylon@6.1.21",
-          "resolved": "https://registry.npmjs.org/babylon/-/babylon-6.1.21.tgz"
-        },
-        "core-js": {
-          "version": "1.2.7",
-          "from": "core-js@>=1.0.0 <2.0.0",
-          "resolved": "https://registry.npmjs.org/core-js/-/core-js-1.2.7.tgz"
-        },
         "extend": {
           "version": "2.0.1",
           "from": "extend@>=2.0.1 <3.0.0",

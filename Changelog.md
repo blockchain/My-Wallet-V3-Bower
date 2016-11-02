@@ -8,8 +8,8 @@ __Blockchain Wallet V3__
 
 ## Bug Fixes
 
-- **helpers:** include tprv and tpub in xprv and xpub checks
-  ([eb79df72](https://github.com/blockchain/My-Wallet-V3/commit/eb79df7275dd11a24782acc8c5387f3f2aa2d769))
+- **helpers:** private key format detection for testnet
+  ([791b5398](https://github.com/blockchain/My-Wallet-V3/commit/791b53981c140411d92f00a22ca360b52407f1b7))
 
 
 
