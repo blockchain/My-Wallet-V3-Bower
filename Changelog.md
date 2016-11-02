@@ -1,15 +1,15 @@
 __Blockchain Wallet V3__
 
-#   (2016-10-31)
+#   (2016-11-02)
 
 
 
 ---
 
-## Features
+## Bug Fixes
 
-- **testnet:** support testnet
-  ([f64c0f89](https://github.com/blockchain/My-Wallet-V3/commit/f64c0f89b4e298fdd2bc547e984bafddf69d53be))
+- **helpers:** include tprv and tpub in xprv and xpub checks
+  ([eb79df72](https://github.com/blockchain/My-Wallet-V3/commit/eb79df7275dd11a24782acc8c5387f3f2aa2d769))
 
 
 
