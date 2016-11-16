@@ -41,11 +41,10 @@ module.exports = {
   Metadata: require('./src/metadata'),
   Bitcoin: require('bitcoinjs-lib'),
   External: require('./src/external'),
-  BuySell: require('./src/buy-sell'),
-  constants: require('./src/constants')
+  BuySell: require('./src/buy-sell')
 };
 
-},{"./src/address":182,"./src/api":183,"./src/blockchain-settings-api":185,"./src/buy-sell":188,"./src/constants":203,"./src/external":205,"./src/helpers":208,"./src/import-export":209,"./src/metadata":212,"./src/payment":213,"./src/rng":214,"./src/shared":215,"./src/transaction":217,"./src/wallet":224,"./src/wallet-crypto":218,"./src/wallet-network":219,"./src/wallet-store":221,"./src/wallet-token-endpoints":222,"./src/wallet-transaction":223,"bitcoinjs-lib":33,"buffer":74,"es6-promise":115,"isomorphic-fetch":129}],2:[function(require,module,exports){
+},{"./src/address":182,"./src/api":183,"./src/blockchain-settings-api":185,"./src/buy-sell":188,"./src/external":204,"./src/helpers":207,"./src/import-export":208,"./src/metadata":211,"./src/payment":212,"./src/rng":213,"./src/shared":214,"./src/transaction":216,"./src/wallet":223,"./src/wallet-crypto":217,"./src/wallet-network":218,"./src/wallet-store":220,"./src/wallet-token-endpoints":221,"./src/wallet-transaction":222,"bitcoinjs-lib":33,"buffer":74,"es6-promise":115,"isomorphic-fetch":129}],2:[function(require,module,exports){
 var asn1 = exports;
 
 asn1.bignum = require('bn.js');
@@ -254,7 +253,7 @@ var assert = require('minimalistic-assert');
 // Supported tags
 var tags = [
   'seq', 'seqof', 'set', 'setof', 'objid', 'bool',
-  'gentime', 'utctime', 'null_', 'enum', 'int',
+  'gentime', 'utctime', 'null_', 'enum', 'int', 'objDesc',
   'bitstr', 'bmpstr', 'charstr', 'genstr', 'graphstr', 'ia5str', 'iso646str',
   'numstr', 'octstr', 'printstr', 't61str', 'unistr', 'utf8str', 'videostr'
 ];
@@ -418,6 +417,7 @@ tags.forEach(function(tag) {
 });
 
 Node.prototype.use = function use(item) {
+  assert(item);
   var state = this._baseState;
 
   assert(state.use === null);
@@ -661,6 +661,8 @@ Node.prototype._decodeGeneric = function decodeGeneric(tag, input, options) {
     return this._decodeNull(input, options);
   else if (tag === 'bool')
     return this._decodeBool(input, options);
+  else if (tag === 'objDesc')
+    return this._decodeStr(input, tag, options);
   else if (tag === 'int' || tag === 'enum')
     return this._decodeInt(input, state.args && state.args[0], options);
 
@@ -864,6 +866,8 @@ Node.prototype._encodePrimitive = function encodePrimitive(tag, data) {
     return this._encodeInt(data, state.args && state.reverseArgs[0]);
   else if (tag === 'bool')
     return this._encodeBool(data);
+  else if (tag === 'objDesc')
+    return this._encodeStr(data, tag);
   else
     throw new Error('Unsupported tag: ' + tag);
 };
@@ -1216,6 +1220,8 @@ DERNode.prototype._decodeStr = function decodeStr(buffer, tag) {
     return numstr;
   } else if (tag === 'octstr') {
     return buffer.raw();
+  } else if (tag === 'objDesc') {
+    return buffer.raw();
   } else if (tag === 'printstr') {
     var printstr = buffer.raw().toString('ascii');
     if (!this._isPrintstr(printstr)) {
@@ -1533,6 +1539,8 @@ DERNode.prototype._encodeStr = function encodeStr(str, tag) {
     }
     return this._createEncoderBuffer(str);
   } else if (/str$/.test(tag)) {
+    return this._createEncoderBuffer(str);
+  } else if (tag === 'objDesc') {
     return this._createEncoderBuffer(str);
   } else {
     return this.reporter.error('Encoding of string type: ' + tag +
@@ -26529,6 +26537,10 @@ var processNextTick = require('process-nextick-args');
 var isArray = require('isarray');
 /*</replacement>*/
 
+/*<replacement>*/
+var Duplex;
+/*</replacement>*/
+
 Readable.ReadableState = ReadableState;
 
 /*<replacement>*/
@@ -26576,6 +26588,8 @@ var StringDecoder;
 util.inherits(Readable, Stream);
 
 function prependListener(emitter, event, fn) {
+  // Sadly this is not cacheable as some libraries bundle their own
+  // event emitter implementation with them.
   if (typeof emitter.prependListener === 'function') {
     return emitter.prependListener(event, fn);
   } else {
@@ -26587,7 +26601,6 @@ function prependListener(emitter, event, fn) {
   }
 }
 
-var Duplex;
 function ReadableState(options, stream) {
   Duplex = Duplex || require('./_stream_duplex');
 
@@ -26657,7 +26670,6 @@ function ReadableState(options, stream) {
   }
 }
 
-var Duplex;
 function Readable(options) {
   Duplex = Duplex || require('./_stream_duplex');
 
@@ -26980,7 +26992,7 @@ function maybeReadMore_(stream, state) {
 // for virtual (non-string, non-buffer) streams, "length" is somewhat
 // arbitrary, and perhaps not very meaningful.
 Readable.prototype._read = function (n) {
-  this.emit('error', new Error('not implemented'));
+  this.emit('error', new Error('_read() is not implemented'));
 };
 
 Readable.prototype.pipe = function (dest, pipeOpts) {
@@ -27158,16 +27170,16 @@ Readable.prototype.unpipe = function (dest) {
     state.pipesCount = 0;
     state.flowing = false;
 
-    for (var _i = 0; _i < len; _i++) {
-      dests[_i].emit('unpipe', this);
+    for (var i = 0; i < len; i++) {
+      dests[i].emit('unpipe', this);
     }return this;
   }
 
   // try to find the right one.
-  var i = indexOf(state.pipes, dest);
-  if (i === -1) return this;
+  var index = indexOf(state.pipes, dest);
+  if (index === -1) return this;
 
-  state.pipes.splice(i, 1);
+  state.pipes.splice(index, 1);
   state.pipesCount -= 1;
   if (state.pipesCount === 1) state.pipes = state.pipes[0];
 
@@ -27552,7 +27564,6 @@ function Transform(options) {
 
   this._transformState = new TransformState(this);
 
-  // when the writable side finishes, then flush out anything remaining.
   var stream = this;
 
   // start out asking for a readable event once data is transformed.
@@ -27569,9 +27580,10 @@ function Transform(options) {
     if (typeof options.flush === 'function') this._flush = options.flush;
   }
 
+  // When the writable side finishes, then flush out anything remaining.
   this.once('prefinish', function () {
-    if (typeof this._flush === 'function') this._flush(function (er) {
-      done(stream, er);
+    if (typeof this._flush === 'function') this._flush(function (er, data) {
+      done(stream, er, data);
     });else done(stream);
   });
 }
@@ -27592,7 +27604,7 @@ Transform.prototype.push = function (chunk, encoding) {
 // an error, then that'll put the hurt on the whole operation.  If you
 // never call cb(), then you'll never get another chunk.
 Transform.prototype._transform = function (chunk, encoding, cb) {
-  throw new Error('Not implemented');
+  throw new Error('_transform() is not implemented');
 };
 
 Transform.prototype._write = function (chunk, encoding, cb) {
@@ -27622,8 +27634,10 @@ Transform.prototype._read = function (n) {
   }
 };
 
-function done(stream, er) {
+function done(stream, er, data) {
   if (er) return stream.emit('error', er);
+
+  if (data !== null && data !== undefined) stream.push(data);
 
   // if there's nothing in the write buffer, then that means
   // that nothing more will ever be provided
@@ -27652,6 +27666,10 @@ var processNextTick = require('process-nextick-args');
 
 /*<replacement>*/
 var asyncWrite = !process.browser && ['v0.10', 'v0.9.'].indexOf(process.version.slice(0, 5)) > -1 ? setImmediate : processNextTick;
+/*</replacement>*/
+
+/*<replacement>*/
+var Duplex;
 /*</replacement>*/
 
 Writable.WritableState = WritableState;
@@ -27694,7 +27712,6 @@ function WriteReq(chunk, encoding, cb) {
   this.next = null;
 }
 
-var Duplex;
 function WritableState(options, stream) {
   Duplex = Duplex || require('./_stream_duplex');
 
@@ -27716,6 +27733,7 @@ function WritableState(options, stream) {
   // cast to ints.
   this.highWaterMark = ~ ~this.highWaterMark;
 
+  // drain event flag.
   this.needDrain = false;
   // at the start of calling end()
   this.ending = false;
@@ -27790,7 +27808,7 @@ function WritableState(options, stream) {
   this.corkedRequestsFree = new CorkedRequest(this);
 }
 
-WritableState.prototype.getBuffer = function writableStateGetBuffer() {
+WritableState.prototype.getBuffer = function getBuffer() {
   var current = this.bufferedRequest;
   var out = [];
   while (current) {
@@ -27810,13 +27828,37 @@ WritableState.prototype.getBuffer = function writableStateGetBuffer() {
   } catch (_) {}
 })();
 
-var Duplex;
+// Test _writableState for inheritance to account for Duplex streams,
+// whose prototype chain only points to Readable.
+var realHasInstance;
+if (typeof Symbol === 'function' && Symbol.hasInstance && typeof Function.prototype[Symbol.hasInstance] === 'function') {
+  realHasInstance = Function.prototype[Symbol.hasInstance];
+  Object.defineProperty(Writable, Symbol.hasInstance, {
+    value: function (object) {
+      if (realHasInstance.call(this, object)) return true;
+
+      return object && object._writableState instanceof WritableState;
+    }
+  });
+} else {
+  realHasInstance = function (object) {
+    return object instanceof this;
+  };
+}
+
 function Writable(options) {
   Duplex = Duplex || require('./_stream_duplex');
 
-  // Writable ctor is applied to Duplexes, though they're not
-  // instanceof Writable, they're instanceof Readable.
-  if (!(this instanceof Writable) && !(this instanceof Duplex)) return new Writable(options);
+  // Writable ctor is applied to Duplexes, too.
+  // `realHasInstance` is necessary because using plain `instanceof`
+  // would return false, as no `_writableState` property is attached.
+
+  // Trying to use the custom `instanceof` for Writable here will also break the
+  // Node.js LazyTransform implementation, which has a non-trivial getter for
+  // `_writableState` that would lead to infinite recursion.
+  if (!realHasInstance.call(Writable, this) && !(this instanceof Duplex)) {
+    return new Writable(options);
+  }
 
   this._writableState = new WritableState(options, this);
 
@@ -28076,7 +28118,7 @@ function clearBuffer(stream, state) {
 }
 
 Writable.prototype._write = function (chunk, encoding, cb) {
-  cb(new Error('not implemented'));
+  cb(new Error('_write() is not implemented'));
 };
 
 Writable.prototype._writev = null;
@@ -31400,6 +31442,28 @@ exports.createContext = Script.createContext = function (context) {
     arrayBuffer: 'ArrayBuffer' in self
   }
 
+  if (support.arrayBuffer) {
+    var viewClasses = [
+      '[object Int8Array]',
+      '[object Uint8Array]',
+      '[object Uint8ClampedArray]',
+      '[object Int16Array]',
+      '[object Uint16Array]',
+      '[object Int32Array]',
+      '[object Uint32Array]',
+      '[object Float32Array]',
+      '[object Float64Array]'
+    ]
+
+    var isDataView = function(obj) {
+      return obj && DataView.prototype.isPrototypeOf(obj)
+    }
+
+    var isArrayBufferView = ArrayBuffer.isView || function(obj) {
+      return obj && viewClasses.indexOf(Object.prototype.toString.call(obj)) > -1
+    }
+  }
+
   function normalizeName(name) {
     if (typeof name !== 'string') {
       name = String(name)
@@ -31453,12 +31517,8 @@ exports.createContext = Script.createContext = function (context) {
   Headers.prototype.append = function(name, value) {
     name = normalizeName(name)
     value = normalizeValue(value)
-    var list = this.map[name]
-    if (!list) {
-      list = []
-      this.map[name] = list
-    }
-    list.push(value)
+    var oldValue = this.map[name]
+    this.map[name] = oldValue ? oldValue+','+value : value
   }
 
   Headers.prototype['delete'] = function(name) {
@@ -31466,12 +31526,8 @@ exports.createContext = Script.createContext = function (context) {
   }
 
   Headers.prototype.get = function(name) {
-    var values = this.map[normalizeName(name)]
-    return values ? values[0] : null
-  }
-
-  Headers.prototype.getAll = function(name) {
-    return this.map[normalizeName(name)] || []
+    name = normalizeName(name)
+    return this.has(name) ? this.map[name] : null
   }
 
   Headers.prototype.has = function(name) {
@@ -31479,15 +31535,15 @@ exports.createContext = Script.createContext = function (context) {
   }
 
   Headers.prototype.set = function(name, value) {
-    this.map[normalizeName(name)] = [normalizeValue(value)]
+    this.map[normalizeName(name)] = normalizeValue(value)
   }
 
   Headers.prototype.forEach = function(callback, thisArg) {
-    Object.getOwnPropertyNames(this.map).forEach(function(name) {
-      this.map[name].forEach(function(value) {
-        callback.call(thisArg, value, name, this)
-      }, this)
-    }, this)
+    for (var name in this.map) {
+      if (this.map.hasOwnProperty(name)) {
+        callback.call(thisArg, this.map[name], name, this)
+      }
+    }
   }
 
   Headers.prototype.keys = function() {
@@ -31532,14 +31588,26 @@ exports.createContext = Script.createContext = function (context) {
 
   function readBlobAsArrayBuffer(blob) {
     var reader = new FileReader()
+    var promise = fileReaderReady(reader)
     reader.readAsArrayBuffer(blob)
-    return fileReaderReady(reader)
+    return promise
   }
 
   function readBlobAsText(blob) {
     var reader = new FileReader()
+    var promise = fileReaderReady(reader)
     reader.readAsText(blob)
-    return fileReaderReady(reader)
+    return promise
+  }
+
+  function bufferClone(buf) {
+    if (buf.slice) {
+      return buf.slice(0)
+    } else {
+      var view = new Uint8Array(buf.byteLength)
+      view.set(new Uint8Array(buf))
+      return view.buffer
+    }
   }
 
   function Body() {
@@ -31547,7 +31615,9 @@ exports.createContext = Script.createContext = function (context) {
 
     this._initBody = function(body) {
       this._bodyInit = body
-      if (typeof body === 'string') {
+      if (!body) {
+        this._bodyText = ''
+      } else if (typeof body === 'string') {
         this._bodyText = body
       } else if (support.blob && Blob.prototype.isPrototypeOf(body)) {
         this._bodyBlob = body
@@ -31555,11 +31625,12 @@ exports.createContext = Script.createContext = function (context) {
         this._bodyFormData = body
       } else if (support.searchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
         this._bodyText = body.toString()
-      } else if (!body) {
-        this._bodyText = ''
-      } else if (support.arrayBuffer && ArrayBuffer.prototype.isPrototypeOf(body)) {
-        // Only support ArrayBuffers for POST method.
-        // Receiving ArrayBuffers happens via Blobs, instead.
+      } else if (support.arrayBuffer && support.blob && isDataView(body)) {
+        this._bodyArrayBuffer = bufferClone(body.buffer)
+        // IE 10-11 can't handle a DataView body.
+        this._bodyInit = new Blob([this._bodyArrayBuffer])
+      } else if (support.arrayBuffer && (ArrayBuffer.prototype.isPrototypeOf(body) || isArrayBufferView(body))) {
+        this._bodyArrayBuffer = bufferClone(body)
       } else {
         throw new Error('unsupported BodyInit type')
       }
@@ -31584,35 +31655,42 @@ exports.createContext = Script.createContext = function (context) {
 
         if (this._bodyBlob) {
           return Promise.resolve(this._bodyBlob)
+        } else if (this._bodyArrayBuffer) {
+          return Promise.resolve(new Blob([this._bodyArrayBuffer]))
         } else if (this._bodyFormData) {
           throw new Error('could not read FormData body as blob')
         } else {
           return Promise.resolve(new Blob([this._bodyText]))
         }
       }
+    }
 
+    this.text = function() {
+      var rejected = consumed(this)
+      if (rejected) {
+        return rejected
+      }
+
+      if (this._bodyBlob) {
+        return readBlobAsText(this._bodyBlob)
+      } else if (this._bodyArrayBuffer) {
+        var view = new Uint8Array(this._bodyArrayBuffer)
+        var str = String.fromCharCode.apply(null, view)
+        return Promise.resolve(str)
+      } else if (this._bodyFormData) {
+        throw new Error('could not read FormData body as text')
+      } else {
+        return Promise.resolve(this._bodyText)
+      }
+    }
+
+    if (support.arrayBuffer) {
       this.arrayBuffer = function() {
-        return this.blob().then(readBlobAsArrayBuffer)
-      }
-
-      this.text = function() {
-        var rejected = consumed(this)
-        if (rejected) {
-          return rejected
-        }
-
-        if (this._bodyBlob) {
-          return readBlobAsText(this._bodyBlob)
-        } else if (this._bodyFormData) {
-          throw new Error('could not read FormData body as text')
+        if (this._bodyArrayBuffer) {
+          return consumed(this) || Promise.resolve(this._bodyArrayBuffer)
         } else {
-          return Promise.resolve(this._bodyText)
+          return this.blob().then(readBlobAsArrayBuffer)
         }
-      }
-    } else {
-      this.text = function() {
-        var rejected = consumed(this)
-        return rejected ? rejected : Promise.resolve(this._bodyText)
       }
     }
 
@@ -31640,7 +31718,10 @@ exports.createContext = Script.createContext = function (context) {
   function Request(input, options) {
     options = options || {}
     var body = options.body
-    if (Request.prototype.isPrototypeOf(input)) {
+
+    if (typeof input === 'string') {
+      this.url = input
+    } else {
       if (input.bodyUsed) {
         throw new TypeError('Already read')
       }
@@ -31651,12 +31732,10 @@ exports.createContext = Script.createContext = function (context) {
       }
       this.method = input.method
       this.mode = input.mode
-      if (!body) {
+      if (!body && input._bodyInit != null) {
         body = input._bodyInit
         input.bodyUsed = true
       }
-    } else {
-      this.url = input
     }
 
     this.credentials = options.credentials || this.credentials || 'omit'
@@ -31674,7 +31753,7 @@ exports.createContext = Script.createContext = function (context) {
   }
 
   Request.prototype.clone = function() {
-    return new Request(this)
+    return new Request(this, { body: this._bodyInit })
   }
 
   function decode(body) {
@@ -31690,16 +31769,17 @@ exports.createContext = Script.createContext = function (context) {
     return form
   }
 
-  function headers(xhr) {
-    var head = new Headers()
-    var pairs = (xhr.getAllResponseHeaders() || '').trim().split('\n')
-    pairs.forEach(function(header) {
-      var split = header.trim().split(':')
-      var key = split.shift().trim()
-      var value = split.join(':').trim()
-      head.append(key, value)
+  function parseHeaders(rawHeaders) {
+    var headers = new Headers()
+    rawHeaders.split('\r\n').forEach(function(line) {
+      var parts = line.split(':')
+      var key = parts.shift().trim()
+      if (key) {
+        var value = parts.join(':').trim()
+        headers.append(key, value)
+      }
     })
-    return head
+    return headers
   }
 
   Body.call(Request.prototype)
@@ -31710,10 +31790,10 @@ exports.createContext = Script.createContext = function (context) {
     }
 
     this.type = 'default'
-    this.status = options.status
+    this.status = 'status' in options ? options.status : 200
     this.ok = this.status >= 200 && this.status < 300
-    this.statusText = options.statusText
-    this.headers = options.headers instanceof Headers ? options.headers : new Headers(options.headers)
+    this.statusText = 'statusText' in options ? options.statusText : 'OK'
+    this.headers = new Headers(options.headers)
     this.url = options.url || ''
     this._initBody(bodyInit)
   }
@@ -31751,35 +31831,16 @@ exports.createContext = Script.createContext = function (context) {
 
   self.fetch = function(input, init) {
     return new Promise(function(resolve, reject) {
-      var request
-      if (Request.prototype.isPrototypeOf(input) && !init) {
-        request = input
-      } else {
-        request = new Request(input, init)
-      }
-
+      var request = new Request(input, init)
       var xhr = new XMLHttpRequest()
-
-      function responseURL() {
-        if ('responseURL' in xhr) {
-          return xhr.responseURL
-        }
-
-        // Avoid security warnings on getResponseHeader when not allowed by CORS
-        if (/^X-Request-URL:/m.test(xhr.getAllResponseHeaders())) {
-          return xhr.getResponseHeader('X-Request-URL')
-        }
-
-        return
-      }
 
       xhr.onload = function() {
         var options = {
           status: xhr.status,
           statusText: xhr.statusText,
-          headers: headers(xhr),
-          url: responseURL()
+          headers: parseHeaders(xhr.getAllResponseHeaders() || '')
         }
+        options.url = 'responseURL' in xhr ? xhr.responseURL : options.headers.get('X-Request-URL')
         var body = 'response' in xhr ? xhr.response : xhr.responseText
         resolve(new Response(body, options))
       }
@@ -31967,7 +32028,7 @@ Object.defineProperties(AccountInfo.prototype, {
   }
 });
 
-},{"./helpers":208,"assert":16}],182:[function(require,module,exports){
+},{"./helpers":207,"assert":16}],182:[function(require,module,exports){
 'use strict';
 
 module.exports = Address;
@@ -31981,7 +32042,6 @@ var MyWallet = require('./wallet'); // This cyclic import should be avoided once
 var shared = require('./shared');
 var ImportExport = require('./import-export');
 var WalletCrypto = require('./wallet-crypto');
-var constants = require('./constants');
 
 // Address class
 function Address (object) {
@@ -32134,7 +32194,7 @@ Address.import = function (key, label) {
       object.priv = Base58.encode(key.d.toBuffer(32));
       break;
     case Helpers.isBitcoinPrivateKey(key):
-      key = Bitcoin.ECPair.fromWIF(key, constants.getNetwork());
+      key = Bitcoin.ECPair.fromWIF(key);
       object.addr = key.getAddress();
       object.priv = Base58.encode(key.d.toBuffer(32));
       break;
@@ -32208,8 +32268,7 @@ Address.fromString = function (keyOrAddr, label, bipPass) {
 Address.new = function (label) {
   var key = Bitcoin.ECPair.makeRandom({
     rng: RNG.run.bind(RNG),
-    compressed: true,
-    network: constants.getNetwork()
+    compressed: true
   });
   return Address.import(key, label);
 };
@@ -32244,7 +32303,7 @@ Address.prototype.signMessage = function (message, secondPassword) {
   var keyPair = Helpers.privateKeyStringToKey(priv, 'base58');
 
   if (keyPair.getAddress() !== this.address) keyPair.compressed = false;
-  return Bitcoin.message.sign(keyPair, message, constants.getNetwork()).toString('base64');
+  return Bitcoin.message.sign(keyPair, message).toString('base64');
 };
 
 Address.prototype.encrypt = function (cipher) {
@@ -32270,7 +32329,7 @@ Address.prototype.persist = function () {
   return this;
 };
 
-},{"./api":183,"./constants":203,"./helpers":208,"./import-export":209,"./rng":214,"./shared":215,"./wallet":224,"./wallet-crypto":218,"bitcoinjs-lib":33,"bs58":68}],183:[function(require,module,exports){
+},{"./api":183,"./helpers":207,"./import-export":208,"./rng":213,"./shared":214,"./wallet":223,"./wallet-crypto":217,"bitcoinjs-lib":33,"bs58":68}],183:[function(require,module,exports){
 'use strict';
 
 module.exports = new API();
@@ -32543,7 +32602,7 @@ API.prototype.exportHistory = function (active, currency, options) {
   return this.request('POST', 'v2/export-history', data);
 };
 
-},{"./helpers":208,"./wallet":224,"./wallet-crypto":218,"./wallet-store":221,"assert":16}],184:[function(require,module,exports){
+},{"./helpers":207,"./wallet":223,"./wallet-crypto":217,"./wallet-store":220,"assert":16}],184:[function(require,module,exports){
 'use strict';
 
 module.exports = Block;
@@ -32946,13 +33005,13 @@ module.exports = {
   updateAuthType: updateAuthType
 };
 
-},{"./api":183,"./wallet-store.js":221,"./wallet.js":224,"assert":16}],186:[function(require,module,exports){
+},{"./api":183,"./wallet-store.js":220,"./wallet.js":223,"assert":16}],186:[function(require,module,exports){
 
 var WebSocket = require('ws');
 var Helpers = require('./helpers');
 
 function BlockchainSocket () {
-  this.wsUrl = 'wss://blockchain.info/inv';
+  this.wsUrl = 'wss://ws.blockchain.info/inv';
   this.headers = { 'Origin': 'https://blockchain.info' };
   this.socket;
   this.reconnect = null;
@@ -33053,7 +33112,7 @@ BlockchainSocket.prototype.msgOnOpen = function (guid, addresses, xpubs) {
 
 module.exports = BlockchainSocket;
 
-},{"./helpers":208,"ws":225}],187:[function(require,module,exports){
+},{"./helpers":207,"ws":224}],187:[function(require,module,exports){
 'use strict';
 
 module.exports = Wallet;
@@ -33911,7 +33970,7 @@ Wallet.prototype.loadExternal = function () {
   }
 };
 
-},{"./account-info":181,"./address":182,"./api":183,"./bitcoin-block":184,"./blockchain-settings-api":185,"./external":205,"./hd-wallet":207,"./helpers":208,"./keyring":211,"./rng":214,"./shared":215,"./transaction-list":216,"./wallet":224,"./wallet-crypto":218,"./wallet-store":221,"assert":16,"bip39":22}],188:[function(require,module,exports){
+},{"./account-info":181,"./address":182,"./api":183,"./bitcoin-block":184,"./blockchain-settings-api":185,"./external":204,"./hd-wallet":206,"./helpers":207,"./keyring":210,"./rng":213,"./shared":214,"./transaction-list":215,"./wallet":223,"./wallet-crypto":217,"./wallet-store":220,"assert":16,"bip39":22}],188:[function(require,module,exports){
 
 module.exports = BuySell;
 
@@ -36073,17 +36132,6 @@ CoinifyTrade.filteredTrades = function (trades) {
 };
 
 },{"./bank-account":191,"./helpers":194,"./quote":201,"assert":16}],203:[function(require,module,exports){
-
-var Bitcoin = require('bitcoinjs-lib');
-
-module.exports = {
-  NETWORK: 'bitcoin',
-  getNetwork: function () {
-    return Bitcoin.networks[this.NETWORK];
-  }
-};
-
-},{"bitcoinjs-lib":33}],204:[function(require,module,exports){
 var API = require('./api');
 var WalletStore = require('./wallet-store');
 var TX = require('./wallet-transaction');
@@ -36267,7 +36315,7 @@ ExchangeDelegate.prototype.deserializeExtraFields = function (obj, trade) {
   trade._receive_index = obj.receive_index;
 };
 
-},{"./api":183,"./helpers":208,"./wallet-store":221,"./wallet-transaction":223,"assert":16}],205:[function(require,module,exports){
+},{"./api":183,"./helpers":207,"./wallet-store":220,"./wallet-transaction":222,"assert":16}],204:[function(require,module,exports){
 'use strict';
 
 var Coinify = require('./coinify/coinify');
@@ -36340,7 +36388,7 @@ External.prototype.addCoinify = function () {
   delegate.trades = this._coinify.trades;
 };
 
-},{"./coinify/coinify":192,"./exchange-delegate":204,"./metadata":212,"assert":16}],206:[function(require,module,exports){
+},{"./coinify/coinify":192,"./exchange-delegate":203,"./metadata":211,"assert":16}],205:[function(require,module,exports){
 'use strict';
 
 module.exports = HDAccount;
@@ -36350,7 +36398,6 @@ var assert = require('assert');
 var Helpers = require('./helpers');
 var KeyRing = require('./keyring');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
-var constants = require('./constants');
 
 // HDAccount Class
 
@@ -36567,7 +36614,7 @@ HDAccount.fromWalletMasterKey = function (masterkey, index, label) {
 HDAccount.fromExtPublicKey = function (extPublicKey, index, label) {
   // this is creating a read-only account
   assert(Helpers.isXpubKey(extPublicKey), 'Extended public key must be given to create an account.');
-  var accountZero = Bitcoin.HDNode.fromBase58(extPublicKey, constants.getNetwork());
+  var accountZero = Bitcoin.HDNode.fromBase58(extPublicKey);
   var a = HDAccount.fromAccountMasterKey(accountZero, index, label);
   a._xpriv = null;
   return a;
@@ -36575,7 +36622,7 @@ HDAccount.fromExtPublicKey = function (extPublicKey, index, label) {
 
 HDAccount.fromExtPrivateKey = function (extPrivateKey, index, label) {
   assert(Helpers.isXprivKey(extPrivateKey), 'Extended private key must be given to create an account.');
-  var accountZero = Bitcoin.HDNode.fromBase58(extPrivateKey, constants.getNetwork());
+  var accountZero = Bitcoin.HDNode.fromBase58(extPrivateKey);
   return HDAccount.fromAccountMasterKey(accountZero, index, label);
 };
 
@@ -36690,7 +36737,7 @@ HDAccount.prototype.persist = function () {
   return this;
 };
 
-},{"./constants":203,"./helpers":208,"./keyring":211,"./wallet":224,"assert":16,"bitcoinjs-lib":33}],207:[function(require,module,exports){
+},{"./helpers":207,"./keyring":210,"./wallet":223,"assert":16,"bitcoinjs-lib":33}],206:[function(require,module,exports){
 'use strict';
 
 module.exports = HDWallet;
@@ -36701,7 +36748,6 @@ var Helpers = require('./helpers');
 var HDAccount = require('./hd-account');
 var BIP39 = require('bip39');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
-var constants = require('./constants');
 
 function HDWallet (object) {
   function addAccount (o, index) {
@@ -36876,7 +36922,7 @@ HDWallet.prototype.getMasterHDNode = function (cipher) {
   }
 
   var masterhex = HDWallet.getMasterHex(this._seedHex, this._bip39Password, dec);
-  var network = constants.getNetwork();
+  var network = Bitcoin.networks.bitcoin;
   return Bitcoin.HDNode.fromSeedBuffer(masterhex, network);
 };
 
@@ -36974,7 +37020,7 @@ HDWallet.prototype.isValidAccountIndex = function (index) {
   return Helpers.isPositiveInteger(index) && index < this._accounts.length;
 };
 
-},{"./constants":203,"./hd-account":206,"./helpers":208,"./wallet":224,"assert":16,"bip39":22,"bitcoinjs-lib":33}],208:[function(require,module,exports){
+},{"./hd-account":205,"./helpers":207,"./wallet":223,"assert":16,"bip39":22,"bitcoinjs-lib":33}],207:[function(require,module,exports){
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -36984,7 +37030,6 @@ var Base58 = require('bs58');
 var BIP39 = require('bip39');
 var shared = require('./shared');
 var ImportExport = require('./import-export');
-var constants = require('./constants');
 
 var Helpers = {};
 Math.log2 = function (x) { return Math.log(x) / Math.LN2; };
@@ -37001,13 +37046,13 @@ Helpers.isInstanceOf = function (object, theClass) {
 Helpers.isBitcoinAddress = function (candidate) {
   try {
     var d = Bitcoin.address.fromBase58Check(candidate);
-    var n = constants.getNetwork();
+    var n = Bitcoin.networks.bitcoin;
     return d.version === n.pubKeyHash || d.version === n.scriptHash;
   } catch (e) { return false; }
 };
 Helpers.isBitcoinPrivateKey = function (candidate) {
   try {
-    Bitcoin.ECPair.fromWIF(candidate, constants.getNetwork());
+    Bitcoin.ECPair.fromWIF(candidate);
     return true;
   } catch (e) { return false; }
 };
@@ -37015,10 +37060,10 @@ Helpers.isBase58Key = function (str) {
   return Helpers.isString(str) && /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{40,44}$/.test(str);
 };
 Helpers.isXprivKey = function (k) {
-  return Helpers.isString(k) && (/^(x|t)prv/).test(k);
+  return Helpers.isString(k) && k.substring(0, 4) === 'xprv';
 };
 Helpers.isXpubKey = function (k) {
-  return Helpers.isString(k) && (/^(x|t)pub/).test(k);
+  return Helpers.isString(k) && k.substring(0, 4) === 'xpub';
 };
 Helpers.isAlphaNum = function (str) {
   return Helpers.isString(str) && /^[\-+,._\w\d\s]+$/.test(str);
@@ -37311,21 +37356,17 @@ Helpers.privateKeyStringToKey = function (value, format) {
     throw new Error('Unsupported Key Format');
   }
 
-  return new Bitcoin.ECPair(
-    new BigInteger.fromByteArrayUnsigned(keyBytes), // eslint-disable-line new-cap
-    null,
-    { compressed: format !== 'sipa', network: constants.getNetwork() }
-  );
+  return new Bitcoin.ECPair(new BigInteger.fromByteArrayUnsigned(keyBytes), null, {compressed: format !== 'sipa'}); // eslint-disable-line new-cap
 };
 
 Helpers.detectPrivateKeyFormat = function (key) {
-  // 51 characters base58, always starts with 5 (or 9, for testnet)
-  if (/^[59][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/.test(key)) {
+  // 51 characters base58, always starts with a '5'
+  if (/^5[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/.test(key)) {
     return 'sipa';
   }
 
-  // 52 character compressed starts with L or K (or c, for testnet)
-  if (/^[LKc][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/.test(key)) {
+  // 52 character compressed starts with L or K
+  if (/^[LK][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/.test(key)) {
     return 'compsipa';
   }
 
@@ -37425,7 +37466,7 @@ Helpers.precisionToSatoshiBN = function (x) {
 };
 
 Helpers.verifyMessage = function (address, signature, message) {
-  return Bitcoin.message.verify(address, signature, message, constants.getNetwork());
+  return Bitcoin.message.verify(address, signature, message);
 };
 
 Helpers.getMobileOperatingSystem = function () {
@@ -37442,7 +37483,7 @@ Helpers.getMobileOperatingSystem = function () {
 
 module.exports = Helpers;
 
-},{"./constants":203,"./import-export":209,"./shared":215,"bigi":20,"bip39":22,"bitcoinjs-lib":33,"bs58":68,"buffer":74}],209:[function(require,module,exports){
+},{"./import-export":208,"./shared":214,"bigi":20,"bip39":22,"bitcoinjs-lib":33,"bs58":68,"buffer":74}],208:[function(require,module,exports){
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -37451,7 +37492,6 @@ var Base58 = require('bs58');
 var Unorm = require('unorm');
 var WalletCrypto = require('./wallet-crypto');
 var Buffer = require('buffer').Buffer;
-var constants = require('./constants');
 
 var hash256 = Bitcoin.crypto.hash256;
 
@@ -37514,7 +37554,7 @@ var ImportExport = new function () {
     var AESopts = { mode: WalletCrypto.AES.ECB, padding: WalletCrypto.pad.NoPadding };
 
     var verifyHashAndReturn = function () {
-      var tmpkey = new Bitcoin.ECPair(decrypted, null, {compressed: isCompPoint, network: constants.getNetwork()});
+      var tmpkey = new Bitcoin.ECPair(decrypted, null, {compressed: isCompPoint});
 
       var base58Address = tmpkey.getAddress();
 
@@ -37554,7 +37594,7 @@ var ImportExport = new function () {
           passfactor = hash256(prefactorB);
         }
 
-        var kp = new Bitcoin.ECPair(BigInteger.fromBuffer(passfactor), null, {network: constants.getNetwork()});
+        var kp = new Bitcoin.ECPair(BigInteger.fromBuffer(passfactor));
 
         var passpoint = kp.getPublicKeyBuffer();
 
@@ -37593,7 +37633,7 @@ var ImportExport = new function () {
 
 module.exports = ImportExport;
 
-},{"./constants":203,"./wallet-crypto":218,"bigi":20,"bitcoinjs-lib":33,"bs58":68,"buffer":74,"unorm":173}],210:[function(require,module,exports){
+},{"./wallet-crypto":217,"bigi":20,"bitcoinjs-lib":33,"bs58":68,"buffer":74,"unorm":173}],209:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyChain;
@@ -37601,7 +37641,6 @@ module.exports = KeyChain;
 var Bitcoin = require('bitcoinjs-lib');
 var assert = require('assert');
 var Helpers = require('./helpers');
-var constants = require('./constants');
 
 // keychain
 function KeyChain (extendedKey, index, cache) {
@@ -37637,10 +37676,10 @@ KeyChain.prototype.init = function (extendedKey, index, cache) {
   // if cache is defined we use it to recreate the chain
   // otherwise we generate it using extendedKey and index
   if (cache) {
-    this._chainRoot = Bitcoin.HDNode.fromBase58(cache, constants.getNetwork());
+    this._chainRoot = Bitcoin.HDNode.fromBase58(cache);
   } else {
     this._chainRoot = extendedKey && Helpers.isPositiveInteger(index) && index >= 0
-      ? Bitcoin.HDNode.fromBase58(extendedKey, constants.getNetwork()).derive(index) : undefined;
+      ? Bitcoin.HDNode.fromBase58(extendedKey).derive(index) : undefined;
   }
   return this;
 };
@@ -37656,7 +37695,7 @@ KeyChain.prototype.getPrivateKey = function (index) {
   return key || null;
 };
 
-},{"./constants":203,"./helpers":208,"assert":16,"bitcoinjs-lib":33}],211:[function(require,module,exports){
+},{"./helpers":207,"assert":16,"bitcoinjs-lib":33}],210:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyRing;
@@ -37718,7 +37757,7 @@ KeyRing.prototype.toJSON = function () {
   return cacheJSON;
 };
 
-},{"./keychain":210,"assert":16}],212:[function(require,module,exports){
+},{"./keychain":209,"assert":16}],211:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -37726,7 +37765,6 @@ var WalletCrypto = require('./wallet-crypto');
 var Bitcoin = require('bitcoinjs-lib');
 var API = require('./api');
 var Helpers = require('./helpers');
-var constants = require('./constants');
 
 var MyWallet = require('./wallet');
 
@@ -37768,7 +37806,7 @@ function Metadata (payloadType, cipher) {
 }
 
 Metadata.prototype.setMagicHash = function (encryptedPayload) {
-  this._magicHash = Bitcoin.message.magicHash(encryptedPayload, constants.getNetwork());
+  this._magicHash = Bitcoin.message.magicHash(encryptedPayload, Bitcoin.networks.bitcoin);
 };
 
 Object.defineProperties(Metadata.prototype, {
@@ -37793,8 +37831,7 @@ Metadata.prototype.create = function (data) {
 
     var encryptedPayloadSignature = Bitcoin.message.sign(
       self._signatureKeyPair,
-      encryptedPayload,
-      constants.getNetwork()
+      encryptedPayload
     );
 
     var serverPayload = {
@@ -37824,8 +37861,7 @@ Metadata.prototype.fetch = function () {
       var verified = Bitcoin.message.verify(
         self._address,
         Buffer(serverPayload.signature, 'base64'),
-        serverPayload.payload,
-        constants.getNetwork()
+        serverPayload.payload
       );
 
       if (verified) {
@@ -37859,8 +37895,7 @@ Metadata.prototype.update = function (data) {
     var encryptedPayload = WalletCrypto.encryptDataWithKey(payload, self._encryptionKey);
     var encryptedPayloadSignature = Bitcoin.message.sign(
       self._signatureKeyPair,
-      encryptedPayload,
-      constants.getNetwork()
+      encryptedPayload
     );
 
     var serverPayload = {
@@ -37933,7 +37968,7 @@ Metadata.prototype.next = function (f) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"./api":183,"./constants":203,"./helpers":208,"./wallet":224,"./wallet-crypto":218,"bitcoinjs-lib":33,"buffer":74}],213:[function(require,module,exports){
+},{"./api":183,"./helpers":207,"./wallet":223,"./wallet-crypto":217,"bitcoinjs-lib":33,"buffer":74}],212:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -37946,7 +37981,6 @@ var Helpers = require('./helpers');
 var KeyRing = require('./keyring');
 var EventEmitter = require('events');
 var util = require('util');
-var constants = require('./constants');
 
 // Payment Class
 
@@ -38302,7 +38336,7 @@ Payment.updateFees = function () {
 
 Payment.prebuild = function (absoluteFee) {
   return function (payment) {
-    var dust = constants.getNetwork().dustThreshold;
+    var dust = Bitcoin.networks.bitcoin.dustThreshold;
 
     var usableCoins = Transaction.filterUsableCoins(payment.coins, payment.feePerKb);
     var max = Transaction.maxAvailableAmount(usableCoins, payment.feePerKb);
@@ -38428,9 +38462,8 @@ function getUnspentCoins (addressList, notify) {
 function getKey (priv, addr) {
   var format = Helpers.detectPrivateKeyFormat(priv);
   var key = Helpers.privateKeyStringToKey(priv, format);
-  var network = constants.getNetwork();
-  var ckey = new Bitcoin.ECPair(key.d, null, {compressed: true, network: network});
-  var ukey = new Bitcoin.ECPair(key.d, null, {compressed: false, network: network});
+  var ckey = new Bitcoin.ECPair(key.d, null, {compressed: true});
+  var ukey = new Bitcoin.ECPair(key.d, null, {compressed: false});
   if (ckey.getAddress() === addr) {
     return ckey;
   } else if (ukey.getAddress() === addr) {
@@ -38487,7 +38520,7 @@ function getPrivateKeys (password, payment) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./api":183,"./constants":203,"./helpers":208,"./keyring":211,"./transaction":217,"./wallet":224,"./wallet-crypto":218,"bitcoinjs-lib":33,"buffer":74,"events":116,"util":177}],214:[function(require,module,exports){
+},{"./api":183,"./helpers":207,"./keyring":210,"./transaction":216,"./wallet":223,"./wallet-crypto":217,"bitcoinjs-lib":33,"buffer":74,"events":116,"util":177}],213:[function(require,module,exports){
 'use strict';
 
 module.exports = new RNG();
@@ -38608,7 +38641,7 @@ RNG.prototype.getServerEntropy = function (nBytes) {
   }
 };
 
-},{"./api":183,"./helpers":208,"assert":16,"buffer":74,"randombytes":145}],215:[function(require,module,exports){
+},{"./api":183,"./helpers":207,"assert":16,"buffer":74,"randombytes":145}],214:[function(require,module,exports){
 /* eslint-disable camelcase */
 var satoshi = 100000000; // One satoshi
 var symbol_btc = {code: 'BTC', symbol: 'BTC', name: 'Bitcoin', conversion: satoshi, symbolAppearsAfter: true, local: false}; // Default BTC Currency Symbol object
@@ -38687,7 +38720,7 @@ try {
 }
 /* eslint-enable camelcase */
 
-},{}],216:[function(require,module,exports){
+},{}],215:[function(require,module,exports){
 'use strict';
 
 var EventEmitter = require('events');
@@ -38754,14 +38787,13 @@ TransactionList.prototype.subscribe = function (listener) {
 
 module.exports = TransactionList;
 
-},{"./helpers":208,"./wallet-transaction":223,"events":116}],217:[function(require,module,exports){
+},{"./helpers":207,"./wallet-transaction":222,"events":116}],216:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
 var Bitcoin = require('bitcoinjs-lib');
 var Helpers = require('./helpers');
 var Buffer = require('buffer').Buffer;
-var constants = require('./constants');
 
 // Error messages that can be seen by the user should take the form of:
 // {error: "NOT_GOOD", some_param: 1}
@@ -38773,7 +38805,7 @@ var Transaction = function (payment, emitter) {
   var amounts = payment.amounts;
   var fee = payment.finalFee;
   var changeAddress = payment.change;
-  var BITCOIN_DUST = constants.getNetwork().dustThreshold;
+  var BITCOIN_DUST = Bitcoin.networks.bitcoin.dustThreshold;
 
   if (!Array.isArray(toAddresses) && toAddresses != null) { toAddresses = [toAddresses]; }
   if (!Array.isArray(amounts) && amounts != null) { amounts = [amounts]; }
@@ -38791,7 +38823,7 @@ var Transaction = function (payment, emitter) {
   assert(toAddresses.length === amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
   assert(this.amount >= BITCOIN_DUST, {error: 'BELOW_DUST_THRESHOLD', amount: this.amount, threshold: BITCOIN_DUST});
   assert(unspentOutputs && unspentOutputs.length > 0, {error: 'NO_UNSPENT_OUTPUTS'});
-  var transaction = new Bitcoin.TransactionBuilder(constants.getNetwork());
+  var transaction = new Bitcoin.TransactionBuilder();
   // add all outputs
   function addOutput (e, i) { transaction.addOutput(toAddresses[i], amounts[i]); }
   toAddresses.map(addOutput);
@@ -38807,7 +38839,7 @@ var Transaction = function (payment, emitter) {
     // Generate address from output script and add to private list so we can check if the private keys match the inputs later
     var scriptBuffer = Buffer(output.script, 'hex');
     assert.notEqual(Bitcoin.script.classifyOutput(scriptBuffer), 'nonstandard', {error: 'STRANGE_SCRIPT'});
-    var address = Bitcoin.address.fromOutputScript(scriptBuffer, constants.getNetwork()).toString();
+    var address = Bitcoin.address.fromOutputScript(scriptBuffer).toString();
     assert(address, {error: 'CANNOT_DECODE_OUTPUT_ADDRESS', tx_hash: output.tx_hash});
     this.addressesOfInputs.push(address);
 
@@ -38959,7 +38991,7 @@ Transaction.confirmationEstimation = function (absoluteFees, fee) {
 };
 module.exports = Transaction;
 
-},{"./constants":203,"./helpers":208,"assert":16,"bitcoinjs-lib":33,"buffer":74}],218:[function(require,module,exports){
+},{"./helpers":207,"assert":16,"bitcoinjs-lib":33,"buffer":74}],217:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -39556,7 +39588,7 @@ module.exports = {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"assert":16,"buffer":74,"crypto":82,"sjcl":166}],219:[function(require,module,exports){
+},{"assert":16,"buffer":74,"crypto":82,"sjcl":166}],218:[function(require,module,exports){
 'use strict';
 
 var API = require('./api');
@@ -39975,7 +40007,7 @@ module.exports = {
   getCaptchaImage: getCaptchaImage
 };
 
-},{"./api":183,"./helpers":208,"./wallet":224,"./wallet-crypto":218,"./wallet-store":221,"assert":16}],220:[function(require,module,exports){
+},{"./api":183,"./helpers":207,"./wallet":223,"./wallet-crypto":217,"./wallet-store":220,"assert":16}],219:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -40005,7 +40037,7 @@ module.exports = {
   generateNewWallet: generateNewWallet
 };
 
-},{"./blockchain-wallet":187,"./wallet-network":219,"assert":16}],221:[function(require,module,exports){
+},{"./blockchain-wallet":187,"./wallet-network":218,"assert":16}],220:[function(require,module,exports){
 'use strict';
 
 var MyWallet = require('./wallet');
@@ -40158,7 +40190,7 @@ var WalletStore = (function () {
 
 module.exports = WalletStore;
 
-},{"./wallet":224,"./wallet-crypto":218}],222:[function(require,module,exports){
+},{"./wallet":223,"./wallet-crypto":217}],221:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -40234,7 +40266,7 @@ module.exports = {
   postTokenEndpoint: postTokenEndpoint // For tests
 };
 
-},{"./api":183,"./helpers":208,"assert":16}],223:[function(require,module,exports){
+},{"./api":183,"./helpers":207,"assert":16}],222:[function(require,module,exports){
 'use strict';
 
 module.exports = Tx;
@@ -40550,7 +40582,7 @@ Tx.setConfirmations = function (txBlockHeight) {
   return conf;
 };
 
-},{"./wallet":224}],224:[function(require,module,exports){
+},{"./wallet":223}],223:[function(require,module,exports){
 'use strict';
 
 var MyWallet = module.exports = {};
@@ -40570,7 +40602,6 @@ var RNG = require('./rng');
 var BIP39 = require('bip39');
 var Bitcoin = require('bitcoinjs-lib');
 var pbkdf2 = require('pbkdf2');
-var constants = require('./constants');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -41136,18 +41167,16 @@ MyWallet.endSession = function (sessionToken) {
 MyWallet.browserCheck = function () {
   var mnemonic = 'daughter size twenty place alter glass small bid purse october faint beyond';
   var seed = BIP39.mnemonicToSeed(mnemonic, '');
-  var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed, constants.getNetwork());
+  var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed);
 
   var account = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(0);
   var address = account.derive(0).derive(0).getAddress();
-  var answer = constants.NETWORK === 'testnet' ? 'n4hTmGM2yGmHXNFDZNXXnyYCJp1W8qoMw4' : '1QBWUDG4AFL2kFmbqoZ9y4KsSpQoCTZKRw';
-  return address === answer;
+  return address === '1QBWUDG4AFL2kFmbqoZ9y4KsSpQoCTZKRw';
 };
 
 // Takes about 100 ms on a Macbook Pro
 MyWallet.browserCheckFast = function () {
   var mnemonic = 'daughter size twenty place alter glass small bid purse october faint beyond';
-  var network = constants.getNetwork();
 
   var seed = pbkdf2.pbkdf2Sync(mnemonic, 'mnemonic', 100, 64, 'sha512');
   var seedString = seed.toString('hex');
@@ -41158,26 +41187,11 @@ MyWallet.browserCheckFast = function () {
 
   seed = Buffer('9f3ad67c5f1eebbffcc8314cb8a3aacbfa28046fd4b3d0af6965a8c804a603e57f5b551320eca4017267550e5b01e622978c133f2085c5999f7ef57a340d0ae2', 'hex');
 
-  var vectors = {
-    'bitcoin': {
-      priv: 'xprv9s21ZrQH143K44XyzPUorz65tsvifDFiWZRoqeM69iTeYXd5KbSrz4WEAbWwB2CY6jCGJ2pKdXgw66oQPePPifrpxhWuGoDkumMGCZQwduP',
-      pub: 'xpub682P4gW4PvBwugpzCZoKp3QMZRcj6KTakpZ5jwZXZuv1nvYkPbcT84PNVk1vSKnf1XtLRfTzuwqRH6y7T2HYKRWohWHLDpEv2sfeqPCAFkH',
-      address: '1MGULYKjmADKfZG6BpWwQQ3qVw622HqhCR',
-      pubChild: 'xpub6BQQYoWs7yyp2oNXYABTjjfmcJNJN1vHogwZ9qFdRPAfYhh5EDrBH63MHdjv5uvaawU3E3HTDGZ4SWDhwDjtnmP2S7A3EyYoQiZdFaFju5e'
-    },
-    'testnet': {
-      priv: 'tprv8ZgxMBicQKsPesmWexLK2di5D1LvtjHir7Lvi4mYdgx8L8NAJxncVosg5mgbBParUAj3J8S5ntGjYxM9WrjLXj8RVLjCw9wops6geJMEiVB',
-      pub: 'tpubD8Q1avKk7C9QBV1qeknR1xjitYiP5hxeJT9P6VcfupfuYDDTTpTYGW4Cjn6hxpjtoSRF3EysT3fTyHTiqt8nCry6m72duLu9cqG4bRT3wcX',
-      address: 'n1nRdbQiaBeaSfjhuPVKEKGAMvgiuxaDHY',
-      pubChild: 'tpubDBn353LYqFwGJbZNzMAYwf18wRTxMQRMMKXrWPJmmHvZHzMnJShGRXiBXfphcQspNqzwqcoKkNP78giKL5b8gCqKVhuLvWD2zgA31b1vXZE'
-    }
-  }[constants.NETWORK];
-
   // master node -> xpriv (1 ms)
-  var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed, network);
-  var priv = masterkey.toString();
+  var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed);
+  var xpriv = masterkey.toString();
 
-  if (priv !== vectors.priv) {
+  if (xpriv !== 'xprv9s21ZrQH143K44XyzPUorz65tsvifDFiWZRoqeM69iTeYXd5KbSrz4WEAbWwB2CY6jCGJ2pKdXgw66oQPePPifrpxhWuGoDkumMGCZQwduP') {
     return false;
   }
 
@@ -41194,24 +41208,24 @@ MyWallet.browserCheckFast = function () {
   //   return false;
   // }
 
-  var pub = Bitcoin.HDNode.fromBase58(vectors.pub, network);
+  var xpub = Bitcoin.HDNode.fromBase58('xpub682P4gW4PvBwugpzCZoKp3QMZRcj6KTakpZ5jwZXZuv1nvYkPbcT84PNVk1vSKnf1XtLRfTzuwqRH6y7T2HYKRWohWHLDpEv2sfeqPCAFkH');
 
   // xpub -> address // 2 ms
-  if (pub.getAddress() !== vectors.address) {
+  if (xpub.getAddress() !== '1MGULYKjmADKfZG6BpWwQQ3qVw622HqhCR') {
     return false;
   }
 
   // xpub -> xpub' // 100 ms
-  var pubChild = pub.derive(0);
+  var xpubChild = xpub.derive(0);
 
-  if (pubChild.toString() !== vectors.pubChild) {
+  if (xpubChild.toString() !== 'xpub6BQQYoWs7yyp2oNXYABTjjfmcJNJN1vHogwZ9qFdRPAfYhh5EDrBH63MHdjv5uvaawU3E3HTDGZ4SWDhwDjtnmP2S7A3EyYoQiZdFaFju5e') {
     return false;
   }
 
   return true;
 };
 
-},{"./api":183,"./blockchain-settings-api":185,"./blockchain-socket":186,"./blockchain-wallet":187,"./constants":203,"./helpers":208,"./rng":214,"./wallet-crypto":218,"./wallet-network":219,"./wallet-signup":220,"./wallet-store":221,"assert":16,"bip39":22,"bitcoinjs-lib":33,"buffer":74,"pbkdf2":136}],225:[function(require,module,exports){
+},{"./api":183,"./blockchain-settings-api":185,"./blockchain-socket":186,"./blockchain-wallet":187,"./helpers":207,"./rng":213,"./wallet-crypto":217,"./wallet-network":218,"./wallet-signup":219,"./wallet-store":220,"assert":16,"bip39":22,"bitcoinjs-lib":33,"buffer":74,"pbkdf2":136}],224:[function(require,module,exports){
 
 var global = (function () { return this; })();
 var WebSocket = global.WebSocket || global.MozWebSocket;
