@@ -47624,10 +47624,12 @@ Metadata.prototype.fetch = function () {
   return this.next(function () {
     var M = Metadata;
     var saveMagicHash = function saveMagicHash(res) {
+      if (res === null) return res;
       _this2._magicHash = R.prop('compute_new_magic_hash', res);
       return res;
     };
     var saveValue = function saveValue(res) {
+      if (res === null) return res;
       _this2._value = res;
       return res;
     };

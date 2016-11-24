@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2016-11-23)
+#   (2016-11-24)
 
 
 
@@ -8,14 +8,23 @@ __Blockchain Wallet V3__
 
 ## Bug Fixes
 
-- **promise:** add es6-promise back
-  ([8df76bf0](https://github.com/blockchain/My-Wallet-V3/commit/8df76bf006bfb56c23553c0805c06c819d1b1aa9))
+- **metadata:** return Promise(null) in 404
+  ([842c4b8d](https://github.com/blockchain/My-Wallet-V3/commit/842c4b8d9593a0b5351610ad1ed2adf46a454740))
 
 
-## Branchs merged
+## Test
 
-- Merge branch 'master' into new-metadata
-  ([e67d6bd2](https://github.com/blockchain/My-Wallet-V3/commit/e67d6bd26af44d75a315a928f2fa30cd09b5477d))
+- **external:**
+  - fixed interference with coinify_trade_spec
+  ([0989402d](https://github.com/blockchain/My-Wallet-V3/commit/0989402dac6e539711494472ee3ccb608cf5749e))
+  - repaired
+  ([82cb145f](https://github.com/blockchain/My-Wallet-V3/commit/82cb145fd9232f47526648c2f31e9ec85ca8afad))
+
+
+## Chore
+
+- **release:** v3.24.3
+  ([e725c056](https://github.com/blockchain/My-Wallet-V3/commit/e725c0568b97ea47f35b7690046f7059cf566a18))
 
 
 
