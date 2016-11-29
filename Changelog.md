@@ -1,30 +1,23 @@
 __Blockchain Wallet V3__
 
-#   (2016-11-24)
+#   (2016-11-29)
 
 
 
 ---
 
-## Bug Fixes
+## Features
 
-- **metadata:** return Promise(null) in 404
-  ([842c4b8d](https://github.com/blockchain/My-Wallet-V3/commit/842c4b8d9593a0b5351610ad1ed2adf46a454740))
-
-
-## Test
-
-- **external:**
-  - fixed interference with coinify_trade_spec
-  ([0989402d](https://github.com/blockchain/My-Wallet-V3/commit/0989402dac6e539711494472ee3ccb608cf5749e))
-  - repaired
-  ([82cb145f](https://github.com/blockchain/My-Wallet-V3/commit/82cb145fd9232f47526648c2f31e9ec85ca8afad))
+- **metadata:** compatible with new version of the metadata service (#304)
+  ([30e0a1c8](https://github.com/blockchain/My-Wallet-V3/commit/30e0a1c8ed0e0356d560429ff25158dfec10440d))
+- **wallettransaction:** add double spend and rbf keys to iOS factory (#305)
+  ([c31ff8ec](https://github.com/blockchain/My-Wallet-V3/commit/c31ff8ec20efe3e738c5868b6e0e48aa51f448be))
 
 
 ## Chore
 
-- **release:** v3.24.3
-  ([e725c056](https://github.com/blockchain/My-Wallet-V3/commit/e725c0568b97ea47f35b7690046f7059cf566a18))
+- **release:** v3.24.4
+  ([c62e9652](https://github.com/blockchain/My-Wallet-V3/commit/c62e96523a6746cdf900e953581db89f3e43dc9b))
 
 
 

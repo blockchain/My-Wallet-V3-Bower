@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.24.3",
+  "version": "3.24.4",
   "dependencies": {
     "abbrev": {
       "version": "1.0.9",
@@ -638,9 +638,9 @@
       "resolved": "https://registry.npmjs.org/bs58/-/bs58-2.0.1.tgz"
     },
     "bs58check": {
-      "version": "1.1.1",
+      "version": "1.3.0",
       "from": "bs58check@>=1.0.5 <2.0.0",
-      "resolved": "https://registry.npmjs.org/bs58check/-/bs58check-1.1.1.tgz"
+      "resolved": "https://registry.npmjs.org/bs58check/-/bs58check-1.3.0.tgz"
     },
     "buffer": {
       "version": "4.9.1",
@@ -1175,14 +1175,14 @@
       "resolved": "https://registry.npmjs.org/encoding/-/encoding-0.1.12.tgz"
     },
     "engine.io": {
-      "version": "1.8.0",
-      "from": "engine.io@1.8.0",
-      "resolved": "https://registry.npmjs.org/engine.io/-/engine.io-1.8.0.tgz"
+      "version": "1.8.1",
+      "from": "engine.io@1.8.1",
+      "resolved": "https://registry.npmjs.org/engine.io/-/engine.io-1.8.1.tgz"
     },
     "engine.io-client": {
-      "version": "1.8.0",
-      "from": "engine.io-client@1.8.0",
-      "resolved": "https://registry.npmjs.org/engine.io-client/-/engine.io-client-1.8.0.tgz",
+      "version": "1.8.1",
+      "from": "engine.io-client@1.8.1",
+      "resolved": "https://registry.npmjs.org/engine.io-client/-/engine.io-client-1.8.1.tgz",
       "dependencies": {
         "component-emitter": {
           "version": "1.2.1",
@@ -1348,21 +1348,9 @@
       "resolved": "https://registry.npmjs.org/esformatter-ignore/-/esformatter-ignore-0.1.3.tgz"
     },
     "esformatter-jsx": {
-      "version": "7.2.0",
+      "version": "7.3.2",
       "from": "esformatter-jsx@>=7.0.0 <8.0.0",
-      "resolved": "https://registry.npmjs.org/esformatter-jsx/-/esformatter-jsx-7.2.0.tgz",
-      "dependencies": {
-        "babylon": {
-          "version": "6.13.1",
-          "from": "babylon@6.13.1",
-          "resolved": "https://registry.npmjs.org/babylon/-/babylon-6.13.1.tgz"
-        },
-        "extend": {
-          "version": "2.0.1",
-          "from": "extend@>=2.0.1 <3.0.0",
-          "resolved": "https://registry.npmjs.org/extend/-/extend-2.0.1.tgz"
-        }
-      }
+      "resolved": "https://registry.npmjs.org/esformatter-jsx/-/esformatter-jsx-7.3.2.tgz"
     },
     "esformatter-literal-notation": {
       "version": "1.0.1",
@@ -1786,11 +1774,6 @@
       "from": "for-own@>=0.1.4 <0.2.0",
       "resolved": "https://registry.npmjs.org/for-own/-/for-own-0.1.4.tgz"
     },
-    "foreach": {
-      "version": "2.0.5",
-      "from": "foreach@>=2.0.5 <3.0.0",
-      "resolved": "https://registry.npmjs.org/foreach/-/foreach-2.0.5.tgz"
-    },
     "forever-agent": {
       "version": "0.6.1",
       "from": "forever-agent@>=0.6.1 <0.7.0",
@@ -1810,18 +1793,6 @@
       "version": "0.1.0",
       "from": "fresh@0.1.0",
       "resolved": "https://registry.npmjs.org/fresh/-/fresh-0.1.0.tgz"
-    },
-    "fresh-falafel": {
-      "version": "1.2.0",
-      "from": "fresh-falafel@>=1.2.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/fresh-falafel/-/fresh-falafel-1.2.0.tgz",
-      "dependencies": {
-        "isarray": {
-          "version": "0.0.1",
-          "from": "isarray@0.0.1",
-          "resolved": "https://registry.npmjs.org/isarray/-/isarray-0.0.1.tgz"
-        }
-      }
     },
     "fs-extra": {
       "version": "0.18.4",
@@ -2297,9 +2268,9 @@
           "resolved": "https://registry.npmjs.org/source-map/-/source-map-0.4.4.tgz"
         },
         "uglify-js": {
-          "version": "2.7.4",
+          "version": "2.7.5",
           "from": "uglify-js@>=2.6.0 <3.0.0",
-          "resolved": "https://registry.npmjs.org/uglify-js/-/uglify-js-2.7.4.tgz",
+          "resolved": "https://registry.npmjs.org/uglify-js/-/uglify-js-2.7.5.tgz",
           "dependencies": {
             "async": {
               "version": "0.2.10",
@@ -2729,7 +2700,7 @@
     },
     "js-beautify": {
       "version": "1.6.4",
-      "from": "js-beautify@>=1.6.3 <2.0.0",
+      "from": "js-beautify@1.6.4",
       "resolved": "https://registry.npmjs.org/js-beautify/-/js-beautify-1.6.4.tgz",
       "dependencies": {
         "nopt": {
@@ -2785,9 +2756,9 @@
       "resolved": "https://registry.npmjs.org/json3/-/json3-3.3.2.tgz"
     },
     "json5": {
-      "version": "0.5.0",
+      "version": "0.5.1",
       "from": "json5@>=0.5.0 <0.6.0",
-      "resolved": "https://registry.npmjs.org/json5/-/json5-0.5.0.tgz"
+      "resolved": "https://registry.npmjs.org/json5/-/json5-0.5.1.tgz"
     },
     "jsonfile": {
       "version": "2.4.0",
@@ -3254,11 +3225,6 @@
       "from": "object-component@0.0.3",
       "resolved": "https://registry.npmjs.org/object-component/-/object-component-0.0.3.tgz"
     },
-    "object-keys": {
-      "version": "1.0.11",
-      "from": "object-keys@>=1.0.6 <2.0.0",
-      "resolved": "https://registry.npmjs.org/object-keys/-/object-keys-1.0.11.tgz"
-    },
     "object.omit": {
       "version": "2.0.1",
       "from": "object.omit@>=2.0.0 <3.0.0",
@@ -3601,9 +3567,9 @@
       "resolved": "https://registry.npmjs.org/ramda/-/ramda-0.22.1.tgz"
     },
     "randomatic": {
-      "version": "1.1.5",
+      "version": "1.1.6",
       "from": "randomatic@>=1.1.3 <2.0.0",
-      "resolved": "https://registry.npmjs.org/randomatic/-/randomatic-1.1.5.tgz"
+      "resolved": "https://registry.npmjs.org/randomatic/-/randomatic-1.1.6.tgz"
     },
     "randombytes": {
       "version": "2.0.3",
@@ -4052,9 +4018,9 @@
       "resolved": "https://registry.npmjs.org/sntp/-/sntp-1.0.9.tgz"
     },
     "socket.io": {
-      "version": "1.6.0",
+      "version": "1.7.1",
       "from": "socket.io@>=1.4.5 <2.0.0",
-      "resolved": "https://registry.npmjs.org/socket.io/-/socket.io-1.6.0.tgz"
+      "resolved": "https://registry.npmjs.org/socket.io/-/socket.io-1.7.1.tgz"
     },
     "socket.io-adapter": {
       "version": "0.5.0",
@@ -4062,9 +4028,9 @@
       "resolved": "https://registry.npmjs.org/socket.io-adapter/-/socket.io-adapter-0.5.0.tgz"
     },
     "socket.io-client": {
-      "version": "1.6.0",
-      "from": "socket.io-client@1.6.0",
-      "resolved": "https://registry.npmjs.org/socket.io-client/-/socket.io-client-1.6.0.tgz",
+      "version": "1.7.1",
+      "from": "socket.io-client@1.7.1",
+      "resolved": "https://registry.npmjs.org/socket.io-client/-/socket.io-client-1.7.1.tgz",
       "dependencies": {
         "component-emitter": {
           "version": "1.2.1",
@@ -4308,16 +4274,9 @@
       "resolved": "https://registry.npmjs.org/through/-/through-2.3.8.tgz"
     },
     "through2": {
-      "version": "2.0.1",
+      "version": "2.0.3",
       "from": "through2@>=2.0.0 <3.0.0",
-      "resolved": "https://registry.npmjs.org/through2/-/through2-2.0.1.tgz",
-      "dependencies": {
-        "readable-stream": {
-          "version": "2.0.6",
-          "from": "readable-stream@>=2.0.0 <2.1.0",
-          "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-2.0.6.tgz"
-        }
-      }
+      "resolved": "https://registry.npmjs.org/through2/-/through2-2.0.3.tgz"
     },
     "timers-browserify": {
       "version": "1.4.2",

@@ -14281,7 +14281,7 @@ function encode (payload) {
 }
 
 // Decode a base58-check encoded string to a buffer, no result if checksum is wrong
-function decodeRaw (string) {
+function decodeUnsafe (string) {
   var buffer = new Buffer(base58.decode(string))
 
   var payload = buffer.slice(0, -4)
@@ -14297,7 +14297,7 @@ function decodeRaw (string) {
 }
 
 function decode (string) {
-  var payload = decodeRaw(string)
+  var payload = decodeUnsafe(string)
   if (!payload) throw new Error('Invalid checksum')
   return payload
 }
@@ -14305,7 +14305,10 @@ function decode (string) {
 module.exports = {
   encode: encode,
   decode: decode,
-  decodeRaw: decodeRaw
+  decodeUnsafe: decodeUnsafe,
+
+  // FIXME: remove in 2.0.0
+  decodeRaw: decodeUnsafe
 }
 
 }).call(this,require("buffer").Buffer)
@@ -47537,7 +47540,7 @@ Metadata.BufferToString = function (buff) {
   return buff.toString();
 };
 
-// Buffer -> Buffer -> Base64String
+// Metadata.message :: Buffer -> Buffer -> Base64String
 Metadata.message = R.curry(function (payload, prevMagic) {
   if (prevMagic) {
     var hash = WalletCrypto.sha256(payload);
@@ -47548,7 +47551,7 @@ Metadata.message = R.curry(function (payload, prevMagic) {
   }
 });
 
-// Buffer -> Buffer -> Buffer
+// Metadata.magic :: Buffer -> Buffer -> Buffer
 Metadata.magic = R.curry(function (payload, prevMagic) {
   var msg = this.message(payload, prevMagic);
   return Bitcoin.message.magicHash(msg, constants.getNetwork());
@@ -47562,6 +47565,8 @@ Metadata.verify = function (address, signature, hash) {
 Metadata.sign = function (keyPair, msg) {
   return Bitcoin.message.sign(keyPair, msg, Bitcoin.networks.bitcoin);
 };
+
+// Metadata.computeSignature :: keypair -> buffer -> buffer -> base64
 Metadata.computeSignature = function (key, payloadBuff, magicHash) {
   return Metadata.sign(key, Metadata.message(payloadBuff, magicHash));
 };
@@ -50239,7 +50244,9 @@ Tx.IOSfactory = function (tx) {
     to: tx.to,
     from: tx.from,
     fee: tx.fee,
-    note: tx.note
+    note: tx.note,
+    double_spend: tx.double_spend,
+    rbf: tx.rbf
   };
 };
 
