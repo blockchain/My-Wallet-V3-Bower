@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.24.4",
+  "version": "3.24.5",
   "dependencies": {
     "abbrev": {
       "version": "1.0.9",
@@ -453,6 +453,11 @@
       "from": "balanced-match@>=0.4.1 <0.5.0",
       "resolved": "https://registry.npmjs.org/balanced-match/-/balanced-match-0.4.2.tgz"
     },
+    "base-x": {
+      "version": "1.1.0",
+      "from": "base-x@>=1.1.0 <2.0.0",
+      "resolved": "https://registry.npmjs.org/base-x/-/base-x-1.1.0.tgz"
+    },
     "base64-arraybuffer": {
       "version": "0.1.5",
       "from": "base64-arraybuffer@0.1.5",
@@ -638,9 +643,16 @@
       "resolved": "https://registry.npmjs.org/bs58/-/bs58-2.0.1.tgz"
     },
     "bs58check": {
-      "version": "1.3.0",
+      "version": "1.3.1",
       "from": "bs58check@>=1.0.5 <2.0.0",
-      "resolved": "https://registry.npmjs.org/bs58check/-/bs58check-1.3.0.tgz"
+      "resolved": "https://registry.npmjs.org/bs58check/-/bs58check-1.3.1.tgz",
+      "dependencies": {
+        "bs58": {
+          "version": "3.1.0",
+          "from": "bs58@>=3.1.0 <4.0.0",
+          "resolved": "https://registry.npmjs.org/bs58/-/bs58-3.1.0.tgz"
+        }
+      }
     },
     "buffer": {
       "version": "4.9.1",
@@ -1348,9 +1360,9 @@
       "resolved": "https://registry.npmjs.org/esformatter-ignore/-/esformatter-ignore-0.1.3.tgz"
     },
     "esformatter-jsx": {
-      "version": "7.3.2",
+      "version": "7.4.0",
       "from": "esformatter-jsx@>=7.0.0 <8.0.0",
-      "resolved": "https://registry.npmjs.org/esformatter-jsx/-/esformatter-jsx-7.3.2.tgz"
+      "resolved": "https://registry.npmjs.org/esformatter-jsx/-/esformatter-jsx-7.4.0.tgz"
     },
     "esformatter-literal-notation": {
       "version": "1.0.1",
