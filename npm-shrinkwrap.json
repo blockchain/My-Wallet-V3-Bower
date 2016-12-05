@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.24.5",
+  "version": "3.25.0",
   "dependencies": {
     "abbrev": {
       "version": "1.0.9",
@@ -40,9 +40,9 @@
       "resolved": "https://registry.npmjs.org/after/-/after-0.8.1.tgz"
     },
     "ajv": {
-      "version": "4.9.0",
+      "version": "4.9.1",
       "from": "ajv@>=4.7.0 <5.0.0",
-      "resolved": "https://registry.npmjs.org/ajv/-/ajv-4.9.0.tgz",
+      "resolved": "https://registry.npmjs.org/ajv/-/ajv-4.9.1.tgz",
       "dependencies": {
         "json-stable-stringify": {
           "version": "1.0.1",
@@ -52,9 +52,9 @@
       }
     },
     "ajv-keywords": {
-      "version": "1.1.1",
+      "version": "1.2.0",
       "from": "ajv-keywords@>=1.0.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/ajv-keywords/-/ajv-keywords-1.1.1.tgz"
+      "resolved": "https://registry.npmjs.org/ajv-keywords/-/ajv-keywords-1.2.0.tgz"
     },
     "align-text": {
       "version": "0.1.4",
@@ -494,9 +494,9 @@
       "resolved": "https://registry.npmjs.org/bigi/-/bigi-1.4.2.tgz"
     },
     "binary-extensions": {
-      "version": "1.7.0",
+      "version": "1.8.0",
       "from": "binary-extensions@>=1.0.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/binary-extensions/-/binary-extensions-1.7.0.tgz"
+      "resolved": "https://registry.npmjs.org/binary-extensions/-/binary-extensions-1.8.0.tgz"
     },
     "bip39": {
       "version": "2.1.2",
@@ -507,6 +507,11 @@
       "version": "1.1.4",
       "from": "bip66@>=1.1.0 <2.0.0",
       "resolved": "https://registry.npmjs.org/bip66/-/bip66-1.1.4.tgz"
+    },
+    "bitcoin-exchange-client": {
+      "version": "0.1.1",
+      "from": "blockchain/bitcoin-exchange-client#master",
+      "resolved": "git://github.com/blockchain/bitcoin-exchange-client.git#7782e8bded3572c71b5eb0d534133a02995d2932"
     },
     "bitcoinjs-lib": {
       "version": "2.1.4",
@@ -814,9 +819,9 @@
       "resolved": "https://registry.npmjs.org/coffeeify/-/coffeeify-2.0.1.tgz",
       "dependencies": {
         "coffee-script": {
-          "version": "1.11.1",
+          "version": "1.12.0",
           "from": "coffee-script@>=1.10.0 <2.0.0",
-          "resolved": "https://registry.npmjs.org/coffee-script/-/coffee-script-1.11.1.tgz"
+          "resolved": "https://registry.npmjs.org/coffee-script/-/coffee-script-1.12.0.tgz"
         }
       }
     },
@@ -2395,9 +2400,9 @@
       "resolved": "https://registry.npmjs.org/http-errors/-/http-errors-1.5.1.tgz"
     },
     "http-proxy": {
-      "version": "1.15.2",
+      "version": "1.16.1",
       "from": "http-proxy@>=1.13.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/http-proxy/-/http-proxy-1.15.2.tgz"
+      "resolved": "https://registry.npmjs.org/http-proxy/-/http-proxy-1.16.1.tgz"
     },
     "http-signature": {
       "version": "1.1.1",
@@ -4005,9 +4010,9 @@
       "resolved": "https://registry.npmjs.org/sigmund/-/sigmund-1.0.1.tgz"
     },
     "signal-exit": {
-      "version": "3.0.1",
+      "version": "3.0.2",
       "from": "signal-exit@>=3.0.0 <4.0.0",
-      "resolved": "https://registry.npmjs.org/signal-exit/-/signal-exit-3.0.1.tgz"
+      "resolved": "https://registry.npmjs.org/signal-exit/-/signal-exit-3.0.2.tgz"
     },
     "sjcl": {
       "version": "1.0.3",
@@ -4348,9 +4353,9 @@
       "resolved": "https://registry.npmjs.org/tunnel-agent/-/tunnel-agent-0.4.3.tgz"
     },
     "tweetnacl": {
-      "version": "0.14.3",
+      "version": "0.14.4",
       "from": "tweetnacl@>=0.14.0 <0.15.0",
-      "resolved": "https://registry.npmjs.org/tweetnacl/-/tweetnacl-0.14.3.tgz"
+      "resolved": "https://registry.npmjs.org/tweetnacl/-/tweetnacl-0.14.4.tgz"
     },
     "type-check": {
       "version": "0.3.2",
@@ -4368,9 +4373,9 @@
       "resolved": "https://registry.npmjs.org/typedarray/-/typedarray-0.0.6.tgz"
     },
     "typeforce": {
-      "version": "1.9.2",
+      "version": "1.9.4",
       "from": "typeforce@>=1.5.5 <2.0.0",
-      "resolved": "https://registry.npmjs.org/typeforce/-/typeforce-1.9.2.tgz"
+      "resolved": "https://registry.npmjs.org/typeforce/-/typeforce-1.9.4.tgz"
     },
     "uglify-js": {
       "version": "2.4.17",

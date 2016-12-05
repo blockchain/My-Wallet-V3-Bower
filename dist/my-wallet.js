@@ -12,17 +12,15 @@ var Buffer = require('buffer').Buffer;
 // This fixes a bug with Safari < 8 and the Browserify Buffer shim used in Crypto-browserify/randombytes
 // See: https://github.com/feross/buffer/issues/63
 try {
-  if (navigator && navigator.vendor &&
-      navigator.vendor.indexOf('Apple') > -1) {
+  if (navigator && navigator.vendor && navigator.vendor.indexOf('Apple') > -1) {
     var versionStart = navigator.userAgent.toLowerCase().indexOf('applewebkit') + 12;
     var version = navigator.userAgent.substr(versionStart, 1);
 
-    if (version && typeof (parseInt(version, 10)) === 'number' && parseInt(version, 10) < 6) {
+    if (version && typeof parseInt(version, 10) === 'number' && parseInt(version, 10) < 6) {
       Buffer.TYPED_ARRAY_SUPPORT = true;
     }
   }
-} catch (e) {
-}
+} catch (e) {}
 
 module.exports = {
   Buffer: Buffer,
@@ -54,7 +52,7 @@ module.exports = {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./src/address":237,"./src/api":238,"./src/blockchain-settings-api":240,"./src/buy-sell":243,"./src/constants":258,"./src/external":260,"./src/helpers":263,"./src/import-export":264,"./src/metadata":267,"./src/payment":268,"./src/rng":269,"./src/shared":270,"./src/transaction":272,"./src/wallet":279,"./src/wallet-crypto":273,"./src/wallet-network":274,"./src/wallet-store":276,"./src/wallet-token-endpoints":277,"./src/wallet-transaction":278,"bigi/lib":21,"bip39":23,"bitcoinjs-lib":34,"bitcoinjs-lib/src/ecdsa":30,"bitcoinjs-lib/src/networks":36,"buffer":76,"core-js/es6/symbol":78,"es6-promise":169,"isomorphic-fetch":183,"ramda":199}],2:[function(require,module,exports){
+},{"./src/address":245,"./src/api":246,"./src/blockchain-settings-api":248,"./src/buy-sell":251,"./src/constants":266,"./src/external":268,"./src/helpers":271,"./src/import-export":272,"./src/metadata":275,"./src/payment":276,"./src/rng":277,"./src/shared":285,"./src/transaction":287,"./src/wallet":294,"./src/wallet-crypto":288,"./src/wallet-network":289,"./src/wallet-store":291,"./src/wallet-token-endpoints":292,"./src/wallet-transaction":293,"bigi/lib":21,"bip39":23,"bitcoinjs-lib":42,"bitcoinjs-lib/src/ecdsa":38,"bitcoinjs-lib/src/networks":44,"buffer":84,"core-js/es6/symbol":86,"es6-promise":177,"isomorphic-fetch":191,"ramda":207}],2:[function(require,module,exports){
 var asn1 = exports;
 
 asn1.bignum = require('bn.js');
@@ -65,7 +63,7 @@ asn1.constants = require('./asn1/constants');
 asn1.decoders = require('./asn1/decoders');
 asn1.encoders = require('./asn1/encoders');
 
-},{"./asn1/api":3,"./asn1/base":5,"./asn1/constants":9,"./asn1/decoders":11,"./asn1/encoders":14,"bn.js":42}],3:[function(require,module,exports){
+},{"./asn1/api":3,"./asn1/base":5,"./asn1/constants":9,"./asn1/decoders":11,"./asn1/encoders":14,"bn.js":50}],3:[function(require,module,exports){
 var asn1 = require('../asn1');
 var inherits = require('inherits');
 
@@ -128,7 +126,7 @@ Entity.prototype.encode = function encode(data, enc, /* internal */ reporter) {
   return this._getEncoder(enc).encode(data, reporter);
 };
 
-},{"../asn1":2,"inherits":180,"vm":233}],4:[function(require,module,exports){
+},{"../asn1":2,"inherits":188,"vm":241}],4:[function(require,module,exports){
 var inherits = require('inherits');
 var Reporter = require('../base').Reporter;
 var Buffer = require('buffer').Buffer;
@@ -246,7 +244,7 @@ EncoderBuffer.prototype.join = function join(out, offset) {
   return out;
 };
 
-},{"../base":5,"buffer":76,"inherits":180}],5:[function(require,module,exports){
+},{"../base":5,"buffer":84,"inherits":188}],5:[function(require,module,exports){
 var base = exports;
 
 base.Reporter = require('./reporter').Reporter;
@@ -890,7 +888,7 @@ Node.prototype._isPrintstr = function isPrintstr(str) {
   return /^[A-Za-z0-9 '\(\)\+,\-\.\/:=\?]*$/.test(str);
 };
 
-},{"../base":5,"minimalistic-assert":185}],7:[function(require,module,exports){
+},{"../base":5,"minimalistic-assert":193}],7:[function(require,module,exports){
 var inherits = require('inherits');
 
 function Reporter(options) {
@@ -1013,7 +1011,7 @@ ReporterError.prototype.rethrow = function rethrow(msg) {
   return this;
 };
 
-},{"inherits":180}],8:[function(require,module,exports){
+},{"inherits":188}],8:[function(require,module,exports){
 var constants = require('../constants');
 
 exports.tagClass = {
@@ -1404,7 +1402,7 @@ function derDecodeLen(buf, primitive, fail) {
   return len;
 }
 
-},{"../../asn1":2,"inherits":180}],11:[function(require,module,exports){
+},{"../../asn1":2,"inherits":188}],11:[function(require,module,exports){
 var decoders = exports;
 
 decoders.der = require('./der');
@@ -1461,7 +1459,7 @@ PEMDecoder.prototype.decode = function decode(data, options) {
   return DERDecoder.prototype.decode.call(this, input, options);
 };
 
-},{"./der":10,"buffer":76,"inherits":180}],13:[function(require,module,exports){
+},{"./der":10,"buffer":84,"inherits":188}],13:[function(require,module,exports){
 var inherits = require('inherits');
 var Buffer = require('buffer').Buffer;
 
@@ -1758,7 +1756,7 @@ function encodeTag(tag, primitive, cls, reporter) {
   return res;
 }
 
-},{"../../asn1":2,"buffer":76,"inherits":180}],14:[function(require,module,exports){
+},{"../../asn1":2,"buffer":84,"inherits":188}],14:[function(require,module,exports){
 var encoders = exports;
 
 encoders.der = require('./der');
@@ -1787,7 +1785,7 @@ PEMEncoder.prototype.encode = function encode(data, options) {
   return out.join('\n');
 };
 
-},{"./der":13,"inherits":180}],16:[function(require,module,exports){
+},{"./der":13,"inherits":188}],16:[function(require,module,exports){
 // http://wiki.commonjs.org/wiki/Unit_Testing/1.0
 //
 // THIS IS NOT TESTED NOR LIKELY TO WORK OUTSIDE V8!
@@ -2148,7 +2146,7 @@ var objectKeys = Object.keys || function (obj) {
   return keys;
 };
 
-},{"util/":232}],17:[function(require,module,exports){
+},{"util/":240}],17:[function(require,module,exports){
 // base-x encoding
 // Forked from https://github.com/cryptocoinjs/bs58
 // Originally written by Mike Hearn for BitcoinJ
@@ -3958,7 +3956,7 @@ BigInteger.prototype.toHex = function(size) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./bigi":19,"assert":16,"buffer":76}],21:[function(require,module,exports){
+},{"./bigi":19,"assert":16,"buffer":84}],21:[function(require,module,exports){
 var BigInteger = require('./bigi')
 
 //addons
@@ -4222,7 +4220,7 @@ module.exports = {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./wordlists/en.json":24,"assert":16,"buffer":76,"create-hash":132,"pbkdf2":190,"randombytes":200,"unorm":228}],24:[function(require,module,exports){
+},{"./wordlists/en.json":24,"assert":16,"buffer":84,"create-hash":140,"pbkdf2":198,"randombytes":208,"unorm":236}],24:[function(require,module,exports){
 module.exports=[
   "abandon",
   "ability",
@@ -6389,7 +6387,984 @@ module.exports = {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":76}],26:[function(require,module,exports){
+},{"buffer":84}],26:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+  Exchange: require('./src/exchange'),
+  API: require('./src/api'),
+  PaymentAccount: require('./src/payment-account'),
+  PaymentMedium: require('./src/payment-medium'),
+  Quote: require('./src/quote'),
+  Trade: require('./src/trade'),
+  Helpers: require('./src/helpers')
+};
+
+},{"./src/api":27,"./src/exchange":28,"./src/helpers":29,"./src/payment-account":30,"./src/payment-medium":31,"./src/quote":32,"./src/trade":33}],27:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var API = function () {
+  function API() {
+    _classCallCheck(this, API);
+  }
+
+  _createClass(API, [{
+    key: '_request',
+    value: function _request(method, url, data, headers) {
+      headers = headers || {};
+
+      headers['Content-Type'] = 'application/json';
+
+      var options = {
+        headers: headers,
+        credentials: 'omit'
+      };
+
+      // encodeFormData :: Object -> url encoded params
+      var encodeFormData = function encodeFormData(data) {
+        var encoded = Object.keys(data).map(function (k) {
+          return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]);
+        }).join('&');
+        return encoded;
+      };
+
+      if (data && Object.keys(data).length !== 0) {
+        if (method === 'GET') {
+          url += '?' + encodeFormData(data);
+        } else {
+          options.body = JSON.stringify(data);
+        }
+      }
+
+      options.method = method;
+
+      var handleNetworkError = function handleNetworkError(e) {
+        return Promise.reject({ error: 'EXCHANGE_CONNECT_ERROR', message: e });
+      };
+
+      var checkStatus = function checkStatus(response) {
+        if (response.status === 204) {
+          return;
+        } else if (response.status >= 200 && response.status < 300) {
+          return response.json();
+        } else {
+          return response.text().then(Promise.reject.bind(Promise));
+        }
+      };
+
+      return fetch(url, options).catch(handleNetworkError).then(checkStatus);
+    }
+  }]);
+
+  return API;
+}();
+
+module.exports = API;
+
+},{}],28:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var assert = require('assert');
+var Helpers = require('./helpers');
+
+// This is poor man's abstract class:
+// https://gist.github.com/Zodiase/af44115098b20d69c531
+
+var Exchange = function () {
+  function Exchange(delegate, TradeClass, QuoteClass, PaymentMediumClass) {
+    _classCallCheck(this, Exchange);
+
+    assert(this.constructor !== Exchange, 'Abstract Class');
+    assert(delegate, 'ExchangeDelegate required');
+    assert(TradeClass, 'Trade class required');
+    assert(QuoteClass, 'Quote class required');
+    assert(QuoteClass, 'PaymentMethod class required');
+    assert(QuoteClass.getQuote, 'Quote.getQuote missing');
+    this._delegate = delegate;
+    this._trades = [];
+    this._TradeClass = TradeClass;
+    this._QuoteClass = QuoteClass;
+    this._PaymentMediumClass = PaymentMediumClass;
+  }
+
+  _createClass(Exchange, [{
+    key: 'getBuyMethods',
+    value: function getBuyMethods() {
+      return this._PaymentMediumClass.getAll(undefined, 'BTC', this._api);
+    }
+  }, {
+    key: 'getSellMethods',
+    value: function getSellMethods() {
+      return this._PaymentMediumClass.getAll('BTC', undefined, this._api);
+    }
+  }, {
+    key: 'getBuyQuote',
+    value: function getBuyQuote(amount, baseCurrency, quoteCurrency) {
+      assert(baseCurrency, 'Specify base currency');
+      assert(baseCurrency !== 'BTC' || quoteCurrency, 'Specify quote currency');
+      // istanbul ignore else
+      if (baseCurrency !== 'BTC') {
+        quoteCurrency = 'BTC';
+      }
+      return this._QuoteClass.getQuote(this._api, this._delegate, -amount, baseCurrency, quoteCurrency, this._debug);
+    }
+  }, {
+    key: 'updateList',
+    value: function updateList(list, items, ListClass) {
+      var item;
+      for (var i = 0; i < items.length; i++) {
+        item = undefined;
+        for (var k = 0; k < list.length; k++) {
+          var itemId = Helpers.isNumber(items[i].id) ? items[i].id : items[i].id.toLowerCase();
+          if (list[k]._id === itemId) {
+            item = list[k];
+            item.debug = this.debug;
+            item.set.bind(item)(items[i]);
+          }
+        }
+        if (item === undefined) {
+          item = new ListClass(items[i], this._api, this.delegate, this);
+          item.debug = this.debug;
+          list.push(item);
+        }
+      }
+    }
+  }, {
+    key: 'getTrades',
+    value: function getTrades() {
+      var _this = this;
+
+      var save = function save() {
+        return _this.delegate.save.bind(_this.delegate)().then(function () {
+          return _this._trades;
+        });
+      };
+      var update = function update(trades) {
+        _this.updateList(_this._trades, trades, _this._TradeClass);
+      };
+      var process = function process() {
+        var _iteratorNormalCompletion = true;
+        var _didIteratorError = false;
+        var _iteratorError = undefined;
+
+        try {
+          for (var _iterator = _this._trades[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+            var trade = _step.value;
+
+            trade.process(_this._trades);
+          }
+        } catch (err) {
+          _didIteratorError = true;
+          _iteratorError = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion && _iterator.return) {
+              _iterator.return();
+            }
+          } finally {
+            if (_didIteratorError) {
+              throw _iteratorError;
+            }
+          }
+        }
+      };
+      return this._TradeClass.fetchAll(this._api).then(update).then(process).then(save);
+    }
+  }, {
+    key: 'monitorPayments',
+    value: function monitorPayments() {
+      this._TradeClass.monitorPayments(this._trades, this.delegate);
+    }
+  }, {
+    key: 'api',
+    get: function get() {
+      return this._api;
+    }
+  }, {
+    key: 'debug',
+    get: function get() {
+      return this._debug;
+    },
+    set: function set(value) {
+      this._debug = Boolean(value);
+      this._delegate.debug = Boolean(value);
+      var _iteratorNormalCompletion2 = true;
+      var _didIteratorError2 = false;
+      var _iteratorError2 = undefined;
+
+      try {
+        for (var _iterator2 = this.trades[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+          var trade = _step2.value;
+
+          trade.debug = Boolean(value);
+        }
+      } catch (err) {
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion2 && _iterator2.return) {
+            _iterator2.return();
+          }
+        } finally {
+          if (_didIteratorError2) {
+            throw _iteratorError2;
+          }
+        }
+      }
+    }
+  }, {
+    key: 'user',
+    get: function get() {
+      return this._user;
+    }
+  }, {
+    key: 'autoLogin',
+    get: function get() {
+      return this._auto_login;
+    },
+    set: function set(value) {
+      assert(Helpers.isBoolean(value), 'Boolean');
+      this._auto_login = value;
+      this.delegate.save.bind(this.delegate)();
+    }
+  }, {
+    key: 'trades',
+    get: function get() {
+      return this._trades;
+    }
+  }, {
+    key: 'delegate',
+    get: function get() {
+      return this._delegate;
+    }
+  }]);
+
+  return Exchange;
+}();
+
+module.exports = Exchange;
+
+},{"./helpers":29,"assert":16}],29:[function(require,module,exports){
+'use strict';
+
+var Helpers = {};
+
+Helpers.isBoolean = function (value) {
+  return typeof value === 'boolean';
+};
+Helpers.isString = function (str) {
+  return typeof str === 'string';
+};
+Helpers.isNumber = function (num) {
+  return typeof num === 'number' && !isNaN(num);
+};
+Helpers.isInteger = function (num) {
+  return Helpers.isNumber(num) && num % 1 === 0;
+};
+Helpers.isPositiveNumber = function (num) {
+  return Helpers.isNumber(num) && num >= 0;
+};
+Helpers.isPositiveInteger = function (num) {
+  return Helpers.isPositiveNumber(num) && num % 1 === 0;
+};
+Helpers.toCents = function (fiat) {
+  return Math.round((parseFloat(fiat) || 0) * 100);
+};
+Helpers.toSatoshi = function (fiat) {
+  return Math.round((parseFloat(fiat) || 0) * 100000000);
+};
+Helpers.fromCents = function (cents) {
+  return parseFloat((cents / 100).toFixed(2));
+};
+Helpers.fromSatoshi = function (satoshi) {
+  return parseFloat((satoshi / 100000000).toFixed(8));
+};
+
+module.exports = Helpers;
+
+},{}],30:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var assert = require('assert');
+
+var PaymentAccount = function () {
+  function PaymentAccount(api, fiatMedium, quote, TradeClass) {
+    _classCallCheck(this, PaymentAccount);
+
+    assert(api, 'API required');
+    assert(TradeClass, 'Trade class required');
+    this._api = api;
+    this._quote = quote;
+    this._TradeClass = TradeClass;
+    this._fiatMedium = fiatMedium;
+  }
+
+  _createClass(PaymentAccount, [{
+    key: 'buy',
+    value: function buy() {
+      var _this = this;
+
+      if (!this._quote) {
+        return Promise.reject('QUOTE_MISSING');
+      }
+      var delegate = this._quote.delegate;
+      var addTrade = function addTrade(trade) {
+        trade.debug = _this._quote.debug;
+        delegate.trades.push(trade);
+        return delegate.save.bind(delegate)().then(function () {
+          return trade;
+        });
+      };
+
+      return this._TradeClass.buy(this._quote, this.fiatMedium, this._id).then(addTrade);
+    }
+  }, {
+    key: 'id',
+    get: function get() {
+      return this._id;
+    }
+  }, {
+    key: 'fiatMedium',
+    get: function get() {
+      return this._fiatMedium;
+    }
+  }, {
+    key: 'name',
+    get: function get() {
+      return this._name;
+    }
+  }]);
+
+  return PaymentAccount;
+}();
+
+module.exports = PaymentAccount;
+
+},{"assert":16}],31:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var assert = require('assert');
+
+var PaymentMedium = function () {
+  function PaymentMedium(api, quote) {
+    _classCallCheck(this, PaymentMedium);
+
+    assert(this.constructor !== PaymentMedium, 'Abstract Class');
+    assert(api, 'API required');
+    this._api = api;
+    this._quote = quote;
+    this._accounts = [];
+  }
+
+  _createClass(PaymentMedium, [{
+    key: 'accounts',
+    get: function get() {
+      return this._accounts;
+    }
+  }, {
+    key: 'inMedium',
+    get: function get() {
+      return this._inMedium;
+    }
+  }, {
+    key: 'outMedium',
+    get: function get() {
+      return this._outMedium;
+    }
+  }, {
+    key: 'fiatMedium',
+    get: function get() {
+      return this._fiatMedium;
+    }
+  }, {
+    key: 'inCurrencies',
+    get: function get() {
+      return this._inCurrencies;
+    }
+  }, {
+    key: 'outCurrencies',
+    get: function get() {
+      return this._outCurrencies;
+    }
+  }, {
+    key: 'inCurrency',
+    get: function get() {
+      return this._inCurrency;
+    }
+  }, {
+    key: 'outCurrency',
+    get: function get() {
+      return this._outCurrency;
+    }
+  }, {
+    key: 'inFixedFee',
+    get: function get() {
+      return this._inFixedFee || 0;
+    }
+  }, {
+    key: 'outFixedFee',
+    get: function get() {
+      return this._outFixedFee || 0;
+    }
+  }, {
+    key: 'inPercentageFee',
+    get: function get() {
+      return this._inPercentageFee || 0;
+    }
+  }, {
+    key: 'outPercentageFee',
+    get: function get() {
+      return this._outPercentageFee || 0;
+    }
+  }, {
+    key: 'fee',
+    get: function get() {
+      return this._fee;
+    }
+  }, {
+    key: 'total',
+    get: function get() {
+      return this._total;
+    }
+  }]);
+
+  return PaymentMedium;
+}();
+
+module.exports = PaymentMedium;
+
+},{"assert":16}],32:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Helpers = require('./helpers');
+var assert = require('assert');
+
+var Quote = function () {
+  function Quote(api, delegate, TradeClass, PaymentMediumClass) {
+    _classCallCheck(this, Quote);
+
+    assert(this.constructor !== Quote, 'Abstract Class');
+    assert(api, 'API required');
+    assert(delegate, 'ExchangeDelegate required');
+    assert(TradeClass, 'Trade class required');
+    assert(PaymentMediumClass, 'PaymentMedium class required');
+    assert(PaymentMediumClass.getAll, 'PaymentMedium.getAll missing');
+    assert(TradeClass.buy, 'Trade.buy() missing');
+
+    this._api = api;
+    this._delegate = delegate;
+    this._TradeClass = TradeClass;
+    this._PaymentMediumClass = PaymentMediumClass;
+
+    this._paymentMediums = null;
+  }
+
+  _createClass(Quote, [{
+    key: 'getPaymentMediums',
+    value: function getPaymentMediums() {
+      var self = this;
+
+      var setPaymentMediums = function setPaymentMediums(paymentMediums) {
+        self._paymentMediums = paymentMediums;
+        return self.paymentMediums;
+      };
+
+      var inCurrency = this.baseCurrency;
+      var outCurrency = this.quoteCurrency;
+      if (this.baseCurrency === 'BTC' && this.baseAmount > 0) {
+        inCurrency = this.quoteCurrency;
+        outCurrency = this.baseCurrency;
+      }
+
+      if (this.paymentMediums) {
+        return Promise.resolve(this.paymentMediums);
+      } else {
+        return this._PaymentMediumClass.getAll(inCurrency, outCurrency, this._api, this).then(setPaymentMediums);
+      }
+    }
+  }, {
+    key: 'id',
+    get: function get() {
+      return this._id;
+    }
+  }, {
+    key: 'debug',
+    get: function get() {
+      return this._debug;
+    },
+    set: function set(value) {
+      this._debug = Boolean(value);
+    }
+  }, {
+    key: 'api',
+    get: function get() {
+      return this._api;
+    }
+  }, {
+    key: 'delegate',
+    get: function get() {
+      return this._delegate;
+    }
+  }, {
+    key: 'baseCurrency',
+    get: function get() {
+      return this._baseCurrency;
+    }
+  }, {
+    key: 'quoteCurrency',
+    get: function get() {
+      return this._quoteCurrency;
+    }
+  }, {
+    key: 'feeCurrency',
+    get: function get() {
+      return this._feeCurrency;
+    }
+  }, {
+    key: 'baseAmount',
+    get: function get() {
+      return this._baseAmount;
+    }
+  }, {
+    key: 'quoteAmount',
+    get: function get() {
+      return this._quoteAmount;
+    }
+  }, {
+    key: 'feeAmount',
+    get: function get() {
+      return this._feeAmount;
+    }
+  }, {
+    key: 'expiresAt',
+    get: function get() {
+      return this._expiresAt;
+    }
+  }, {
+    key: 'paymentMediums',
+    get: function get() {
+      return this._paymentMediums;
+    }
+  }], [{
+    key: 'getQuote',
+    value: function getQuote(amount, baseCurrency, quoteCurrency, supportedCurrencies, debug) {
+      assert(Helpers.isInteger(amount), 'amount must be in cents or satoshi');
+
+      if (supportedCurrencies.indexOf(baseCurrency) === -1) {
+        return Promise.reject('base_currency_not_supported');
+      }
+
+      if (supportedCurrencies.indexOf(quoteCurrency) === -1) {
+        return Promise.reject('quote_currency_not_supported');
+      }
+
+      // istanbul ignore if
+      if (baseCurrency === 'CNY' || quoteCurrency === 'CNY') {
+        console.warn('CNY has only 1 decimal place');
+      }
+
+      var baseAmount;
+      if (baseCurrency === 'BTC') {
+        baseAmount = (amount / 100000000).toFixed(8);
+      } else {
+        baseAmount = (amount / 100).toFixed(2);
+      }
+
+      return Promise.resolve(baseAmount);
+    }
+  }]);
+
+  return Quote;
+}();
+
+module.exports = Quote;
+
+},{"./helpers":29,"assert":16}],33:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var assert = require('assert');
+
+var Trade = function () {
+  function Trade(api, delegate) {
+    _classCallCheck(this, Trade);
+
+    assert(this.constructor !== Trade, 'Abstract Class');
+    assert(this.refresh, 'Subclass must implement refresh()');
+    assert(api, 'API missing');
+    assert(delegate, 'delegate missing');
+    assert(typeof delegate.getReceiveAddress === 'function', 'delegate requires getReceiveAddress()');
+    this._delegate = delegate;
+    this._api = api;
+  }
+
+  _createClass(Trade, [{
+    key: 'self',
+    value: function self() {
+      return this;
+    }
+  }, {
+    key: 'process',
+    value: function process() {
+      if (['rejected', 'cancelled', 'expired', 'failed'].indexOf(this.state) > -1) {
+        /* istanbul ignore if */
+        if (this.debug) {
+          console.info('Check if address for ' + this.state + ' trade ' + this.id + ' can be released');
+        }
+        this._delegate.releaseReceiveAddress(this);
+      }
+    }
+
+    // Checks the balance for the receive address and monitors the websocket if needed:
+    // Call this method long before the user completes the purchase:
+    // trade.watchAddress.then(() => ...);
+
+  }, {
+    key: 'watchAddress',
+    value: function watchAddress() {
+      /* istanbul ignore if */
+      if (this.debug) {
+        console.info('Watch ' + this.receiveAddress + ' for ' + this.state + ' trade ' + this.id);
+      }
+      // Check if this transaction is already marked as paid:
+      if (this._txHash) {
+        /* istanbul ignore if */
+        if (this.debug) {
+          console.info("Already paid, resolve immedidately and don't watch.");
+        }
+        return Promise.resolve();
+      }
+      var self = this;
+      var promise = new Promise(function (resolve, reject) {
+        self._watchAddressResolve = resolve;
+      });
+      return promise;
+    }
+  }, {
+    key: '_monitorAddress',
+    value: function _monitorAddress() {
+      var _this = this;
+
+      var save = function save() {
+        return _this._delegate.save.bind(_this._delegate)();
+      };
+
+      var self = this;
+
+      this._delegate.monitorAddress(this.receiveAddress, function (hash, amount) {
+        var checkAddress = function checkAddress() {
+          return self._setTransactionHash({ hash: hash }, amount, self._delegate);
+        };
+        if (self.state === 'completed' || self.state === 'processing' || self.state === 'completed_test') {
+          return checkAddress().then(save);
+        } else {
+          return self.refresh().then(checkAddress).then(save);
+        }
+      });
+    }
+  }, {
+    key: '_setTransactionHash',
+
+
+    //
+    value: function _setTransactionHash(tx, amount, delegate) {
+      var self = this;
+      var setConfirmations = function setConfirmations(tx) {
+        self._confirmations = tx.confirmations;
+        // TODO: refactor
+        if (self.confirmed) {
+          self._confirmed = true;
+        }
+      };
+
+      /* istanbul ignore if */
+      if (self.debug) {
+        console.info('Transaction ' + tx.hash + ' detected, considering ' + self.state + ' trade ' + self.id);
+      }
+      if (self.state === 'completed_test') {
+        if (!self.confirmations && !self._txHash) {
+          // For test trades, there is no real transaction, so trade._txHash is not
+          // set. Instead use the hash for the incoming transaction. This will not
+          // work correctly with address reuse.
+          /* istanbul ignore if */
+          if (self.debug) {
+            console.info('Test trade, not matched before, unconfirmed transaction, assuming match');
+          }
+          self._txHash = tx.hash;
+          setConfirmations(tx);
+          self._watchAddressResolve && self._watchAddressResolve();
+        } else {
+          /* istanbul ignore if */
+          if (self.debug) {
+            console.info('Trade already matched, not calling _watchAddressResolve()');
+          }
+          if (self._txHash === tx.hash) {
+            setConfirmations(tx);
+          }
+        }
+        /* istanbul ignore else */
+      } else if (self.state === 'completed' || self.state === 'processing') {
+        if (self._txHash) {
+          // Multiple trades may reuse the same address if e.g. one is
+          // cancelled of if we reach the gap limit.
+          /* istanbul ignore if */
+          if (self.debug) {
+            console.info('Trade already matched, not calling _watchAddressResolve()');
+          }
+          if (self._txHash === tx.hash) {
+            setConfirmations(tx);
+          } else {
+            // Different trade, ignore
+          }
+        } else {
+          // transferOut.details.transaction is not implemented and might be
+          // missing if in the processing state.
+          /* istanbul ignore if */
+          if (self.debug) {
+            console.info('Trade not matched yet, assuming match');
+          }
+          self._txHash = tx.hash;
+          setConfirmations(tx);
+        }
+        self._watchAddressResolve && self._watchAddressResolve();
+      } else {
+        /* istanbul ignore if */
+        if (self.debug) {
+          console.info('Not calling _watchAddressResolve()');
+        }
+      }
+    }
+  }, {
+    key: 'debug',
+    get: function get() {
+      return this._debug;
+    },
+    set: function set(value) {
+      this._debug = Boolean(value);
+    }
+  }, {
+    key: 'id',
+    get: function get() {
+      return this._id;
+    }
+  }, {
+    key: 'createdAt',
+    get: function get() {
+      return this._createdAt;
+    }
+  }, {
+    key: 'inCurrency',
+    get: function get() {
+      return this._inCurrency;
+    }
+  }, {
+    key: 'outCurrency',
+    get: function get() {
+      return this._outCurrency;
+    }
+  }, {
+    key: 'inAmount',
+    get: function get() {
+      return this._inAmount;
+    }
+  }, {
+    key: 'medium',
+    get: function get() {
+      return this._medium;
+    }
+  }, {
+    key: 'state',
+    get: function get() {
+      return this._state;
+    }
+  }, {
+    key: 'sendAmount',
+    get: function get() {
+      return this._sendAmount;
+    }
+  }, {
+    key: 'outAmount',
+    get: function get() {
+      return this._outAmount;
+    }
+  }, {
+    key: 'outAmountExpected',
+    get: function get() {
+      return this._outAmountExpected;
+    }
+  }, {
+    key: 'receiveAddress',
+    get: function get() {
+      return this._receiveAddress;
+    }
+  }, {
+    key: 'accountIndex',
+    get: function get() {
+      return this._account_index;
+    }
+  }, {
+    key: 'bitcoinReceived',
+    get: function get() {
+      return Boolean(this._txHash);
+    }
+  }, {
+    key: 'confirmed',
+    get: function get() {
+      return this._confirmed || this._confirmations >= 3;
+    }
+  }, {
+    key: 'txHash',
+    get: function get() {
+      return this._txHash || null;
+    }
+  }], [{
+    key: '_checkOnce',
+    value: function _checkOnce(trades, delegate) {
+      assert(delegate, '_checkOnce needs delegate');
+
+      if (trades.length === 0) {
+        return Promise.resolve();
+      }
+
+      /* istanbul ignore if */
+      if (delegate.debug) {
+        console.info('_checkOnce', trades.map(function (trade) {
+          return trade.id;
+        }).join(', '));
+      }
+
+      var promises = trades.map(function (trade) {
+        return delegate.checkAddress(trade.receiveAddress).then(function (tx, amount) {
+          if (!tx) return;
+
+          /* istanbul ignore if */
+          if (delegate.debug) {
+            console.info('checkAddress', trade.receiveAddress, 'found transaction');
+          }
+
+          var setTransactionHash = function setTransactionHash() {
+            return trade._setTransactionHash(tx, amount, delegate);
+          };
+
+          if (trade.state === 'completed' || trade.state === 'processing' || trade.state === 'completed_test') {
+            return setTransactionHash();
+          } else {
+            return trade.refresh().then(setTransactionHash);
+          }
+        });
+      });
+
+      return Promise.all(promises).then(delegate.save.bind(delegate));
+    }
+  }, {
+    key: 'buy',
+    value: function buy(quote, medium, request) {
+      assert(quote, 'Quote required');
+      assert(quote.expiresAt > new Date(), 'QUOTE_EXPIRED');
+
+      /* istanbul ignore if */
+      if (quote.debug) {
+        console.info('Reserve receive address for new trade');
+      }
+      var reservation = quote.delegate.reserveReceiveAddress();
+
+      var processTrade = function processTrade(res) {
+        var trade = new quote._TradeClass(res, quote.api, quote.delegate);
+        trade.debug = quote.debug;
+
+        /* istanbul ignore if */
+        if (quote.debug) {
+          console.info('Commit receive address for new trade');
+        }
+        reservation.commit(trade);
+
+        /* istanbul ignore if */
+        if (quote.debug) {
+          console.info('Monitor trade', trade.receiveAddress);
+        }
+        trade._monitorAddress.bind(trade)();
+        return trade;
+      };
+
+      var error = function error(e) {
+        console.error(e);
+        return Promise.reject(e);
+      };
+
+      return request(reservation.receiveAddress).then(processTrade).catch(error);
+    }
+  }, {
+    key: '_monitorWebSockets',
+    value: function _monitorWebSockets(trades) {
+      for (var i = 0; i < trades.length; i++) {
+        var trade = trades[i];
+        trade._monitorAddress.bind(trade)();
+      }
+    }
+
+    // Monitor the receive addresses for pending and completed trades.
+
+  }, {
+    key: 'monitorPayments',
+    value: function monitorPayments(trades, delegate) {
+      /* istanbul ignore if */
+      if (delegate.debug) {
+        console.info('monitorPayments');
+      }
+
+      assert(delegate, '_monitorPayments needs delegate');
+
+      var tradeFilter = function tradeFilter(trade) {
+        return ['awaiting_transfer_in', 'reviewing', 'processing', 'completed', 'completed_test'].indexOf(trade.state) > -1 && !trade.confirmed;
+      };
+
+      var filteredTrades = trades.filter(tradeFilter);
+
+      Trade._checkOnce(filteredTrades, delegate).then(function () {
+        Trade._monitorWebSockets(filteredTrades);
+      });
+    }
+  }, {
+    key: 'filteredTrades',
+    value: function filteredTrades(trades) {
+      return trades.filter(function (trade) {
+        // Only consider transactions that are complete or that we're still
+        // expecting payment for:
+        return ['awaiting_transfer_in', 'processing', 'reviewing', 'completed', 'completed_test'].indexOf(trade.state) > -1;
+      });
+    }
+  }]);
+
+  return Trade;
+}();
+
+module.exports = Trade;
+
+},{"assert":16}],34:[function(require,module,exports){
 (function (Buffer){
 var bs58check = require('bs58check')
 var bscript = require('./script')
@@ -6445,7 +7420,7 @@ module.exports = {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./networks":36,"./script":38,"./types":41,"bs58check":70,"buffer":76,"typeforce":226}],27:[function(require,module,exports){
+},{"./networks":44,"./script":46,"./types":49,"bs58check":78,"buffer":84,"typeforce":234}],35:[function(require,module,exports){
 (function (Buffer){
 var bufferutils = require('./bufferutils')
 var bcrypto = require('./crypto')
@@ -6567,7 +7542,7 @@ Block.prototype.toHex = function (headersOnly) {
 module.exports = Block
 
 }).call(this,require("buffer").Buffer)
-},{"./bufferutils":28,"./crypto":29,"./transaction":39,"buffer":76}],28:[function(require,module,exports){
+},{"./bufferutils":36,"./crypto":37,"./transaction":47,"buffer":84}],36:[function(require,module,exports){
 (function (Buffer){
 var opcodes = require('./opcodes')
 
@@ -6753,7 +7728,7 @@ module.exports = {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./opcodes":37,"buffer":76,"buffer-equals":72,"buffer-reverse":73}],29:[function(require,module,exports){
+},{"./opcodes":45,"buffer":84,"buffer-equals":80,"buffer-reverse":81}],37:[function(require,module,exports){
 var createHash = require('create-hash')
 
 function hash160 (buffer) {
@@ -6784,7 +7759,7 @@ module.exports = {
   sha256: sha256
 }
 
-},{"create-hash":132}],30:[function(require,module,exports){
+},{"create-hash":140}],38:[function(require,module,exports){
 (function (Buffer){
 var createHmac = require('create-hmac')
 var typeforce = require('typeforce')
@@ -7037,7 +8012,7 @@ module.exports = {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./ecsignature":32,"./types":41,"bigi":21,"buffer":76,"create-hmac":135,"ecurve":149,"typeforce":226}],31:[function(require,module,exports){
+},{"./ecsignature":40,"./types":49,"bigi":21,"buffer":84,"create-hmac":143,"ecurve":157,"typeforce":234}],39:[function(require,module,exports){
 (function (Buffer){
 var bcrypto = require('./crypto')
 var bs58check = require('bs58check')
@@ -7173,7 +8148,7 @@ ECPair.prototype.verify = function (hash, signature) {
 module.exports = ECPair
 
 }).call(this,require("buffer").Buffer)
-},{"./crypto":29,"./ecdsa":30,"./networks":36,"./types":41,"bigi":21,"bs58check":70,"buffer":76,"ecurve":149,"randombytes":200,"typeforce":226,"wif":235}],32:[function(require,module,exports){
+},{"./crypto":37,"./ecdsa":38,"./networks":44,"./types":49,"bigi":21,"bs58check":78,"buffer":84,"ecurve":157,"randombytes":208,"typeforce":234,"wif":243}],40:[function(require,module,exports){
 (function (Buffer){
 var bip66 = require('bip66')
 var typeforce = require('typeforce')
@@ -7264,7 +8239,7 @@ ECSignature.prototype.toScriptSignature = function (hashType) {
 module.exports = ECSignature
 
 }).call(this,require("buffer").Buffer)
-},{"./types":41,"bigi":21,"bip66":25,"buffer":76,"typeforce":226}],33:[function(require,module,exports){
+},{"./types":49,"bigi":21,"bip66":25,"buffer":84,"typeforce":234}],41:[function(require,module,exports){
 (function (Buffer){
 var base58check = require('bs58check')
 var bcrypto = require('./crypto')
@@ -7554,7 +8529,7 @@ HDNode.prototype.toString = HDNode.prototype.toBase58
 module.exports = HDNode
 
 }).call(this,require("buffer").Buffer)
-},{"./crypto":29,"./ecpair":31,"./networks":36,"./types":41,"bigi":21,"bs58check":70,"buffer":76,"create-hmac":135,"ecurve":149,"typeforce":226}],34:[function(require,module,exports){
+},{"./crypto":37,"./ecpair":39,"./networks":44,"./types":49,"bigi":21,"bs58check":78,"buffer":84,"create-hmac":143,"ecurve":157,"typeforce":234}],42:[function(require,module,exports){
 module.exports = {
   Block: require('./block'),
   ECPair: require('./ecpair'),
@@ -7572,7 +8547,7 @@ module.exports = {
   script: require('./script')
 }
 
-},{"./address":26,"./block":27,"./bufferutils":28,"./crypto":29,"./ecpair":31,"./ecsignature":32,"./hdnode":33,"./message":35,"./networks":36,"./opcodes":37,"./script":38,"./transaction":39,"./transaction_builder":40}],35:[function(require,module,exports){
+},{"./address":34,"./block":35,"./bufferutils":36,"./crypto":37,"./ecpair":39,"./ecsignature":40,"./hdnode":41,"./message":43,"./networks":44,"./opcodes":45,"./script":46,"./transaction":47,"./transaction_builder":48}],43:[function(require,module,exports){
 (function (Buffer){
 var bufferutils = require('./bufferutils')
 var bcrypto = require('./crypto')
@@ -7630,7 +8605,7 @@ module.exports = {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./bufferutils":28,"./crypto":29,"./ecdsa":30,"./ecpair":31,"./ecsignature":32,"./networks":36,"bigi":21,"buffer":76}],36:[function(require,module,exports){
+},{"./bufferutils":36,"./crypto":37,"./ecdsa":38,"./ecpair":39,"./ecsignature":40,"./networks":44,"bigi":21,"buffer":84}],44:[function(require,module,exports){
 // https://en.bitcoin.it/wiki/List_of_address_prefixes
 // Dogecoin BIP32 is a proposed standard: https://bitcointalk.org/index.php?topic=409731
 
@@ -7681,7 +8656,7 @@ module.exports = {
   }
 }
 
-},{}],37:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 module.exports={
   "OP_FALSE": 0,
   "OP_0": 0,
@@ -7811,7 +8786,7 @@ module.exports={
   "OP_INVALIDOPCODE": 255
 }
 
-},{}],38:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 (function (Buffer){
 var bip66 = require('bip66')
 var bufferutils = require('./bufferutils')
@@ -8213,7 +9188,7 @@ module.exports = {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./bufferutils":28,"./opcodes":37,"./types":41,"bip66":25,"buffer":76,"typeforce":226}],39:[function(require,module,exports){
+},{"./bufferutils":36,"./opcodes":45,"./types":49,"bip66":25,"buffer":84,"typeforce":234}],47:[function(require,module,exports){
 (function (Buffer){
 var bcrypto = require('./crypto')
 var bscript = require('./script')
@@ -8532,7 +9507,7 @@ Transaction.prototype.setInputScript = function (index, scriptSig) {
 module.exports = Transaction
 
 }).call(this,require("buffer").Buffer)
-},{"./bufferutils":28,"./crypto":29,"./opcodes":37,"./script":38,"./types":41,"buffer":76,"typeforce":226}],40:[function(require,module,exports){
+},{"./bufferutils":36,"./crypto":37,"./opcodes":45,"./script":46,"./types":49,"buffer":84,"typeforce":234}],48:[function(require,module,exports){
 (function (Buffer){
 var baddress = require('./address')
 var bcrypto = require('./crypto')
@@ -8980,7 +9955,7 @@ TransactionBuilder.prototype.sign = function (index, keyPair, redeemScript, hash
 module.exports = TransactionBuilder
 
 }).call(this,require("buffer").Buffer)
-},{"./address":26,"./crypto":29,"./ecpair":31,"./ecsignature":32,"./networks":36,"./opcodes":37,"./script":38,"./transaction":39,"buffer":76,"buffer-equals":72}],41:[function(require,module,exports){
+},{"./address":34,"./crypto":37,"./ecpair":39,"./ecsignature":40,"./networks":44,"./opcodes":45,"./script":46,"./transaction":47,"buffer":84,"buffer-equals":80}],49:[function(require,module,exports){
 var typeforce = require('typeforce')
 
 function nBuffer (value, n) {
@@ -9043,7 +10018,7 @@ for (var typeName in typeforce) {
 
 module.exports = types
 
-},{"typeforce":226}],42:[function(require,module,exports){
+},{"typeforce":234}],50:[function(require,module,exports){
 (function (module, exports) {
   'use strict';
 
@@ -12472,7 +13447,7 @@ module.exports = types
   };
 })(typeof module === 'undefined' || module, this);
 
-},{}],43:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 var r;
 
 module.exports = function rand(len) {
@@ -12531,9 +13506,9 @@ if (typeof window === 'object') {
   }
 }
 
-},{"crypto":44}],44:[function(require,module,exports){
+},{"crypto":52}],52:[function(require,module,exports){
 
-},{}],45:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 (function (Buffer){
 // based on the aes implimentation in triple sec
 // https://github.com/keybase/triplesec
@@ -12714,7 +13689,7 @@ AES.prototype._doCryptBlock = function (M, keySchedule, SUB_MIX, SBOX) {
 exports.AES = AES
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":76}],46:[function(require,module,exports){
+},{"buffer":84}],54:[function(require,module,exports){
 (function (Buffer){
 var aes = require('./aes')
 var Transform = require('cipher-base')
@@ -12815,7 +13790,7 @@ function xorTest (a, b) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./aes":45,"./ghash":50,"buffer":76,"buffer-xor":75,"cipher-base":77,"inherits":180}],47:[function(require,module,exports){
+},{"./aes":53,"./ghash":58,"buffer":84,"buffer-xor":83,"cipher-base":85,"inherits":188}],55:[function(require,module,exports){
 var ciphers = require('./encrypter')
 exports.createCipher = exports.Cipher = ciphers.createCipher
 exports.createCipheriv = exports.Cipheriv = ciphers.createCipheriv
@@ -12828,7 +13803,7 @@ function getCiphers () {
 }
 exports.listCiphers = exports.getCiphers = getCiphers
 
-},{"./decrypter":48,"./encrypter":49,"./modes":51}],48:[function(require,module,exports){
+},{"./decrypter":56,"./encrypter":57,"./modes":59}],56:[function(require,module,exports){
 (function (Buffer){
 var aes = require('./aes')
 var Transform = require('cipher-base')
@@ -12969,7 +13944,7 @@ exports.createDecipher = createDecipher
 exports.createDecipheriv = createDecipheriv
 
 }).call(this,require("buffer").Buffer)
-},{"./aes":45,"./authCipher":46,"./modes":51,"./modes/cbc":52,"./modes/cfb":53,"./modes/cfb1":54,"./modes/cfb8":55,"./modes/ctr":56,"./modes/ecb":57,"./modes/ofb":58,"./streamCipher":59,"buffer":76,"cipher-base":77,"evp_bytestokey":171,"inherits":180}],49:[function(require,module,exports){
+},{"./aes":53,"./authCipher":54,"./modes":59,"./modes/cbc":60,"./modes/cfb":61,"./modes/cfb1":62,"./modes/cfb8":63,"./modes/ctr":64,"./modes/ecb":65,"./modes/ofb":66,"./streamCipher":67,"buffer":84,"cipher-base":85,"evp_bytestokey":179,"inherits":188}],57:[function(require,module,exports){
 (function (Buffer){
 var aes = require('./aes')
 var Transform = require('cipher-base')
@@ -13095,7 +14070,7 @@ exports.createCipheriv = createCipheriv
 exports.createCipher = createCipher
 
 }).call(this,require("buffer").Buffer)
-},{"./aes":45,"./authCipher":46,"./modes":51,"./modes/cbc":52,"./modes/cfb":53,"./modes/cfb1":54,"./modes/cfb8":55,"./modes/ctr":56,"./modes/ecb":57,"./modes/ofb":58,"./streamCipher":59,"buffer":76,"cipher-base":77,"evp_bytestokey":171,"inherits":180}],50:[function(require,module,exports){
+},{"./aes":53,"./authCipher":54,"./modes":59,"./modes/cbc":60,"./modes/cfb":61,"./modes/cfb1":62,"./modes/cfb8":63,"./modes/ctr":64,"./modes/ecb":65,"./modes/ofb":66,"./streamCipher":67,"buffer":84,"cipher-base":85,"evp_bytestokey":179,"inherits":188}],58:[function(require,module,exports){
 (function (Buffer){
 var zeros = new Buffer(16)
 zeros.fill(0)
@@ -13197,7 +14172,7 @@ function xor (a, b) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":76}],51:[function(require,module,exports){
+},{"buffer":84}],59:[function(require,module,exports){
 exports['aes-128-ecb'] = {
   cipher: 'AES',
   key: 128,
@@ -13370,7 +14345,7 @@ exports['aes-256-gcm'] = {
   type: 'auth'
 }
 
-},{}],52:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 var xor = require('buffer-xor')
 
 exports.encrypt = function (self, block) {
@@ -13389,7 +14364,7 @@ exports.decrypt = function (self, block) {
   return xor(out, pad)
 }
 
-},{"buffer-xor":75}],53:[function(require,module,exports){
+},{"buffer-xor":83}],61:[function(require,module,exports){
 (function (Buffer){
 var xor = require('buffer-xor')
 
@@ -13424,7 +14399,7 @@ function encryptStart (self, data, decrypt) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":76,"buffer-xor":75}],54:[function(require,module,exports){
+},{"buffer":84,"buffer-xor":83}],62:[function(require,module,exports){
 (function (Buffer){
 function encryptByte (self, byteParam, decrypt) {
   var pad
@@ -13462,7 +14437,7 @@ function shiftIn (buffer, value) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":76}],55:[function(require,module,exports){
+},{"buffer":84}],63:[function(require,module,exports){
 (function (Buffer){
 function encryptByte (self, byteParam, decrypt) {
   var pad = self._cipher.encryptBlock(self._prev)
@@ -13481,7 +14456,7 @@ exports.encrypt = function (self, chunk, decrypt) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":76}],56:[function(require,module,exports){
+},{"buffer":84}],64:[function(require,module,exports){
 (function (Buffer){
 var xor = require('buffer-xor')
 
@@ -13516,7 +14491,7 @@ exports.encrypt = function (self, chunk) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":76,"buffer-xor":75}],57:[function(require,module,exports){
+},{"buffer":84,"buffer-xor":83}],65:[function(require,module,exports){
 exports.encrypt = function (self, block) {
   return self._cipher.encryptBlock(block)
 }
@@ -13524,7 +14499,7 @@ exports.decrypt = function (self, block) {
   return self._cipher.decryptBlock(block)
 }
 
-},{}],58:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 (function (Buffer){
 var xor = require('buffer-xor')
 
@@ -13544,7 +14519,7 @@ exports.encrypt = function (self, chunk) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":76,"buffer-xor":75}],59:[function(require,module,exports){
+},{"buffer":84,"buffer-xor":83}],67:[function(require,module,exports){
 (function (Buffer){
 var aes = require('./aes')
 var Transform = require('cipher-base')
@@ -13573,7 +14548,7 @@ StreamCipher.prototype._final = function () {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./aes":45,"buffer":76,"cipher-base":77,"inherits":180}],60:[function(require,module,exports){
+},{"./aes":53,"buffer":84,"cipher-base":85,"inherits":188}],68:[function(require,module,exports){
 var ebtk = require('evp_bytestokey')
 var aes = require('browserify-aes/browser')
 var DES = require('browserify-des')
@@ -13648,7 +14623,7 @@ function getCiphers () {
 }
 exports.listCiphers = exports.getCiphers = getCiphers
 
-},{"browserify-aes/browser":47,"browserify-aes/modes":51,"browserify-des":61,"browserify-des/modes":62,"evp_bytestokey":171}],61:[function(require,module,exports){
+},{"browserify-aes/browser":55,"browserify-aes/modes":59,"browserify-des":69,"browserify-des/modes":70,"evp_bytestokey":179}],69:[function(require,module,exports){
 (function (Buffer){
 var CipherBase = require('cipher-base')
 var des = require('des.js')
@@ -13695,7 +14670,7 @@ DES.prototype._final = function () {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":76,"cipher-base":77,"des.js":137,"inherits":180}],62:[function(require,module,exports){
+},{"buffer":84,"cipher-base":85,"des.js":145,"inherits":188}],70:[function(require,module,exports){
 exports['des-ecb'] = {
   key: 8,
   iv: 0
@@ -13721,7 +14696,7 @@ exports['des-ede'] = {
   iv: 0
 }
 
-},{}],63:[function(require,module,exports){
+},{}],71:[function(require,module,exports){
 (function (Buffer){
 var bn = require('bn.js');
 var randomBytes = require('randombytes');
@@ -13765,7 +14740,7 @@ function getr(priv) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"bn.js":42,"buffer":76,"randombytes":200}],64:[function(require,module,exports){
+},{"bn.js":50,"buffer":84,"randombytes":208}],72:[function(require,module,exports){
 (function (Buffer){
 'use strict'
 exports['RSA-SHA224'] = exports.sha224WithRSAEncryption = {
@@ -13841,7 +14816,7 @@ exports['RSA-MD5'] = exports.md5WithRSAEncryption = {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":76}],65:[function(require,module,exports){
+},{"buffer":84}],73:[function(require,module,exports){
 (function (Buffer){
 var _algos = require('./algos')
 var createHash = require('create-hash')
@@ -13948,7 +14923,7 @@ module.exports = {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./algos":64,"./sign":67,"./verify":68,"buffer":76,"create-hash":132,"inherits":180,"stream":222}],66:[function(require,module,exports){
+},{"./algos":72,"./sign":75,"./verify":76,"buffer":84,"create-hash":140,"inherits":188,"stream":230}],74:[function(require,module,exports){
 'use strict'
 exports['1.3.132.0.10'] = 'secp256k1'
 
@@ -13962,7 +14937,7 @@ exports['1.3.132.0.34'] = 'p384'
 
 exports['1.3.132.0.35'] = 'p521'
 
-},{}],67:[function(require,module,exports){
+},{}],75:[function(require,module,exports){
 (function (Buffer){
 // much of this based on https://github.com/indutny/self-signed/blob/gh-pages/lib/rsa.js
 var createHmac = require('create-hmac')
@@ -14151,7 +15126,7 @@ module.exports.getKey = getKey
 module.exports.makeKey = makeKey
 
 }).call(this,require("buffer").Buffer)
-},{"./curves":66,"bn.js":42,"browserify-rsa":63,"buffer":76,"create-hmac":135,"elliptic":152,"parse-asn1":189}],68:[function(require,module,exports){
+},{"./curves":74,"bn.js":50,"browserify-rsa":71,"buffer":84,"create-hmac":143,"elliptic":160,"parse-asn1":197}],76:[function(require,module,exports){
 (function (Buffer){
 // much of this based on https://github.com/indutny/self-signed/blob/gh-pages/lib/rsa.js
 var curves = require('./curves')
@@ -14258,7 +15233,7 @@ function checkValue (b, q) {
 module.exports = verify
 
 }).call(this,require("buffer").Buffer)
-},{"./curves":66,"bn.js":42,"buffer":76,"elliptic":152,"parse-asn1":189}],69:[function(require,module,exports){
+},{"./curves":74,"bn.js":50,"buffer":84,"elliptic":160,"parse-asn1":197}],77:[function(require,module,exports){
 // Base58 encoding/decoding
 // Originally written by Mike Hearn for BitcoinJ
 // Copyright (c) 2011 Google Inc
@@ -14345,7 +15320,7 @@ module.exports = {
   decode: decode
 }
 
-},{}],70:[function(require,module,exports){
+},{}],78:[function(require,module,exports){
 (function (Buffer){
 'use strict'
 
@@ -14408,13 +15383,13 @@ module.exports = {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"bs58":71,"buffer":76,"create-hash":132}],71:[function(require,module,exports){
+},{"bs58":79,"buffer":84,"create-hash":140}],79:[function(require,module,exports){
 var basex = require('base-x')
 var ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
 module.exports = basex(ALPHABET)
 
-},{"base-x":17}],72:[function(require,module,exports){
+},{"base-x":17}],80:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 module.exports = function (a, b) {
@@ -14444,7 +15419,7 @@ module.exports = function (a, b) {
 };
 
 }).call(this,{"isBuffer":require("../is-buffer/index.js")})
-},{"../is-buffer/index.js":181}],73:[function(require,module,exports){
+},{"../is-buffer/index.js":189}],81:[function(require,module,exports){
 (function (Buffer){
 module.exports = function reverse (src) {
   var buffer = new Buffer(src.length)
@@ -14458,7 +15433,7 @@ module.exports = function reverse (src) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":76}],74:[function(require,module,exports){
+},{"buffer":84}],82:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -14570,7 +15545,7 @@ exports.allocUnsafeSlow = function allocUnsafeSlow(size) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"buffer":76}],75:[function(require,module,exports){
+},{"buffer":84}],83:[function(require,module,exports){
 (function (Buffer){
 module.exports = function xor (a, b) {
   var length = Math.min(a.length, b.length)
@@ -14584,7 +15559,7 @@ module.exports = function xor (a, b) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":76}],76:[function(require,module,exports){
+},{"buffer":84}],84:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -16377,7 +17352,7 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":18,"ieee754":178,"isarray":182}],77:[function(require,module,exports){
+},{"base64-js":18,"ieee754":186,"isarray":190}],85:[function(require,module,exports){
 (function (Buffer){
 var Transform = require('stream').Transform
 var inherits = require('inherits')
@@ -16471,22 +17446,22 @@ CipherBase.prototype._toString = function (value, enc, fin) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":76,"inherits":180,"stream":222,"string_decoder":223}],78:[function(require,module,exports){
+},{"buffer":84,"inherits":188,"stream":230,"string_decoder":231}],86:[function(require,module,exports){
 require('../modules/es6.symbol');
 require('../modules/es6.object.to-string');
 module.exports = require('../modules/_core').Symbol;
-},{"../modules/_core":84,"../modules/es6.object.to-string":128,"../modules/es6.symbol":129}],79:[function(require,module,exports){
+},{"../modules/_core":92,"../modules/es6.object.to-string":136,"../modules/es6.symbol":137}],87:[function(require,module,exports){
 module.exports = function(it){
   if(typeof it != 'function')throw TypeError(it + ' is not a function!');
   return it;
 };
-},{}],80:[function(require,module,exports){
+},{}],88:[function(require,module,exports){
 var isObject = require('./_is-object');
 module.exports = function(it){
   if(!isObject(it))throw TypeError(it + ' is not an object!');
   return it;
 };
-},{"./_is-object":100}],81:[function(require,module,exports){
+},{"./_is-object":108}],89:[function(require,module,exports){
 // false -> Array#indexOf
 // true  -> Array#includes
 var toIObject = require('./_to-iobject')
@@ -16508,7 +17483,7 @@ module.exports = function(IS_INCLUDES){
     } return !IS_INCLUDES && -1;
   };
 };
-},{"./_to-index":119,"./_to-iobject":121,"./_to-length":122}],82:[function(require,module,exports){
+},{"./_to-index":127,"./_to-iobject":129,"./_to-length":130}],90:[function(require,module,exports){
 // getting tag from 19.1.3.6 Object.prototype.toString()
 var cof = require('./_cof')
   , TAG = require('./_wks')('toStringTag')
@@ -16532,16 +17507,16 @@ module.exports = function(it){
     // ES3 arguments fallback
     : (B = cof(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
 };
-},{"./_cof":83,"./_wks":127}],83:[function(require,module,exports){
+},{"./_cof":91,"./_wks":135}],91:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = function(it){
   return toString.call(it).slice(8, -1);
 };
-},{}],84:[function(require,module,exports){
+},{}],92:[function(require,module,exports){
 var core = module.exports = {version: '2.4.0'};
 if(typeof __e == 'number')__e = core; // eslint-disable-line no-undef
-},{}],85:[function(require,module,exports){
+},{}],93:[function(require,module,exports){
 // optional / simple context binding
 var aFunction = require('./_a-function');
 module.exports = function(fn, that, length){
@@ -16562,18 +17537,18 @@ module.exports = function(fn, that, length){
     return fn.apply(that, arguments);
   };
 };
-},{"./_a-function":79}],86:[function(require,module,exports){
+},{"./_a-function":87}],94:[function(require,module,exports){
 // 7.2.1 RequireObjectCoercible(argument)
 module.exports = function(it){
   if(it == undefined)throw TypeError("Can't call method on  " + it);
   return it;
 };
-},{}],87:[function(require,module,exports){
+},{}],95:[function(require,module,exports){
 // Thank's IE8 for his funny defineProperty
 module.exports = !require('./_fails')(function(){
   return Object.defineProperty({}, 'a', {get: function(){ return 7; }}).a != 7;
 });
-},{"./_fails":92}],88:[function(require,module,exports){
+},{"./_fails":100}],96:[function(require,module,exports){
 var isObject = require('./_is-object')
   , document = require('./_global').document
   // in old IE typeof document.createElement is 'object'
@@ -16581,12 +17556,12 @@ var isObject = require('./_is-object')
 module.exports = function(it){
   return is ? document.createElement(it) : {};
 };
-},{"./_global":93,"./_is-object":100}],89:[function(require,module,exports){
+},{"./_global":101,"./_is-object":108}],97:[function(require,module,exports){
 // IE 8- don't enum bug keys
 module.exports = (
   'constructor,hasOwnProperty,isPrototypeOf,propertyIsEnumerable,toLocaleString,toString,valueOf'
 ).split(',');
-},{}],90:[function(require,module,exports){
+},{}],98:[function(require,module,exports){
 // all enumerable object keys, includes symbols
 var getKeys = require('./_object-keys')
   , gOPS    = require('./_object-gops')
@@ -16602,7 +17577,7 @@ module.exports = function(it){
     while(symbols.length > i)if(isEnum.call(it, key = symbols[i++]))result.push(key);
   } return result;
 };
-},{"./_object-gops":110,"./_object-keys":112,"./_object-pie":113}],91:[function(require,module,exports){
+},{"./_object-gops":118,"./_object-keys":120,"./_object-pie":121}],99:[function(require,module,exports){
 var global    = require('./_global')
   , core      = require('./_core')
   , hide      = require('./_hide')
@@ -16646,7 +17621,7 @@ $export.W = 32;  // wrap
 $export.U = 64;  // safe
 $export.R = 128; // real proto method for `library` 
 module.exports = $export;
-},{"./_core":84,"./_ctx":85,"./_global":93,"./_hide":95,"./_redefine":115}],92:[function(require,module,exports){
+},{"./_core":92,"./_ctx":93,"./_global":101,"./_hide":103,"./_redefine":123}],100:[function(require,module,exports){
 module.exports = function(exec){
   try {
     return !!exec();
@@ -16654,17 +17629,17 @@ module.exports = function(exec){
     return true;
   }
 };
-},{}],93:[function(require,module,exports){
+},{}],101:[function(require,module,exports){
 // https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
 var global = module.exports = typeof window != 'undefined' && window.Math == Math
   ? window : typeof self != 'undefined' && self.Math == Math ? self : Function('return this')();
 if(typeof __g == 'number')__g = global; // eslint-disable-line no-undef
-},{}],94:[function(require,module,exports){
+},{}],102:[function(require,module,exports){
 var hasOwnProperty = {}.hasOwnProperty;
 module.exports = function(it, key){
   return hasOwnProperty.call(it, key);
 };
-},{}],95:[function(require,module,exports){
+},{}],103:[function(require,module,exports){
 var dP         = require('./_object-dp')
   , createDesc = require('./_property-desc');
 module.exports = require('./_descriptors') ? function(object, key, value){
@@ -16673,29 +17648,29 @@ module.exports = require('./_descriptors') ? function(object, key, value){
   object[key] = value;
   return object;
 };
-},{"./_descriptors":87,"./_object-dp":105,"./_property-desc":114}],96:[function(require,module,exports){
+},{"./_descriptors":95,"./_object-dp":113,"./_property-desc":122}],104:[function(require,module,exports){
 module.exports = require('./_global').document && document.documentElement;
-},{"./_global":93}],97:[function(require,module,exports){
+},{"./_global":101}],105:[function(require,module,exports){
 module.exports = !require('./_descriptors') && !require('./_fails')(function(){
   return Object.defineProperty(require('./_dom-create')('div'), 'a', {get: function(){ return 7; }}).a != 7;
 });
-},{"./_descriptors":87,"./_dom-create":88,"./_fails":92}],98:[function(require,module,exports){
+},{"./_descriptors":95,"./_dom-create":96,"./_fails":100}],106:[function(require,module,exports){
 // fallback for non-array-like ES3 and non-enumerable old V8 strings
 var cof = require('./_cof');
 module.exports = Object('z').propertyIsEnumerable(0) ? Object : function(it){
   return cof(it) == 'String' ? it.split('') : Object(it);
 };
-},{"./_cof":83}],99:[function(require,module,exports){
+},{"./_cof":91}],107:[function(require,module,exports){
 // 7.2.2 IsArray(argument)
 var cof = require('./_cof');
 module.exports = Array.isArray || function isArray(arg){
   return cof(arg) == 'Array';
 };
-},{"./_cof":83}],100:[function(require,module,exports){
+},{"./_cof":91}],108:[function(require,module,exports){
 module.exports = function(it){
   return typeof it === 'object' ? it !== null : typeof it === 'function';
 };
-},{}],101:[function(require,module,exports){
+},{}],109:[function(require,module,exports){
 var getKeys   = require('./_object-keys')
   , toIObject = require('./_to-iobject');
 module.exports = function(object, el){
@@ -16706,9 +17681,9 @@ module.exports = function(object, el){
     , key;
   while(length > index)if(O[key = keys[index++]] === el)return key;
 };
-},{"./_object-keys":112,"./_to-iobject":121}],102:[function(require,module,exports){
+},{"./_object-keys":120,"./_to-iobject":129}],110:[function(require,module,exports){
 module.exports = false;
-},{}],103:[function(require,module,exports){
+},{}],111:[function(require,module,exports){
 var META     = require('./_uid')('meta')
   , isObject = require('./_is-object')
   , has      = require('./_has')
@@ -16762,7 +17737,7 @@ var meta = module.exports = {
   getWeak:  getWeak,
   onFreeze: onFreeze
 };
-},{"./_fails":92,"./_has":94,"./_is-object":100,"./_object-dp":105,"./_uid":124}],104:[function(require,module,exports){
+},{"./_fails":100,"./_has":102,"./_is-object":108,"./_object-dp":113,"./_uid":132}],112:[function(require,module,exports){
 // 19.1.2.2 / 15.2.3.5 Object.create(O [, Properties])
 var anObject    = require('./_an-object')
   , dPs         = require('./_object-dps')
@@ -16805,7 +17780,7 @@ module.exports = Object.create || function create(O, Properties){
   return Properties === undefined ? result : dPs(result, Properties);
 };
 
-},{"./_an-object":80,"./_dom-create":88,"./_enum-bug-keys":89,"./_html":96,"./_object-dps":106,"./_shared-key":117}],105:[function(require,module,exports){
+},{"./_an-object":88,"./_dom-create":96,"./_enum-bug-keys":97,"./_html":104,"./_object-dps":114,"./_shared-key":125}],113:[function(require,module,exports){
 var anObject       = require('./_an-object')
   , IE8_DOM_DEFINE = require('./_ie8-dom-define')
   , toPrimitive    = require('./_to-primitive')
@@ -16822,7 +17797,7 @@ exports.f = require('./_descriptors') ? Object.defineProperty : function defineP
   if('value' in Attributes)O[P] = Attributes.value;
   return O;
 };
-},{"./_an-object":80,"./_descriptors":87,"./_ie8-dom-define":97,"./_to-primitive":123}],106:[function(require,module,exports){
+},{"./_an-object":88,"./_descriptors":95,"./_ie8-dom-define":105,"./_to-primitive":131}],114:[function(require,module,exports){
 var dP       = require('./_object-dp')
   , anObject = require('./_an-object')
   , getKeys  = require('./_object-keys');
@@ -16836,7 +17811,7 @@ module.exports = require('./_descriptors') ? Object.defineProperties : function 
   while(length > i)dP.f(O, P = keys[i++], Properties[P]);
   return O;
 };
-},{"./_an-object":80,"./_descriptors":87,"./_object-dp":105,"./_object-keys":112}],107:[function(require,module,exports){
+},{"./_an-object":88,"./_descriptors":95,"./_object-dp":113,"./_object-keys":120}],115:[function(require,module,exports){
 var pIE            = require('./_object-pie')
   , createDesc     = require('./_property-desc')
   , toIObject      = require('./_to-iobject')
@@ -16853,7 +17828,7 @@ exports.f = require('./_descriptors') ? gOPD : function getOwnPropertyDescriptor
   } catch(e){ /* empty */ }
   if(has(O, P))return createDesc(!pIE.f.call(O, P), O[P]);
 };
-},{"./_descriptors":87,"./_has":94,"./_ie8-dom-define":97,"./_object-pie":113,"./_property-desc":114,"./_to-iobject":121,"./_to-primitive":123}],108:[function(require,module,exports){
+},{"./_descriptors":95,"./_has":102,"./_ie8-dom-define":105,"./_object-pie":121,"./_property-desc":122,"./_to-iobject":129,"./_to-primitive":131}],116:[function(require,module,exports){
 // fallback for IE11 buggy Object.getOwnPropertyNames with iframe and window
 var toIObject = require('./_to-iobject')
   , gOPN      = require('./_object-gopn').f
@@ -16874,7 +17849,7 @@ module.exports.f = function getOwnPropertyNames(it){
   return windowNames && toString.call(it) == '[object Window]' ? getWindowNames(it) : gOPN(toIObject(it));
 };
 
-},{"./_object-gopn":109,"./_to-iobject":121}],109:[function(require,module,exports){
+},{"./_object-gopn":117,"./_to-iobject":129}],117:[function(require,module,exports){
 // 19.1.2.7 / 15.2.3.4 Object.getOwnPropertyNames(O)
 var $keys      = require('./_object-keys-internal')
   , hiddenKeys = require('./_enum-bug-keys').concat('length', 'prototype');
@@ -16882,9 +17857,9 @@ var $keys      = require('./_object-keys-internal')
 exports.f = Object.getOwnPropertyNames || function getOwnPropertyNames(O){
   return $keys(O, hiddenKeys);
 };
-},{"./_enum-bug-keys":89,"./_object-keys-internal":111}],110:[function(require,module,exports){
+},{"./_enum-bug-keys":97,"./_object-keys-internal":119}],118:[function(require,module,exports){
 exports.f = Object.getOwnPropertySymbols;
-},{}],111:[function(require,module,exports){
+},{}],119:[function(require,module,exports){
 var has          = require('./_has')
   , toIObject    = require('./_to-iobject')
   , arrayIndexOf = require('./_array-includes')(false)
@@ -16902,7 +17877,7 @@ module.exports = function(object, names){
   }
   return result;
 };
-},{"./_array-includes":81,"./_has":94,"./_shared-key":117,"./_to-iobject":121}],112:[function(require,module,exports){
+},{"./_array-includes":89,"./_has":102,"./_shared-key":125,"./_to-iobject":129}],120:[function(require,module,exports){
 // 19.1.2.14 / 15.2.3.14 Object.keys(O)
 var $keys       = require('./_object-keys-internal')
   , enumBugKeys = require('./_enum-bug-keys');
@@ -16910,9 +17885,9 @@ var $keys       = require('./_object-keys-internal')
 module.exports = Object.keys || function keys(O){
   return $keys(O, enumBugKeys);
 };
-},{"./_enum-bug-keys":89,"./_object-keys-internal":111}],113:[function(require,module,exports){
+},{"./_enum-bug-keys":97,"./_object-keys-internal":119}],121:[function(require,module,exports){
 exports.f = {}.propertyIsEnumerable;
-},{}],114:[function(require,module,exports){
+},{}],122:[function(require,module,exports){
 module.exports = function(bitmap, value){
   return {
     enumerable  : !(bitmap & 1),
@@ -16921,7 +17896,7 @@ module.exports = function(bitmap, value){
     value       : value
   };
 };
-},{}],115:[function(require,module,exports){
+},{}],123:[function(require,module,exports){
 var global    = require('./_global')
   , hide      = require('./_hide')
   , has       = require('./_has')
@@ -16954,7 +17929,7 @@ require('./_core').inspectSource = function(it){
 })(Function.prototype, TO_STRING, function toString(){
   return typeof this == 'function' && this[SRC] || $toString.call(this);
 });
-},{"./_core":84,"./_global":93,"./_has":94,"./_hide":95,"./_uid":124}],116:[function(require,module,exports){
+},{"./_core":92,"./_global":101,"./_has":102,"./_hide":103,"./_uid":132}],124:[function(require,module,exports){
 var def = require('./_object-dp').f
   , has = require('./_has')
   , TAG = require('./_wks')('toStringTag');
@@ -16962,20 +17937,20 @@ var def = require('./_object-dp').f
 module.exports = function(it, tag, stat){
   if(it && !has(it = stat ? it : it.prototype, TAG))def(it, TAG, {configurable: true, value: tag});
 };
-},{"./_has":94,"./_object-dp":105,"./_wks":127}],117:[function(require,module,exports){
+},{"./_has":102,"./_object-dp":113,"./_wks":135}],125:[function(require,module,exports){
 var shared = require('./_shared')('keys')
   , uid    = require('./_uid');
 module.exports = function(key){
   return shared[key] || (shared[key] = uid(key));
 };
-},{"./_shared":118,"./_uid":124}],118:[function(require,module,exports){
+},{"./_shared":126,"./_uid":132}],126:[function(require,module,exports){
 var global = require('./_global')
   , SHARED = '__core-js_shared__'
   , store  = global[SHARED] || (global[SHARED] = {});
 module.exports = function(key){
   return store[key] || (store[key] = {});
 };
-},{"./_global":93}],119:[function(require,module,exports){
+},{"./_global":101}],127:[function(require,module,exports){
 var toInteger = require('./_to-integer')
   , max       = Math.max
   , min       = Math.min;
@@ -16983,28 +17958,28 @@ module.exports = function(index, length){
   index = toInteger(index);
   return index < 0 ? max(index + length, 0) : min(index, length);
 };
-},{"./_to-integer":120}],120:[function(require,module,exports){
+},{"./_to-integer":128}],128:[function(require,module,exports){
 // 7.1.4 ToInteger
 var ceil  = Math.ceil
   , floor = Math.floor;
 module.exports = function(it){
   return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
 };
-},{}],121:[function(require,module,exports){
+},{}],129:[function(require,module,exports){
 // to indexed object, toObject with fallback for non-array-like ES3 strings
 var IObject = require('./_iobject')
   , defined = require('./_defined');
 module.exports = function(it){
   return IObject(defined(it));
 };
-},{"./_defined":86,"./_iobject":98}],122:[function(require,module,exports){
+},{"./_defined":94,"./_iobject":106}],130:[function(require,module,exports){
 // 7.1.15 ToLength
 var toInteger = require('./_to-integer')
   , min       = Math.min;
 module.exports = function(it){
   return it > 0 ? min(toInteger(it), 0x1fffffffffffff) : 0; // pow(2, 53) - 1 == 9007199254740991
 };
-},{"./_to-integer":120}],123:[function(require,module,exports){
+},{"./_to-integer":128}],131:[function(require,module,exports){
 // 7.1.1 ToPrimitive(input [, PreferredType])
 var isObject = require('./_is-object');
 // instead of the ES6 spec version, we didn't implement @@toPrimitive case
@@ -17017,13 +17992,13 @@ module.exports = function(it, S){
   if(!S && typeof (fn = it.toString) == 'function' && !isObject(val = fn.call(it)))return val;
   throw TypeError("Can't convert object to primitive value");
 };
-},{"./_is-object":100}],124:[function(require,module,exports){
+},{"./_is-object":108}],132:[function(require,module,exports){
 var id = 0
   , px = Math.random();
 module.exports = function(key){
   return 'Symbol('.concat(key === undefined ? '' : key, ')_', (++id + px).toString(36));
 };
-},{}],125:[function(require,module,exports){
+},{}],133:[function(require,module,exports){
 var global         = require('./_global')
   , core           = require('./_core')
   , LIBRARY        = require('./_library')
@@ -17033,9 +18008,9 @@ module.exports = function(name){
   var $Symbol = core.Symbol || (core.Symbol = LIBRARY ? {} : global.Symbol || {});
   if(name.charAt(0) != '_' && !(name in $Symbol))defineProperty($Symbol, name, {value: wksExt.f(name)});
 };
-},{"./_core":84,"./_global":93,"./_library":102,"./_object-dp":105,"./_wks-ext":126}],126:[function(require,module,exports){
+},{"./_core":92,"./_global":101,"./_library":110,"./_object-dp":113,"./_wks-ext":134}],134:[function(require,module,exports){
 exports.f = require('./_wks');
-},{"./_wks":127}],127:[function(require,module,exports){
+},{"./_wks":135}],135:[function(require,module,exports){
 var store      = require('./_shared')('wks')
   , uid        = require('./_uid')
   , Symbol     = require('./_global').Symbol
@@ -17047,7 +18022,7 @@ var $exports = module.exports = function(name){
 };
 
 $exports.store = store;
-},{"./_global":93,"./_shared":118,"./_uid":124}],128:[function(require,module,exports){
+},{"./_global":101,"./_shared":126,"./_uid":132}],136:[function(require,module,exports){
 'use strict';
 // 19.1.3.6 Object.prototype.toString()
 var classof = require('./_classof')
@@ -17058,7 +18033,7 @@ if(test + '' != '[object z]'){
     return '[object ' + classof(this) + ']';
   }, true);
 }
-},{"./_classof":82,"./_redefine":115,"./_wks":127}],129:[function(require,module,exports){
+},{"./_classof":90,"./_redefine":123,"./_wks":135}],137:[function(require,module,exports){
 'use strict';
 // ECMAScript 6 symbols shim
 var global         = require('./_global')
@@ -17294,7 +18269,7 @@ setToStringTag($Symbol, 'Symbol');
 setToStringTag(Math, 'Math', true);
 // 24.3.3 JSON[@@toStringTag]
 setToStringTag(global.JSON, 'JSON', true);
-},{"./_an-object":80,"./_descriptors":87,"./_enum-keys":90,"./_export":91,"./_fails":92,"./_global":93,"./_has":94,"./_hide":95,"./_is-array":99,"./_keyof":101,"./_library":102,"./_meta":103,"./_object-create":104,"./_object-dp":105,"./_object-gopd":107,"./_object-gopn":109,"./_object-gopn-ext":108,"./_object-gops":110,"./_object-keys":112,"./_object-pie":113,"./_property-desc":114,"./_redefine":115,"./_set-to-string-tag":116,"./_shared":118,"./_to-iobject":121,"./_to-primitive":123,"./_uid":124,"./_wks":127,"./_wks-define":125,"./_wks-ext":126}],130:[function(require,module,exports){
+},{"./_an-object":88,"./_descriptors":95,"./_enum-keys":98,"./_export":99,"./_fails":100,"./_global":101,"./_has":102,"./_hide":103,"./_is-array":107,"./_keyof":109,"./_library":110,"./_meta":111,"./_object-create":112,"./_object-dp":113,"./_object-gopd":115,"./_object-gopn":117,"./_object-gopn-ext":116,"./_object-gops":118,"./_object-keys":120,"./_object-pie":121,"./_property-desc":122,"./_redefine":123,"./_set-to-string-tag":124,"./_shared":126,"./_to-iobject":129,"./_to-primitive":131,"./_uid":132,"./_wks":135,"./_wks-define":133,"./_wks-ext":134}],138:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -17405,7 +18380,7 @@ function objectToString(o) {
 }
 
 }).call(this,{"isBuffer":require("../../is-buffer/index.js")})
-},{"../../is-buffer/index.js":181}],131:[function(require,module,exports){
+},{"../../is-buffer/index.js":189}],139:[function(require,module,exports){
 (function (Buffer){
 var elliptic = require('elliptic');
 var BN = require('bn.js');
@@ -17531,7 +18506,7 @@ function formatReturnValue(bn, enc, len) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"bn.js":42,"buffer":76,"elliptic":152}],132:[function(require,module,exports){
+},{"bn.js":50,"buffer":84,"elliptic":160}],140:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 var inherits = require('inherits')
@@ -17587,7 +18562,7 @@ module.exports = function createHash (alg) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./md5":134,"buffer":76,"cipher-base":77,"inherits":180,"ripemd160":212,"sha.js":214}],133:[function(require,module,exports){
+},{"./md5":142,"buffer":84,"cipher-base":85,"inherits":188,"ripemd160":220,"sha.js":222}],141:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 var intSize = 4;
@@ -17624,7 +18599,7 @@ function hash(buf, fn, hashSize, bigEndian) {
 }
 exports.hash = hash;
 }).call(this,require("buffer").Buffer)
-},{"buffer":76}],134:[function(require,module,exports){
+},{"buffer":84}],142:[function(require,module,exports){
 'use strict';
 /*
  * A JavaScript implementation of the RSA Data Security, Inc. MD5 Message
@@ -17781,7 +18756,7 @@ function bit_rol(num, cnt)
 module.exports = function md5(buf) {
   return helpers.hash(buf, core_md5, 16);
 };
-},{"./helpers":133}],135:[function(require,module,exports){
+},{"./helpers":141}],143:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 var createHash = require('create-hash/browser');
@@ -17853,7 +18828,7 @@ module.exports = function createHmac(alg, key) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":76,"create-hash/browser":132,"inherits":180,"stream":222}],136:[function(require,module,exports){
+},{"buffer":84,"create-hash/browser":140,"inherits":188,"stream":230}],144:[function(require,module,exports){
 'use strict'
 
 exports.randomBytes = exports.rng = exports.pseudoRandomBytes = exports.prng = require('randombytes')
@@ -17932,7 +18907,7 @@ var publicEncrypt = require('public-encrypt')
   }
 })
 
-},{"browserify-cipher":60,"browserify-sign":65,"browserify-sign/algos":64,"create-ecdh":131,"create-hash":132,"create-hmac":135,"diffie-hellman":143,"pbkdf2":190,"public-encrypt":193,"randombytes":200}],137:[function(require,module,exports){
+},{"browserify-cipher":68,"browserify-sign":73,"browserify-sign/algos":72,"create-ecdh":139,"create-hash":140,"create-hmac":143,"diffie-hellman":151,"pbkdf2":198,"public-encrypt":201,"randombytes":208}],145:[function(require,module,exports){
 'use strict';
 
 exports.utils = require('./des/utils');
@@ -17941,7 +18916,7 @@ exports.DES = require('./des/des');
 exports.CBC = require('./des/cbc');
 exports.EDE = require('./des/ede');
 
-},{"./des/cbc":138,"./des/cipher":139,"./des/des":140,"./des/ede":141,"./des/utils":142}],138:[function(require,module,exports){
+},{"./des/cbc":146,"./des/cipher":147,"./des/des":148,"./des/ede":149,"./des/utils":150}],146:[function(require,module,exports){
 'use strict';
 
 var assert = require('minimalistic-assert');
@@ -18008,7 +18983,7 @@ proto._update = function _update(inp, inOff, out, outOff) {
   }
 };
 
-},{"inherits":180,"minimalistic-assert":185}],139:[function(require,module,exports){
+},{"inherits":188,"minimalistic-assert":193}],147:[function(require,module,exports){
 'use strict';
 
 var assert = require('minimalistic-assert');
@@ -18151,7 +19126,7 @@ Cipher.prototype._finalDecrypt = function _finalDecrypt() {
   return this._unpad(out);
 };
 
-},{"minimalistic-assert":185}],140:[function(require,module,exports){
+},{"minimalistic-assert":193}],148:[function(require,module,exports){
 'use strict';
 
 var assert = require('minimalistic-assert');
@@ -18296,7 +19271,7 @@ DES.prototype._decrypt = function _decrypt(state, lStart, rStart, out, off) {
   utils.rip(l, r, out, off);
 };
 
-},{"../des":137,"inherits":180,"minimalistic-assert":185}],141:[function(require,module,exports){
+},{"../des":145,"inherits":188,"minimalistic-assert":193}],149:[function(require,module,exports){
 'use strict';
 
 var assert = require('minimalistic-assert');
@@ -18353,7 +19328,7 @@ EDE.prototype._update = function _update(inp, inOff, out, outOff) {
 EDE.prototype._pad = DES.prototype._pad;
 EDE.prototype._unpad = DES.prototype._unpad;
 
-},{"../des":137,"inherits":180,"minimalistic-assert":185}],142:[function(require,module,exports){
+},{"../des":145,"inherits":188,"minimalistic-assert":193}],150:[function(require,module,exports){
 'use strict';
 
 exports.readUInt32BE = function readUInt32BE(bytes, off) {
@@ -18611,7 +19586,7 @@ exports.padSplit = function padSplit(num, size, group) {
   return out.join(' ');
 };
 
-},{}],143:[function(require,module,exports){
+},{}],151:[function(require,module,exports){
 (function (Buffer){
 var generatePrime = require('./lib/generatePrime')
 var primes = require('./lib/primes.json')
@@ -18657,7 +19632,7 @@ exports.DiffieHellmanGroup = exports.createDiffieHellmanGroup = exports.getDiffi
 exports.createDiffieHellman = exports.DiffieHellman = createDiffieHellman
 
 }).call(this,require("buffer").Buffer)
-},{"./lib/dh":144,"./lib/generatePrime":145,"./lib/primes.json":146,"buffer":76}],144:[function(require,module,exports){
+},{"./lib/dh":152,"./lib/generatePrime":153,"./lib/primes.json":154,"buffer":84}],152:[function(require,module,exports){
 (function (Buffer){
 var BN = require('bn.js');
 var MillerRabin = require('miller-rabin');
@@ -18825,7 +19800,7 @@ function formatReturnValue(bn, enc) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./generatePrime":145,"bn.js":42,"buffer":76,"miller-rabin":184,"randombytes":200}],145:[function(require,module,exports){
+},{"./generatePrime":153,"bn.js":50,"buffer":84,"miller-rabin":192,"randombytes":208}],153:[function(require,module,exports){
 var randomBytes = require('randombytes');
 module.exports = findPrime;
 findPrime.simpleSieve = simpleSieve;
@@ -18932,7 +19907,7 @@ function findPrime(bits, gen) {
 
 }
 
-},{"bn.js":42,"miller-rabin":184,"randombytes":200}],146:[function(require,module,exports){
+},{"bn.js":50,"miller-rabin":192,"randombytes":208}],154:[function(require,module,exports){
 module.exports={
     "modp1": {
         "gen": "02",
@@ -18967,7 +19942,7 @@ module.exports={
         "prime": "ffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b139b22514a08798e3404ddef9519b3cd3a431b302b0a6df25f14374fe1356d6d51c245e485b576625e7ec6f44c42e9a637ed6b0bff5cb6f406b7edee386bfb5a899fa5ae9f24117c4b1fe649286651ece45b3dc2007cb8a163bf0598da48361c55d39a69163fa8fd24cf5f83655d23dca3ad961c62f356208552bb9ed529077096966d670c354e4abc9804f1746c08ca18217c32905e462e36ce3be39e772c180e86039b2783a2ec07a28fb5c55df06f4c52c9de2bcbf6955817183995497cea956ae515d2261898fa051015728e5a8aaac42dad33170d04507a33a85521abdf1cba64ecfb850458dbef0a8aea71575d060c7db3970f85a6e1e4c7abf5ae8cdb0933d71e8c94e04a25619dcee3d2261ad2ee6bf12ffa06d98a0864d87602733ec86a64521f2b18177b200cbbe117577a615d6c770988c0bad946e208e24fa074e5ab3143db5bfce0fd108e4b82d120a92108011a723c12a787e6d788719a10bdba5b2699c327186af4e23c1a946834b6150bda2583e9ca2ad44ce8dbbbc2db04de8ef92e8efc141fbecaa6287c59474e6bc05d99b2964fa090c3a2233ba186515be7ed1f612970cee2d7afb81bdd762170481cd0069127d5b05aa993b4ea988d8fddc186ffb7dc90a6c08f4df435c93402849236c3fab4d27c7026c1d4dcb2602646dec9751e763dba37bdf8ff9406ad9e530ee5db382f413001aeb06a53ed9027d831179727b0865a8918da3edbebcf9b14ed44ce6cbaced4bb1bdb7f1447e6cc254b332051512bd7af426fb8f401378cd2bf5983ca01c64b92ecf032ea15d1721d03f482d7ce6e74fef6d55e702f46980c82b5a84031900b1c9e59e7c97fbec7e8f323a97a7e36cc88be0f1d45b7ff585ac54bd407b22b4154aacc8f6d7ebf48e1d814cc5ed20f8037e0a79715eef29be32806a1d58bb7c5da76f550aa3d8a1fbff0eb19ccb1a313d55cda56c9ec2ef29632387fe8d76e3c0468043e8f663f4860ee12bf2d5b0b7474d6e694f91e6dbe115974a3926f12fee5e438777cb6a932df8cd8bec4d073b931ba3bc832b68d9dd300741fa7bf8afc47ed2576f6936ba424663aab639c5ae4f5683423b4742bf1c978238f16cbe39d652de3fdb8befc848ad922222e04a4037c0713eb57a81a23f0c73473fc646cea306b4bcbc8862f8385ddfa9d4b7fa2c087e879683303ed5bdd3a062b3cf5b3a278a66d2a13f83f44f82ddf310ee074ab6a364597e899a0255dc164f31cc50846851df9ab48195ded7ea1b1d510bd7ee74d73faf36bc31ecfa268359046f4eb879f924009438b481c6cd7889a002ed5ee382bc9190da6fc026e479558e4475677e9aa9e3050e2765694dfc81f56e880b96e7160c980dd98edd3dfffffffffffffffff"
     }
 }
-},{}],147:[function(require,module,exports){
+},{}],155:[function(require,module,exports){
 var assert = require('assert')
 var BigInteger = require('bigi')
 
@@ -19043,7 +20018,7 @@ Curve.prototype.validate = function (Q) {
 
 module.exports = Curve
 
-},{"./point":151,"assert":16,"bigi":21}],148:[function(require,module,exports){
+},{"./point":159,"assert":16,"bigi":21}],156:[function(require,module,exports){
 module.exports={
   "secp128r1": {
     "p": "fffffffdffffffffffffffffffffffff",
@@ -19110,7 +20085,7 @@ module.exports={
   }
 }
 
-},{}],149:[function(require,module,exports){
+},{}],157:[function(require,module,exports){
 var Point = require('./point')
 var Curve = require('./curve')
 
@@ -19122,7 +20097,7 @@ module.exports = {
   getCurveByName: getCurveByName
 }
 
-},{"./curve":147,"./names":150,"./point":151}],150:[function(require,module,exports){
+},{"./curve":155,"./names":158,"./point":159}],158:[function(require,module,exports){
 var BigInteger = require('bigi')
 
 var curves = require('./curves.json')
@@ -19145,7 +20120,7 @@ function getCurveByName (name) {
 
 module.exports = getCurveByName
 
-},{"./curve":147,"./curves.json":148,"bigi":21}],151:[function(require,module,exports){
+},{"./curve":155,"./curves.json":156,"bigi":21}],159:[function(require,module,exports){
 (function (Buffer){
 var assert = require('assert')
 var BigInteger = require('bigi')
@@ -19395,7 +20370,7 @@ Point.prototype.toString = function () {
 module.exports = Point
 
 }).call(this,require("buffer").Buffer)
-},{"assert":16,"bigi":21,"buffer":76}],152:[function(require,module,exports){
+},{"assert":16,"bigi":21,"buffer":84}],160:[function(require,module,exports){
 'use strict';
 
 var elliptic = exports;
@@ -19411,7 +20386,7 @@ elliptic.curves = require('./elliptic/curves');
 elliptic.ec = require('./elliptic/ec');
 elliptic.eddsa = require('./elliptic/eddsa');
 
-},{"../package.json":168,"./elliptic/curve":155,"./elliptic/curves":158,"./elliptic/ec":159,"./elliptic/eddsa":162,"./elliptic/hmac-drbg":165,"./elliptic/utils":167,"brorand":43}],153:[function(require,module,exports){
+},{"../package.json":176,"./elliptic/curve":163,"./elliptic/curves":166,"./elliptic/ec":167,"./elliptic/eddsa":170,"./elliptic/hmac-drbg":173,"./elliptic/utils":175,"brorand":51}],161:[function(require,module,exports){
 'use strict';
 
 var BN = require('bn.js');
@@ -19788,7 +20763,7 @@ BasePoint.prototype.dblp = function dblp(k) {
   return r;
 };
 
-},{"../../elliptic":152,"bn.js":42}],154:[function(require,module,exports){
+},{"../../elliptic":160,"bn.js":50}],162:[function(require,module,exports){
 'use strict';
 
 var curve = require('../curve');
@@ -20223,7 +21198,7 @@ Point.prototype.eqXToP = function eqXToP(x) {
 Point.prototype.toP = Point.prototype.normalize;
 Point.prototype.mixedAdd = Point.prototype.add;
 
-},{"../../elliptic":152,"../curve":155,"bn.js":42,"inherits":180}],155:[function(require,module,exports){
+},{"../../elliptic":160,"../curve":163,"bn.js":50,"inherits":188}],163:[function(require,module,exports){
 'use strict';
 
 var curve = exports;
@@ -20233,7 +21208,7 @@ curve.short = require('./short');
 curve.mont = require('./mont');
 curve.edwards = require('./edwards');
 
-},{"./base":153,"./edwards":154,"./mont":156,"./short":157}],156:[function(require,module,exports){
+},{"./base":161,"./edwards":162,"./mont":164,"./short":165}],164:[function(require,module,exports){
 'use strict';
 
 var curve = require('../curve');
@@ -20415,7 +21390,7 @@ Point.prototype.getX = function getX() {
   return this.x.fromRed();
 };
 
-},{"../../elliptic":152,"../curve":155,"bn.js":42,"inherits":180}],157:[function(require,module,exports){
+},{"../../elliptic":160,"../curve":163,"bn.js":50,"inherits":188}],165:[function(require,module,exports){
 'use strict';
 
 var curve = require('../curve');
@@ -21355,7 +22330,7 @@ JPoint.prototype.isInfinity = function isInfinity() {
   return this.z.cmpn(0) === 0;
 };
 
-},{"../../elliptic":152,"../curve":155,"bn.js":42,"inherits":180}],158:[function(require,module,exports){
+},{"../../elliptic":160,"../curve":163,"bn.js":50,"inherits":188}],166:[function(require,module,exports){
 'use strict';
 
 var curves = exports;
@@ -21562,7 +22537,7 @@ defineCurve('secp256k1', {
   ]
 });
 
-},{"../elliptic":152,"./precomputed/secp256k1":166,"hash.js":172}],159:[function(require,module,exports){
+},{"../elliptic":160,"./precomputed/secp256k1":174,"hash.js":180}],167:[function(require,module,exports){
 'use strict';
 
 var BN = require('bn.js');
@@ -21801,7 +22776,7 @@ EC.prototype.getKeyRecoveryParam = function(e, signature, Q, enc) {
   throw new Error('Unable to find valid recovery factor');
 };
 
-},{"../../elliptic":152,"./key":160,"./signature":161,"bn.js":42}],160:[function(require,module,exports){
+},{"../../elliptic":160,"./key":168,"./signature":169,"bn.js":50}],168:[function(require,module,exports){
 'use strict';
 
 var BN = require('bn.js');
@@ -21910,7 +22885,7 @@ KeyPair.prototype.inspect = function inspect() {
          ' pub: ' + (this.pub && this.pub.inspect()) + ' >';
 };
 
-},{"bn.js":42}],161:[function(require,module,exports){
+},{"bn.js":50}],169:[function(require,module,exports){
 'use strict';
 
 var BN = require('bn.js');
@@ -22047,7 +23022,7 @@ Signature.prototype.toDER = function toDER(enc) {
   return utils.encode(res, enc);
 };
 
-},{"../../elliptic":152,"bn.js":42}],162:[function(require,module,exports){
+},{"../../elliptic":160,"bn.js":50}],170:[function(require,module,exports){
 'use strict';
 
 var hash = require('hash.js');
@@ -22167,7 +23142,7 @@ EDDSA.prototype.isPoint = function isPoint(val) {
   return val instanceof this.pointClass;
 };
 
-},{"../../elliptic":152,"./key":163,"./signature":164,"hash.js":172}],163:[function(require,module,exports){
+},{"../../elliptic":160,"./key":171,"./signature":172,"hash.js":180}],171:[function(require,module,exports){
 'use strict';
 
 var elliptic = require('../../elliptic');
@@ -22265,7 +23240,7 @@ KeyPair.prototype.getPublic = function getPublic(enc) {
 
 module.exports = KeyPair;
 
-},{"../../elliptic":152}],164:[function(require,module,exports){
+},{"../../elliptic":160}],172:[function(require,module,exports){
 'use strict';
 
 var BN = require('bn.js');
@@ -22333,7 +23308,7 @@ Signature.prototype.toHex = function toHex() {
 
 module.exports = Signature;
 
-},{"../../elliptic":152,"bn.js":42}],165:[function(require,module,exports){
+},{"../../elliptic":160,"bn.js":50}],173:[function(require,module,exports){
 'use strict';
 
 var hash = require('hash.js');
@@ -22449,7 +23424,7 @@ HmacDRBG.prototype.generate = function generate(len, enc, add, addEnc) {
   return utils.encode(res, enc);
 };
 
-},{"../elliptic":152,"hash.js":172}],166:[function(require,module,exports){
+},{"../elliptic":160,"hash.js":180}],174:[function(require,module,exports){
 module.exports = {
   doubles: {
     step: 4,
@@ -23231,7 +24206,7 @@ module.exports = {
   }
 };
 
-},{}],167:[function(require,module,exports){
+},{}],175:[function(require,module,exports){
 'use strict';
 
 var utils = exports;
@@ -23405,7 +24380,7 @@ function intFromLE(bytes) {
 utils.intFromLE = intFromLE;
 
 
-},{"bn.js":42}],168:[function(require,module,exports){
+},{"bn.js":50}],176:[function(require,module,exports){
 module.exports={
   "_args": [
     [
@@ -23517,7 +24492,7 @@ module.exports={
   "version": "6.3.2"
 }
 
-},{}],169:[function(require,module,exports){
+},{}],177:[function(require,module,exports){
 (function (process,global){
 /*!
  * @overview es6-promise - a tiny implementation of Promises/A+.
@@ -24674,7 +25649,7 @@ return Promise;
 })));
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":192}],170:[function(require,module,exports){
+},{"_process":200}],178:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -24978,7 +25953,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],171:[function(require,module,exports){
+},{}],179:[function(require,module,exports){
 (function (Buffer){
 var md5 = require('create-hash/md5')
 module.exports = EVP_BytesToKey
@@ -25050,7 +26025,7 @@ function EVP_BytesToKey (password, salt, keyLen, ivLen) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":76,"create-hash/md5":134}],172:[function(require,module,exports){
+},{"buffer":84,"create-hash/md5":142}],180:[function(require,module,exports){
 var hash = exports;
 
 hash.utils = require('./hash/utils');
@@ -25067,7 +26042,7 @@ hash.sha384 = hash.sha.sha384;
 hash.sha512 = hash.sha.sha512;
 hash.ripemd160 = hash.ripemd.ripemd160;
 
-},{"./hash/common":173,"./hash/hmac":174,"./hash/ripemd":175,"./hash/sha":176,"./hash/utils":177}],173:[function(require,module,exports){
+},{"./hash/common":181,"./hash/hmac":182,"./hash/ripemd":183,"./hash/sha":184,"./hash/utils":185}],181:[function(require,module,exports){
 var hash = require('../hash');
 var utils = hash.utils;
 var assert = utils.assert;
@@ -25160,7 +26135,7 @@ BlockHash.prototype._pad = function pad() {
   return res;
 };
 
-},{"../hash":172}],174:[function(require,module,exports){
+},{"../hash":180}],182:[function(require,module,exports){
 var hmac = exports;
 
 var hash = require('../hash');
@@ -25210,7 +26185,7 @@ Hmac.prototype.digest = function digest(enc) {
   return this.outer.digest(enc);
 };
 
-},{"../hash":172}],175:[function(require,module,exports){
+},{"../hash":180}],183:[function(require,module,exports){
 var hash = require('../hash');
 var utils = hash.utils;
 
@@ -25356,7 +26331,7 @@ var sh = [
   8, 5, 12, 9, 12, 5, 14, 6, 8, 13, 6, 5, 15, 13, 11, 11
 ];
 
-},{"../hash":172}],176:[function(require,module,exports){
+},{"../hash":180}],184:[function(require,module,exports){
 var hash = require('../hash');
 var utils = hash.utils;
 var assert = utils.assert;
@@ -25922,7 +26897,7 @@ function g1_512_lo(xh, xl) {
   return r;
 }
 
-},{"../hash":172}],177:[function(require,module,exports){
+},{"../hash":180}],185:[function(require,module,exports){
 var utils = exports;
 var inherits = require('inherits');
 
@@ -26181,7 +27156,7 @@ function shr64_lo(ah, al, num) {
 };
 exports.shr64_lo = shr64_lo;
 
-},{"inherits":180}],178:[function(require,module,exports){
+},{"inherits":188}],186:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -26267,7 +27242,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],179:[function(require,module,exports){
+},{}],187:[function(require,module,exports){
 
 var indexOf = [].indexOf;
 
@@ -26278,7 +27253,7 @@ module.exports = function(arr, obj){
   }
   return -1;
 };
-},{}],180:[function(require,module,exports){
+},{}],188:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -26303,7 +27278,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],181:[function(require,module,exports){
+},{}],189:[function(require,module,exports){
 /*!
  * Determine if an object is a Buffer
  *
@@ -26326,14 +27301,14 @@ function isSlowBuffer (obj) {
   return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
-},{}],182:[function(require,module,exports){
+},{}],190:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],183:[function(require,module,exports){
+},{}],191:[function(require,module,exports){
 // the whatwg-fetch polyfill installs the fetch() function
 // on the global object (window or self)
 //
@@ -26341,7 +27316,7 @@ module.exports = Array.isArray || function (arr) {
 require('whatwg-fetch');
 module.exports = self.fetch.bind(self);
 
-},{"whatwg-fetch":234}],184:[function(require,module,exports){
+},{"whatwg-fetch":242}],192:[function(require,module,exports){
 var bn = require('bn.js');
 var brorand = require('brorand');
 
@@ -26456,7 +27431,7 @@ MillerRabin.prototype.getDivisor = function getDivisor(n, k) {
   return false;
 };
 
-},{"bn.js":42,"brorand":43}],185:[function(require,module,exports){
+},{"bn.js":50,"brorand":51}],193:[function(require,module,exports){
 module.exports = assert;
 
 function assert(val, msg) {
@@ -26469,7 +27444,7 @@ assert.equal = function assertEqual(l, r, msg) {
     throw new Error(msg || ('Assertion failed: ' + l + ' != ' + r));
 };
 
-},{}],186:[function(require,module,exports){
+},{}],194:[function(require,module,exports){
 module.exports={"2.16.840.1.101.3.4.1.1": "aes-128-ecb",
 "2.16.840.1.101.3.4.1.2": "aes-128-cbc",
 "2.16.840.1.101.3.4.1.3": "aes-128-ofb",
@@ -26483,7 +27458,7 @@ module.exports={"2.16.840.1.101.3.4.1.1": "aes-128-ecb",
 "2.16.840.1.101.3.4.1.43": "aes-256-ofb",
 "2.16.840.1.101.3.4.1.44": "aes-256-cfb"
 }
-},{}],187:[function(require,module,exports){
+},{}],195:[function(require,module,exports){
 // from https://github.com/indutny/self-signed/blob/gh-pages/lib/asn1.js
 // Fedor, you are amazing.
 
@@ -26602,7 +27577,7 @@ exports.signature = asn1.define('signature', function () {
   )
 })
 
-},{"asn1.js":2}],188:[function(require,module,exports){
+},{"asn1.js":2}],196:[function(require,module,exports){
 (function (Buffer){
 // adapted from https://github.com/apatil/pemstrip
 var findProc = /Proc-Type: 4,ENCRYPTED\r?\nDEK-Info: AES-((?:128)|(?:192)|(?:256))-CBC,([0-9A-H]+)\r?\n\r?\n([0-9A-z\n\r\+\/\=]+)\r?\n/m
@@ -26636,7 +27611,7 @@ module.exports = function (okey, password) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"browserify-aes":47,"buffer":76,"evp_bytestokey":171}],189:[function(require,module,exports){
+},{"browserify-aes":55,"buffer":84,"evp_bytestokey":179}],197:[function(require,module,exports){
 (function (Buffer){
 var asn1 = require('./asn1')
 var aesid = require('./aesid.json')
@@ -26741,7 +27716,7 @@ function decrypt (data, password) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./aesid.json":186,"./asn1":187,"./fixProc":188,"browserify-aes":47,"buffer":76,"pbkdf2":190}],190:[function(require,module,exports){
+},{"./aesid.json":194,"./asn1":195,"./fixProc":196,"browserify-aes":55,"buffer":84,"pbkdf2":198}],198:[function(require,module,exports){
 (function (Buffer){
 var createHmac = require('create-hmac')
 var MAX_ALLOC = Math.pow(2, 30) - 1 // default in iojs
@@ -26825,7 +27800,7 @@ function pbkdf2Sync (password, salt, iterations, keylen, digest) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":76,"create-hmac":135}],191:[function(require,module,exports){
+},{"buffer":84,"create-hmac":143}],199:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -26872,7 +27847,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 }
 
 }).call(this,require('_process'))
-},{"_process":192}],192:[function(require,module,exports){
+},{"_process":200}],200:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -27054,7 +28029,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],193:[function(require,module,exports){
+},{}],201:[function(require,module,exports){
 exports.publicEncrypt = require('./publicEncrypt');
 exports.privateDecrypt = require('./privateDecrypt');
 
@@ -27065,7 +28040,7 @@ exports.privateEncrypt = function privateEncrypt(key, buf) {
 exports.publicDecrypt = function publicDecrypt(key, buf) {
   return exports.privateDecrypt(key, buf, true);
 };
-},{"./privateDecrypt":195,"./publicEncrypt":196}],194:[function(require,module,exports){
+},{"./privateDecrypt":203,"./publicEncrypt":204}],202:[function(require,module,exports){
 (function (Buffer){
 var createHash = require('create-hash');
 module.exports = function (seed, len) {
@@ -27084,7 +28059,7 @@ function i2ops(c) {
   return out;
 }
 }).call(this,require("buffer").Buffer)
-},{"buffer":76,"create-hash":132}],195:[function(require,module,exports){
+},{"buffer":84,"create-hash":140}],203:[function(require,module,exports){
 (function (Buffer){
 var parseKeys = require('parse-asn1');
 var mgf = require('./mgf');
@@ -27195,7 +28170,7 @@ function compare(a, b){
   return dif;
 }
 }).call(this,require("buffer").Buffer)
-},{"./mgf":194,"./withPublic":197,"./xor":198,"bn.js":42,"browserify-rsa":63,"buffer":76,"create-hash":132,"parse-asn1":189}],196:[function(require,module,exports){
+},{"./mgf":202,"./withPublic":205,"./xor":206,"bn.js":50,"browserify-rsa":71,"buffer":84,"create-hash":140,"parse-asn1":197}],204:[function(require,module,exports){
 (function (Buffer){
 var parseKeys = require('parse-asn1');
 var randomBytes = require('randombytes');
@@ -27293,7 +28268,7 @@ function nonZero(len, crypto) {
   return out;
 }
 }).call(this,require("buffer").Buffer)
-},{"./mgf":194,"./withPublic":197,"./xor":198,"bn.js":42,"browserify-rsa":63,"buffer":76,"create-hash":132,"parse-asn1":189,"randombytes":200}],197:[function(require,module,exports){
+},{"./mgf":202,"./withPublic":205,"./xor":206,"bn.js":50,"browserify-rsa":71,"buffer":84,"create-hash":140,"parse-asn1":197,"randombytes":208}],205:[function(require,module,exports){
 (function (Buffer){
 var bn = require('bn.js');
 function withPublic(paddedMsg, key) {
@@ -27306,7 +28281,7 @@ function withPublic(paddedMsg, key) {
 
 module.exports = withPublic;
 }).call(this,require("buffer").Buffer)
-},{"bn.js":42,"buffer":76}],198:[function(require,module,exports){
+},{"bn.js":50,"buffer":84}],206:[function(require,module,exports){
 module.exports = function xor(a, b) {
   var len = a.length;
   var i = -1;
@@ -27315,7 +28290,7 @@ module.exports = function xor(a, b) {
   }
   return a
 };
-},{}],199:[function(require,module,exports){
+},{}],207:[function(require,module,exports){
 //  Ramda v0.22.1
 //  https://github.com/ramda/ramda
 //  (c) 2013-2016 Scott Sauyet, Michael Hurley, and David Chambers
@@ -36148,7 +37123,7 @@ module.exports = function xor(a, b) {
 
 }.call(this));
 
-},{}],200:[function(require,module,exports){
+},{}],208:[function(require,module,exports){
 (function (process,global,Buffer){
 'use strict'
 
@@ -36188,10 +37163,10 @@ function randomBytes (size, cb) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"_process":192,"buffer":76}],201:[function(require,module,exports){
+},{"_process":200,"buffer":84}],209:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":202}],202:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":210}],210:[function(require,module,exports){
 // a duplex stream is just a stream that is both readable and writable.
 // Since JS doesn't have multiple prototypal inheritance, this class
 // prototypally inherits from Readable, and then parasitically from
@@ -36267,7 +37242,7 @@ function forEach(xs, f) {
     f(xs[i], i);
   }
 }
-},{"./_stream_readable":204,"./_stream_writable":206,"core-util-is":130,"inherits":180,"process-nextick-args":191}],203:[function(require,module,exports){
+},{"./_stream_readable":212,"./_stream_writable":214,"core-util-is":138,"inherits":188,"process-nextick-args":199}],211:[function(require,module,exports){
 // a passthrough stream.
 // basically just the most minimal sort of Transform stream.
 // Every written chunk gets output as-is.
@@ -36294,7 +37269,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":205,"core-util-is":130,"inherits":180}],204:[function(require,module,exports){
+},{"./_stream_transform":213,"core-util-is":138,"inherits":188}],212:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -37238,7 +38213,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'))
-},{"./_stream_duplex":202,"./internal/streams/BufferList":207,"_process":192,"buffer":76,"buffer-shims":74,"core-util-is":130,"events":170,"inherits":180,"isarray":182,"process-nextick-args":191,"string_decoder/":223,"util":44}],205:[function(require,module,exports){
+},{"./_stream_duplex":210,"./internal/streams/BufferList":215,"_process":200,"buffer":84,"buffer-shims":82,"core-util-is":138,"events":178,"inherits":188,"isarray":190,"process-nextick-args":199,"string_decoder/":231,"util":52}],213:[function(require,module,exports){
 // a transform stream is a readable/writable stream where you do
 // something with the data.  Sometimes it's called a "filter",
 // but that's not a great name for it, since that implies a thing where
@@ -37421,7 +38396,7 @@ function done(stream, er, data) {
 
   return stream.push(null);
 }
-},{"./_stream_duplex":202,"core-util-is":130,"inherits":180}],206:[function(require,module,exports){
+},{"./_stream_duplex":210,"core-util-is":138,"inherits":188}],214:[function(require,module,exports){
 (function (process){
 // A bit simpler than readable streams.
 // Implement an async ._write(chunk, encoding, cb), and it'll handle all
@@ -37978,7 +38953,7 @@ function CorkedRequest(state) {
   };
 }
 }).call(this,require('_process'))
-},{"./_stream_duplex":202,"_process":192,"buffer":76,"buffer-shims":74,"core-util-is":130,"events":170,"inherits":180,"process-nextick-args":191,"util-deprecate":229}],207:[function(require,module,exports){
+},{"./_stream_duplex":210,"_process":200,"buffer":84,"buffer-shims":82,"core-util-is":138,"events":178,"inherits":188,"process-nextick-args":199,"util-deprecate":237}],215:[function(require,module,exports){
 'use strict';
 
 var Buffer = require('buffer').Buffer;
@@ -38043,10 +39018,10 @@ BufferList.prototype.concat = function (n) {
   }
   return ret;
 };
-},{"buffer":76,"buffer-shims":74}],208:[function(require,module,exports){
+},{"buffer":84,"buffer-shims":82}],216:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":203}],209:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":211}],217:[function(require,module,exports){
 (function (process){
 var Stream = (function (){
   try {
@@ -38066,13 +39041,13 @@ if (!process.browser && process.env.READABLE_STREAM === 'disable' && Stream) {
 }
 
 }).call(this,require('_process'))
-},{"./lib/_stream_duplex.js":202,"./lib/_stream_passthrough.js":203,"./lib/_stream_readable.js":204,"./lib/_stream_transform.js":205,"./lib/_stream_writable.js":206,"_process":192}],210:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":210,"./lib/_stream_passthrough.js":211,"./lib/_stream_readable.js":212,"./lib/_stream_transform.js":213,"./lib/_stream_writable.js":214,"_process":200}],218:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":205}],211:[function(require,module,exports){
+},{"./lib/_stream_transform.js":213}],219:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":206}],212:[function(require,module,exports){
+},{"./lib/_stream_writable.js":214}],220:[function(require,module,exports){
 (function (Buffer){
 /*
 CryptoJS v3.1.2
@@ -38286,7 +39261,7 @@ function ripemd160 (message) {
 module.exports = ripemd160
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":76}],213:[function(require,module,exports){
+},{"buffer":84}],221:[function(require,module,exports){
 (function (Buffer){
 // prototype class for hash functions
 function Hash (blockSize, finalSize) {
@@ -38359,7 +39334,7 @@ Hash.prototype._update = function () {
 module.exports = Hash
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":76}],214:[function(require,module,exports){
+},{"buffer":84}],222:[function(require,module,exports){
 var exports = module.exports = function SHA (algorithm) {
   algorithm = algorithm.toLowerCase()
 
@@ -38376,7 +39351,7 @@ exports.sha256 = require('./sha256')
 exports.sha384 = require('./sha384')
 exports.sha512 = require('./sha512')
 
-},{"./sha":215,"./sha1":216,"./sha224":217,"./sha256":218,"./sha384":219,"./sha512":220}],215:[function(require,module,exports){
+},{"./sha":223,"./sha1":224,"./sha224":225,"./sha256":226,"./sha384":227,"./sha512":228}],223:[function(require,module,exports){
 (function (Buffer){
 /*
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-0, as defined
@@ -38473,7 +39448,7 @@ Sha.prototype._hash = function () {
 module.exports = Sha
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":213,"buffer":76,"inherits":180}],216:[function(require,module,exports){
+},{"./hash":221,"buffer":84,"inherits":188}],224:[function(require,module,exports){
 (function (Buffer){
 /*
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-1, as defined
@@ -38575,7 +39550,7 @@ Sha1.prototype._hash = function () {
 module.exports = Sha1
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":213,"buffer":76,"inherits":180}],217:[function(require,module,exports){
+},{"./hash":221,"buffer":84,"inherits":188}],225:[function(require,module,exports){
 (function (Buffer){
 /**
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-256, as defined
@@ -38631,7 +39606,7 @@ Sha224.prototype._hash = function () {
 module.exports = Sha224
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":213,"./sha256":218,"buffer":76,"inherits":180}],218:[function(require,module,exports){
+},{"./hash":221,"./sha256":226,"buffer":84,"inherits":188}],226:[function(require,module,exports){
 (function (Buffer){
 /**
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-256, as defined
@@ -38769,7 +39744,7 @@ Sha256.prototype._hash = function () {
 module.exports = Sha256
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":213,"buffer":76,"inherits":180}],219:[function(require,module,exports){
+},{"./hash":221,"buffer":84,"inherits":188}],227:[function(require,module,exports){
 (function (Buffer){
 var inherits = require('inherits')
 var SHA512 = require('./sha512')
@@ -38829,7 +39804,7 @@ Sha384.prototype._hash = function () {
 module.exports = Sha384
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":213,"./sha512":220,"buffer":76,"inherits":180}],220:[function(require,module,exports){
+},{"./hash":221,"./sha512":228,"buffer":84,"inherits":188}],228:[function(require,module,exports){
 (function (Buffer){
 var inherits = require('inherits')
 var Hash = require('./hash')
@@ -39092,7 +40067,7 @@ Sha512.prototype._hash = function () {
 module.exports = Sha512
 
 }).call(this,require("buffer").Buffer)
-},{"./hash":213,"buffer":76,"inherits":180}],221:[function(require,module,exports){
+},{"./hash":221,"buffer":84,"inherits":188}],229:[function(require,module,exports){
 "use strict";function q(a){throw a;}var r=void 0,s=!1;var sjcl={cipher:{},hash:{},keyexchange:{},mode:{},misc:{},codec:{},exception:{corrupt:function(a){this.toString=function(){return"CORRUPT: "+this.message};this.message=a},invalid:function(a){this.toString=function(){return"INVALID: "+this.message};this.message=a},bug:function(a){this.toString=function(){return"BUG: "+this.message};this.message=a},notReady:function(a){this.toString=function(){return"NOT READY: "+this.message};this.message=a}}};
 "undefined"!==typeof module&&module.exports&&(module.exports=sjcl);"function"===typeof define&&define([],function(){return sjcl});
 sjcl.cipher.aes=function(a){this.n[0][0][0]||this.H();var b,c,d,e,f=this.n[0][4],g=this.n[1];b=a.length;var h=1;4!==b&&(6!==b&&8!==b)&&q(new sjcl.exception.invalid("invalid aes key size"));this.b=[d=a.slice(0),e=[]];for(a=b;a<4*b+28;a++){c=d[a-1];if(0===a%b||8===b&&4===a%b)c=f[c>>>24]<<24^f[c>>16&255]<<16^f[c>>8&255]<<8^f[c&255],0===a%b&&(c=c<<8^c>>>24^h<<24,h=h<<1^283*(h>>7));d[a]=d[a-b]^c}for(b=0;a;b++,a--)c=d[b&3?a:a-4],e[b]=4>=a||4>b?c:g[0][f[c>>>24]]^g[1][f[c>>16&255]]^g[2][f[c>>8&255]]^g[3][f[c&
@@ -39151,7 +40126,7 @@ b.mode&&sjcl.arrayBuffer&&sjcl.arrayBuffer.ccm&&b.ct instanceof ArrayBuffer?sjcl
 q(new sjcl.exception.invalid("json decode: this isn't json!")),null!=d[3]?b[d[2]]=parseInt(d[3],10):null!=d[4]?b[d[2]]=d[2].match(/^(ct|adata|salt|iv)$/)?sjcl.codec.base64.toBits(d[4]):unescape(d[4]):null!=d[5]&&(b[d[2]]="true"===d[5]);return b},h:function(a,b,c){a===r&&(a={});if(b===r)return a;for(var d in b)b.hasOwnProperty(d)&&(c&&(a[d]!==r&&a[d]!==b[d])&&q(new sjcl.exception.invalid("required parameter overridden")),a[d]=b[d]);return a},ja:function(a,b){var c={},d;for(d in a)a.hasOwnProperty(d)&&
 a[d]!==b[d]&&(c[d]=a[d]);return c},ia:function(a,b){var c={},d;for(d=0;d<b.length;d++)a[b[d]]!==r&&(c[b[d]]=a[b[d]]);return c}};sjcl.encrypt=sjcl.json.encrypt;sjcl.decrypt=sjcl.json.decrypt;sjcl.misc.ga={};sjcl.misc.cachedPbkdf2=function(a,b){var c=sjcl.misc.ga,d;b=b||{};d=b.iter||1E3;c=c[a]=c[a]||{};d=c[d]=c[d]||{firstSalt:b.salt&&b.salt.length?b.salt.slice(0):sjcl.random.randomWords(2,0)};c=b.salt===r?d.firstSalt:b.salt;d[c]=d[c]||sjcl.misc.pbkdf2(a,c,b.iter);return{key:d[c].slice(0),salt:c.slice(0)}};
 
-},{"crypto":136}],222:[function(require,module,exports){
+},{"crypto":144}],230:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -39280,7 +40255,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":170,"inherits":180,"readable-stream/duplex.js":201,"readable-stream/passthrough.js":208,"readable-stream/readable.js":209,"readable-stream/transform.js":210,"readable-stream/writable.js":211}],223:[function(require,module,exports){
+},{"events":178,"inherits":188,"readable-stream/duplex.js":209,"readable-stream/passthrough.js":216,"readable-stream/readable.js":217,"readable-stream/transform.js":218,"readable-stream/writable.js":219}],231:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -39503,7 +40478,7 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":76}],224:[function(require,module,exports){
+},{"buffer":84}],232:[function(require,module,exports){
 var inherits = require('inherits')
 var native = require('./native')
 
@@ -39632,7 +40607,7 @@ module.exports = {
   getValueTypeName: getValueTypeName
 }
 
-},{"./native":227,"inherits":180}],225:[function(require,module,exports){
+},{"./native":235,"inherits":188}],233:[function(require,module,exports){
 (function (Buffer){
 var errors = require('./errors')
 
@@ -39641,7 +40616,7 @@ function _Buffer (value) {
 }
 _Buffer.toJSON = function () { return 'Buffer' }
 
-function BufferN (length) {
+function _BufferN (length) {
   function BufferN (value) {
     if (!Buffer.isBuffer(value)) return false
     if (value.length !== length) {
@@ -39683,7 +40658,7 @@ function UInt53 (value) {
 
 module.exports = {
   Buffer: _Buffer,
-  BufferN: BufferN,
+  BufferN: _BufferN,
   Hex: Hex,
   HexN: HexN,
   Int8: Int8,
@@ -39696,7 +40671,7 @@ module.exports = {
 }
 
 }).call(this,{"isBuffer":require("../is-buffer/index.js")})
-},{"../is-buffer/index.js":181,"./errors":224}],226:[function(require,module,exports){
+},{"../is-buffer/index.js":189,"./errors":232}],234:[function(require,module,exports){
 var errors = require('./errors')
 var native = require('./native')
 
@@ -39916,7 +40891,7 @@ typeforce.TfPropertyTypeError = TfPropertyTypeError
 
 module.exports = typeforce
 
-},{"./errors":224,"./extra":225,"./native":227}],227:[function(require,module,exports){
+},{"./errors":232,"./extra":233,"./native":235}],235:[function(require,module,exports){
 var types = {
   Array: function (value) { return value !== null && value !== undefined && value.constructor === Array },
   Boolean: function (value) { return typeof value === 'boolean' },
@@ -39936,7 +40911,7 @@ for (var typeName in types) {
 
 module.exports = types
 
-},{}],228:[function(require,module,exports){
+},{}],236:[function(require,module,exports){
 (function (root) {
    "use strict";
 
@@ -40380,7 +41355,7 @@ UChar.udata={
    }
 }(this));
 
-},{}],229:[function(require,module,exports){
+},{}],237:[function(require,module,exports){
 (function (global){
 
 /**
@@ -40451,16 +41426,16 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],230:[function(require,module,exports){
-arguments[4][180][0].apply(exports,arguments)
-},{"dup":180}],231:[function(require,module,exports){
+},{}],238:[function(require,module,exports){
+arguments[4][188][0].apply(exports,arguments)
+},{"dup":188}],239:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],232:[function(require,module,exports){
+},{}],240:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -41050,7 +42025,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":231,"_process":192,"inherits":230}],233:[function(require,module,exports){
+},{"./support/isBuffer":239,"_process":200,"inherits":238}],241:[function(require,module,exports){
 var indexOf = require('indexof');
 
 var Object_keys = function (obj) {
@@ -41190,7 +42165,7 @@ exports.createContext = Script.createContext = function (context) {
     return copy;
 };
 
-},{"indexof":179}],234:[function(require,module,exports){
+},{"indexof":187}],242:[function(require,module,exports){
 (function(self) {
   'use strict';
 
@@ -41650,7 +42625,7 @@ exports.createContext = Script.createContext = function (context) {
   self.fetch.polyfill = true
 })(typeof self !== 'undefined' ? self : this);
 
-},{}],235:[function(require,module,exports){
+},{}],243:[function(require,module,exports){
 (function (Buffer){
 var bs58check = require('bs58check')
 
@@ -41708,7 +42683,7 @@ module.exports = {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"bs58check":70,"buffer":76}],236:[function(require,module,exports){
+},{"bs58check":78,"buffer":84}],244:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -41716,17 +42691,10 @@ var Helpers = require('./helpers');
 
 module.exports = AccountInfo;
 
-function AccountInfo (object) {
+function AccountInfo(object) {
   this._email = object.email;
 
-  if (object.sms_number && object.sms_number.length > 5) {
-    this._mobile = {
-      countryCode: object.sms_number.split(' ')[0].substr(1),
-      number: object.sms_number.split(' ')[1]
-    };
-  } else {
-    this._mobile = null;
-  }
+  this.mobile = object.sms_number;
 
   this._countryCodeGuess = object.country_code; // Country guess by the backend
   this._dialCode = object.dial_code; // Dialcode guess by the backend
@@ -41754,58 +42722,88 @@ Object.defineProperties(AccountInfo.prototype, {
 
   'email': {
     configurable: false,
-    get: function () { return this._email; },
-    set: function (value) {
+    get: function get() {
+      return this._email;
+    },
+    set: function set(value) {
       this._email = value;
     }
   },
   'mobileObject': {
     configurable: false,
-    get: function () { return this._mobile; }
+    get: function get() {
+      return this._mobile;
+    }
   },
   'mobile': {
     configurable: false,
-    get: function () {
-      return this._mobile == null
-        ? null
-        : '+' + this._mobile.countryCode + this._mobile.number.replace(/^0*/, '');
+    get: function get() {
+      return this._mobile == null ? null : '+' + this._mobile.countryCode + this._mobile.number.replace(/^0*/, '');
+    },
+    set: function set(value) {
+      if (value && value.length > 5) {
+        this._mobile = {
+          countryCode: value.split(' ')[0].substr(1),
+          number: value.split(' ')[1]
+        };
+      } else {
+        this._mobile = null;
+      }
     }
   },
   'countryCodeGuess': {
     configurable: false,
-    get: function () { return this._countryCodeGuess; }
+    get: function get() {
+      return this._countryCodeGuess;
+    }
   },
   'dialCode': {
     configurable: false,
-    get: function () { return this._dialCode; }
+    get: function get() {
+      return this._dialCode;
+    }
   },
   'isEmailVerified': {
     configurable: false,
-    get: function () { return this._isEmailVerified; },
-    set: function (value) {
+    get: function get() {
+      return this._isEmailVerified;
+    },
+    set: function set(value) {
       assert(Helpers.isBoolean(value), 'Boolean');
       this._isEmailVerified = value;
     }
   },
   'isMobileVerified': {
     configurable: false,
-    get: function () { return this._isMobileVerified; }
+    get: function get() {
+      return this._isMobileVerified;
+    },
+    set: function set(value) {
+      assert(Helpers.isBoolean(value), 'Boolean');
+      this._isMobileVerified = value;
+    }
   },
   'currency': {
     configurable: false,
-    get: function () { return this._currency; }
+    get: function get() {
+      return this._currency;
+    }
   },
   'invited': {
     configurable: false,
-    get: function () { return this._invited; }
+    get: function get() {
+      return this._invited;
+    }
   },
   'notifications': {
     configurable: false,
-    get: function () { return this._notifications; }
+    get: function get() {
+      return this._notifications;
+    }
   }
 });
 
-},{"./helpers":263,"assert":16}],237:[function(require,module,exports){
+},{"./helpers":271,"assert":16}],245:[function(require,module,exports){
 'use strict';
 
 module.exports = Address;
@@ -41822,13 +42820,13 @@ var WalletCrypto = require('./wallet-crypto');
 var constants = require('./constants');
 
 // Address class
-function Address (object) {
+function Address(object) {
   // private members
   var obj = object || {};
   this._addr = obj.addr;
   this._priv = obj.priv;
   this._label = obj.label;
-  this._tag = obj.tag || 0;  // default is non-archived
+  this._tag = obj.tag || 0; // default is non-archived
   this._created_time = obj.created_time;
   this._created_device_name = obj.created_device_name;
   this._created_device_version = obj.created_device_version;
@@ -41842,20 +42840,28 @@ function Address (object) {
 Object.defineProperties(Address.prototype, {
   'address': {
     configurable: false,
-    get: function () { return this._addr; }
+    get: function get() {
+      return this._addr;
+    }
   },
   'priv': {
     configurable: false,
-    get: function () { return this._priv; }
+    get: function get() {
+      return this._priv;
+    }
   },
   'tag': {
     configurable: false,
-    get: function () { return this._tag; }
+    get: function get() {
+      return this._tag;
+    }
   },
   'label': {
     configurable: false,
-    get: function () { return this._label; },
-    set: function (str) {
+    get: function get() {
+      return this._label;
+    },
+    set: function set(str) {
       if (Helpers.isValidLabel(str) || str == null) {
         this._label = str === '' ? undefined : str;
         MyWallet.syncWallet();
@@ -41866,20 +42872,28 @@ Object.defineProperties(Address.prototype, {
   },
   'created_time': {
     configurable: false,
-    get: function () { return this._created_time; }
+    get: function get() {
+      return this._created_time;
+    }
   },
   'created_device_name': {
     configurable: false,
-    get: function () { return this._created_device_name; }
+    get: function get() {
+      return this._created_device_name;
+    }
   },
   'created_device_version': {
     configurable: false,
-    get: function () { return this._created_device_version; }
+    get: function get() {
+      return this._created_device_version;
+    }
   },
   'balance': {
     configurable: false,
-    get: function () { return this._balance; },
-    set: function (num) {
+    get: function get() {
+      return this._balance;
+    },
+    set: function set(num) {
       if (Helpers.isPositiveNumber(num)) {
         this._balance = num;
       } else {
@@ -41889,8 +42903,10 @@ Object.defineProperties(Address.prototype, {
   },
   'totalSent': {
     configurable: false,
-    get: function () { return this._totalSent; },
-    set: function (num) {
+    get: function get() {
+      return this._totalSent;
+    },
+    set: function set(num) {
       if (Helpers.isPositiveNumber(num)) {
         this._totalSent = num;
       } else {
@@ -41900,8 +42916,10 @@ Object.defineProperties(Address.prototype, {
   },
   'totalReceived': {
     configurable: false,
-    get: function () { return this._totalReceived; },
-    set: function (num) {
+    get: function get() {
+      return this._totalReceived;
+    },
+    set: function set(num) {
       if (Helpers.isPositiveNumber(num)) {
         this._totalReceived = num;
       } else {
@@ -41911,24 +42929,34 @@ Object.defineProperties(Address.prototype, {
   },
   'isWatchOnly': {
     configurable: false,
-    get: function () { return this._priv == null; }
+    get: function get() {
+      return this._priv == null;
+    }
   },
   'isEncrypted': {
     configurable: false,
-    get: function () { return Helpers.isBase64(this._priv) && !Helpers.isBase58Key(this._priv); }
+    get: function get() {
+      return Helpers.isBase64(this._priv) && !Helpers.isBase58Key(this._priv);
+    }
   },
   'isUnEncrypted': {
     configurable: false,
-    get: function () { return Helpers.isBase58Key(this._priv); }
+    get: function get() {
+      return Helpers.isBase58Key(this._priv);
+    }
   },
   'archived': {
     configurable: false,
-    get: function () { return this._tag === 2; },
-    set: function (value) {
+    get: function get() {
+      return this._tag === 2;
+    },
+    set: function set(value) {
       if (Helpers.isBoolean(value)) {
-        if (value) { // Archive:
+        if (value) {
+          // Archive:
           this._tag = 2;
-        } else { // Unarchive:
+        } else {
+          // Unarchive:
           this._tag = 0;
           MyWallet.wallet.getHistory();
         }
@@ -41940,8 +42968,12 @@ Object.defineProperties(Address.prototype, {
   },
   'active': {
     configurable: false,
-    get: function () { return !this.archived; },
-    set: function (value) { this.archived = !value; }
+    get: function get() {
+      return !this.archived;
+    },
+    set: function set(value) {
+      this.archived = !value;
+    }
   }
 });
 
@@ -41999,12 +43031,14 @@ Address.fromString = function (keyOrAddr, label, bipPass) {
         return Promise.reject('needsBip38');
       }
 
-      var parseBIP38Wrapper = function (resolve, reject) {
-        ImportExport.parseBIP38toECPair(keyOrAddr, bipPass,
-          function (key) { resolve(Address.import(key, label)); },
-          function () { reject('wrongBipPass'); },
-          function () { reject('importError'); }
-        );
+      var parseBIP38Wrapper = function parseBIP38Wrapper(resolve, reject) {
+        ImportExport.parseBIP38toECPair(keyOrAddr, bipPass, function (key) {
+          resolve(Address.import(key, label));
+        }, function () {
+          reject('wrongBipPass');
+        }, function () {
+          reject('importError');
+        });
       };
       return new Promise(parseBIP38Wrapper);
     } else if (format === 'mini' || format === 'base58') {
@@ -42017,23 +43051,19 @@ Address.fromString = function (keyOrAddr, label, bipPass) {
       var cad = myk.getAddress();
       myk.compressed = false;
       var uad = myk.getAddress();
-      return API.getBalances([cad, uad]).then(
-        function (o) {
-          var compBalance = o[cad].final_balance;
-          var ucompBalance = o[uad].final_balance;
-          if (compBalance === 0 && ucompBalance > 0) {
-            myk.compressed = false;
-          } else {
-            myk.compressed = true;
-          }
-          return Address.import(myk, label);
-        }
-      ).catch(
-        function (e) {
+      return API.getBalances([cad, uad]).then(function (o) {
+        var compBalance = o[cad].final_balance;
+        var ucompBalance = o[uad].final_balance;
+        if (compBalance === 0 && ucompBalance > 0) {
+          myk.compressed = false;
+        } else {
           myk.compressed = true;
-          return Promise.resolve(Address.import(myk, label));
         }
-      );
+        return Address.import(myk, label);
+      }).catch(function (e) {
+        myk.compressed = true;
+        return Promise.resolve(Address.import(myk, label));
+      });
     } else if (okFormats.indexOf(format) > -1) {
       var k = Helpers.privateKeyStringToKey(keyOrAddr, format);
       return Promise.resolve(Address.import(k, label));
@@ -42075,8 +43105,7 @@ Address.prototype.signMessage = function (message, secondPassword) {
   if (this.isWatchOnly) throw new Error('Private key needed for message signing');
   if (this.isEncrypted && secondPassword == null) throw new Error('Second password needed to decrypt key');
 
-  var getDecrypted = WalletCrypto.decryptSecretWithSecondPassword.bind(null,
-    this.priv, secondPassword, MyWallet.wallet.sharedKey, MyWallet.wallet.pbkdf2_iterations);
+  var getDecrypted = WalletCrypto.decryptSecretWithSecondPassword.bind(null, this.priv, secondPassword, MyWallet.wallet.sharedKey, MyWallet.wallet.pbkdf2_iterations);
 
   var priv = this.isEncrypted ? getDecrypted() : this.priv;
   var keyPair = Helpers.privateKeyStringToKey(priv, 'base58');
@@ -42088,7 +43117,9 @@ Address.prototype.signMessage = function (message, secondPassword) {
 Address.prototype.encrypt = function (cipher) {
   if (!this._priv) return this;
   var priv = cipher ? cipher(this._priv) : this._priv;
-  if (!priv) { throw new Error('Error Encoding key'); }
+  if (!priv) {
+    throw new Error('Error Encoding key');
+  }
   this._temporal_priv = priv;
   return this;
 };
@@ -42096,7 +43127,9 @@ Address.prototype.encrypt = function (cipher) {
 Address.prototype.decrypt = function (cipher) {
   if (!this._priv) return this;
   var priv = cipher ? cipher(this._priv) : this._priv;
-  if (!priv) { throw new Error('Error Decoding key'); }
+  if (!priv) {
+    throw new Error('Error Decoding key');
+  }
   this._temporal_priv = priv;
   return this;
 };
@@ -42108,7 +43141,7 @@ Address.prototype.persist = function () {
   return this;
 };
 
-},{"./api":238,"./constants":258,"./helpers":263,"./import-export":264,"./rng":269,"./shared":270,"./wallet":279,"./wallet-crypto":273,"bitcoinjs-lib":34,"bs58":69}],238:[function(require,module,exports){
+},{"./api":246,"./constants":266,"./helpers":271,"./import-export":272,"./rng":277,"./shared":285,"./wallet":294,"./wallet-crypto":288,"bitcoinjs-lib":42,"bs58":77}],246:[function(require,module,exports){
 'use strict';
 
 module.exports = new API();
@@ -42120,7 +43153,7 @@ var WalletCrypto = require('./wallet-crypto');
 var MyWallet = require('./wallet');
 
 // API class
-function API () {
+function API() {
   // private members
   this.ROOT_URL = 'https://blockchain.info/';
   this.AJAX_RETRY_DEFAULT = 2;
@@ -42146,7 +43179,7 @@ API.prototype.request = function (action, method, data, extraHeaders) {
 
   var url = this.ROOT_URL + method;
   var body = data ? this.encodeFormData(data) : '';
-  var time = (new Date()).getTime();
+  var time = new Date().getTime();
 
   var options = {
     method: action,
@@ -42163,21 +43196,15 @@ API.prototype.request = function (action, method, data, extraHeaders) {
   if (action === 'GET') url += '?' + body;
   if (action === 'POST') options.body = body;
 
-  var handleNetworkError = function () {
+  var handleNetworkError = function handleNetworkError() {
     return Promise.reject({ initial_error: 'Connectivity error, failed to send network request' });
   };
 
-  var checkStatus = function (response) {
+  var checkStatus = function checkStatus(response) {
     if (response.status >= 200 && response.status < 300) {
-      if (
-        response.headers.get('content-type') &&
-        response.headers.get('content-type').indexOf('application/json') > -1
-      ) {
+      if (response.headers.get('content-type') && response.headers.get('content-type').indexOf('application/json') > -1) {
         return response.json();
-      } else if (
-        response.headers.get('content-type') &&
-        response.headers.get('content-type').indexOf('image/jpeg') > -1
-      ) {
+      } else if (response.headers.get('content-type') && response.headers.get('content-type').indexOf('image/jpeg') > -1) {
         return response.blob();
       } else if (data.format === 'json') {
         return response.json();
@@ -42194,20 +43221,17 @@ API.prototype.request = function (action, method, data, extraHeaders) {
     return response;
   }.bind(this);
 
-  return fetch(url, options)
-    .catch(handleNetworkError)
-    .then(checkStatus)
-    .then(handleResponse);
+  return fetch(url, options).catch(handleNetworkError).then(checkStatus).then(handleResponse);
 };
 
 API.prototype.retry = function (f, n) {
   var self = this;
   var i = n === null || n === undefined ? this.AJAX_RETRY_DEFAULT : n;
   if (i > 1) {
-    return f().then(
-        undefined, // pass through success
-        function () { return self.retry(f, i - 1); }
-    );
+    return f().then(undefined, // pass through success
+    function () {
+      return self.retry(f, i - 1);
+    });
   } else {
     return f();
   }
@@ -42216,7 +43240,7 @@ API.prototype.retry = function (f, n) {
 // sync clocks with network time protocol
 API.prototype.handleNTPResponse = function (obj, clientTime) {
   // Calculate serverTimeOffset using NTP algo
-  var nowTime = (new Date()).getTime();
+  var nowTime = new Date().getTime();
   if (obj.clientTimeDiff && obj.serverTime) {
     var serverClientResponseDiffTime = nowTime - obj.serverTime;
     var responseTime = (obj.clientTimeDiff - nowTime + clientTime - serverClientResponseDiffTime) / 2;
@@ -42275,7 +43299,7 @@ API.prototype.getUnspent = function (fromAddresses, confirmations) {
 };
 
 API.prototype.getHistory = function (addresses, txFilter, offset, n, syncBool) {
-  var clientTime = (new Date()).getTime();
+  var clientTime = new Date().getTime();
   offset = offset || 0;
   n = n || 0;
 
@@ -42298,7 +43322,9 @@ API.prototype.getHistory = function (addresses, txFilter, offset, n, syncBool) {
 
 API.prototype.securePost = function (url, data, extraHeaders) {
   var clone = Helpers.merge({}, data);
-  if (!Helpers.isValidGUID(data.guid)) { clone.guid = MyWallet.wallet.guid; }
+  if (!Helpers.isValidGUID(data.guid)) {
+    clone.guid = MyWallet.wallet.guid;
+  }
   if (!data.sharedKey) {
     var sharedKey = MyWallet.wallet ? MyWallet.wallet.sharedKey : undefined;
     if (!Helpers.isValidSharedKey(sharedKey)) throw new Error('Shared key is invalid');
@@ -42308,11 +43334,7 @@ API.prototype.securePost = function (url, data, extraHeaders) {
     var timestamp = parseInt((now - this.SERVER_TIME_OFFSET) / 10000, 10);
     var SKHashHex = WalletCrypto.sha256(sharedKey.toLowerCase() + timestamp).toString('hex');
     var i = 0;
-    var tSKUID = SKHashHex.substring(i, i += 8) + '-' +
-                 SKHashHex.substring(i, i += 4) + '-' +
-                 SKHashHex.substring(i, i += 4) + '-' +
-                 SKHashHex.substring(i, i += 4) + '-' +
-                 SKHashHex.substring(i, i += 12);
+    var tSKUID = SKHashHex.substring(i, i += 8) + '-' + SKHashHex.substring(i, i += 4) + '-' + SKHashHex.substring(i, i += 4) + '-' + SKHashHex.substring(i, i += 4) + '-' + SKHashHex.substring(i, i += 12);
 
     clone.sharedKey = tSKUID;
     clone.sKTimestamp = timestamp;
@@ -42341,7 +43363,7 @@ API.prototype.pushTx = function (txHex, note) {
 
   if (note) data.note = note;
 
-  var responseTXHASH = function (responseText) {
+  var responseTXHASH = function responseTXHASH(responseText) {
     if (responseText.indexOf('Transaction Submitted') > -1) {
       return true;
     } else {
@@ -42353,11 +43375,11 @@ API.prototype.pushTx = function (txHex, note) {
 };
 
 API.prototype.getFees = function () {
-  var handleNetworkError = function () {
+  var handleNetworkError = function handleNetworkError() {
     return Promise.reject({ initial_error: 'Connectivity error, failed to send network request' });
   };
 
-  var checkStatus = function (response) {
+  var checkStatus = function checkStatus(response) {
     if (response.status >= 200 && response.status < 300) {
       return response.json();
     } else {
@@ -42365,9 +43387,7 @@ API.prototype.getFees = function () {
     }
   };
 
-  return fetch(this.API_ROOT_URL + 'fees')
-            .then(checkStatus)
-            .catch(handleNetworkError);
+  return fetch(this.API_ROOT_URL + 'fees').then(checkStatus).catch(handleNetworkError);
 };
 
 API.prototype.exportHistory = function (active, currency, options) {
@@ -42381,12 +43401,12 @@ API.prototype.exportHistory = function (active, currency, options) {
   return this.request('POST', 'v2/export-history', data);
 };
 
-},{"./helpers":263,"./wallet":279,"./wallet-crypto":273,"./wallet-store":276,"assert":16}],239:[function(require,module,exports){
+},{"./helpers":271,"./wallet":294,"./wallet-crypto":288,"./wallet-store":291,"assert":16}],247:[function(require,module,exports){
 'use strict';
 
 module.exports = Block;
 
-function Block (object) {
+function Block(object) {
   var obj = object || {};
   this._hash = obj.hash || 'emptyBlock';
   this._time = obj.time || 0;
@@ -42397,19 +43417,27 @@ function Block (object) {
 Object.defineProperties(Block.prototype, {
   'hash': {
     configurable: false,
-    get: function () { return this._hash; }
+    get: function get() {
+      return this._hash;
+    }
   },
   'time': {
     configurable: false,
-    get: function () { return this._time; }
+    get: function get() {
+      return this._time;
+    }
   },
   'blockIndex': {
     configurable: false,
-    get: function () { return this._blockIndex; }
+    get: function get() {
+      return this._blockIndex;
+    }
   },
   'height': {
     configurable: false,
-    get: function () { return this._height; }
+    get: function get() {
+      return this._height;
+    }
   }
 });
 
@@ -42431,8 +43459,10 @@ Block.fromJSON = function (json) {
   }
 };
 
-},{}],240:[function(require,module,exports){
+},{}],248:[function(require,module,exports){
 'use strict';
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var assert = require('assert');
 
@@ -42440,27 +43470,26 @@ var WalletStore = require('./wallet-store.js');
 var MyWallet = require('./wallet.js');
 var API = require('./api');
 
-function fetchAccountInfo () {
-  return API.securePost('wallet', {method: 'get-info', format: 'json'})
-    .catch(function (data) {
-      var response = data.responseText || 'Error Downloading Account Settings';
-      WalletStore.sendEvent('msg', {type: 'error', message: response});
-    });
-}
-
-// TODO: depricate
-function getAccountInfo (success, error) {
-  API.securePostCallbacks('wallet', {method: 'get-info', format: 'json'}, function (data) {
-    typeof (success) === 'function' && success(data);
-  }, function (data) {
+function fetchAccountInfo() {
+  return API.securePost('wallet', { method: 'get-info', format: 'json' }).catch(function (data) {
     var response = data.responseText || 'Error Downloading Account Settings';
-    WalletStore.sendEvent('msg', {type: 'error', message: response});
-
-    typeof (error) === 'function' && error();
+    WalletStore.sendEvent('msg', { type: 'error', message: response });
   });
 }
 
-function updateKV (method, value, success, error, extra) {
+// TODO: depricate
+function getAccountInfo(success, error) {
+  API.securePostCallbacks('wallet', { method: 'get-info', format: 'json' }, function (data) {
+    typeof success === 'function' && success(data);
+  }, function (data) {
+    var response = data.responseText || 'Error Downloading Account Settings';
+    WalletStore.sendEvent('msg', { type: 'error', message: response });
+
+    typeof error === 'function' && error();
+  });
+}
+
+function updateKV(method, value, success, error, extra) {
   if (typeof value === 'string') {
     value = value.trim();
   }
@@ -42468,13 +43497,13 @@ function updateKV (method, value, success, error, extra) {
   extra = extra || '';
 
   API.securePostCallbacks('wallet' + extra, { length: (value + '').length, payload: value + '', method: method }, function (data) {
-    WalletStore.sendEvent('msg', {type: 'success', message: method + '-success: ' + data});
+    WalletStore.sendEvent('msg', { type: 'success', message: method + '-success: ' + data });
 
-    typeof (success) === 'function' && success();
+    typeof success === 'function' && success();
   }, function (data) {
-    WalletStore.sendEvent('msg', {type: 'error', message: method + '-error: ' + data});
+    WalletStore.sendEvent('msg', { type: 'error', message: method + '-error: ' + data });
 
-    typeof (error) === 'function' && error();
+    typeof error === 'function' && error();
   });
 }
 
@@ -42483,32 +43512,34 @@ function updateKV (method, value, success, error, extra) {
  * @param {function ()} success success callback function
  * @param {function ()} error error callback function
  */
-function updateIPlock (ips, success, error) {
+function updateIPlock(ips, success, error) {
   updateKV('update-ip-lock', ips, success, error);
 }
 
-function updateIPlockOn (enabled, success, error) {
+function updateIPlockOn(enabled, success, error) {
   updateKV('update-ip-lock-on', Boolean(enabled), success, error);
 }
 
-function changeLanguage (language, success, error) {
+function changeLanguage(language, success, error) {
   updateKV('update-language', language, success, error);
 }
 
-function changeLocalCurrency (code, success, error) {
+function changeLocalCurrency(code, success, error) {
   updateKV('update-currency', code, success, error);
 }
 
-function changeBtcCurrency (code, success, error) {
+function changeBtcCurrency(code, success, error) {
   updateKV('update-btc-currency', code, success, error);
 }
 
-function updateTorIpBlock (enabled, success, error) {
+function updateTorIpBlock(enabled, success, error) {
   updateKV('update-block-tor-ips', enabled ? 1 : 0, success, error);
 }
 
-function isBadPasswordHint (value) {
-  if (value.split('').some(function (c) { return c.charCodeAt(0) > 255; })) {
+function isBadPasswordHint(value) {
+  if (value.split('').some(function (c) {
+    return c.charCodeAt(0) > 255;
+  })) {
     return 101; // invalid charset
   } else if (WalletStore.getPassword() === value) {
     return 102; // password hint cannot be main wallet pass
@@ -42519,22 +43550,22 @@ function isBadPasswordHint (value) {
   }
 }
 
-function updatePasswordHint1 (value, success, error) {
-  assert(error && typeof (error) === 'function', 'Error callback required');
+function updatePasswordHint1(value, success, error) {
+  assert(error && typeof error === 'function', 'Error callback required');
 
   var isBad = isBadPasswordHint(value);
   isBad ? error(isBad) : updateKV('update-password-hint1', value, success, error);
 }
 
-function updatePasswordHint2 (value, success, error) {
-  assert(error && typeof (error) === 'function', 'Error callback required');
+function updatePasswordHint2(value, success, error) {
+  assert(error && typeof error === 'function', 'Error callback required');
 
   var isBad = isBadPasswordHint(value);
   isBad ? error(isBad) : updateKV('update-password-hint2', value, success, error);
 }
 
-function changeEmail (email, successCallback, error) {
-  var success = function (res) {
+function changeEmail(email, successCallback, error) {
+  var success = function success(res) {
     MyWallet.wallet.accountInfo.email = email;
     MyWallet.wallet.accountInfo.isEmailVerified = false;
     if (typeof successCallback === 'function') successCallback(res);
@@ -42542,72 +43573,72 @@ function changeEmail (email, successCallback, error) {
   updateKV('update-email', email, success, error);
 }
 
-function changeMobileNumber (val, success, error) {
-  updateKV('update-sms', val, success, error);
+function changeMobileNumber(mobile, successCallback, error) {
+  var success = function success(res) {
+    MyWallet.wallet.accountInfo.mobile = mobile;
+    MyWallet.wallet.accountInfo.isMobileVerified = false;
+    if (typeof successCallback === 'function') successCallback(res);
+  };
+  updateKV('update-sms', mobile, success, error);
 }
 
 // Logging levels:
 // 0 - Logging disabled
 // 1 - Log actions with hashed IP addresses
 // 2 - Log actions with IP addresses and user agents
-function updateLoggingLevel (val, success, error) {
+function updateLoggingLevel(val, success, error) {
   updateKV('update-logging-level', val, success, error);
 }
 
-function toggleSave2FA (val, success, error) {
+function toggleSave2FA(val, success, error) {
   updateKV('update-never-save-auth-type', Boolean(val), success, error);
 }
 
-function updateAuthType (val, success, error) {
+function updateAuthType(val, success, error) {
   updateKV('update-auth-type', val, function () {
     WalletStore.setRealAuthType(val);
-    typeof (success) === 'function' && success();
+    typeof success === 'function' && success();
   }, error);
 }
 
-function unsetTwoFactor (success, error) {
+function unsetTwoFactor(success, error) {
   updateAuthType(0, success, error);
 }
 
-function setTwoFactorSMS (success, error) {
+function setTwoFactorSMS(success, error) {
   updateAuthType(5, success, error);
 }
 
-function setTwoFactorYubiKey (code, success, error) {
+function setTwoFactorYubiKey(code, success, error) {
   assert(code, 'Activation code required');
   assert(success, 'Success callback required');
   assert(error, 'Error callback required');
 
   // Tell the server about the YubiKey and then enable 2FA with it:
-  updateKV(
-    'update-yubikey',
-    code,
-    function () {
-      updateAuthType(1, success, error);
-    },
-    function () {
-      error('Failed to configure Yubikey');
-    }
-  );
-}
-
-function setTwoFactorEmail (success, error) {
-  updateAuthType(2, success, error);
-}
-
-function setTwoFactorGoogleAuthenticator (success, error) {
-  API.securePostCallbacks('wallet', { method: 'generate-google-secret' }, function (googleSecretURL) {
-    typeof (success) === 'function' && success(googleSecretURL);
-  }, function (data) {
-    WalletStore.sendEvent('msg', {type: 'error', message: data.responseText});
-    typeof (error) === 'function' && error(data.responseText);
+  updateKV('update-yubikey', code, function () {
+    updateAuthType(1, success, error);
+  }, function () {
+    error('Failed to configure Yubikey');
   });
 }
 
-function confirmTwoFactorGoogleAuthenticator (code, success, error) {
+function setTwoFactorEmail(success, error) {
+  updateAuthType(2, success, error);
+}
+
+function setTwoFactorGoogleAuthenticator(success, error) {
+  API.securePostCallbacks('wallet', { method: 'generate-google-secret' }, function (googleSecretURL) {
+    typeof success === 'function' && success(googleSecretURL);
+  }, function (data) {
+    WalletStore.sendEvent('msg', { type: 'error', message: data.responseText });
+    typeof error === 'function' && error(data.responseText);
+  });
+}
+
+function confirmTwoFactorGoogleAuthenticator(code, success, error) {
   updateKV('update-auth-type', 4, function () {
     WalletStore.setRealAuthType(4);
-    typeof (success) === 'function' && success();
+    typeof success === 'function' && success();
   }, error, '?code=' + code);
 }
 
@@ -42617,7 +43648,7 @@ function confirmTwoFactorGoogleAuthenticator (code, success, error) {
  * @param {function ()} success Success callback function.
  * @param {function ()} error Error callback function.
  */
-function resendEmailConfirmation (email, success, error) {
+function resendEmailConfirmation(email, success, error) {
   updateKV('update-email', email, success, error);
 }
 
@@ -42627,14 +43658,14 @@ function resendEmailConfirmation (email, success, error) {
  * @param {function (Object)} success Success callback function.
  * @param {function ()} error Error callback function.
  */
-function verifyEmail (code, success, error) {
+function verifyEmail(code, success, error) {
   API.securePostCallbacks('wallet', { payload: code, length: code.length, method: 'verify-email' }, function (data) {
-    WalletStore.sendEvent('msg', {type: 'success', message: data});
+    WalletStore.sendEvent('msg', { type: 'success', message: data });
     MyWallet.wallet.accountInfo.isEmailVerified = true;
-    typeof (success) === 'function' && success(data);
+    typeof success === 'function' && success(data);
   }, function (data) {
-    WalletStore.sendEvent('msg', {type: 'error', message: data});
-    typeof (error) === 'function' && error();
+    WalletStore.sendEvent('msg', { type: 'error', message: data });
+    typeof error === 'function' && error();
   });
 }
 
@@ -42644,59 +43675,59 @@ function verifyEmail (code, success, error) {
  * @param {function (Object)} success Success callback function.
  * @param {function ()} error Error callback function.
  */
-function verifyMobile (code, success, error) {
+function verifyMobile(code, success, error) {
   API.securePostCallbacks('wallet', { payload: code, length: code.length, method: 'verify-sms' }, function (data) {
-    WalletStore.sendEvent('msg', {type: 'success', message: data});
-    typeof (success) === 'function' && success(data);
+    WalletStore.sendEvent('msg', { type: 'success', message: data });
+    MyWallet.wallet.accountInfo.isMobileVerified = true;
+    typeof success === 'function' && success(data);
   }, function (data) {
-    WalletStore.sendEvent('msg', {type: 'error', message: data});
-    typeof (error) === 'function' && error();
+    WalletStore.sendEvent('msg', { type: 'error', message: data });
+    typeof error === 'function' && error();
   });
 }
 
-function getActivityLogs (success, error) {
-  API.securePostCallbacks('wallet', {method: 'list-logs', format: 'json'}, function (data) {
-    typeof (success) === 'function' && success(data);
+function getActivityLogs(success, error) {
+  API.securePostCallbacks('wallet', { method: 'list-logs', format: 'json' }, function (data) {
+    typeof success === 'function' && success(data);
   }, function (data) {
     var response = data.responseText || 'Error Downloading Activity Logs';
-    WalletStore.sendEvent('msg', {type: 'error', message: response});
-    typeof (error) === 'function' && error();
+    WalletStore.sendEvent('msg', { type: 'error', message: response });
+    typeof error === 'function' && error();
   });
 }
 
-function enableEmailNotifications (success, error) {
+function enableEmailNotifications(success, error) {
   updateNotificationsType({ email: true }).then(function (data) {
-    typeof (success) === 'function' && success(data);
+    typeof success === 'function' && success(data);
   }, function (data) {
     var response = data.responseText || 'Error Enabling Email Notifications';
-    WalletStore.sendEvent('msg', {type: 'error', message: response});
-    typeof (error) === 'function' && error();
+    WalletStore.sendEvent('msg', { type: 'error', message: response });
+    typeof error === 'function' && error();
   });
 }
 
-function enableReceiveNotifications (success, error) {
+function enableReceiveNotifications(success, error) {
   updateNotificationsOn({ receive: true }).then(function (data) {
-    typeof (success) === 'function' && success(data);
+    typeof success === 'function' && success(data);
   }, function (data) {
     var response = data.responseText || 'Error Enabling Receive Notifications';
-    WalletStore.sendEvent('msg', {type: 'error', message: response});
-    typeof (error) === 'function' && error();
+    WalletStore.sendEvent('msg', { type: 'error', message: response });
+    typeof error === 'function' && error();
   });
 }
 
-function enableEmailReceiveNotifications (success, error) {
-  assert(success && typeof (error) === 'function', 'Success callback required');
-  assert(error && typeof (error) === 'function', 'Error callback required');
+function enableEmailReceiveNotifications(success, error) {
+  assert(success && typeof error === 'function', 'Success callback required');
+  assert(error && typeof error === 'function', 'Error callback required');
 
-  enableEmailNotifications(
-    function () { enableReceiveNotifications(success, error); },
-    error
-  );
+  enableEmailNotifications(function () {
+    enableReceiveNotifications(success, error);
+  }, error);
 }
 
-function disableAllNotifications (success, error) {
-  assert(success && typeof (success) === 'function', 'Success callback required');
-  assert(error && typeof (error) === 'function', 'Error callback required');
+function disableAllNotifications(success, error) {
+  assert(success && typeof success === 'function', 'Success callback required');
+  assert(error && typeof error === 'function', 'Error callback required');
 
   updateNotificationsType({}).then(success, function (data) {
     var response = data.responseText || 'Error Disabling Receive Notifications';
@@ -42705,18 +43736,14 @@ function disableAllNotifications (success, error) {
   });
 }
 
-function updateNotificationsType (types) {
-  assert(typeof types === 'object', 'Must pass an object of notification types');
+function updateNotificationsType(types) {
+  assert((typeof types === 'undefined' ? 'undefined' : _typeof(types)) === 'object', 'Must pass an object of notification types');
 
-  var payload = [
-    types.email ? 1 << 0 : 0,
-    types.http ? 1 << 2 : 0,
-    types.sms ? 1 << 5 : 0
-  ].reduce(function (acc, n) {
+  var payload = [types.email ? 1 << 0 : 0, types.http ? 1 << 2 : 0, types.sms ? 1 << 5 : 0].reduce(function (acc, n) {
     return acc | n;
   });
 
-  var success = function (result) {
+  var success = function success(result) {
     WalletStore.setSyncPubKeys(payload !== 0);
     MyWallet.syncWallet();
     return result;
@@ -42729,18 +43756,18 @@ function updateNotificationsType (types) {
   }).then(success);
 }
 
-function updateNotificationsOn (on) {
+function updateNotificationsOn(on) {
   on = on || {};
   assert(on.send || on.receive, 'Must have notifications for sending or receiving');
 
   return API.securePost('wallet', {
     method: 'update-notifications-on',
     length: 1,
-    payload: on.send && on.receive ? 0 : (on.send ? 1 : 2)
+    payload: on.send && on.receive ? 0 : on.send ? 1 : 2
   });
 }
 
-function removeAlias () {
+function removeAlias() {
   return API.securePost('wallet', {
     method: 'remove-alias',
     length: 0,
@@ -42784,7 +43811,7 @@ module.exports = {
   updateAuthType: updateAuthType
 };
 
-},{"./api":238,"./wallet-store.js":276,"./wallet.js":279,"assert":16}],241:[function(require,module,exports){
+},{"./api":246,"./wallet-store.js":291,"./wallet.js":294,"assert":16}],249:[function(require,module,exports){
 
 var WebSocket = require('ws');
 var Helpers = require('./helpers');
@@ -42891,7 +43918,7 @@ BlockchainSocket.prototype.msgOnOpen = function (guid, addresses, xpubs) {
 
 module.exports = BlockchainSocket;
 
-},{"./helpers":263,"ws":280}],242:[function(require,module,exports){
+},{"./helpers":271,"ws":295}],250:[function(require,module,exports){
 'use strict';
 
 module.exports = Wallet;
@@ -42918,7 +43945,7 @@ var Metadata = require('./metadata');
 
 // Wallet
 
-function Wallet (object) {
+function Wallet(object) {
   var obj = object || {};
   obj.options = obj.options || {};
   obj.keys = obj.keys || [];
@@ -42942,13 +43969,11 @@ function Wallet (object) {
   // address book list
   // address book in json is [{address: 'address1', label: 'label1'} , ... ]
   // address book in memory is {address1: 'label1', address2: 'label2'}
-  this._address_book = obj.address_book
-      ? obj.address_book.reduce(function (o, a) {
-        var address = a.address || a.addr;
-        o[address] = a.label;
-        return o;
-      }, {})
-      : {};
+  this._address_book = obj.address_book ? obj.address_book.reduce(function (o, a) {
+    var address = a.address || a.addr;
+    o[address] = a.label;
+    return o;
+  }, {}) : {};
 
   // tx_notes dictionary
   this._tx_notes = obj.tx_notes || {};
@@ -42973,35 +43998,46 @@ function Wallet (object) {
 Object.defineProperties(Wallet.prototype, {
   'guid': {
     configurable: false,
-    get: function () { return this._guid; }
+    get: function get() {
+      return this._guid;
+    }
   },
   'sharedKey': {
     configurable: false,
-    get: function () { return this._sharedKey; }
+    get: function get() {
+      return this._sharedKey;
+    }
   },
   'context': {
     configurable: false,
-    get: function () {
+    get: function get() {
       var xpubs = this.hdwallet && this.hdwallet.activeXpubs;
       return this.activeAddresses.concat(xpubs || []);
     }
   },
   'isDoubleEncrypted': {
     configurable: false,
-    get: function () { return this._double_encryption; }
+    get: function get() {
+      return this._double_encryption;
+    }
   },
   'dpasswordhash': {
     configurable: false,
-    get: function () { return this._dpasswordhash; }
+    get: function get() {
+      return this._dpasswordhash;
+    }
   },
   'fee_per_kb': {
     configurable: false,
-    get: function () { return this._fee_per_kb; },
-    set: function (value) {
+    get: function get() {
+      return this._fee_per_kb;
+    },
+    set: function set(value) {
       switch (true) {
         case !Helpers.isPositiveNumber(value):
           throw new Error('wallet.fee_per_kb must be a positive number');
-        case value > 1000000:  // 0.01 btc
+        case value > 1000000:
+          // 0.01 btc
           throw new Error('wallet.fee_per_kb too high (0.01 btc limit)');
         default:
           this._fee_per_kb = value;
@@ -43011,12 +44047,16 @@ Object.defineProperties(Wallet.prototype, {
   },
   'pbkdf2_iterations': {
     configurable: false,
-    get: function () { return this._pbkdf2_iterations; }
+    get: function get() {
+      return this._pbkdf2_iterations;
+    }
   },
   'totalSent': {
     configurable: false,
-    get: function () { return this._totalSent; },
-    set: function (value) {
+    get: function get() {
+      return this._totalSent;
+    },
+    set: function set(value) {
       if (Helpers.isPositiveNumber(value)) {
         this._totalSent = value;
       } else {
@@ -43026,8 +44066,10 @@ Object.defineProperties(Wallet.prototype, {
   },
   'totalReceived': {
     configurable: false,
-    get: function () { return this._totalReceived; },
-    set: function (value) {
+    get: function get() {
+      return this._totalReceived;
+    },
+    set: function set(value) {
       if (Helpers.isPositiveNumber(value)) {
         this._totalReceived = value;
       } else {
@@ -43037,8 +44079,10 @@ Object.defineProperties(Wallet.prototype, {
   },
   'finalBalance': {
     configurable: false,
-    get: function () { return this._finalBalance; },
-    set: function (value) {
+    get: function get() {
+      return this._finalBalance;
+    },
+    set: function set(value) {
       if (Helpers.isPositiveNumber(value)) {
         this._finalBalance = value;
       } else {
@@ -43048,12 +44092,16 @@ Object.defineProperties(Wallet.prototype, {
   },
   'txList': {
     configurable: false,
-    get: function () { return this._txList; }
+    get: function get() {
+      return this._txList;
+    }
   },
   'numberTxTotal': {
     configurable: false,
-    get: function () { return this._numberTxTotal; },
-    set: function (value) {
+    get: function get() {
+      return this._numberTxTotal;
+    },
+    set: function set(value) {
       if (Helpers.isPositiveInteger(value)) {
         this._numberTxTotal = value;
       } else {
@@ -43063,27 +44111,37 @@ Object.defineProperties(Wallet.prototype, {
   },
   'addresses': {
     configurable: false,
-    get: function () { return Object.keys(this._addresses); }
+    get: function get() {
+      return Object.keys(this._addresses);
+    }
   },
   'activeAddresses': {
     configurable: false,
-    get: function () { return this.activeKeys.map(function (k) { return k.address; }); }
+    get: function get() {
+      return this.activeKeys.map(function (k) {
+        return k.address;
+      });
+    }
   },
   'spendableActiveAddresses': {
     configurable: false,
-    get: function () {
-      return this.activeKeys
-          .filter(function (k) { return !k.isWatchOnly; })
-          .map(function (k) { return k.address; });
+    get: function get() {
+      return this.activeKeys.filter(function (k) {
+        return !k.isWatchOnly;
+      }).map(function (k) {
+        return k.address;
+      });
     }
   },
   'key': {
     configurable: false,
-    value: function (addr) { return this._addresses[addr]; }
+    value: function value(addr) {
+      return this._addresses[addr];
+    }
   },
   'activeKey': {
     configurable: false,
-    value: function (addr) {
+    value: function value(addr) {
       var k = this._addresses[addr];
       var r = !k || k.archived ? null : k;
       return r;
@@ -43091,62 +44149,77 @@ Object.defineProperties(Wallet.prototype, {
   },
   'keys': {
     configurable: false,
-    get: function () {
+    get: function get() {
       var that = this;
-      return that.addresses.map(function (a) { return that.key(a); });
+      return that.addresses.map(function (a) {
+        return that.key(a);
+      });
     }
   },
   'activeKeys': {
     configurable: false,
-    get: function () { return this.keys.filter(function (a) { return !a.archived; }); }
+    get: function get() {
+      return this.keys.filter(function (a) {
+        return !a.archived;
+      });
+    }
   },
   'hdwallet': {
     configurable: false,
-    get: function () { return this._hd_wallets[0]; }
+    get: function get() {
+      return this._hd_wallets[0];
+    }
   },
   'isUpgradedToHD': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return !(this._hd_wallets == null || this._hd_wallets.length === 0);
     }
   },
   'external': {
     configurable: false,
-    get: function () { return this._external; }
+    get: function get() {
+      return this._external;
+    }
   },
   'isEncryptionConsistent': {
     configurable: false,
-    get: function () {
+    get: function get() {
       var operation;
       if (this.isDoubleEncrypted) {
-        operation = function (k) { return k.isEncrypted; };
-      } else { // no double encryption activated
-        operation = function (k) { return k.isUnEncrypted; };
+        operation = function operation(k) {
+          return k.isEncrypted;
+        };
+      } else {
+        // no double encryption activated
+        operation = function operation(k) {
+          return k.isUnEncrypted;
+        };
       }
-      var A = this.keys.filter(function (k) { return !k.isWatchOnly; })
-                       .map(operation)
-                       .reduce(Helpers.and, true);
-      var W = this._hd_wallets.map(operation)
-                              .reduce(Helpers.and, true);
+      var A = this.keys.filter(function (k) {
+        return !k.isWatchOnly;
+      }).map(operation).reduce(Helpers.and, true);
+      var W = this._hd_wallets.map(operation).reduce(Helpers.and, true);
       return A && W;
     }
   },
   'balanceActiveLegacy': {
     configurable: false,
-    get: function () {
-      return this.activeKeys
-                 .map(function (k) { return k.balance; })
-                 .reduce(Helpers.add, 0);
+    get: function get() {
+      return this.activeKeys.map(function (k) {
+        return k.balance;
+      }).reduce(Helpers.add, 0);
     }
   },
   'balanceActiveAccounts': {
     configurable: false,
-    get: function () {
+    get: function get() {
       if (this.isUpgradedToHD) {
-        return this.hdwallet.accounts
-                  .filter(function (a) { return !a.archived; })
-                  .map(function (a) { return a.balance; })
-                  .reduce(Helpers.add, 0);
+        return this.hdwallet.accounts.filter(function (a) {
+          return !a.archived;
+        }).map(function (a) {
+          return a.balance;
+        }).reduce(Helpers.add, 0);
       } else {
         return 0;
       }
@@ -43154,37 +44227,44 @@ Object.defineProperties(Wallet.prototype, {
   },
   'balanceActive': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this.balanceActiveLegacy + this.balanceActiveAccounts;
     }
   },
   'balanceSpendableActive': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this.balanceSpendableActiveLegacy + this.balanceActiveAccounts;
     }
   },
   'balanceSpendableActiveLegacy': {
     configurable: false,
-    get: function () {
-      return this.activeKeys
-                 .filter(function (k) { return !k.isWatchOnly; })
-                 .map(function (k) { return k.balance; })
-                 .reduce(Helpers.add, 0);
+    get: function get() {
+      return this.activeKeys.filter(function (k) {
+        return !k.isWatchOnly;
+      }).map(function (k) {
+        return k.balance;
+      }).reduce(Helpers.add, 0);
     }
   },
   'addressBook': {
     configurable: false,
-    get: function () { return this._address_book; }
+    get: function get() {
+      return this._address_book;
+    }
   },
   'defaultPbkdf2Iterations': {
     configurable: false,
-    get: function () { return 5000; }
+    get: function get() {
+      return 5000;
+    }
   },
   'latestBlock': {
     configurable: false,
-    get: function () { return this._latestBlock; },
-    set: function (json) {
+    get: function get() {
+      return this._latestBlock;
+    },
+    set: function set(json) {
       var b = Block.fromJSON(json);
       if (b != null) {
         this._latestBlock = b;
@@ -43196,8 +44276,10 @@ Object.defineProperties(Wallet.prototype, {
   },
   'logoutTime': {
     configurable: false,
-    get: function () { return this._logout_time; },
-    set: function (t) {
+    get: function get() {
+      return this._logout_time;
+    },
+    set: function set(t) {
       if (Helpers.isPositiveInteger(t) && Helpers.isInRange(t, 60000, 86400001)) {
         this._logout_time = t;
         MyWallet.syncWallet();
@@ -43208,7 +44290,9 @@ Object.defineProperties(Wallet.prototype, {
   },
   'accountInfo': {
     configurable: false,
-    get: function () { return this._accountInfo; }
+    get: function get() {
+      return this._accountInfo;
+    }
   }
 });
 
@@ -43216,7 +44300,7 @@ Object.defineProperties(Wallet.prototype, {
 Wallet.prototype._updateWalletInfo = function (obj) {
   if (obj.info) {
     if (obj.info.notice) {
-      WalletStore.sendEvent('msg', {type: 'error', message: obj.info.notice});
+      WalletStore.sendEvent('msg', { type: 'error', message: obj.info.notice });
     }
   }
 
@@ -43233,7 +44317,7 @@ Wallet.prototype._updateWalletInfo = function (obj) {
   this.finalBalance = obj.wallet.final_balance;
   this.numberTxTotal = obj.wallet.n_tx;
 
-  var updateAccountAndAddressesInfo = function (e) {
+  var updateAccountAndAddressesInfo = function updateAccountAndAddressesInfo(e) {
     if (this.isUpgradedToHD) {
       var account = this.hdwallet.activeAccount(e.address);
       if (account) {
@@ -43262,23 +44346,22 @@ Wallet.prototype._updateWalletInfo = function (obj) {
 };
 
 Wallet.prototype.getHistory = function () {
-  return API.getHistory(this.context, 0, 0, this.txList.loadNumber)
-    .then(function (obj) { this.txList.wipe(); return obj; }.bind(this))
-    .then(this._updateWalletInfo.bind(this));
+  return API.getHistory(this.context, 0, 0, this.txList.loadNumber).then(function (obj) {
+    this.txList.wipe();return obj;
+  }.bind(this)).then(this._updateWalletInfo.bind(this));
 };
 
 Wallet.prototype.fetchTransactions = function () {
-  return API.getHistory(this.context, 0, this.txList.fetched, this.txList.loadNumber)
-    .then(this._updateWalletInfo.bind(this));
+  return API.getHistory(this.context, 0, this.txList.fetched, this.txList.loadNumber).then(this._updateWalletInfo.bind(this));
 };
 
 Wallet.prototype.getBalancesForArchived = function () {
-  var updateBalance = function (key) {
+  var updateBalance = function updateBalance(key) {
     if (this.containsLegacyAddress(key.address)) {
       this.key(key.address).balance = key.final_balance;
     }
   };
-  var updateBalances = function (obj) {
+  var updateBalances = function updateBalances(obj) {
     obj.addresses.forEach(updateBalance.bind(this));
     return obj;
   };
@@ -43290,9 +44373,10 @@ Wallet.prototype.getBalancesForArchived = function () {
 };
 
 Wallet.prototype.toJSON = function () {
-  function addressBookToJSON (addressBook) {
-    return Object.keys(addressBook)
-             .map(function (a) { return {addr: a, label: addressBook[a]}; });
+  function addressBookToJSON(addressBook) {
+    return Object.keys(addressBook).map(function (a) {
+      return { addr: a, label: addressBook[a] };
+    });
   }
 
   return {
@@ -43332,8 +44416,12 @@ Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bi
     }
     watchOnlyKey._priv = newKey._priv;
     if (this.isDoubleEncrypted) {
-      if (!secPass) { throw new Error('second password needed'); }
-      if (!this.validateSecondPassword(secPass)) { throw new Error('wrong second password'); }
+      if (!secPass) {
+        throw new Error('second password needed');
+      }
+      if (!this.validateSecondPassword(secPass)) {
+        throw new Error('wrong second password');
+      }
       var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, 'enc');
       watchOnlyKey.encrypt(cipher).persist();
     }
@@ -43360,8 +44448,12 @@ Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) 
       }
     }
     if (this.isDoubleEncrypted) {
-      if (!secPass) { throw new Error('second password needed'); }
-      if (!this.validateSecondPassword(secPass)) { throw new Error('wrong second password'); }
+      if (!secPass) {
+        throw new Error('second password needed');
+      }
+      if (!this.validateSecondPassword(secPass)) {
+        throw new Error('wrong second password');
+      }
       var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, 'enc');
       ad.encrypt(cipher).persist();
     }
@@ -43440,7 +44532,9 @@ Wallet.prototype.encrypt = function (pw, success, error, encrypting, syncing) {
   try {
     if (!this.isDoubleEncrypted) {
       var g = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, 'enc');
-      var f = function (element) { element.encrypt(g); };
+      var f = function f(element) {
+        element.encrypt(g);
+      };
       this.keys.forEach(f);
       this._hd_wallets.forEach(f);
     } else {
@@ -43455,7 +44549,9 @@ Wallet.prototype.encrypt = function (pw, success, error, encrypting, syncing) {
   // if encryption finished well, then save
   this._dpasswordhash = WalletCrypto.hashNTimes(this._sharedKey + pw, this._pbkdf2_iterations);
   this._double_encryption = true;
-  var p = function (element) { element.persist(); };
+  var p = function p(element) {
+    element.persist();
+  };
   this.keys.forEach(p);
   this._hd_wallets.forEach(p);
   syncing && syncing();
@@ -43472,7 +44568,9 @@ Wallet.prototype.decrypt = function (pw, success, error, decrypting, syncing) {
   try {
     if (this.isDoubleEncrypted) {
       var g = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, 'dec');
-      var f = function (element) { element.decrypt(g); };
+      var f = function f(element) {
+        element.decrypt(g);
+      };
       this.keys.forEach(f);
       this._hd_wallets.forEach(f);
     } else {
@@ -43487,7 +44585,9 @@ Wallet.prototype.decrypt = function (pw, success, error, decrypting, syncing) {
   // if encryption finished well, then save
   this._dpasswordhash = undefined;
   this._double_encryption = false;
-  var p = function (element) { element.persist(); };
+  var p = function p(element) {
+    element.persist();
+  };
   this.keys.forEach(p);
   this._hd_wallets.forEach(p);
   syncing && syncing();
@@ -43500,12 +44600,14 @@ Wallet.prototype.decrypt = function (pw, success, error, decrypting, syncing) {
 };
 
 Wallet.reviver = function (k, v) {
-  if (k === '') { return new Wallet(v); }
+  if (k === '') {
+    return new Wallet(v);
+  }
   return v;
 };
 
-function isAccountNonUsed (account, progress) {
-  var isNonUsed = function (obj) {
+function isAccountNonUsed(account, progress) {
+  var isNonUsed = function isNonUsed(obj) {
     var result = obj[account.extendedPublicKey];
     progress && progress(result);
     return result.total_received === 0;
@@ -43519,8 +44621,8 @@ Wallet.prototype.scanBip44 = function (secondPassword, progress) {
   var AccountsGap = 10;
   isAccountNonUsed(self.hdwallet._accounts[0], progress);
 
-  var untilNEmptyAccounts = function (n) {
-    var go = function (nonused) {
+  var untilNEmptyAccounts = function untilNEmptyAccounts(n) {
+    var go = function go(nonused) {
       return untilNEmptyAccounts(nonused ? n - 1 : AccountsGap);
     };
     if (n === 0) {
@@ -43571,7 +44673,9 @@ Wallet.new = function (guid, sharedKey, mnemonic, bip39Password, firstAccountLab
     var hd = HDWallet.new(mnemonic, bip39Password);
     MyWallet.wallet._hd_wallets.push(hd);
     hd.newAccount(label);
-  } catch (e) { error(e); return; }
+  } catch (e) {
+    error(e);return;
+  }
   success(MyWallet.wallet);
 };
 
@@ -43581,7 +44685,9 @@ Wallet.prototype.upgradeToV3 = function (firstAccountLabel, pw, success, error) 
   try {
     var mnemonic = BIP39.generateMnemonic(undefined, RNG.run.bind(RNG));
     var hd = HDWallet.new(mnemonic, undefined, encoder);
-  } catch (e) { error(e); return; }
+  } catch (e) {
+    error(e);return;
+  }
   this._hd_wallets.push(hd);
   var label = firstAccountLabel || 'My Bitcoin Wallet';
   this.newAccount(label, pw, this._hd_wallets.length - 1, true);
@@ -43594,18 +44700,21 @@ Wallet.prototype.upgradeToV3 = function (firstAccountLabel, pw, success, error) 
 };
 
 Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosave) {
-  if (!this.isUpgradedToHD) { return false; }
+  if (!this.isUpgradedToHD) {
+    return false;
+  }
   var index = Helpers.isPositiveInteger(hdwalletIndex) ? hdwalletIndex : 0;
   var cipher;
   if (this.isDoubleEncrypted) {
     cipher = WalletCrypto.cipherFunction.bind(undefined, pw, this._sharedKey, this._pbkdf2_iterations);
   }
   var newAccount = this._hd_wallets[index].newAccount(label, cipher).lastAccount;
-  try { // MyWallet.ws.send can fail when restoring from mnemonic because it is not initialized.
+  try {
+    // MyWallet.ws.send can fail when restoring from mnemonic because it is not initialized.
     MyWallet.ws.send(MyWallet.ws.msgXPUBSub(newAccount.extendedPublicKey));
   } catch (e) {}
   if (!(nosave === true)) MyWallet.syncWallet();
-  typeof (success) === 'function' && success();
+  typeof success === 'function' && success();
   return newAccount;
 };
 
@@ -43643,19 +44752,23 @@ Wallet.prototype.getNotePlaceholder = function (filter, tx) {
   // If using no account filter or filtering by imported addresses, pass in a non-numeric string. It will use the first account found in the outputs as the filtered account.
   if (tx.txType === 'received' && this.isUpgradedToHD) {
     var account = parseInt(filter, 10);
-    var addresses = tx.processedOutputs.filter(function (processedOutput) { return processedOutput.identity >= 0; });
+    var addresses = tx.processedOutputs.filter(function (processedOutput) {
+      return processedOutput.identity >= 0;
+    });
     var indexesAndLabels = addresses.map(function (processedOutput) {
       var coinType = processedOutput.coinType.split('/');
       var addressIndex = coinType[2];
-      return {index: addressIndex, label: processedOutput.label};
+      return { index: addressIndex, label: processedOutput.label };
     });
 
     if (addresses.length) {
-      var match = function (a, b, prop) {
+      var match = function match(a, b, prop) {
         var seen = [];
-        for (var i = 0, aLength = a.length; i < aLength; i++) seen[prop ? a[i][prop] : a[i]] = true;
-        for (var j = 0, bLength = b.length; j < bLength; j++) if (seen[prop ? b[j][prop] : b[j]]) return b[j];
-        return false;
+        for (var i = 0, aLength = a.length; i < aLength; i++) {
+          seen[prop ? a[i][prop] : a[i]] = true;
+        }for (var j = 0, bLength = b.length; j < bLength; j++) {
+          if (seen[prop ? b[j][prop] : b[j]]) return b[j];
+        }return false;
       };
       if (isNaN(account)) account = addresses[0].identity;
       var hdAddresses = this.hdwallet.accounts[account].receivingAddressesLabels;
@@ -43667,9 +44780,7 @@ Wallet.prototype.getNotePlaceholder = function (filter, tx) {
 };
 
 Wallet.prototype.getMnemonic = function (password) {
-  var seedHex = this.isDoubleEncrypted
-      ? WalletCrypto.decryptSecretWithSecondPassword(this.hdwallet.seedHex, password, this.sharedKey, this.pbkdf2_iterations)
-      : this.hdwallet.seedHex;
+  var seedHex = this.isDoubleEncrypted ? WalletCrypto.decryptSecretWithSecondPassword(this.hdwallet.seedHex, password, this.sharedKey, this.pbkdf2_iterations) : this.hdwallet.seedHex;
   return BIP39.entropyToMnemonic(seedHex);
 };
 
@@ -43678,11 +44789,12 @@ Wallet.prototype.changePbkdf2Iterations = function (newIterations, password) {
   if (newIterations !== this._pbkdf2_iterations) {
     if (this.isDoubleEncrypted) {
       this.decrypt(password);
-      this._pbkdf2_iterations = newIterations;         // sec pass iterations
-      WalletStore.setPbkdf2Iterations(newIterations);  // main pass iterations
+      this._pbkdf2_iterations = newIterations; // sec pass iterations
+      WalletStore.setPbkdf2Iterations(newIterations); // main pass iterations
       this.encrypt(password);
-    } else { // no double encrypted wallet
-      this._pbkdf2_iterations = newIterations;        // sec pass iterations
+    } else {
+      // no double encrypted wallet
+      this._pbkdf2_iterations = newIterations; // sec pass iterations
       WalletStore.setPbkdf2Iterations(newIterations); // main pass iterations
       MyWallet.syncWallet();
     }
@@ -43694,9 +44806,7 @@ Wallet.prototype.getPrivateKeyForAddress = function (address, secondPassword) {
   assert(address, 'Error: address must be defined');
   var pk = null;
   if (!address.isWatchOnly) {
-    pk = this.isDoubleEncrypted
-        ? WalletCrypto.decryptSecretWithSecondPassword(address.priv, secondPassword, this.sharedKey, this.pbkdf2_iterations)
-        : address.priv;
+    pk = this.isDoubleEncrypted ? WalletCrypto.decryptSecretWithSecondPassword(address.priv, secondPassword, this.sharedKey, this.pbkdf2_iterations) : address.priv;
   }
   return pk;
 };
@@ -43718,9 +44828,7 @@ Wallet.prototype._getPrivateKey = function (accountIndex, path, secondPassword) 
   assert(this.hdwallet.isValidAccountIndex(accountIndex), 'Error: account non-existent');
   assert(Helpers.isString(path), 'Error: path must be an string of the form \'M/0/27\'');
   var maybeXpriv = this.hdwallet.accounts[accountIndex].extendedPrivateKey;
-  var xpriv = this.isDoubleEncrypted
-      ? WalletCrypto.decryptSecretWithSecondPassword(maybeXpriv, secondPassword, this.sharedKey, this.pbkdf2_iterations)
-      : maybeXpriv;
+  var xpriv = this.isDoubleEncrypted ? WalletCrypto.decryptSecretWithSecondPassword(maybeXpriv, secondPassword, this.sharedKey, this.pbkdf2_iterations) : maybeXpriv;
   var kr = new KeyRing(xpriv, null);
   return kr.privateKeyFromPath(path).keyPair.toWIF();
 };
@@ -43748,12 +44856,13 @@ Wallet.prototype.metadata = function (typeId) {
   return Metadata.fromMasterHDNode(masterhdnode, typeId);
 };
 
-},{"./account-info":236,"./address":237,"./api":238,"./bitcoin-block":239,"./blockchain-settings-api":240,"./external":260,"./hd-wallet":262,"./helpers":263,"./keyring":266,"./metadata":267,"./rng":269,"./transaction-list":271,"./wallet":279,"./wallet-crypto":273,"./wallet-store":276,"assert":16,"bip39":23}],243:[function(require,module,exports){
+},{"./account-info":244,"./address":245,"./api":246,"./bitcoin-block":247,"./blockchain-settings-api":248,"./external":268,"./hd-wallet":270,"./helpers":271,"./keyring":274,"./metadata":275,"./rng":277,"./transaction-list":286,"./wallet":294,"./wallet-crypto":288,"./wallet-store":291,"assert":16,"bip39":23}],251:[function(require,module,exports){
+'use strict';
 
 module.exports = BuySell;
 
 // var buySell = new Blockchain.BuySell(Blockchain.MyWallet.wallet);
-function BuySell (wallet, debug) {
+function BuySell(wallet, debug) {
   this.debug = Boolean(debug);
 
   /* istanbul ignore if */
@@ -43777,16 +44886,14 @@ function BuySell (wallet, debug) {
     return;
   }
 
-  // Add Coinify if not already added:
-  if (!this._wallet.external.coinify) this._wallet.external.addCoinify();
-
   this._wallet.external.coinify.debug = this.debug;
+  this._wallet.external.sfox.debug = this.debug;
 }
 
 Object.defineProperties(BuySell.prototype, {
   'status': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return {
         metaDataService: this._wallet.external && this._wallet.external.loaded
       };
@@ -43794,19 +44901,17 @@ Object.defineProperties(BuySell.prototype, {
   },
   'exchanges': {
     configurable: false,
-    get: function () {
-      if (
-        this._wallet.external === null ||
-        !this._wallet.external.loaded
-      ) return;
+    get: function get() {
+      if (this._wallet.external === null || !this._wallet.external.loaded) return;
       return {
-        coinify: this._wallet.external.coinify
+        coinify: this._wallet.external.coinify,
+        sfox: this._wallet.external.sfox
       };
     }
   }
 });
 
-},{}],244:[function(require,module,exports){
+},{}],252:[function(require,module,exports){
 'use strict';
 
 module.exports = Address;
@@ -43852,165 +44957,144 @@ Object.defineProperties(Address.prototype, {
   }
 });
 
-},{}],245:[function(require,module,exports){
+},{}],253:[function(require,module,exports){
 'use strict';
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
 var assert = require('assert');
+var Exchange = require('bitcoin-exchange-client');
 
-module.exports = API;
+var API = function (_Exchange$API) {
+  _inherits(API, _Exchange$API);
 
-function API() {
-  this._offlineToken = null;
-  this._rootURL = 'https://app-api.coinify.com/';
-  this._loginExpiresAt = null;
-}
+  function API() {
+    _classCallCheck(this, API);
 
-Object.defineProperties(API.prototype, {
-  'isLoggedIn': {
-    configurable: false,
+    var _this = _possibleConstructorReturn(this, (API.__proto__ || Object.getPrototypeOf(API)).call(this));
+
+    _this._offlineToken = null;
+    _this._rootURL = 'https://app-api.coinify.com/';
+    _this._loginExpiresAt = null;
+    return _this;
+  }
+
+  _createClass(API, [{
+    key: 'login',
+    value: function login() {
+      var self = this;
+
+      var promise = new Promise(function (resolve, reject) {
+        assert(self._offlineToken, 'Offline token required');
+
+        var loginSuccess = function loginSuccess(res) {
+          self._access_token = res.access_token;
+          self._loginExpiresAt = new Date(new Date().getTime() + res.expires_in * 1000);
+          resolve();
+        };
+
+        var loginFailed = function loginFailed(e) {
+          reject(e);
+        };
+        self.POST('auth', {
+          grant_type: 'offline_token',
+          offline_token: self._offlineToken
+        }).then(loginSuccess).catch(loginFailed);
+      });
+
+      return promise;
+    }
+  }, {
+    key: '_request',
+    value: function _request(method, endpoint, data, authorized) {
+      assert(!authorized || this.isLoggedIn, "Can't make authorized request if not logged in");
+
+      var url = this._rootURL + endpoint;
+
+      var headers = {};
+
+      if (authorized) {
+        headers['Authorization'] = 'Bearer ' + this._access_token;
+      }
+
+      return _get(API.prototype.__proto__ || Object.getPrototypeOf(API.prototype), '_request', this).call(this, method, url, data, headers);
+    }
+  }, {
+    key: '_authRequest',
+    value: function _authRequest(method, endpoint, data) {
+      var doRequest = function doRequest() {
+        return this._request(method, endpoint, data, true);
+      };
+
+      if (this.isLoggedIn) {
+        return doRequest.bind(this)();
+      } else {
+        return this.login().then(doRequest.bind(this));
+      }
+    }
+  }, {
+    key: 'GET',
+    value: function GET(endpoint, data) {
+      return this._request('GET', endpoint, data);
+    }
+  }, {
+    key: 'authGET',
+    value: function authGET(endpoint, data) {
+      return this._authRequest('GET', endpoint, data);
+    }
+  }, {
+    key: 'POST',
+    value: function POST(endpoint, data) {
+      return this._request('POST', endpoint, data);
+    }
+  }, {
+    key: 'authPOST',
+    value: function authPOST(endpoint, data) {
+      return this._authRequest('POST', endpoint, data);
+    }
+  }, {
+    key: 'PATCH',
+    value: function PATCH(endpoint, data) {
+      return this._request('PATCH', endpoint, data);
+    }
+  }, {
+    key: 'authPATCH',
+    value: function authPATCH(endpoint, data) {
+      return this._authRequest('PATCH', endpoint, data);
+    }
+  }, {
+    key: 'isLoggedIn',
     get: function get() {
       // Debug: + 60 * 19 * 1000 expires the login after 1 minute
       var tenSecondsFromNow = new Date(new Date().getTime() + 10000);
       return Boolean(this._access_token) && this._loginExpiresAt > tenSecondsFromNow;
     }
-  },
-  'offlineToken': {
-    configurable: false,
+  }, {
+    key: 'offlineToken',
     get: function get() {
       return this._offlineToken;
     }
-  },
-  'hasAccount': {
-    configurable: false,
+  }, {
+    key: 'hasAccount',
     get: function get() {
       return Boolean(this.offlineToken);
     }
-  }
-});
+  }]);
 
-API.prototype.login = function () {
-  var self = this;
+  return API;
+}(Exchange.API);
 
-  var promise = new Promise(function (resolve, reject) {
-    assert(self._offlineToken, 'Offline token required');
+module.exports = API;
 
-    var loginSuccess = function loginSuccess(res) {
-      self._access_token = res.access_token;
-      self._loginExpiresAt = new Date(new Date().getTime() + res.expires_in * 1000);
-      resolve();
-    };
-
-    var loginFailed = function loginFailed(e) {
-      reject(e);
-    };
-    self.POST('auth', {
-      grant_type: 'offline_token',
-      offline_token: self._offlineToken
-    }).then(loginSuccess).catch(loginFailed);
-  });
-
-  return promise;
-};
-
-API.prototype.GET = function (endpoint, data) {
-  return this._request('GET', endpoint, data);
-};
-
-API.prototype.authGET = function (endpoint, data) {
-  var doGET = function doGET() {
-    return this._request('GET', endpoint, data, true);
-  };
-
-  if (this.isLoggedIn) {
-    return doGET.bind(this)();
-  } else {
-    return this.login().then(doGET.bind(this));
-  }
-};
-
-API.prototype.POST = function (endpoint, data) {
-  return this._request('POST', endpoint, data);
-};
-
-API.prototype.authPOST = function (endpoint, data) {
-  var doPOST = function doPOST() {
-    return this._request('POST', endpoint, data, true);
-  };
-
-  if (this.isLoggedIn) {
-    return doPOST.bind(this)();
-  } else {
-    return this.login().then(doPOST.bind(this));
-  }
-};
-
-API.prototype.PATCH = function (endpoint, data) {
-  return this._request('PATCH', endpoint, data);
-};
-
-API.prototype.authPATCH = function (endpoint, data) {
-  var doPATCH = function doPATCH() {
-    return this._request('PATCH', endpoint, data, true);
-  };
-
-  if (this.isLoggedIn) {
-    return doPATCH.bind(this)();
-  } else {
-    return this.login().then(doPATCH.bind(this));
-  }
-};
-
-API.prototype._request = function (method, endpoint, data, authorized) {
-  assert(!authorized || this.isLoggedIn, "Can't make authorized request if not logged in");
-
-  var url = this._rootURL + endpoint;
-
-  var options = {
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'omit'
-  };
-
-  if (authorized) {
-    options.headers['Authorization'] = 'Bearer ' + this._access_token;
-  }
-
-  // encodeFormData :: Object -> url encoded params
-  var encodeFormData = function encodeFormData(data) {
-    if (!data) return '';
-    var encoded = Object.keys(data).map(function (k) {
-      return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]);
-    }).join('&');
-    return encoded;
-  };
-
-  if (data) {
-    if (method === 'GET') {
-      url += '?' + encodeFormData(data);
-    } else {
-      options.body = JSON.stringify(data);
-    }
-  }
-
-  options.method = method;
-
-  var handleNetworkError = function handleNetworkError(e) {
-    return Promise.reject({ error: 'COINIFY_CONNECT_ERROR', message: e });
-  };
-
-  var checkStatus = function checkStatus(response) {
-    if (response.status === 204) {
-      return;
-    } else if (response.status >= 200 && response.status < 300) {
-      return response.json();
-    } else {
-      return response.text().then(Promise.reject.bind(Promise));
-    }
-  };
-
-  return fetch(url, options).catch(handleNetworkError).then(checkStatus);
-};
-
-},{"assert":16}],246:[function(require,module,exports){
+},{"assert":16,"bitcoin-exchange-client":26}],254:[function(require,module,exports){
 'use strict';
 
 var Address = require('./address');
@@ -44107,8 +45191,18 @@ Object.defineProperties(BankAccount.prototype, {
   // }
 });
 
-},{"./address":244}],247:[function(require,module,exports){
+},{"./address":252}],255:[function(require,module,exports){
 'use strict';
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 /* To use this class, three things are needed:
 1 - a delegate object with functions that provide the following:
@@ -44134,371 +45228,268 @@ coinify.delegate.save.bind(coinify.delegate)()
 // "{"user":1,"offline_token":"token"}"
 */
 
+var Exchange = require('bitcoin-exchange-client');
 var CoinifyProfile = require('./profile');
-var CoinifyTrade = require('./trade');
+var Trade = require('./trade');
 var CoinifyKYC = require('./kyc');
-var PaymentMethod = require('./payment-method');
+var PaymentMedium = require('./payment-medium');
 var ExchangeRate = require('./exchange-rate');
 var Quote = require('./quote');
 var API = require('./api');
 
 var assert = require('assert');
 
-var isBoolean = function isBoolean(value) {
-  return typeof value === 'boolean';
-};
+var Coinify = function (_Exchange$Exchange) {
+  _inherits(Coinify, _Exchange$Exchange);
 
-var isString = function isString(str) {
-  return typeof str === 'string' || str instanceof String;
-};
+  function Coinify(object, delegate) {
+    _classCallCheck(this, Coinify);
 
-module.exports = Coinify;
+    var _this = _possibleConstructorReturn(this, (Coinify.__proto__ || Object.getPrototypeOf(Coinify)).call(this, delegate, Trade, Quote, PaymentMedium));
 
-function Coinify(object, delegate) {
-  assert(delegate, 'ExchangeDelegate required');
-  this._delegate = delegate;
-  var obj = object || {};
-  this._partner_id = null;
-  this._user = obj.user;
-  this._auto_login = obj.auto_login;
-  this._offlineToken = obj.offline_token;
+    var obj = object || {};
+    _this._partner_id = null;
+    _this._user = obj.user;
+    _this._auto_login = obj.auto_login;
+    _this._offlineToken = obj.offline_token;
 
-  this._api = new API();
-  this._api._offlineToken = this._offlineToken;
+    _this._api = new API('https://app-api.coinify.com/');
+    _this._api._offlineToken = _this._offlineToken;
 
-  this._profile = new CoinifyProfile(this._api);
-  this._lastQuote = null;
+    _this._profile = new CoinifyProfile(_this._api);
 
-  this._buyCurrencies = null;
-  this._sellCurrencies = null;
+    _this._buyCurrencies = null;
+    _this._sellCurrencies = null;
 
-  this._trades = [];
-  if (obj.trades) {
-    var _iteratorNormalCompletion = true;
-    var _didIteratorError = false;
-    var _iteratorError = undefined;
+    _this._trades = [];
+    if (obj.trades) {
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
 
-    try {
-      for (var _iterator = obj.trades[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-        var tradeObj = _step.value;
-
-        var trade = new CoinifyTrade(tradeObj, this._api, delegate, this);
-        trade.debug = this._debug;
-        this._trades.push(trade);
-      }
-    } catch (err) {
-      _didIteratorError = true;
-      _iteratorError = err;
-    } finally {
       try {
-        if (!_iteratorNormalCompletion && _iterator.return) {
-          _iterator.return();
+        for (var _iterator = obj.trades[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var tradeObj = _step.value;
+
+          var trade = new Trade(tradeObj, _this._api, delegate, _this);
+          trade._getQuote = Quote.getQuote; // Prevents circular dependency
+          trade.debug = _this._debug;
+          _this._trades.push(trade);
         }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
       } finally {
-        if (_didIteratorError) {
-          throw _iteratorError;
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
         }
       }
     }
+
+    _this._kycs = [];
+
+    _this.exchangeRate = new ExchangeRate(_this._api);
+    return _this;
   }
 
-  this._kycs = [];
+  _createClass(Coinify, [{
+    key: 'toJSON',
+    value: function toJSON() {
+      var coinify = {
+        user: this._user,
+        offline_token: this._offlineToken,
+        auto_login: this._auto_login,
+        trades: this._TradeClass.filteredTrades(this._trades)
+      };
 
-  this.exchangeRate = new ExchangeRate(this._api);
-}
+      return coinify;
+    }
 
-Object.defineProperties(Coinify.prototype, {
-  'debug': {
-    configurable: false,
-    get: function get() {
-      return this._debug;
-    },
-    set: function set(value) {
-      this._debug = Boolean(value);
-      this._delegate.debug = Boolean(value);
-      for (var i = 0; i < this.trades.length; i++) {
-        this.trades[i].debug = Boolean(value);
-      }
-    }
-  },
-  'delegate': {
-    configurable: false,
-    get: function get() {
-      return this._delegate;
-    }
-  },
-  'user': {
-    configurable: false,
-    get: function get() {
-      return this._user;
-    }
-  },
-  'autoLogin': {
-    configurable: false,
-    get: function get() {
-      return this._auto_login;
-    },
-    set: function set(value) {
-      assert(isBoolean(value), 'Boolean');
-      this._auto_login = value;
-      this.delegate.save.bind(this.delegate)();
-    }
-  },
-  'profile': {
-    configurable: false,
-    get: function get() {
-      if (!this._profile._did_fetch) {
-        return null;
-      } else {
-        return this._profile;
-      }
-    }
-  },
-  'trades': {
-    configurable: false,
-    get: function get() {
-      return this._trades;
-    }
-  },
-  'kycs': {
-    configurable: false,
-    get: function get() {
-      return this._kycs;
-    }
-  },
-  'hasAccount': {
-    configurable: false,
-    get: function get() {
-      return Boolean(this._offlineToken);
-    }
-  },
-  'partnerId': {
-    configurable: false,
-    get: function get() {
-      return this._partner_id;
-    },
-    set: function set(value) {
-      this._partner_id = value;
-    }
-  },
-  'buyCurrencies': {
-    configurable: false,
-    get: function get() {
-      return this._buyCurrencies;
-    }
-  },
-  'sellCurrencies': {
-    configurable: false,
-    get: function get() {
-      return this._sellCurrencies;
-    }
-  }
-});
+    // Country and default currency must be set
+    // Email must be set and verified
 
-Coinify.prototype.toJSON = function () {
-  var coinify = {
-    user: this._user,
-    offline_token: this._offlineToken,
-    auto_login: this._auto_login,
-    trades: CoinifyTrade.filteredTrades(this._trades)
-  };
+  }, {
+    key: 'signup',
+    value: function signup(countryCode, currencyCode) {
+      var self = this;
+      var runChecks = function runChecks() {
+        assert(!self.user, 'Already signed up');
 
-  return coinify;
-};
-// Country and default currency must be set
-// Email must be set and verified
-Coinify.prototype.signup = function (countryCode, currencyCode) {
-  var self = this;
-  var runChecks = function runChecks() {
-    assert(!self.user, 'Already signed up');
+        assert(self.delegate, 'ExchangeDelegate required');
 
-    assert(self.delegate, 'ExchangeDelegate required');
+        assert(countryCode && Exchange.Helpers.isString(countryCode) && countryCode.length === 2 && countryCode.match(/[a-zA-Z]{2}/), 'ISO 3166-1 alpha-2');
 
-    assert(countryCode && isString(countryCode) && countryCode.length === 2 && countryCode.match(/[a-zA-Z]{2}/), 'ISO 3166-1 alpha-2');
+        assert(currencyCode, 'currency required');
 
-    assert(currencyCode, 'currency required');
+        assert(self.delegate.email(), 'email required');
+        assert(self.delegate.isEmailVerified(), 'email must be verified');
+      };
 
-    assert(self.delegate.email(), 'email required');
-    assert(self.delegate.isEmailVerified(), 'email must be verified');
-  };
+      var doSignup = function doSignup(emailToken) {
+        assert(emailToken, 'email token missing');
+        return this._api.POST('signup/trader', {
+          email: self.delegate.email(),
+          partnerId: self.partnerId,
+          defaultCurrency: currencyCode, // ISO 4217
+          profile: {
+            address: {
+              country: countryCode.toUpperCase()
+            }
+          },
+          trustedEmailValidationToken: emailToken,
+          generateOfflineToken: true
+        });
+      };
 
-  var doSignup = function doSignup(emailToken) {
-    assert(emailToken, 'email token missing');
-    return this._api.POST('signup/trader', {
-      email: self.delegate.email(),
-      partnerId: self.partnerId,
-      defaultCurrency: currencyCode, // ISO 4217
-      profile: {
-        address: {
-          country: countryCode.toUpperCase()
+      var saveMetadata = function saveMetadata(res) {
+        this._user = res.trader.id;
+        this._offlineToken = res.offlineToken;
+        this._api._offlineToken = this._offlineToken;
+        return this._delegate.save.bind(this._delegate)().then(function () {
+          return res;
+        });
+      };
+
+      return Promise.resolve().then(runChecks.bind(this)).then(this.delegate.getEmailToken.bind(this.delegate)).then(doSignup.bind(this)).then(saveMetadata.bind(this));
+    }
+  }, {
+    key: 'fetchProfile',
+    value: function fetchProfile() {
+      return this._profile.fetch();
+    }
+  }, {
+    key: 'triggerKYC',
+    value: function triggerKYC() {
+      var _this2 = this;
+
+      var addKYC = function addKYC(kyc) {
+        _this2._kycs.push(kyc);
+        return kyc;
+      };
+
+      return CoinifyKYC.trigger(this._api).then(addKYC);
+    }
+  }, {
+    key: 'getKYCs',
+    value: function getKYCs() {
+      var _this3 = this;
+
+      var save = function save() {
+        return _this3.delegate.save.bind(_this3.delegate)().then(function () {
+          return _this3._kycs;
+        });
+      };
+      var update = function update(kycs) {
+        _this3.updateList(_this3._kycs, kycs, CoinifyKYC);
+      };
+      return CoinifyKYC.fetchAll(this._api, this).then(update).then(save);
+    }
+  }, {
+    key: 'getBuyCurrencies',
+    value: function getBuyCurrencies() {
+      var getCurrencies = function getCurrencies(paymentMethods) {
+        var currencies = [];
+        var _iteratorNormalCompletion2 = true;
+        var _didIteratorError2 = false;
+        var _iteratorError2 = undefined;
+
+        try {
+          for (var _iterator2 = Object.entries(paymentMethods)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+            var _step2$value = _slicedToArray(_step2.value, 2),
+                paymentMethod = _step2$value[1];
+
+            var _iteratorNormalCompletion3 = true;
+            var _didIteratorError3 = false;
+            var _iteratorError3 = undefined;
+
+            try {
+              for (var _iterator3 = paymentMethod.inCurrencies[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+                var inCurrency = _step3.value;
+
+                if (currencies.indexOf(inCurrency) === -1) {
+                  currencies.push(inCurrency);
+                }
+              }
+            } catch (err) {
+              _didIteratorError3 = true;
+              _iteratorError3 = err;
+            } finally {
+              try {
+                if (!_iteratorNormalCompletion3 && _iterator3.return) {
+                  _iterator3.return();
+                }
+              } finally {
+                if (_didIteratorError3) {
+                  throw _iteratorError3;
+                }
+              }
+            }
+          }
+        } catch (err) {
+          _didIteratorError2 = true;
+          _iteratorError2 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion2 && _iterator2.return) {
+              _iterator2.return();
+            }
+          } finally {
+            if (_didIteratorError2) {
+              throw _iteratorError2;
+            }
+          }
         }
-      },
-      trustedEmailValidationToken: emailToken,
-      generateOfflineToken: true
-    });
-  };
 
-  var saveMetadata = function saveMetadata(res) {
-    this._user = res.trader.id;
-    this._offlineToken = res.offlineToken;
-    this._api._offlineToken = this._offlineToken;
-    return this._delegate.save.bind(this._delegate)().then(function () {
-      return res;
-    });
-  };
-
-  return Promise.resolve().then(runChecks.bind(this)).then(this.delegate.getEmailToken.bind(this.delegate)).then(doSignup.bind(this)).then(saveMetadata.bind(this));
-};
-
-Coinify.prototype.fetchProfile = function () {
-  return this._profile.fetch();
-};
-
-Coinify.prototype.getBuyQuote = function (amount, baseCurrency, quoteCurrency) {
-  assert(baseCurrency, 'Specify base currency');
-  assert(baseCurrency !== 'BTC' || quoteCurrency, 'Specify quote currency');
-  if (baseCurrency !== 'BTC') {
-    quoteCurrency = 'BTC';
-  }
-  return Quote.getQuote(this._api, -amount, baseCurrency, quoteCurrency).then(this.setLastQuote.bind(this));
-};
-
-Coinify.prototype.setLastQuote = function (quote) {
-  this._lastQuote = quote;
-  return quote;
-};
-
-Coinify.prototype.buy = function (amount, baseCurrency, medium) {
-  assert(this.delegate, 'ExchangeDelegate required');
-  assert(this._lastQuote !== null, 'You must first obtain a quote');
-  assert(this._lastQuote.baseAmount === -amount, 'LAST_QUOTE_AMOUNT_DOES_NOT_MATCH');
-  assert(this._lastQuote.baseCurrency === baseCurrency, 'Currency must match last quote');
-  assert(this._lastQuote.expiresAt > new Date(), 'LAST_QUOTE_EXPIRED');
-  assert(medium === 'bank' || medium === 'card', 'Specify bank or card');
-
-  var addTrade = function addTrade(trade) {
-    trade.debug = this._debug;
-    this._trades.push(trade);
-    return this.delegate.save.bind(this.delegate)().then(function () {
-      return trade;
-    });
-  };
-
-  return CoinifyTrade.buy(this._lastQuote, medium, this._api, this.delegate, this).then(addTrade.bind(this));
-};
-
-Coinify.prototype.updateList = function (list, items, ListClass) {
-  var item;
-  for (var i = 0; i < items.length; i++) {
-    item = undefined;
-    for (var k = 0; k < list.length; k++) {
-      if (list[k]._id === items[i].id) {
-        item = list[k];
-        item.debug = this.debug;
-        item.set.bind(item)(items[i]);
-      }
+        this._buyCurrencies = JSON.parse(JSON.stringify(currencies));
+        return currencies;
+      };
+      return this.getBuyMethods().then(getCurrencies.bind(this));
     }
-    if (item === undefined) {
-      item = new ListClass(items[i], this._api, this.delegate, this);
-      item.debug = this.debug;
-      list.push(item);
-    }
-  }
-};
-
-Coinify.prototype.getTrades = function () {
-  var _this = this;
-
-  var save = function save() {
-    return _this.delegate.save.bind(_this.delegate)().then(function () {
-      return _this._trades;
-    });
-  };
-  var update = function update(trades) {
-    _this.updateList(_this._trades, trades, CoinifyTrade);
-  };
-  var process = function process() {
-    var _iteratorNormalCompletion2 = true;
-    var _didIteratorError2 = false;
-    var _iteratorError2 = undefined;
-
-    try {
-      for (var _iterator2 = _this._trades[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-        var trade = _step2.value;
-
-        trade.process(_this._trades);
-      }
-    } catch (err) {
-      _didIteratorError2 = true;
-      _iteratorError2 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion2 && _iterator2.return) {
-          _iterator2.return();
-        }
-      } finally {
-        if (_didIteratorError2) {
-          throw _iteratorError2;
-        }
-      }
-    }
-  };
-  return CoinifyTrade.fetchAll(this._api).then(update).then(process).then(save);
-};
-
-Coinify.prototype.triggerKYC = function () {
-  var _this2 = this;
-
-  var addKYC = function addKYC(kyc) {
-    _this2._kycs.push(kyc);
-    return kyc;
-  };
-
-  return CoinifyKYC.trigger(this._api).then(addKYC);
-};
-
-Coinify.prototype.getKYCs = function () {
-  var _this3 = this;
-
-  var save = function save() {
-    return _this3.delegate.save.bind(_this3.delegate)().then(function () {
-      return _this3._kycs;
-    });
-  };
-  var update = function update(kycs) {
-    _this3.updateList(_this3._kycs, kycs, CoinifyKYC);
-  };
-  return CoinifyKYC.fetchAll(this._api, this).then(update).then(save);
-};
-
-Coinify.prototype.getBuyMethods = function () {
-  return PaymentMethod.fetchAll(undefined, 'BTC', this._api);
-};
-
-Coinify.prototype.getSellMethods = function () {
-  return PaymentMethod.fetchAll('BTC', undefined, this._api);
-};
-
-Coinify.prototype.getBuyCurrencies = function () {
-  var getCurrencies = function getCurrencies(paymentMethods) {
-    var currencies = [];
-    var _iteratorNormalCompletion3 = true;
-    var _didIteratorError3 = false;
-    var _iteratorError3 = undefined;
-
-    try {
-      for (var _iterator3 = paymentMethods[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-        var paymentMethod = _step3.value;
+  }, {
+    key: 'getSellCurrencies',
+    value: function getSellCurrencies() {
+      var getCurrencies = function getCurrencies(paymentMethods) {
+        var currencies = [];
         var _iteratorNormalCompletion4 = true;
         var _didIteratorError4 = false;
         var _iteratorError4 = undefined;
 
         try {
-          for (var _iterator4 = paymentMethod.inCurrencies[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-            var inCurrency = _step4.value;
+          for (var _iterator4 = Object.entries(paymentMethods)[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+            var _step4$value = _slicedToArray(_step4.value, 2),
+                paymentMethod = _step4$value[1];
 
-            if (currencies.indexOf(inCurrency) === -1) {
-              currencies.push(inCurrency);
+            var _iteratorNormalCompletion5 = true;
+            var _didIteratorError5 = false;
+            var _iteratorError5 = undefined;
+
+            try {
+              for (var _iterator5 = paymentMethod.outCurrencies[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+                var outCurrency = _step5.value;
+
+                if (currencies.indexOf(outCurrency) === -1) {
+                  currencies.push(outCurrency);
+                }
+              }
+            } catch (err) {
+              _didIteratorError5 = true;
+              _iteratorError5 = err;
+            } finally {
+              try {
+                if (!_iteratorNormalCompletion5 && _iterator5.return) {
+                  _iterator5.return();
+                }
+              } finally {
+                if (_didIteratorError5) {
+                  throw _iteratorError5;
+                }
+              }
             }
           }
         } catch (err) {
@@ -44515,100 +45506,67 @@ Coinify.prototype.getBuyCurrencies = function () {
             }
           }
         }
-      }
-    } catch (err) {
-      _didIteratorError3 = true;
-      _iteratorError3 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion3 && _iterator3.return) {
-          _iterator3.return();
-        }
-      } finally {
-        if (_didIteratorError3) {
-          throw _iteratorError3;
-        }
+
+        this._sellCurrencies = JSON.parse(JSON.stringify(currencies));
+        return currencies;
+      };
+      return this.getSellMethods().then(getCurrencies.bind(this));
+    }
+  }, {
+    key: 'profile',
+    get: function get() {
+      if (!this._profile._did_fetch) {
+        return null;
+      } else {
+        return this._profile;
       }
     }
-
-    this._buyCurrencies = JSON.parse(JSON.stringify(currencies));
-    return currencies;
-  };
-  return this.getBuyMethods().then(getCurrencies.bind(this));
-};
-
-Coinify.prototype.getSellCurrencies = function () {
-  var getCurrencies = function getCurrencies(paymentMethods) {
-    var currencies = [];
-    var _iteratorNormalCompletion5 = true;
-    var _didIteratorError5 = false;
-    var _iteratorError5 = undefined;
-
-    try {
-      for (var _iterator5 = paymentMethods[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-        var paymentMethod = _step5.value;
-        var _iteratorNormalCompletion6 = true;
-        var _didIteratorError6 = false;
-        var _iteratorError6 = undefined;
-
-        try {
-          for (var _iterator6 = paymentMethod.outCurrencies[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-            var outCurrency = _step6.value;
-
-            if (currencies.indexOf(outCurrency) === -1) {
-              currencies.push(outCurrency);
-            }
-          }
-        } catch (err) {
-          _didIteratorError6 = true;
-          _iteratorError6 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion6 && _iterator6.return) {
-              _iterator6.return();
-            }
-          } finally {
-            if (_didIteratorError6) {
-              throw _iteratorError6;
-            }
-          }
-        }
-      }
-    } catch (err) {
-      _didIteratorError5 = true;
-      _iteratorError5 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion5 && _iterator5.return) {
-          _iterator5.return();
-        }
-      } finally {
-        if (_didIteratorError5) {
-          throw _iteratorError5;
-        }
-      }
+  }, {
+    key: 'kycs',
+    get: function get() {
+      return this._kycs;
     }
+  }, {
+    key: 'hasAccount',
+    get: function get() {
+      return Boolean(this._offlineToken);
+    }
+  }, {
+    key: 'partnerId',
+    get: function get() {
+      return this._partner_id;
+    },
+    set: function set(value) {
+      this._partner_id = value;
+    }
+  }, {
+    key: 'buyCurrencies',
+    get: function get() {
+      return this._buyCurrencies;
+    }
+  }, {
+    key: 'sellCurrencies',
+    get: function get() {
+      return this._sellCurrencies;
+    }
+  }], [{
+    key: 'new',
+    value: function _new(delegate) {
+      assert(delegate, 'Coinify.new requires delegate');
+      var object = {
+        auto_login: true
+      };
+      var coinify = new Coinify(object, delegate);
+      return coinify;
+    }
+  }]);
 
-    this._sellCurrencies = JSON.parse(JSON.stringify(currencies));
-    return currencies;
-  };
-  return this.getSellMethods().then(getCurrencies.bind(this));
-};
+  return Coinify;
+}(Exchange.Exchange);
 
-Coinify.prototype.monitorPayments = function () {
-  CoinifyTrade.monitorPayments(this._trades, this.delegate);
-};
+module.exports = Coinify;
 
-Coinify.new = function (delegate) {
-  assert(delegate, 'Coinify.new requires delegate');
-  var object = {
-    auto_login: true
-  };
-  var coinify = new Coinify(object, delegate);
-  return coinify;
-};
-
-},{"./api":245,"./exchange-rate":248,"./kyc":250,"./payment-method":254,"./profile":255,"./quote":256,"./trade":257,"assert":16}],248:[function(require,module,exports){
+},{"./api":253,"./exchange-rate":256,"./kyc":257,"./payment-medium":262,"./profile":263,"./quote":264,"./trade":265,"assert":16,"bitcoin-exchange-client":26}],256:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -44637,39 +45595,7 @@ ExchangeRate.prototype.get = function (baseCurrency, quoteCurrency) {
   return Promise.resolve().then(performChecks).then(getRate).then(processRate);
 };
 
-},{"assert":16}],249:[function(require,module,exports){
-'use strict';
-
-var Helpers = {};
-
-Helpers.isNumber = function (num) {
-  return typeof num === 'number' && !isNaN(num);
-};
-Helpers.isInteger = function (num) {
-  return Helpers.isNumber(num) && num % 1 === 0;
-};
-Helpers.isPositiveNumber = function (num) {
-  return Helpers.isNumber(num) && num >= 0;
-};
-Helpers.isPositiveInteger = function (num) {
-  return Helpers.isPositiveNumber(num) && num % 1 === 0;
-};
-Helpers.toCents = function (fiat) {
-  return Math.round((parseFloat(fiat) || 0) * 100);
-};
-Helpers.toSatoshi = function (fiat) {
-  return Math.round((parseFloat(fiat) || 0) * 100000000);
-};
-Helpers.fromCents = function (cents) {
-  return parseFloat((cents / 100).toFixed(2));
-};
-Helpers.fromSatoshi = function (satoshi) {
-  return parseFloat((satoshi / 100000000).toFixed(8));
-};
-
-module.exports = Helpers;
-
-},{}],250:[function(require,module,exports){
+},{"assert":16}],257:[function(require,module,exports){
 'use strict';
 
 module.exports = CoinifyKYC;
@@ -44743,7 +45669,7 @@ CoinifyKYC.fetchAll = function (api) {
   return api.authGET('kyc');
 };
 
-},{}],251:[function(require,module,exports){
+},{}],258:[function(require,module,exports){
 'use strict';
 
 module.exports = Level;
@@ -44790,10 +45716,10 @@ Object.defineProperties(Level.prototype, {
   }
 });
 
-},{"./limits":253}],252:[function(require,module,exports){
+},{"./limits":260}],259:[function(require,module,exports){
 'use strict';
 
-var Helpers = require('./helpers');
+var Helpers = require('bitcoin-exchange-client').Helpers;
 
 module.exports = Limit;
 
@@ -44839,7 +45765,7 @@ Object.defineProperties(Limit.prototype, {
   }
 });
 
-},{"./helpers":249}],253:[function(require,module,exports){
+},{"bitcoin-exchange-client":26}],260:[function(require,module,exports){
 'use strict';
 
 var Limit = require('./limit');
@@ -44866,141 +45792,168 @@ Object.defineProperties(Limits.prototype, {
   }
 });
 
-},{"./limit":252}],254:[function(require,module,exports){
+},{"./limit":259}],261:[function(require,module,exports){
 'use strict';
 
-module.exports = PaymentMethod;
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-function PaymentMethod(obj, api) {
-  this._api = api;
-  this._inMedium = obj.inMedium;
-  this._outMedium = obj.outMedium;
-  this._name = obj.name;
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-  this._inCurrencies = obj.inCurrencies;
-  this._outCurrencies = obj.outCurrencies;
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-  this._inCurrency = obj.inCurrency;
-  this._outCurrency = obj.outCurrency;
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-  if (this._inCurrency === 'BTC') {
-    this._inFixedFee = Math.round(obj.inFixedFee * 100000000);
-    this._outFixedFee = Math.round(obj.outFixedFee * 100);
-  } else {
-    this._inFixedFee = Math.round(obj.inFixedFee * 100);
-    this._outFixedFee = Math.round(obj.outFixedFee * 100000000);
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var ExchangePaymentAccount = require('bitcoin-exchange-client').PaymentAccount;
+var Trade = require('./trade');
+
+var PaymentAccount = function (_ExchangePaymentAccou) {
+  _inherits(PaymentAccount, _ExchangePaymentAccou);
+
+  function PaymentAccount(api, medium, quote) {
+    _classCallCheck(this, PaymentAccount);
+
+    var _this = _possibleConstructorReturn(this, (PaymentAccount.__proto__ || Object.getPrototypeOf(PaymentAccount)).call(this, api, medium, quote, Trade));
+
+    _this._fiatMedium = medium;
+    return _this;
   }
-  this._inPercentageFee = obj.inPercentageFee;
-  this._outPercentageFee = obj.outPercentageFee;
-}
 
-Object.defineProperties(PaymentMethod.prototype, {
-  'inMedium': {
-    configurable: false,
-    get: function get() {
-      return this._inMedium;
+  _createClass(PaymentAccount, [{
+    key: 'buy',
+    value: function buy() {
+      var _this2 = this;
+
+      return _get(PaymentAccount.prototype.__proto__ || Object.getPrototypeOf(PaymentAccount.prototype), 'buy', this).call(this).then(function (trade) {
+        trade._getQuote = _this2._quote.constructor.getQuote; // Prevents circular dependency
+        return trade;
+      });
     }
-  },
-  'outMedium': {
-    configurable: false,
-    get: function get() {
-      return this._outMedium;
+  }]);
+
+  return PaymentAccount;
+}(ExchangePaymentAccount);
+
+module.exports = PaymentAccount;
+
+},{"./trade":265,"bitcoin-exchange-client":26}],262:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var ExchangePaymentMedium = require('bitcoin-exchange-client').PaymentMedium;
+var PaymentAccount = require('./payment-account');
+var Trade = require('./trade');
+
+var PaymentMedium = function (_ExchangePaymentMediu) {
+  _inherits(PaymentMedium, _ExchangePaymentMediu);
+
+  function PaymentMedium(obj, api, quote) {
+    _classCallCheck(this, PaymentMedium);
+
+    var _this = _possibleConstructorReturn(this, (PaymentMedium.__proto__ || Object.getPrototypeOf(PaymentMedium)).call(this, api, quote, Trade));
+
+    _this._TradeClass = Trade;
+
+    _this._inMedium = obj.inMedium;
+    _this._outMedium = obj.outMedium;
+
+    /* istanbul ignore else */
+    if (_this._inMedium === 'card' || _this._outMedium === 'card') {
+      _this._fiatMedium = 'card';
+    } else if (_this._inMedium === 'bank' || _this._outMedium === 'bank') {
+      _this._fiatMedium = 'bank';
+    } else {
+      console.warn('Unknown fiat medium', _this._inMedium, _this._outMedium);
     }
-  },
-  'name': {
-    configurable: false,
+
+    _this._name = obj.name;
+
+    _this._inCurrencies = obj.inCurrencies;
+    _this._outCurrencies = obj.outCurrencies;
+
+    _this._inCurrency = obj.inCurrency;
+    _this._outCurrency = obj.outCurrency;
+
+    if (_this._inCurrency === 'BTC') {
+      _this._inFixedFee = Math.round(obj.inFixedFee * 100000000);
+      _this._outFixedFee = Math.round(obj.outFixedFee * 100);
+    } else {
+      _this._inFixedFee = Math.round(obj.inFixedFee * 100);
+      _this._outFixedFee = Math.round(obj.outFixedFee * 100000000);
+    }
+    _this._inPercentageFee = obj.inPercentageFee;
+    _this._outPercentageFee = obj.outPercentageFee;
+
+    if (quote) {
+      var amt = quote.baseCurrency === 'BTC' ? quote.quoteAmount : quote.baseAmount;
+      _this._fee = Math.round(_this.inFixedFee + -amt * (_this.inPercentageFee / 100));
+      _this._total = -amt + _this._fee;
+    }
+    return _this;
+  }
+
+  _createClass(PaymentMedium, [{
+    key: 'getAccounts',
+    value: function getAccounts() {
+      return Promise.resolve([new PaymentAccount(this._api, this.fiatMedium, this._quote)]);
+    }
+
+    // There are no PaymentAccounts when buying, so just call it directly:
+
+  }, {
+    key: 'buy',
+    value: function buy() {
+      var account = new PaymentAccount(this._api, this.fiatMedium, this._quote);
+      account.buy();
+    }
+  }, {
+    key: 'name',
     get: function get() {
       return this._name;
     }
-  },
-  'inCurrencies': {
-    configurable: false,
-    get: function get() {
-      return this._inCurrencies;
-    }
-  },
-  'outCurrencies': {
-    configurable: false,
-    get: function get() {
-      return this._outCurrencies;
-    }
-  },
-  'inCurrency': {
-    configurable: false,
-    get: function get() {
-      return this._inCurrency;
-    }
-  },
-  'outCurrency': {
-    configurable: false,
-    get: function get() {
-      return this._outCurrency;
-    }
-  },
-  'inFixedFee': {
-    configurable: false,
-    get: function get() {
-      return this._inFixedFee;
-    }
-  },
-  'outFixedFee': {
-    configurable: false,
-    get: function get() {
-      return this._outFixedFee;
-    }
-  },
-  'inPercentageFee': {
-    configurable: false,
-    get: function get() {
-      return this._inPercentageFee;
-    }
-  },
-  'outPercentageFee': {
-    configurable: false,
-    get: function get() {
-      return this._outPercentageFee;
-    }
-  },
-  'fee': {
-    configurable: false,
-    get: function get() {
-      return this._fee;
-    }
-  },
-  'total': {
-    configurable: false,
-    get: function get() {
-      return this._total;
-    }
-  }
-});
+  }], [{
+    key: 'getAll',
+    value: function getAll(inCurrency, outCurrency, api, quote) {
+      var params = {};
+      if (inCurrency) {
+        params.inCurrency = inCurrency;
+      }
+      if (outCurrency) {
+        params.outCurrency = outCurrency;
+      }
 
-PaymentMethod.fetchAll = function (inCurrency, outCurrency, api) {
-  var params = {};
-  if (inCurrency) {
-    params.inCurrency = inCurrency;
-  }
-  if (outCurrency) {
-    params.outCurrency = outCurrency;
-  }
-
-  var output = [];
-  return api.authGET('trades/payment-methods', params).then(function (res) {
-    output.length = 0;
-    for (var i = 0; i < res.length; i++) {
-      output.push(new PaymentMethod(res[i], api));
+      var output = [];
+      return api.authGET('trades/payment-methods', params).then(function (res) {
+        output = {};
+        for (var i = 0; i < res.length; i++) {
+          var medium = new PaymentMedium(res[i], api, quote);
+          if (inCurrency !== 'BTC') {
+            // Buy
+            output[medium.inMedium] = medium;
+          } else {
+            // Sell
+            output[medium.outMedium] = medium;
+          }
+        }
+        return Promise.resolve(output);
+      });
     }
-    return Promise.resolve(output);
-  });
-};
+  }]);
 
-PaymentMethod.prototype.calculateFee = function (quote) {
-  var amt = quote.baseCurrency === 'BTC' ? quote.quoteAmount : quote.baseAmount;
-  this._fee = Math.round(this.inFixedFee + -amt * (this.inPercentageFee / 100));
-  this._total = -amt + this._fee;
-};
+  return PaymentMedium;
+}(ExchangePaymentMedium);
 
-},{}],255:[function(require,module,exports){
+module.exports = PaymentMedium;
+
+},{"./payment-account":261,"./trade":265,"bitcoin-exchange-client":26}],263:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -45186,311 +46139,340 @@ CoinifyProfile.prototype.update = function (values) {
   return this._api.authPATCH('traders/me', values);
 };
 
-},{"./level":251,"./limits":253,"assert":16}],256:[function(require,module,exports){
+},{"./level":258,"./limits":260,"assert":16}],264:[function(require,module,exports){
 'use strict';
 
-var PaymentMethod = require('./payment-method');
-var Helpers = require('./helpers');
-var assert = require('assert');
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var PaymentMethod = require('./payment-medium');
+var Exchange = require('bitcoin-exchange-client');
+var Trade = require('./trade');
+
+var Quote = function (_Exchange$Quote) {
+  _inherits(Quote, _Exchange$Quote);
+
+  function Quote(obj, api, delegate, debug) {
+    _classCallCheck(this, Quote);
+
+    var _this = _possibleConstructorReturn(this, (Quote.__proto__ || Object.getPrototypeOf(Quote)).call(this, api, delegate, Trade, PaymentMethod, debug));
+
+    var expiresAt = new Date(obj.expiryTime);
+
+    // Debug, make quote expire in 15 seconds:
+    // expiresAt = new Date(new Date().getTime() + 15 * 1000);
+
+    _this._id = obj.id;
+    _this._baseCurrency = obj.baseCurrency;
+    _this._quoteCurrency = obj.quoteCurrency;
+    _this._expiresAt = expiresAt;
+
+    if (_this._baseCurrency === 'BTC') {
+      _this._baseAmount = Math.round(obj.baseAmount * 100000000);
+      _this._quoteAmount = Math.round(obj.quoteAmount * 100);
+    } else {
+      _this._baseAmount = Math.round(obj.baseAmount * 100);
+      _this._quoteAmount = Math.round(obj.quoteAmount * 100000000);
+    }
+
+    obj.baseAmount;
+    return _this;
+  }
+
+  _createClass(Quote, [{
+    key: 'expire',
+
+
+    // QA tool
+    value: function expire() {
+      this._expiresAt = new Date(new Date().getTime() + 3 * 1000);
+    }
+  }], [{
+    key: 'getQuote',
+    value: function getQuote(api, delegate, amount, baseCurrency, quoteCurrency, debug) {
+      var processQuote = function processQuote(quote) {
+        return new Quote(quote, api, delegate);
+      };
+
+      var getQuote = function getQuote(_baseAmount) {
+        var getAnonymousQuote = function getAnonymousQuote() {
+          return api.POST('trades/quote', {
+            baseCurrency: baseCurrency,
+            quoteCurrency: quoteCurrency,
+            baseAmount: parseFloat(_baseAmount)
+          });
+        };
+
+        var getQuote = function getQuote() {
+          return api.authPOST('trades/quote', {
+            baseCurrency: baseCurrency,
+            quoteCurrency: quoteCurrency,
+            baseAmount: parseFloat(_baseAmount)
+          });
+        };
+
+        if (!api.hasAccount) {
+          return getAnonymousQuote().then(processQuote);
+        } else {
+          return getQuote().then(processQuote);
+        }
+      };
+
+      return _get(Quote.__proto__ || Object.getPrototypeOf(Quote), 'getQuote', this).call(this, amount, baseCurrency, quoteCurrency, ['BTC', 'EUR', 'GBP', 'USD', 'DKK'], debug).then(getQuote);
+    }
+  }]);
+
+  return Quote;
+}(Exchange.Quote);
 
 module.exports = Quote;
 
-function Quote(obj, api) {
-  assert(obj, 'Missing quote object');
-  this._api = api;
-
-  var expiresAt = new Date(obj.expiryTime);
-
-  // Debug, make quote expire in 15 seconds:
-  // expiresAt = new Date(new Date().getTime() + 15 * 1000);
-
-  this._id = obj.id;
-  this._baseCurrency = obj.baseCurrency;
-  this._quoteCurrency = obj.quoteCurrency;
-  this._expiresAt = expiresAt;
-
-  if (this._baseCurrency === 'BTC') {
-    this._baseAmount = Math.round(obj.baseAmount * 100000000);
-    this._quoteAmount = Math.round(obj.quoteAmount * 100);
-  } else {
-    this._baseAmount = Math.round(obj.baseAmount * 100);
-    this._quoteAmount = Math.round(obj.quoteAmount * 100000000);
-  }
-
-  obj.baseAmount;
-}
-
-Object.defineProperties(Quote.prototype, {
-  'id': {
-    configurable: false,
-    get: function get() {
-      return this._id;
-    }
-  },
-  'baseCurrency': {
-    configurable: false,
-    get: function get() {
-      return this._baseCurrency;
-    }
-  },
-  'quoteCurrency': {
-    configurable: false,
-    get: function get() {
-      return this._quoteCurrency;
-    }
-  },
-  'baseAmount': {
-    configurable: false,
-    get: function get() {
-      return this._baseAmount;
-    }
-  },
-  'quoteAmount': {
-    configurable: false,
-    get: function get() {
-      return this._quoteAmount;
-    }
-  },
-  'expiresAt': {
-    configurable: false,
-    get: function get() {
-      return this._expiresAt;
-    }
-  }
-});
-
-Quote.getQuote = function (api, amount, baseCurrency, quoteCurrency) {
-  assert(Helpers.isInteger(amount), 'amount must be in cents or satoshi');
-
-  var supportedCurrencies = ['BTC', 'EUR', 'GBP', 'USD', 'DKK'];
-
-  if (supportedCurrencies.indexOf(baseCurrency) === -1) {
-    return Promise.reject('base_currency_not_supported');
-  }
-
-  if (supportedCurrencies.indexOf(quoteCurrency) === -1) {
-    return Promise.reject('quote_currency_not_supported');
-  }
-
-  if (baseCurrency === 'CNY' || quoteCurrency === 'CNY') {
-    console.warn('CNY has only 1 decimal place');
-  }
-
-  var baseAmount;
-  if (baseCurrency === 'BTC') {
-    baseAmount = (amount / 100000000).toFixed(8);
-  } else {
-    baseAmount = (amount / 100).toFixed(2);
-  }
-
-  var processQuote = function processQuote(quote) {
-    quote = new Quote(quote, api);
-    return quote;
-  };
-
-  var getAnonymousQuote = function getAnonymousQuote() {
-    return api.POST('trades/quote', {
-      baseCurrency: baseCurrency,
-      quoteCurrency: quoteCurrency,
-      baseAmount: parseFloat(baseAmount)
-    });
-  };
-
-  var getQuote = function getQuote() {
-    return api.authPOST('trades/quote', {
-      baseCurrency: baseCurrency,
-      quoteCurrency: quoteCurrency,
-      baseAmount: parseFloat(baseAmount)
-    });
-  };
-
-  if (!api.hasAccount) {
-    return getAnonymousQuote().then(processQuote);
-  } else {
-    return getQuote().then(processQuote);
-  }
-};
-
-Quote.prototype.getPaymentMethods = function () {
-  var self = this;
-
-  var setPaymentMethods = function setPaymentMethods(paymentMethods) {
-    self.paymentMethods = {};
-    for (var i = 0; i < paymentMethods.length; i++) {
-      var paymentMethod = paymentMethods[i];
-      self.paymentMethods[paymentMethod.inMedium] = paymentMethod;
-      paymentMethod.calculateFee.bind(paymentMethod)(self);
-    }
-    return self.paymentMethods;
-  };
-
-  var inCurrency = this.baseCurrency;
-  var outCurrency = this.quoteCurrency;
-  if (this.baseCurrency === 'BTC' && this.baseAmount > 0) {
-    inCurrency = this.quoteCurrency;
-    outCurrency = this.baseCurrency;
-  }
-
-  if (this.paymentMethods) {
-    return Promise.resolve(this.paymentMethods);
-  } else {
-    return PaymentMethod.fetchAll(inCurrency, outCurrency, this._api).then(setPaymentMethods);
-  }
-};
-
-// QA tool
-Quote.prototype.expire = function () {
-  this._expiresAt = new Date(new Date().getTime() + 3 * 1000);
-};
-
-},{"./helpers":249,"./payment-method":254,"assert":16}],257:[function(require,module,exports){
+},{"./payment-medium":262,"./trade":265,"bitcoin-exchange-client":26}],265:[function(require,module,exports){
 'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var assert = require('assert');
 
 var BankAccount = require('./bank-account');
-var Helpers = require('./helpers');
-var Quote = require('./quote');
+var Helpers = require('bitcoin-exchange-client').Helpers;
 
-module.exports = CoinifyTrade;
+var Exchange = require('bitcoin-exchange-client');
 
-function CoinifyTrade(obj, api, coinifyDelegate) {
-  assert(obj, 'JSON missing');
-  assert(api, 'Coinify API missing');
-  assert(coinifyDelegate, 'coinifyDelegate missing');
-  assert(typeof coinifyDelegate.getReceiveAddress === 'function', 'delegate requires getReceiveAddress()');
-  this._coinifyDelegate = coinifyDelegate;
-  this._api = api;
-  this._id = obj.id;
-  this.set(obj);
-}
+var Trade = function (_Exchange$Trade) {
+  _inherits(Trade, _Exchange$Trade);
 
-Object.defineProperties(CoinifyTrade.prototype, {
-  'debug': {
-    configurable: false,
-    get: function get() {
-      return this._debug;
-    },
-    set: function set(value) {
-      this._debug = Boolean(value);
+  function Trade(obj, api, delegate) {
+    _classCallCheck(this, Trade);
+
+    var _this = _possibleConstructorReturn(this, (Trade.__proto__ || Object.getPrototypeOf(Trade)).call(this, api, delegate));
+
+    assert(obj, 'JSON missing');
+    _this._id = obj.id;
+    _this.set(obj);
+    return _this;
+  }
+
+  _createClass(Trade, [{
+    key: 'set',
+    value: function set(obj) {
+      if (['awaiting_transfer_in', 'processing', 'reviewing', 'completed', 'completed_test', 'cancelled', 'rejected', 'expired'].indexOf(obj.state) === -1) {
+        console.warn('Unknown state:', obj.state);
+      }
+      if (this._isDeclined && obj.state === 'awaiting_transfer_in') {
+        // Coinify API may lag a bit behind the iSignThis iframe.
+        this._state = 'rejected';
+      } else {
+        this._state = obj.state;
+      }
+      this._is_buy = obj.is_buy;
+
+      this._inCurrency = obj.inCurrency;
+      this._outCurrency = obj.outCurrency;
+
+      if (obj.transferIn) {
+        this._medium = obj.transferIn.medium;
+        this._sendAmount = this._inCurrency === 'BTC' ? Helpers.toSatoshi(obj.transferIn.sendAmount) : Helpers.toCents(obj.transferIn.sendAmount);
+      }
+
+      if (this._inCurrency === 'BTC') {
+        this._inAmount = Helpers.toSatoshi(obj.inAmount);
+        this._outAmount = Helpers.toCents(obj.outAmount);
+        this._outAmountExpected = Helpers.toCents(obj.outAmountExpected);
+      } else {
+        this._inAmount = Helpers.toCents(obj.inAmount);
+        this._outAmount = Helpers.toSatoshi(obj.outAmount);
+        this._outAmountExpected = Helpers.toSatoshi(obj.outAmountExpected);
+      }
+
+      if (obj.confirmed === Boolean(obj.confirmed)) {
+        this._delegate.deserializeExtraFields(obj, this);
+        this._receiveAddress = this._delegate.getReceiveAddress(this);
+        this._confirmed = obj.confirmed;
+        this._txHash = obj.tx_hash;
+      } else {
+        // Contructed from Coinify API
+        /* istanbul ignore if */
+        if (this.debug) {
+          // This log only happens if .set() is called after .debug is set.
+          console.info('Trade ' + this.id + ' from Coinify API');
+        }
+        this._createdAt = new Date(obj.createTime);
+        this._updatedAt = new Date(obj.updateTime);
+        this._quoteExpireTime = new Date(obj.quoteExpireTime);
+        this._receiptUrl = obj.receiptUrl;
+
+        if (this._inCurrency !== 'BTC') {
+          // NOTE: this field is currently missing in the Coinify API:
+          if (obj.transferOut && obj.transferOutdetails && obj.transferOutdetails.transaction) {
+            this._txHash = obj.transferOutdetails.transaction;
+          }
+
+          if (this._medium === 'bank') {
+            this._bankAccount = new BankAccount(obj.transferIn.details);
+          }
+
+          this._receiveAddress = obj.transferOut.details.account;
+          this._iSignThisID = obj.transferIn.details.paymentId;
+        }
+      }
+
+      return this;
     }
-  },
-  'id': {
-    configurable: false,
-    get: function get() {
-      return this._id;
+  }, {
+    key: 'cancel',
+    value: function cancel() {
+      var self = this;
+
+      var processCancel = function processCancel(trade) {
+        self._state = trade.state;
+
+        self._delegate.releaseReceiveAddress(self);
+
+        return self._delegate.save.bind(self._delegate)();
+      };
+
+      return self._api.authPATCH('trades/' + self._id + '/cancel').then(processCancel);
     }
-  },
-  'iSignThisID': {
-    configurable: false,
+  }, {
+    key: 'btcExpected',
+    value: function btcExpected() {
+      var _this2 = this;
+
+      if (this.isBuy) {
+        if (['completed', 'completed_test', 'cancelled', 'failed', 'rejected'].indexOf(this.state) > -1) {
+          return Promise.resolve(this.outAmountExpected);
+        }
+
+        var oneMinuteAgo = new Date(new Date().getTime() - 60 * 1000);
+        if (this.quoteExpireTime > new Date()) {
+          // Quoted price still valid
+          return Promise.resolve(this.outAmountExpected);
+        } else {
+          // Estimate BTC expected based on current exchange rate:
+          if (this._lastBtcExpectedGuessAt > oneMinuteAgo) {
+            return Promise.resolve(this._lastBtcExpectedGuess);
+          } else {
+            var processQuote = function processQuote(quote) {
+              _this2._lastBtcExpectedGuess = quote.quoteAmount;
+              _this2._lastBtcExpectedGuessAt = new Date();
+              return _this2._lastBtcExpectedGuess;
+            };
+            return this._getQuote(this._api, this._delegate, -this.inAmount, this.inCurrency, this.outCurrency, this._debug).then(processQuote);
+          }
+        }
+      } else {
+        return Promise.reject();
+      }
+    }
+
+    // QA tool:
+
+  }, {
+    key: 'fakeBankTransfer',
+    value: function fakeBankTransfer() {
+      var self = this;
+
+      return self._api.authPOST('trades/' + self._id + '/test/bank-transfer', {
+        sendAmount: parseFloat((self.inAmount / 100).toFixed(2)),
+        currency: self.inCurrency
+      }).then(this._delegate.save.bind(this._delegate));
+    }
+
+    // QA tool:
+
+  }, {
+    key: 'expireQuote',
+    value: function expireQuote() {
+      this._quoteExpireTime = new Date(new Date().getTime() + 3000);
+    }
+  }, {
+    key: 'process',
+    value: function process() {
+      if (['rejected', 'cancelled', 'expired'].indexOf(this.state) > -1) {
+        /* istanbul ignore if */
+        if (this.debug) {
+          console.info('Check if address for ' + this.state + ' trade ' + this.id + ' can be released');
+        }
+        this._delegate.releaseReceiveAddress(this);
+      }
+    }
+  }, {
+    key: 'refresh',
+    value: function refresh() {
+      /* istanbul ignore if */
+      if (this.debug) {
+        console.info('Refresh ' + this.state + ' trade ' + this.id);
+      }
+      return this._api.authGET('trades/' + this._id).then(this.set.bind(this)).then(this._delegate.save.bind(this._delegate)).then(this.self.bind(this));
+    }
+
+    // Call this if the iSignThis iframe says the card is declined. It may take a
+    // while before Coinify API reflects this change
+
+  }, {
+    key: 'declined',
+    value: function declined() {
+      this._state = 'rejected';
+      this._isDeclined = true;
+    }
+  }, {
+    key: 'toJSON',
+    value: function toJSON() {
+      var serialized = {
+        id: this._id,
+        state: this._state,
+        tx_hash: this._txHash,
+        confirmed: this.confirmed,
+        is_buy: this.isBuy
+      };
+
+      this._delegate.serializeExtraFields(serialized, this);
+
+      return serialized;
+    }
+  }, {
+    key: 'iSignThisID',
     get: function get() {
       return this._iSignThisID;
     }
-  },
-  'quoteExpireTime': {
-    configurable: false,
+  }, {
+    key: 'quoteExpireTime',
     get: function get() {
       return this._quoteExpireTime;
     }
-  },
-  'bankAccount': {
-    configurable: false,
+  }, {
+    key: 'bankAccount',
     get: function get() {
       return this._bankAccount;
     }
-  },
-  'createdAt': {
-    configurable: false,
-    get: function get() {
-      return this._createdAt;
-    }
-  },
-  'updatedAt': {
-    configurable: false,
+  }, {
+    key: 'updatedAt',
     get: function get() {
       return this._updatedAt;
     }
-  },
-  'inCurrency': {
-    configurable: false,
-    get: function get() {
-      return this._inCurrency;
-    }
-  },
-  'outCurrency': {
-    configurable: false,
-    get: function get() {
-      return this._outCurrency;
-    }
-  },
-  'inAmount': {
-    configurable: false,
-    get: function get() {
-      return this._inAmount;
-    }
-  },
-  'medium': {
-    configurable: false,
-    get: function get() {
-      return this._medium;
-    }
-  },
-  'state': {
-    configurable: false,
-    get: function get() {
-      return this._state;
-    }
-  },
-  'sendAmount': {
-    configurable: false,
-    get: function get() {
-      return this._sendAmount;
-    }
-  },
-  'outAmount': {
-    configurable: false,
-    get: function get() {
-      return this._outAmount;
-    }
-  },
-  'outAmountExpected': {
-    configurable: false,
-    get: function get() {
-      return this._outAmountExpected;
-    }
-  },
-  'receiptUrl': {
-    configurable: false,
+  }, {
+    key: 'receiptUrl',
     get: function get() {
       return this._receiptUrl;
     }
-  },
-  'receiveAddress': {
-    configurable: false,
-    get: function get() {
-      return this._receiveAddress;
-    }
-  },
-  'accountIndex': {
-    configurable: false,
-    get: function get() {
-      return this._account_index;
-    }
-  },
-  'bitcoinReceived': {
-    configurable: false,
-    get: function get() {
-      return Boolean(this._txHash);
-    }
-  },
-  'confirmed': {
-    configurable: false,
-    get: function get() {
-      return this._confirmed || this._confirmations >= 3;
-    }
-  },
-  'isBuy': {
-    configurable: false,
+  }, {
+    key: 'isBuy',
     get: function get() {
       if (Boolean(this._is_buy) === this._is_buy) {
         return this._is_buy;
@@ -45500,427 +46482,52 @@ Object.defineProperties(CoinifyTrade.prototype, {
         return this.outCurrency === 'BTC';
       }
     }
-  },
-  'txHash': {
-    configurable: false,
-    get: function get() {
-      return this._txHash || null;
-    }
-  }
-});
-
-CoinifyTrade.prototype.set = function (obj) {
-  if (['awaiting_transfer_in', 'processing', 'reviewing', 'completed', 'completed_test', 'cancelled', 'rejected', 'expired'].indexOf(obj.state) === -1) {
-    console.warn('Unknown state:', obj.state);
-  }
-  if (this._isDeclined && obj.state === 'awaiting_transfer_in') {
-    // Coinify API may lag a bit behind the iSignThis iframe.
-    this._state = 'rejected';
-  } else {
-    this._state = obj.state;
-  }
-  this._is_buy = obj.is_buy;
-
-  this._inCurrency = obj.inCurrency;
-  this._outCurrency = obj.outCurrency;
-
-  if (obj.transferIn) {
-    this._medium = obj.transferIn.medium;
-    this._sendAmount = this._inCurrency === 'BTC' ? Helpers.toSatoshi(obj.transferIn.sendAmount) : Helpers.toCents(obj.transferIn.sendAmount);
-  }
-
-  if (this._inCurrency === 'BTC') {
-    this._inAmount = Helpers.toSatoshi(obj.inAmount);
-    this._outAmount = Helpers.toCents(obj.outAmount);
-    this._outAmountExpected = Helpers.toCents(obj.outAmountExpected);
-  } else {
-    this._inAmount = Helpers.toCents(obj.inAmount);
-    this._outAmount = Helpers.toSatoshi(obj.outAmount);
-    this._outAmountExpected = Helpers.toSatoshi(obj.outAmountExpected);
-  }
-
-  if (obj.confirmed === Boolean(obj.confirmed)) {
-    this._coinifyDelegate.deserializeExtraFields(obj, this);
-    this._receiveAddress = this._coinifyDelegate.getReceiveAddress(this);
-    this._confirmed = obj.confirmed;
-    this._txHash = obj.tx_hash;
-  } else {
-    // Contructed from Coinify API
-    /* istanbul ignore if */
-    if (this.debug) {
-      // This log only happens if .set() is called after .debug is set.
-      console.info('Trade ' + this.id + ' from Coinify API');
-    }
-    this._createdAt = new Date(obj.createTime);
-    this._updatedAt = new Date(obj.updateTime);
-    this._quoteExpireTime = new Date(obj.quoteExpireTime);
-    this._receiptUrl = obj.receiptUrl;
-
-    if (this._inCurrency !== 'BTC') {
-      // NOTE: this field is currently missing in the Coinify API:
-      if (obj.transferOut && obj.transferOutdetails && obj.transferOutdetails.transaction) {
-        this._txHash = obj.transferOutdetails.transaction;
-      }
-
-      if (this._medium === 'bank') {
-        this._bankAccount = new BankAccount(obj.transferIn.details);
-      }
-
-      this._receiveAddress = obj.transferOut.details.account;
-      this._iSignThisID = obj.transferIn.details.paymentId;
-    }
-  }
-
-  return this;
-};
-
-CoinifyTrade.prototype.cancel = function () {
-  var self = this;
-
-  var processCancel = function processCancel(trade) {
-    self._state = trade.state;
-
-    self._coinifyDelegate.releaseReceiveAddress(self);
-
-    return self._coinifyDelegate.save.bind(self._coinifyDelegate)();
-  };
-
-  return self._api.authPATCH('trades/' + self._id + '/cancel').then(processCancel);
-};
-
-// Checks the balance for the receive address and monitors the websocket if needed:
-// Call this method long before the user completes the purchase:
-// trade.watchAddress.then(() => ...);
-CoinifyTrade.prototype.watchAddress = function () {
-  /* istanbul ignore if */
-  if (this.debug) {
-    console.info('Watch ' + this.receiveAddress + ' for ' + this.state + ' trade ' + this.id);
-  }
-  // Check if this transaction is already marked as paid:
-  if (this._txHash) {
-    /* istanbul ignore if */
-    if (this.debug) {
-      console.info("Already paid, resolve immedidately and don't watch.");
-    }
-    return Promise.resolve();
-  }
-  var self = this;
-  var promise = new Promise(function (resolve, reject) {
-    self._watchAddressResolve = resolve;
-  });
-  return promise;
-};
-
-CoinifyTrade.prototype.btcExpected = function () {
-  var self = this;
-  if (this.isBuy) {
-    if (['completed', 'completed_test', 'cancelled', 'rejected'].indexOf(this.state) > -1) {
-      return Promise.resolve(this.outAmountExpected);
-    }
-
-    var oneMinuteAgo = new Date(new Date().getTime() - 60 * 1000);
-    if (this.quoteExpireTime > new Date()) {
-      // Quoted price still valid
-      return Promise.resolve(this.outAmountExpected);
-    } else {
-      // Estimate BTC expected based on current exchange rate:
-      if (this._lastBtcExpectedGuessAt > oneMinuteAgo) {
-        return Promise.resolve(this._lastBtcExpectedGuess);
-      } else {
-        var processQuote = function processQuote(quote) {
-          self._lastBtcExpectedGuess = quote.quoteAmount;
-          self._lastBtcExpectedGuessAt = new Date();
-          return self._lastBtcExpectedGuess;
-        };
-        return Quote.getQuote(this._api, -this.inAmount, this.inCurrency, this.outCurrency).then(processQuote);
-      }
-    }
-  } else {
-    return Promise.reject();
-  }
-};
-
-// QA tool:
-CoinifyTrade.prototype.fakeBankTransfer = function () {
-  var self = this;
-
-  return self._api.authPOST('trades/' + self._id + '/test/bank-transfer', {
-    sendAmount: parseFloat((self.inAmount / 100).toFixed(2)),
-    currency: self.inCurrency
-  }).then(this._coinifyDelegate.save.bind(this._coinifyDelegate));
-};
-
-// QA tool:
-CoinifyTrade.prototype.expireQuote = function () {
-  this._quoteExpireTime = new Date(new Date().getTime() + 3000);
-};
-
-CoinifyTrade.buy = function (quote, medium, api, coinifyDelegate, debug) {
-  assert(quote, 'Quote required');
-
-  /* istanbul ignore if */
-  if (debug) {
-    console.info('Reserve receive address for new trade');
-  }
-  var reservation = coinifyDelegate.reserveReceiveAddress();
-
-  var processTrade = function processTrade(res) {
-    var trade = new CoinifyTrade(res, api, coinifyDelegate);
-    trade.debug = debug;
-
-    /* istanbul ignore if */
-    if (debug) {
-      console.info('Commit receive address for new trade');
-    }
-    reservation.commit(trade);
-
-    /* istanbul ignore if */
-    if (debug) {
-      console.info('Monitor trade', trade.receiveAddress);
-    }
-    trade._monitorAddress.bind(trade)();
-    return trade;
-  };
-
-  var error = function error(e) {
-    console.error(e);
-    return Promise.reject(e);
-  };
-
-  return api.authPOST('trades', {
-    priceQuoteId: quote.id,
-    transferIn: {
-      medium: medium
-    },
-    transferOut: {
-      medium: 'blockchain',
-      details: {
-        account: reservation.receiveAddress
-      }
-    }
-  }).then(processTrade).catch(error);
-};
-
-CoinifyTrade.fetchAll = function (api) {
-  return api.authGET('trades');
-};
-
-CoinifyTrade.prototype.self = function () {
-  return this;
-};
-
-CoinifyTrade.prototype.process = function () {
-  if (['rejected', 'cancelled', 'expired'].indexOf(this.state) > -1) {
-    /* istanbul ignore if */
-    if (this.debug) {
-      console.info('Check if address for ' + this.state + ' trade ' + this.id + ' can be released');
-    }
-    this._coinifyDelegate.releaseReceiveAddress(this);
-  }
-};
-
-CoinifyTrade.prototype.refresh = function () {
-  /* istanbul ignore if */
-  if (this.debug) {
-    console.info('Refresh ' + this.state + ' trade ' + this.id);
-  }
-  return this._api.authGET('trades/' + this._id).then(this.set.bind(this)).then(this._coinifyDelegate.save.bind(this._coinifyDelegate)).then(this.self.bind(this));
-};
-
-// Call this if the iSignThis iframe says the card is declined. It may take a
-// while before Coinify API reflects this change
-CoinifyTrade.prototype.declined = function () {
-  this._state = 'rejected';
-  this._isDeclined = true;
-};
-
-CoinifyTrade.prototype._monitorAddress = function () {
-  var self = this;
-
-  var save = function save() {
-    return self._coinifyDelegate.save.bind(self._coinifyDelegate)();
-  };
-
-  self._coinifyDelegate.monitorAddress(self.receiveAddress, function (hash, amount) {
-    var checkAddress = function checkAddress() {
-      return self._setTransactionHash({ hash: hash }, amount, self._coinifyDelegate);
-    };
-    if (self.state === 'completed' || self.state === 'processing' || self.state === 'completed_test') {
-      return checkAddress().then(save);
-    } else {
-      return self.refresh().then(checkAddress).then(save);
-    }
-  });
-};
-
-CoinifyTrade._checkOnce = function (trades, coinifyDelegate) {
-  assert(coinifyDelegate, '_checkOnce needs delegate');
-
-  if (trades.length === 0) {
-    return Promise.resolve();
-  }
-
-  /* istanbul ignore if */
-  if (coinifyDelegate.debug) {
-    console.info('_checkOnce', trades.map(function (trade) {
-      return trade.id;
-    }).join(', '));
-  }
-
-  // DO NOT DO THIS: // for (var i = 0; i < trades.length; i++) {
-  var promises = trades.map(function (trade) {
-    return coinifyDelegate.checkAddress(trade.receiveAddress).then(function (tx, amount) {
-      if (!tx) return;
-
-      /* istanbul ignore if */
-      if (coinifyDelegate.debug) {
-        console.info('checkAddress', trade.receiveAddress, 'found transaction');
-      }
-
-      var setTransactionHash = function setTransactionHash() {
-        return trade._setTransactionHash(tx, amount, coinifyDelegate);
+  }], [{
+    key: 'buy',
+    value: function buy(quote, medium) {
+      var request = function request(receiveAddress) {
+        return quote.api.authPOST('trades', {
+          priceQuoteId: quote.id,
+          transferIn: {
+            medium: medium
+          },
+          transferOut: {
+            medium: 'blockchain',
+            details: {
+              account: receiveAddress
+            }
+          }
+        });
       };
-
-      if (trade.state === 'completed' || trade.state === 'processing' || trade.state === 'completed_test') {
-        return setTransactionHash();
-      } else {
-        return trade.refresh().then(setTransactionHash);
-      }
-    });
-  });
-
-  return Promise.all(promises).then(coinifyDelegate.save.bind(coinifyDelegate));
-};
-
-//
-CoinifyTrade.prototype._setTransactionHash = function (tx, amount, coinifyDelegate) {
-  var self = this;
-  var setConfirmations = function setConfirmations(tx) {
-    self._confirmations = tx.confirmations;
-    // TODO: refactor
-    if (self.confirmed) {
-      self._confirmed = true;
+      return _get(Trade.__proto__ || Object.getPrototypeOf(Trade), 'buy', this).call(this, quote, medium, request);
     }
-  };
-
-  /* istanbul ignore if */
-  if (self.debug) {
-    console.info('Transaction ' + tx.hash + ' detected, considering ' + self.state + ' trade ' + self.id);
-  }
-  if (self.state === 'completed_test') {
-    if (!self.confirmations && !self._txHash) {
-      // For test trades, there is no real transaction, so trade._txHash is not
-      // set. Instead use the hash for the incoming transaction. This will not
-      // work correctly with address reuse.
-      /* istanbul ignore if */
-      if (self.debug) {
-        console.info('Test trade, not matched before, unconfirmed transaction, assuming match');
-      }
-      self._txHash = tx.hash;
-      setConfirmations(tx);
-      self._watchAddressResolve && self._watchAddressResolve();
-    } else {
-      if (self.debug) {
-        console.info('Trade already matched, not calling _watchAddressResolve()');
-      }
-      if (self._txHash === tx.hash) {
-        /* istanbul ignore if */
-        setConfirmations(tx);
-      }
+  }, {
+    key: 'fetchAll',
+    value: function fetchAll(api) {
+      return api.authGET('trades');
     }
-  } else if (self.state === 'completed' || self.state === 'processing') {
-    if (self._txHash) {
-      // Multiple trades may reuse the same address if e.g. one is
-      // cancelled of if we reach the gap limit.
-      /* istanbul ignore if */
-      if (self.debug) {
-        console.info('Trade already matched, not calling _watchAddressResolve()');
-      }
-      if (self._txHash === tx.hash) {
-        setConfirmations(tx);
-      } else {
-        // Different trade, ignore
-      }
-    } else {
-      // transferOut.details.transaction is not implemented and might be
-      // missing if in the processing state.
-      /* istanbul ignore if */
-      if (self.debug) {
-        console.info('Trade not matched yet, assuming match');
-      }
-      self._txHash = tx.hash;
-      setConfirmations(tx);
-    }
-    self._watchAddressResolve && self._watchAddressResolve();
-  } else {
-    /* istanbul ignore if */
-    if (self.debug) {
-      console.info('Not calling _watchAddressResolve()');
-    }
-  }
-};
+  }]);
 
-CoinifyTrade._monitorWebSockets = function (trades) {
-  for (var i = 0; i < trades.length; i++) {
-    var trade = trades[i];
-    trade._monitorAddress.bind(trade)();
-  }
-};
+  return Trade;
+}(Exchange.Trade);
 
-// Monitor the receive addresses for pending and completed trades.
-CoinifyTrade.monitorPayments = function (trades, coinifyDelegate) {
-  /* istanbul ignore if */
-  if (coinifyDelegate.debug) {
-    console.info('monitorPayments');
-  }
+module.exports = Trade;
 
-  assert(coinifyDelegate, '_monitorPayments needs delegate');
-
-  var tradeFilter = function tradeFilter(trade) {
-    return ['awaiting_transfer_in', 'reviewing', 'processing', 'completed', 'completed_test'].indexOf(trade.state) > -1 && !trade.confirmed;
-  };
-
-  var filteredTrades = trades.filter(tradeFilter);
-
-  CoinifyTrade._checkOnce(filteredTrades, coinifyDelegate).then(function () {
-    CoinifyTrade._monitorWebSockets(filteredTrades);
-  });
-};
-
-CoinifyTrade.prototype.toJSON = function () {
-  var serialized = {
-    id: this._id,
-    state: this._state,
-    tx_hash: this._txHash,
-    confirmed: this.confirmed,
-    is_buy: this.isBuy
-  };
-
-  this._coinifyDelegate.serializeExtraFields(serialized, this);
-
-  return serialized;
-};
-
-CoinifyTrade.filteredTrades = function (trades) {
-  return trades.filter(function (trade) {
-    // Only consider transactions that are complete or that we're still
-    // expecting payment for:
-    return ['awaiting_transfer_in', 'processing', 'reviewing', 'completed', 'completed_test'].indexOf(trade.state) > -1;
-  });
-};
-
-},{"./bank-account":246,"./helpers":249,"./quote":256,"assert":16}],258:[function(require,module,exports){
+},{"./bank-account":254,"assert":16,"bitcoin-exchange-client":26}],266:[function(require,module,exports){
+'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
 
 module.exports = {
   NETWORK: 'bitcoin',
-  getNetwork: function () {
+  getNetwork: function getNetwork() {
     return Bitcoin.networks[this.NETWORK];
   }
 };
 
-},{"bitcoinjs-lib":34}],259:[function(require,module,exports){
+},{"bitcoinjs-lib":42}],267:[function(require,module,exports){
+'use strict';
+
 var API = require('./api');
 var WalletStore = require('./wallet-store');
 var TX = require('./wallet-transaction');
@@ -45929,7 +46536,7 @@ var assert = require('assert');
 
 module.exports = ExchangeDelegate;
 
-function ExchangeDelegate (wallet) {
+function ExchangeDelegate(wallet) {
   assert(wallet, 'BlockchainWallet expected');
   this._wallet = wallet;
 }
@@ -45937,16 +46544,29 @@ function ExchangeDelegate (wallet) {
 Object.defineProperties(ExchangeDelegate.prototype, {
   'debug': {
     configurable: false,
-    get: function () { return this._debug; },
-    set: function (value) {
+    get: function get() {
+      return this._debug;
+    },
+    set: function set(value) {
       this._debug = Boolean(value);
     }
   },
   'trades': {
     configurable: false,
-    get: function () { return this._trades; },
-    set: function (value) {
+    get: function get() {
+      return this._trades;
+    },
+    set: function set(value) {
       this._trades = value;
+    }
+  },
+  'labelBase': {
+    configurable: false,
+    get: function get() {
+      return this._labelBase || 'Exchange order';
+    },
+    set: function set(value) {
+      this._labelBase = value;
     }
   }
 });
@@ -45959,25 +46579,44 @@ ExchangeDelegate.prototype.email = function () {
   return this._wallet.accountInfo.email;
 };
 
+ExchangeDelegate.prototype.mobile = function () {
+  return this._wallet.accountInfo.mobile;
+};
+
 ExchangeDelegate.prototype.isEmailVerified = function () {
   return this._wallet.accountInfo.isEmailVerified;
 };
 
+ExchangeDelegate.prototype.isMobileVerified = function () {
+  return this._wallet.accountInfo.isMobileVerified;
+};
+
 ExchangeDelegate.prototype.getEmailToken = function () {
   var self = this;
-  return API.request(
-    'GET',
-    'wallet/signed-token',
-    {
-      guid: self._wallet.guid,
-      sharedKey: self._wallet.sharedKey,
-      fields: 'email'
-    }
-  ).then(function (res) {
+  return API.request('GET', 'wallet/signed-token', {
+    guid: self._wallet.guid,
+    sharedKey: self._wallet.sharedKey,
+    fields: 'email'
+  }).then(function (res) {
     if (res.success) {
       return res.token;
     } else {
       throw new Error('Unable to obtain email verification proof');
+    }
+  });
+};
+
+ExchangeDelegate.prototype.getToken = function () {
+  var self = this;
+  return API.request('GET', 'wallet/signed-token', {
+    guid: self._wallet.guid,
+    sharedKey: self._wallet.sharedKey,
+    fields: 'email|mobile'
+  }).then(function (res) {
+    if (res.success) {
+      return res.token;
+    } else {
+      throw new Error('Unable to obtain email & mobile verification proof');
     }
   });
 };
@@ -46005,7 +46644,7 @@ ExchangeDelegate.prototype.checkAddress = function (address) {
   return API.getHistory([address]).then(function (res) {
     if (res.txs && res.txs.length > 0) {
       var tx = new TX(res.txs[0]);
-      return {hash: tx.hash, confirmations: tx.confirmations};
+      return { hash: tx.hash, confirmations: tx.confirmations };
     }
   });
 };
@@ -46032,7 +46671,7 @@ ExchangeDelegate.prototype.reserveReceiveAddress = function () {
 
   var receiveAddress = account.receiveAddressAtIndex(receiveAddressIndex);
 
-  function findLastExchangeIndex (currentReceiveIndex) {
+  function findLastExchangeIndex(currentReceiveIndex) {
     var receiveIndexes = self._trades.map(Helpers.pluck('_receive_index'));
     var index = currentReceiveIndex;
     for (var i = index - 1; i > index - 20; i--) {
@@ -46041,13 +46680,10 @@ ExchangeDelegate.prototype.reserveReceiveAddress = function () {
     return null;
   }
 
-  function commitAddressLabel (trade) {
-    var labelBase = 'Coinify order';
-    var ids = self._trades
-      .filter(Helpers.propEq('receiveAddress', receiveAddress))
-      .map(Helpers.pluck('id')).concat(trade.id);
+  function commitAddressLabel(trade) {
+    var ids = self._trades.filter(Helpers.propEq('receiveAddress', receiveAddress)).map(Helpers.pluck('id')).concat(trade.id);
 
-    var label = labelBase + ' #' + ids.join(', #');
+    var label = self.labelBase + ' #' + ids.join(', #');
     /* istanbul ignore if */
     if (self.debug) {
       console.info('Set label for receive index', receiveAddressIndex, label);
@@ -46070,10 +46706,7 @@ ExchangeDelegate.prototype.releaseReceiveAddress = function (trade) {
   if (Helpers.isPositiveInteger(trade._account_index) && Helpers.isPositiveInteger(trade._receive_index)) {
     var account = this._wallet.hdwallet.accounts[trade._account_index];
 
-    var ids = this._trades
-      .filter(Helpers.propEq('receiveAddress', trade.receiveAddress))
-      .map(Helpers.pluck('id'))
-      .filter(Helpers.notEq(trade.id));
+    var ids = this._trades.filter(Helpers.propEq('receiveAddress', trade.receiveAddress)).map(Helpers.pluck('id')).filter(Helpers.notEq(trade.id));
 
     var self = this;
 
@@ -46104,52 +46737,77 @@ ExchangeDelegate.prototype.deserializeExtraFields = function (obj, trade) {
   trade._receive_index = obj.receive_index;
 };
 
-},{"./api":238,"./helpers":263,"./wallet-store":276,"./wallet-transaction":278,"assert":16}],260:[function(require,module,exports){
+},{"./api":246,"./helpers":271,"./wallet-store":291,"./wallet-transaction":293,"assert":16}],268:[function(require,module,exports){
 'use strict';
 
 var Coinify = require('./coinify/coinify');
+var SFOX = require('./sfox/sfox');
 var Metadata = require('./metadata');
-var assert = require('assert');
 var ExchangeDelegate = require('./exchange-delegate');
 
 var METADATA_TYPE_EXTERNAL = 3;
 
 module.exports = External;
 
-function External (wallet) {
+function External(wallet) {
   var masterhdnode = wallet.hdwallet.getMasterHDNode();
   this._metadata = Metadata.fromMasterHDNode(masterhdnode, METADATA_TYPE_EXTERNAL);
   this._coinify = undefined;
+  this._sfox = undefined;
   this._wallet = wallet;
 }
 
 Object.defineProperties(External.prototype, {
   'coinify': {
     configurable: false,
-    get: function () { return this._coinify; }
+    get: function get() {
+      if (!this._coinify) {
+        var delegate = new ExchangeDelegate(this._wallet);
+        this._coinify = Coinify.new(delegate);
+        delegate.trades = this._coinify.trades;
+      }
+      return this._coinify;
+    }
+  },
+  'sfox': {
+    configurable: false,
+    get: function get() {
+      if (!this._sfox) {
+        var delegate = new ExchangeDelegate(this._wallet);
+        this._sfox = SFOX.new(delegate);
+        delegate.trades = this._sfox.trades;
+      }
+      return this._sfox;
+    }
   }
 });
 
 External.prototype.toJSON = function () {
   var external = {
-    coinify: this._coinify
+    coinify: this._coinify,
+    sfox: this._sfox
   };
   return external;
 };
 
 External.prototype.fetch = function () {
-  var Populate = function (object) {
+  var Populate = function Populate(object) {
     this.loaded = true;
     if (object !== null) {
       if (object.coinify) {
-        var delegate = new ExchangeDelegate(this._wallet);
-        this._coinify = new Coinify(object.coinify, delegate);
-        delegate.trades = this._coinify.trades;
+        var coinifyDelegate = new ExchangeDelegate(this._wallet);
+        this._coinify = new Coinify(object.coinify, coinifyDelegate);
+        coinifyDelegate.trades = this._coinify.trades;
+      }
+      if (object.sfox) {
+        var sfoxDelegate = new ExchangeDelegate(this._wallet);
+        this._sfox = new SFOX(object.sfox, sfoxDelegate);
+        sfoxDelegate.trades = this._sfox.trades;
       }
     }
     return this;
   };
-  var fetchFailed = function (e) {
+  var fetchFailed = function fetchFailed(e) {
     // Metadata service is down or unreachable.
     this.loaded = false;
     return Promise.reject(e);
@@ -46168,17 +46826,10 @@ External.prototype.save = function () {
 External.prototype.wipe = function () {
   this._metadata.update({}).then(this.fetch.bind(this));
   this._coinify = undefined;
+  this._sfox = undefined;
 };
 
-External.prototype.addCoinify = function () {
-  assert(!this._coinify, 'Already added');
-
-  var delegate = new ExchangeDelegate(this._wallet);
-  this._coinify = Coinify.new(delegate);
-  delegate.trades = this._coinify.trades;
-};
-
-},{"./coinify/coinify":247,"./exchange-delegate":259,"./metadata":267,"assert":16}],261:[function(require,module,exports){
+},{"./coinify/coinify":255,"./exchange-delegate":267,"./metadata":275,"./sfox/sfox":283}],269:[function(require,module,exports){
 'use strict';
 
 module.exports = HDAccount;
@@ -46192,7 +46843,7 @@ var constants = require('./constants');
 
 // HDAccount Class
 
-function HDAccount (object) {
+function HDAccount(object) {
   var self = this;
   var obj = object || {};
   obj.cache = obj.cache || {};
@@ -46205,7 +46856,9 @@ function HDAccount (object) {
   this._network = obj.network || Bitcoin.networks.bitcoin;
 
   this._address_labels = [];
-  obj.address_labels.map(function (e) { self._address_labels[e.index] = e.label; });
+  obj.address_labels.map(function (e) {
+    self._address_labels[e.index] = e.label;
+  });
 
   // computed properties
   this._keyRing = new KeyRing(obj.xpub, obj.cache);
@@ -46224,8 +46877,10 @@ Object.defineProperties(HDAccount.prototype, {
 
   'label': {
     configurable: false,
-    get: function () { return this._label; },
-    set: function (str) {
+    get: function get() {
+      return this._label;
+    },
+    set: function set(str) {
       if (Helpers.isValidLabel(str)) {
         this._label = str;
         MyWallet.syncWallet();
@@ -46236,8 +46891,10 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'balance': {
     configurable: false,
-    get: function () { return this._balance; },
-    set: function (num) {
+    get: function get() {
+      return this._balance;
+    },
+    set: function set(num) {
       if (Helpers.isPositiveNumber(num)) {
         this._balance = num;
       } else {
@@ -46246,8 +46903,10 @@ Object.defineProperties(HDAccount.prototype, {
     }
   },
   'n_tx': {
-    get: function () { return this._n_tx; },
-    set: function (num) {
+    get: function get() {
+      return this._n_tx;
+    },
+    set: function set(num) {
       if (Helpers.isPositiveInteger(num)) {
         this._n_tx = num;
       } else {
@@ -46257,12 +46916,15 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'archived': {
     configurable: false,
-    get: function () { return this._archived; },
-    set: function (value) {
+    get: function get() {
+      return this._archived;
+    },
+    set: function set(value) {
       if (Helpers.isBoolean(value)) {
         this._archived = value;
         MyWallet.syncWallet();
-        if (!value) { // Unarchive
+        if (!value) {
+          // Unarchive
           // we should define a way to update only the account, not the whole wallet
           MyWallet.wallet.getHistory();
         }
@@ -46273,13 +46935,19 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'active': {
     configurable: false,
-    get: function () { return !this.archived; },
-    set: function (value) { this.archived = !value; }
+    get: function get() {
+      return !this.archived;
+    },
+    set: function set(value) {
+      this.archived = !value;
+    }
   },
   'receiveIndex': {
     configurable: false,
-    get: function () { return this._receiveIndex; },
-    set: function (value) {
+    get: function get() {
+      return this._receiveIndex;
+    },
+    set: function set(value) {
       if (Helpers.isPositiveInteger(value)) {
         this._receiveIndex = value;
       } else {
@@ -46289,8 +46957,10 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'lastUsedReceiveIndex': {
     configurable: false,
-    get: function () { return this._lastUsedReceiveIndex; },
-    set: function (value) {
+    get: function get() {
+      return this._lastUsedReceiveIndex;
+    },
+    set: function set(value) {
       if (Helpers.isPositiveInteger(value)) {
         this._lastUsedReceiveIndex = value;
       } else {
@@ -46300,7 +46970,7 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'maxLabeledReceiveIndex': {
     configurable: false,
-    get: function () {
+    get: function get() {
       var keys = Object.keys(this._address_labels).map(function (k) {
         return parseInt(k, 10);
       });
@@ -46313,8 +46983,10 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'changeIndex': {
     configurable: false,
-    get: function () { return this._changeIndex; },
-    set: function (value) {
+    get: function get() {
+      return this._changeIndex;
+    },
+    set: function set(value) {
       if (Helpers.isPositiveInteger(value)) {
         this._changeIndex = value;
       } else {
@@ -46324,54 +46996,72 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'receivingAddressesLabels': {
     configurable: false,
-    get: function () {
+    get: function get() {
       var denseArray = [];
-      this._address_labels
-        .map(function (lab, ind) { denseArray.push({'index': ind, 'label': lab}); });
+      this._address_labels.map(function (lab, ind) {
+        denseArray.push({ 'index': ind, 'label': lab });
+      });
       return denseArray;
     }
   },
   'labeledReceivingAddresses': {
     configurable: false,
-    get: function () {
+    get: function get() {
       var denseArray = [];
       var outerThis = this;
-      this._address_labels
-        .map(function (lab, i) { denseArray.push(outerThis.receiveAddressAtIndex(i)); });
+      this._address_labels.map(function (lab, i) {
+        denseArray.push(outerThis.receiveAddressAtIndex(i));
+      });
       return denseArray;
     }
   },
   'extendedPublicKey': {
     configurable: false,
-    get: function () { return this._xpub; }
+    get: function get() {
+      return this._xpub;
+    }
   },
   'extendedPrivateKey': {
     configurable: false,
-    get: function () { return this._xpriv; }
+    get: function get() {
+      return this._xpriv;
+    }
   },
   'keyRing': {
     configurable: false,
-    get: function () { return this._keyRing; }
+    get: function get() {
+      return this._keyRing;
+    }
   },
   'receiveAddress': {
     configurable: false,
-    get: function () { return this._keyRing.receive.getAddress(this._receiveIndex); }
+    get: function get() {
+      return this._keyRing.receive.getAddress(this._receiveIndex);
+    }
   },
   'changeAddress': {
     configurable: false,
-    get: function () { return this._keyRing.change.getAddress(this._changeIndex); }
+    get: function get() {
+      return this._keyRing.change.getAddress(this._changeIndex);
+    }
   },
   'isEncrypted': {
     configurable: false,
-    get: function () { return Helpers.isBase64(this._xpriv) && !Helpers.isXprivKey(this._xpriv); }
+    get: function get() {
+      return Helpers.isBase64(this._xpriv) && !Helpers.isXprivKey(this._xpriv);
+    }
   },
   'isUnEncrypted': {
     configurable: false,
-    get: function () { return Helpers.isXprivKey(this._xpriv); }
+    get: function get() {
+      return Helpers.isXprivKey(this._xpriv);
+    }
   },
   'index': {
     configurable: false,
-    get: function () { return this._index; }
+    get: function get() {
+      return this._index;
+    }
   }
 });
 
@@ -46508,7 +47198,9 @@ HDAccount.prototype.receiveAddressAtIndex = function (index) {
 HDAccount.prototype.encrypt = function (cipher) {
   if (!this._xpriv) return this;
   var xpriv = cipher ? cipher(this._xpriv) : this._xpriv;
-  if (!xpriv) { throw new Error('Error Encoding account extended private key'); }
+  if (!xpriv) {
+    throw new Error('Error Encoding account extended private key');
+  }
   this._temporal_xpriv = xpriv;
   return this;
 };
@@ -46516,7 +47208,9 @@ HDAccount.prototype.encrypt = function (cipher) {
 HDAccount.prototype.decrypt = function (cipher) {
   if (!this._xpriv) return this;
   var xpriv = cipher ? cipher(this._xpriv) : this._xpriv;
-  if (!xpriv) { throw new Error('Error Decoding account extended private key'); }
+  if (!xpriv) {
+    throw new Error('Error Decoding account extended private key');
+  }
   this._temporal_xpriv = xpriv;
   return this;
 };
@@ -46528,7 +47222,7 @@ HDAccount.prototype.persist = function () {
   return this;
 };
 
-},{"./constants":258,"./helpers":263,"./keyring":266,"./wallet":279,"assert":16,"bitcoinjs-lib":34}],262:[function(require,module,exports){
+},{"./constants":266,"./helpers":271,"./keyring":274,"./wallet":294,"assert":16,"bitcoinjs-lib":42}],270:[function(require,module,exports){
 'use strict';
 
 module.exports = HDWallet;
@@ -46541,8 +47235,8 @@ var BIP39 = require('bip39');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 var constants = require('./constants');
 
-function HDWallet (object) {
-  function addAccount (o, index) {
+function HDWallet(object) {
+  function addAccount(o, index) {
     o.index = index;
     return HDAccount.factory(o);
   }
@@ -46561,20 +47255,28 @@ function HDWallet (object) {
 Object.defineProperties(HDWallet.prototype, {
   'seedHex': {
     configurable: false,
-    get: function () { return this._seedHex; }
+    get: function get() {
+      return this._seedHex;
+    }
   },
   'bip39Password': {
     configurable: false,
-    get: function () { return this._bip39Password; }
+    get: function get() {
+      return this._bip39Password;
+    }
   },
   'isMnemonicVerified': {
     configurable: false,
-    get: function () { return this._mnemonic_verified; }
+    get: function get() {
+      return this._mnemonic_verified;
+    }
   },
   'defaultAccountIndex': {
     configurable: false,
-    get: function () { return this._default_account_idx; },
-    set: function (value) {
+    get: function get() {
+      return this._default_account_idx;
+    },
+    set: function set(value) {
       if (this.isValidAccountIndex(value)) {
         this._default_account_idx = value;
         MyWallet.syncWallet();
@@ -46585,66 +47287,80 @@ Object.defineProperties(HDWallet.prototype, {
   },
   'defaultAccount': {
     configurable: false,
-    get: function () { return this._accounts[this._default_account_idx]; }
+    get: function get() {
+      return this._accounts[this._default_account_idx];
+    }
   },
   'accounts': {
     configurable: false,
-    get: function () {
-      return this._accounts.map(function (a) { return a; });
+    get: function get() {
+      return this._accounts.map(function (a) {
+        return a;
+      });
     }
   },
   'activeAccounts': {
     configurable: false,
-    get: function () {
-      return this._accounts.filter(function (a) { return !a.archived; });
+    get: function get() {
+      return this._accounts.filter(function (a) {
+        return !a.archived;
+      });
     }
   },
   'xpubs': {
     configurable: false,
-    get: function () {
-      return this._accounts.map(function (a) { return (a.extendedPublicKey); });
+    get: function get() {
+      return this._accounts.map(function (a) {
+        return a.extendedPublicKey;
+      });
     }
   },
   'activeXpubs': {
     configurable: false,
-    get: function () {
-      return this.activeAccounts.map(function (a) { return (a.extendedPublicKey); });
+    get: function get() {
+      return this.activeAccounts.map(function (a) {
+        return a.extendedPublicKey;
+      });
     }
   },
   'balanceActiveAccounts': {
     configurable: false,
-    get: function () {
-      var balances = this.activeAccounts.map(function (k) { return k.balance; });
+    get: function get() {
+      var balances = this.activeAccounts.map(function (k) {
+        return k.balance;
+      });
       if (balances.some(Helpers.isNotNumber)) return null;
       return balances.reduce(Helpers.add, 0);
     }
   },
   'isEncrypted': {
     configurable: false,
-    get: function () {
+    get: function get() {
       var isSeedEnc = Helpers.isBase64(this._seedHex) && !Helpers.isSeedHex(this._seedHex);
-      return isSeedEnc && this._accounts.map(function (a) { return a.isEncrypted; })
-                                          .reduce(Helpers.and, true);
+      return isSeedEnc && this._accounts.map(function (a) {
+        return a.isEncrypted;
+      }).reduce(Helpers.and, true);
     }
   },
   'isUnEncrypted': {
     configurable: false,
-    get: function () {
+    get: function get() {
       var isSeedUnEnc = Helpers.isSeedHex(this._seedHex);
-      return isSeedUnEnc && this._accounts.map(function (a) { return a.isUnEncrypted; })
-                             .reduce(Helpers.and, true);
+      return isSeedUnEnc && this._accounts.map(function (a) {
+        return a.isUnEncrypted;
+      }).reduce(Helpers.and, true);
     }
   },
   'lastAccount': {
     configurable: false,
-    get: function () {
+    get: function get() {
       return this._accounts[this._accounts.length - 1];
     }
   }
 });
 
 // non exposed functions
-function decryptMnemonic (seedHex, cipher) {
+function decryptMnemonic(seedHex, cipher) {
   if (cipher) {
     return BIP39.entropyToMnemonic(cipher(seedHex));
   } else {
@@ -46656,8 +47372,10 @@ function decryptMnemonic (seedHex, cipher) {
   }
 }
 
-function decryptPassphrase (bip39Password, cipher) {
-  if (bip39Password === '') { return bip39Password; }
+function decryptPassphrase(bip39Password, cipher) {
+  if (bip39Password === '') {
+    return bip39Password;
+  }
   if (cipher) {
     return cipher(bip39Password);
   } else {
@@ -46760,8 +47478,9 @@ HDWallet.prototype.verifyMnemonic = function () {
 };
 
 HDWallet.prototype.account = function (xpub) {
-  var f = this._accounts
-            .filter(function (a) { return a.extendedPublicKey === xpub; });
+  var f = this._accounts.filter(function (a) {
+    return a.extendedPublicKey === xpub;
+  });
   var r = f.length === 0 ? null : f[0];
   return r;
 };
@@ -46775,22 +47494,22 @@ HDWallet.prototype.activeAccount = function (xpub) {
 // account managment
 
 HDWallet.prototype.encrypt = function (cipher) {
-  function f (acc) { acc.encrypt(cipher); }
+  function f(acc) {
+    acc.encrypt(cipher);
+  }
   this._accounts.forEach(f);
   this._temporal_seedHex = cipher(this._seedHex);
-  this._temporal_bip39Password = this._bip39Password === ''
-   ? this._bip39Password
-   : cipher(this._bip39Password);
+  this._temporal_bip39Password = this._bip39Password === '' ? this._bip39Password : cipher(this._bip39Password);
   return this;
 };
 
 HDWallet.prototype.decrypt = function (cipher) {
-  function f (acc) { acc.decrypt(cipher); }
+  function f(acc) {
+    acc.decrypt(cipher);
+  }
   this._accounts.forEach(f);
   this._temporal_seedHex = cipher(this._seedHex);
-  this._temporal_bip39Password = this._bip39Password === ''
-   ? this._bip39Password
-   : cipher(this._bip39Password);
+  this._temporal_bip39Password = this._bip39Password === '' ? this._bip39Password : cipher(this._bip39Password);
   return this;
 };
 
@@ -46802,7 +47521,9 @@ HDWallet.prototype.persist = function () {
   this._bip39Password = this._temporal_bip39Password;
   delete this._temporal_seedHex;
   delete this._temporal_bip39Password;
-  function f (acc) { acc.persist(); }
+  function f(acc) {
+    acc.persist();
+  }
   this._accounts.forEach(f);
   return this;
 };
@@ -46812,7 +47533,7 @@ HDWallet.prototype.isValidAccountIndex = function (index) {
   return Helpers.isPositiveInteger(index) && index < this._accounts.length;
 };
 
-},{"./constants":258,"./hd-account":261,"./helpers":263,"./wallet":279,"assert":16,"bip39":23,"bitcoinjs-lib":34}],263:[function(require,module,exports){
+},{"./constants":266,"./hd-account":269,"./helpers":271,"./wallet":294,"assert":16,"bip39":23,"bitcoinjs-lib":42}],271:[function(require,module,exports){
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -46824,7 +47545,9 @@ var ImportExport = require('./import-export');
 var constants = require('./constants');
 
 var Helpers = {};
-Math.log2 = function (x) { return Math.log(x) / Math.LN2; };
+Math.log2 = function (x) {
+  return Math.log(x) / Math.LN2;
+};
 
 Helpers.isString = function (str) {
   return typeof str === 'string' || str instanceof String;
@@ -46840,22 +47563,26 @@ Helpers.isBitcoinAddress = function (candidate) {
     var d = Bitcoin.address.fromBase58Check(candidate);
     var n = constants.getNetwork();
     return d.version === n.pubKeyHash || d.version === n.scriptHash;
-  } catch (e) { return false; }
+  } catch (e) {
+    return false;
+  }
 };
 Helpers.isBitcoinPrivateKey = function (candidate) {
   try {
     Bitcoin.ECPair.fromWIF(candidate, constants.getNetwork());
     return true;
-  } catch (e) { return false; }
+  } catch (e) {
+    return false;
+  }
 };
 Helpers.isBase58Key = function (str) {
   return Helpers.isString(str) && /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{40,44}$/.test(str);
 };
 Helpers.isXprivKey = function (k) {
-  return Helpers.isString(k) && (/^(x|t)prv/).test(k);
+  return Helpers.isString(k) && /^(x|t)prv/.test(k);
 };
 Helpers.isXpubKey = function (k) {
-  return Helpers.isString(k) && (/^(x|t)pub/).test(k);
+  return Helpers.isString(k) && /^(x|t)pub/.test(k);
 };
 Helpers.isAlphaNum = function (str) {
   return Helpers.isString(str) && /^[\-+,._\w\d\s]+$/.test(str);
@@ -46882,7 +47609,7 @@ Helpers.isNotNumber = function (num) {
   return !Helpers.isNumber(num);
 };
 Helpers.isBoolean = function (value) {
-  return typeof (value) === 'boolean';
+  return typeof value === 'boolean';
 };
 Helpers.isValidLabel = function (text) {
   return Helpers.isString(text);
@@ -46897,16 +47624,24 @@ Helpers.and = function (x, y) {
   return x && y;
 };
 Helpers.pluck = function (prop) {
-  return function (o) { return o[prop]; };
+  return function (o) {
+    return o[prop];
+  };
 };
 Helpers.eq = function (value1) {
-  return function (value0) { return value0 === value1; };
+  return function (value0) {
+    return value0 === value1;
+  };
 };
 Helpers.notEq = function (value1) {
-  return function (value0) { return value0 !== value1; };
+  return function (value0) {
+    return value0 !== value1;
+  };
 };
 Helpers.propEq = function (prop, value) {
-  return function (o) { return o[prop] === value; };
+  return function (o) {
+    return o[prop] === value;
+  };
 };
 Helpers.o = function (pred1, pred2) {
   return function (element) {
@@ -46925,8 +47660,7 @@ Helpers.memoize = function (f) {
   var cache = {};
   return function () {
     var key = arguments.length + Array.prototype.join.call(arguments, ',');
-    if (key in cache) return cache[key];
-    else {
+    if (key in cache) return cache[key];else {
       var value = cache[key] = f.apply(this, arguments);
       return value;
     }
@@ -46945,28 +47679,34 @@ Helpers.isEmptyArray = function (x) {
 Helpers.asyncOnce = function (f, milliseconds, before) {
   var timer = null;
   var oldArguments = [];
-  return function () {
+
+  trigger.cancel = function () {
+    clearTimeout(timer);
+  };
+
+  function trigger() {
+    trigger.cancel();
     before && before();
-    if (timer) {
-      clearTimeout(timer);
-      timer = null;
-    }
     var myArgs = [];
     // this is needed because arguments is not an 'Array' instance
-    for (var i = 0; i < arguments.length; i++) { myArgs[i] = arguments[i]; }
+    for (var i = 0; i < arguments.length; i++) {
+      myArgs[i] = arguments[i];
+    }
     myArgs = Helpers.zipLong(Helpers.maybeCompose, myArgs, oldArguments);
     oldArguments = myArgs;
     timer = setTimeout(function () {
       f.apply(this, myArgs);
       oldArguments = [];
     }, milliseconds);
-  };
+  }
+
+  return trigger;
 };
 
 Helpers.exponentialBackoff = function (f, maxTime) {
   maxTime = maxTime || Infinity;
   var timer;
-  var run = function (e) {
+  var run = function run(e) {
     var nextTime = Math.pow(2, e) * 1000;
     timer = setTimeout(function () {
       f.call(f);
@@ -46994,7 +47734,9 @@ Helpers.zipLong = function (f, xs, ys) {
     return null;
   } else {
     var zs = xs.length > ys.length ? xs : ys;
-    return zs.map(function (v, i) { return f(xs[i], ys[i]); });
+    return zs.map(function (v, i) {
+      return f(xs[i], ys[i]);
+    });
   }
 };
 
@@ -47002,7 +47744,9 @@ Helpers.zip3 = function (xs, ys, zs) {
   if (!(xs instanceof Array && ys instanceof Array && zs instanceof Array)) {
     return null;
   } else {
-    return xs.map(function (v, i) { return [xs[i], ys[i], zs[i]]; });
+    return xs.map(function (v, i) {
+      return [xs[i], ys[i], zs[i]];
+    });
   }
 };
 
@@ -47010,14 +47754,19 @@ Helpers.maybeCompose = function (f, g) {
   if (f instanceof Function && g instanceof Function) {
     return f.compose(g);
   } else {
-    if (f instanceof Function) { return f; }
-    if (g instanceof Function) { return g; }
+    if (f instanceof Function) {
+      return f;
+    }
+    if (g instanceof Function) {
+      return g;
+    }
     // otherwise
     return f;
   }
 };
 
-Function.prototype.compose = function (g) { // eslint-disable-line no-extend-native
+Function.prototype.compose = function (g) {
+  // eslint-disable-line no-extend-native
   var fn = this;
   return function () {
     return fn.call(this, g.apply(this, arguments));
@@ -47025,7 +47774,7 @@ Function.prototype.compose = function (g) { // eslint-disable-line no-extend-nat
 };
 
 Helpers.guessSize = function (nInputs, nOutputs) {
-  return (nInputs * 148 + nOutputs * 34 + 10);
+  return nInputs * 148 + nOutputs * 34 + 10;
 };
 
 Helpers.guessFee = function (nInputs, nOutputs, feePerKb) {
@@ -47035,53 +47784,62 @@ Helpers.guessFee = function (nInputs, nOutputs, feePerKb) {
 
 // password scorer
 Helpers.scorePassword = function (password) {
-  if (!Helpers.isString(password)) { return 0; }
+  if (!Helpers.isString(password)) {
+    return 0;
+  }
 
-  var patternsList = [
-    [0.25, /^[\d\s]+$/],
-    [0.25, /^[a-z\s]+\d$/],
-    [0.25, /^[A-Z\s]+\d$/],
-    [0.5, /^[a-zA-Z\s]+\d$/],
-    [0.5, /^[a-z\s]+\d+$/],
-    [0.25, /^[a-z\s]+$/],
-    [0.25, /^[A-Z\s]+$/],
-    [0.25, /^[A-Z][a-z\s]+$/],
-    [0.25, /^[A-Z][a-z\s]+\d$/],
-    [0.5, /^[A-Z][a-z\s]+\d+$/],
-    [0.25, /^[a-z\s]+[._!\- @*#]$/],
-    [0.25, /^[A-Z\s]+[._!\- @*#]$/],
-    [0.5, /^[a-zA-Z\s]+[._!\- @*#]$/],
-    [0, /^[a-zA-Z0-9_]+@[a-zA-Z0-9]+\.[a-zA-Z]+$/],  // email must always score bad
-    [1, /^.*$/]
-  ];
+  var patternsList = [[0.25, /^[\d\s]+$/], [0.25, /^[a-z\s]+\d$/], [0.25, /^[A-Z\s]+\d$/], [0.5, /^[a-zA-Z\s]+\d$/], [0.5, /^[a-z\s]+\d+$/], [0.25, /^[a-z\s]+$/], [0.25, /^[A-Z\s]+$/], [0.25, /^[A-Z][a-z\s]+$/], [0.25, /^[A-Z][a-z\s]+\d$/], [0.5, /^[A-Z][a-z\s]+\d+$/], [0.25, /^[a-z\s]+[._!\- @*#]$/], [0.25, /^[A-Z\s]+[._!\- @*#]$/], [0.5, /^[a-zA-Z\s]+[._!\- @*#]$/], [0, /^[a-zA-Z0-9_]+@[a-zA-Z0-9]+\.[a-zA-Z]+$/], // email must always score bad
+  [1, /^.*$/]];
 
-  var hasDigits = function (str) { return /[0-9]/.test(str); };
-  var hasLowerCase = function (str) { return /[a-z]/.test(str); };
-  var hasUpperCase = function (str) { return /[A-Z]/.test(str); };
-  var hasSymbol = function (str) { return /[^0-9a-zA-z]/.test(str); };
-  var computeSet = function (str) {
-    var maxChar = Math.max.apply(Math, str.split('').map(function (c) { return c.charCodeAt(0); }));
+  var hasDigits = function hasDigits(str) {
+    return (/[0-9]/.test(str)
+    );
+  };
+  var hasLowerCase = function hasLowerCase(str) {
+    return (/[a-z]/.test(str)
+    );
+  };
+  var hasUpperCase = function hasUpperCase(str) {
+    return (/[A-Z]/.test(str)
+    );
+  };
+  var hasSymbol = function hasSymbol(str) {
+    return (/[^0-9a-zA-z]/.test(str)
+    );
+  };
+  var computeSet = function computeSet(str) {
+    var maxChar = Math.max.apply(Math, str.split('').map(function (c) {
+      return c.charCodeAt(0);
+    }));
     return maxChar + 256 - maxChar % 256;
   };
 
-  var base = function (str) {
+  var base = function base(str) {
     var tuples = [[10, hasDigits(str)], [26, hasLowerCase(str)], [26, hasUpperCase(str)]];
-    var bases = tuples.filter(function (t) { return t[1]; }).map(function (t) { return t[0]; });
+    var bases = tuples.filter(function (t) {
+      return t[1];
+    }).map(function (t) {
+      return t[0];
+    });
     var setSize = hasSymbol(str) ? computeSet(str) : bases.reduce(Helpers.add, 0);
     var ret = setSize === 0 ? 1 : setSize;
     return ret;
   };
 
-  var entropy = function (str) {
+  var entropy = function entropy(str) {
     return Math.log2(Math.pow(base(str), str.length));
   };
 
-  var quality = function (str) {
-    var pats = patternsList.filter(function (p) { return p[1].test(str); }).map(function (p) { return p[0]; });
+  var quality = function quality(str) {
+    var pats = patternsList.filter(function (p) {
+      return p[1].test(str);
+    }).map(function (p) {
+      return p[0];
+    });
     return Math.min.apply(Math, pats);
   };
 
-  var entropyWeighted = function (str) {
+  var entropyWeighted = function entropyWeighted(str) {
     return quality(str) * entropy(str);
   };
 
@@ -47089,7 +47847,7 @@ Helpers.scorePassword = function (password) {
 };
 
 Helpers.getHostName = function () {
-  if ((typeof window === 'undefined')) {
+  if (typeof window === 'undefined') {
     return null;
   }
 
@@ -47113,7 +47871,7 @@ Helpers.buffertoByteArray = function (value) {
   return BigInteger.fromBuffer(value).toByteArray();
 };
 
-function parseMiniKey (miniKey) {
+function parseMiniKey(miniKey) {
   var check = Bitcoin.crypto.sha256(miniKey + '?');
   if (check[0] !== 0x00) {
     throw new Error('Invalid mini key');
@@ -47148,29 +47906,22 @@ Helpers.privateKeyStringToKey = function (value, format) {
     throw new Error('Unsupported Key Format');
   }
 
-  return new Bitcoin.ECPair(
-    new BigInteger.fromByteArrayUnsigned(keyBytes), // eslint-disable-line new-cap
-    null,
-    { compressed: format !== 'sipa', network: constants.getNetwork() }
-  );
+  return new Bitcoin.ECPair(new BigInteger.fromByteArrayUnsigned(keyBytes), // eslint-disable-line new-cap
+  null, { compressed: format !== 'sipa', network: constants.getNetwork() });
 };
 
 Helpers.detectPrivateKeyFormat = function (key) {
   var isTestnet = constants.NETWORK === 'testnet';
 
   // 51 characters base58, always starts with 5 (or 9, for testnet)
-  var sipaRegex = isTestnet
-    ? (/^[9][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/)
-    : (/^[5][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/);
+  var sipaRegex = isTestnet ? /^[9][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/ : /^[5][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/;
 
   if (sipaRegex.test(key)) {
     return 'sipa';
   }
 
   // 52 character compressed starts with L or K (or c, for testnet)
-  var compsipaRegex = isTestnet
-    ? (/^[c][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/)
-    : (/^[LK][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/);
+  var compsipaRegex = isTestnet ? /^[c][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/ : /^[LK][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/;
 
   if (compsipaRegex.test(key)) {
     return 'compsipa';
@@ -47193,10 +47944,7 @@ Helpers.detectPrivateKeyFormat = function (key) {
     return 'bip38';
   }
 
-  if (/^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{21}$/.test(key) ||
-      /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{25}$/.test(key) ||
-      /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{29}$/.test(key) ||
-      /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{30}$/.test(key)) {
+  if (/^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{21}$/.test(key) || /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{25}$/.test(key) || /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{29}$/.test(key) || /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{30}$/.test(key)) {
     var testBytes = Bitcoin.crypto.sha256(key + '?');
 
     if (testBytes[0] === 0x00 || testBytes[0] === 0x01) {
@@ -47213,7 +47961,9 @@ Helpers.isValidBIP39Mnemonic = function (mnemonic) {
 Helpers.isValidPrivateKey = function (candidate) {
   try {
     var format = Helpers.detectPrivateKeyFormat(candidate);
-    if (format === 'bip38') { return true; }
+    if (format === 'bip38') {
+      return true;
+    }
     var key = Helpers.privateKeyStringToKey(candidate, format);
     return key.getAddress();
   } catch (e) {
@@ -47222,18 +47972,20 @@ Helpers.isValidPrivateKey = function (candidate) {
 };
 
 Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
-  var asyncParse = function (resolve, reject) {
+  var asyncParse = function asyncParse(resolve, reject) {
     var format = Helpers.detectPrivateKeyFormat(priv);
     var okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
     if (format === 'bip38') {
       if (bipPass === undefined || bipPass === null || bipPass === '') {
         return reject('needsBip38');
       }
-      ImportExport.parseBIP38toECPair(priv, bipPass,
-        function (key) { resolve(key); },
-        function () { reject('wrongBipPass'); },
-        function () { reject('importError'); }
-      );
+      ImportExport.parseBIP38toECPair(priv, bipPass, function (key) {
+        resolve(key);
+      }, function () {
+        reject('wrongBipPass');
+      }, function () {
+        reject('importError');
+      });
     } else if (okFormats.indexOf(format) > -1) {
       var k = Helpers.privateKeyStringToKey(priv, format);
       return resolve(k);
@@ -47241,7 +47993,7 @@ Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
       reject('unknown key format');
     }
   };
-  var predicate = function (key) {
+  var predicate = function predicate(key) {
     var a = key.getAddress();
     return a === address ? Base58.encode(key.d.toBuffer(32)) : null;
   };
@@ -47266,7 +48018,7 @@ Helpers.getMobileOperatingSystem = function () {
 
 module.exports = Helpers;
 
-},{"./constants":258,"./import-export":264,"bigi":21,"bip39":23,"bitcoinjs-lib":34,"bs58":69,"buffer":76}],264:[function(require,module,exports){
+},{"./constants":266,"./import-export":272,"bigi":21,"bip39":23,"bitcoinjs-lib":42,"bs58":77,"buffer":84}],272:[function(require,module,exports){
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -47337,8 +48089,8 @@ var ImportExport = new function () {
     var decrypted;
     var AESopts = { mode: WalletCrypto.AES.ECB, padding: WalletCrypto.pad.NoPadding };
 
-    var verifyHashAndReturn = function () {
-      var tmpkey = new Bitcoin.ECPair(decrypted, null, {compressed: isCompPoint, network: constants.getNetwork()});
+    var verifyHashAndReturn = function verifyHashAndReturn() {
+      var tmpkey = new Bitcoin.ECPair(decrypted, null, { compressed: isCompPoint, network: constants.getNetwork() });
 
       var base58Address = tmpkey.getAddress();
 
@@ -47358,7 +48110,9 @@ var ImportExport = new function () {
         var k = derivedBytes.slice(32, 32 + 32);
 
         var decryptedBytes = WalletCrypto.AES.decrypt(Buffer(hex.slice(7, 7 + 32)), k, null, AESopts);
-        for (var x = 0; x < 32; x++) { decryptedBytes[x] ^= derivedBytes[x]; }
+        for (var x = 0; x < 32; x++) {
+          decryptedBytes[x] ^= derivedBytes[x];
+        }
 
         decrypted = BigInteger.fromBuffer(decryptedBytes);
 
@@ -47378,7 +48132,7 @@ var ImportExport = new function () {
           passfactor = hash256(prefactorB);
         }
 
-        var kp = new Bitcoin.ECPair(BigInteger.fromBuffer(passfactor), null, {network: constants.getNetwork()});
+        var kp = new Bitcoin.ECPair(BigInteger.fromBuffer(passfactor), null, { network: constants.getNetwork() });
 
         var passpoint = kp.getPublicKeyBuffer();
 
@@ -47391,13 +48145,17 @@ var ImportExport = new function () {
 
           var unencryptedpart2Bytes = WalletCrypto.AES.decrypt(encryptedpart2, k, null, AESopts);
 
-          for (var i = 0; i < 16; i++) { unencryptedpart2Bytes[i] ^= derived[i + 16]; }
+          for (var i = 0; i < 16; i++) {
+            unencryptedpart2Bytes[i] ^= derived[i + 16];
+          }
 
           var encryptedpart1 = Buffer.concat([Buffer(hex.slice(15, 15 + 8)), Buffer(unencryptedpart2Bytes.slice(0, 0 + 8))]);
 
           var unencryptedpart1Bytes = WalletCrypto.AES.decrypt(encryptedpart1, k, null, AESopts);
 
-          for (var ii = 0; ii < 16; ii++) { unencryptedpart1Bytes[ii] ^= derived[ii]; }
+          for (var ii = 0; ii < 16; ii++) {
+            unencryptedpart1Bytes[ii] ^= derived[ii];
+          }
 
           var seedb = Buffer.concat([Buffer(unencryptedpart1Bytes.slice(0, 0 + 16)), Buffer(unencryptedpart2Bytes.slice(8, 8 + 8))]);
 
@@ -47413,11 +48171,11 @@ var ImportExport = new function () {
       });
     }
   };
-};
+}();
 
 module.exports = ImportExport;
 
-},{"./constants":258,"./wallet-crypto":273,"bigi":21,"bitcoinjs-lib":34,"bs58":69,"buffer":76,"unorm":228}],265:[function(require,module,exports){
+},{"./constants":266,"./wallet-crypto":288,"bigi":21,"bitcoinjs-lib":42,"bs58":77,"buffer":84,"unorm":236}],273:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyChain;
@@ -47428,7 +48186,7 @@ var Helpers = require('./helpers');
 var constants = require('./constants');
 
 // keychain
-function KeyChain (extendedKey, index, cache) {
+function KeyChain(extendedKey, index, cache) {
   this._chainRoot = null;
   this.init(extendedKey, index, cache);
 
@@ -47443,11 +48201,13 @@ function KeyChain (extendedKey, index, cache) {
 Object.defineProperties(KeyChain.prototype, {
   'xpub': {
     configurable: false,
-    get: function () { return this._chainRoot ? this._chainRoot.neutered().toBase58() : null; }
+    get: function get() {
+      return this._chainRoot ? this._chainRoot.neutered().toBase58() : null;
+    }
   },
   'isNeutered': {
     configurable: false,
-    get: function () {
+    get: function get() {
       // isNeutered() is not yet in 2.1.4
       // return this._chainRoot ? this._chainRoot.isNeutered() : null;
       return this._chainRoot ? !this._chainRoot.keyPair.d : null;
@@ -47463,8 +48223,7 @@ KeyChain.prototype.init = function (extendedKey, index, cache) {
   if (cache) {
     this._chainRoot = Bitcoin.HDNode.fromBase58(cache, constants.getNetwork());
   } else {
-    this._chainRoot = extendedKey && Helpers.isPositiveInteger(index) && index >= 0
-      ? Bitcoin.HDNode.fromBase58(extendedKey, constants.getNetwork()).derive(index) : undefined;
+    this._chainRoot = extendedKey && Helpers.isPositiveInteger(index) && index >= 0 ? Bitcoin.HDNode.fromBase58(extendedKey, constants.getNetwork()).derive(index) : undefined;
   }
   return this;
 };
@@ -47480,7 +48239,7 @@ KeyChain.prototype.getPrivateKey = function (index) {
   return key || null;
 };
 
-},{"./constants":258,"./helpers":263,"assert":16,"bitcoinjs-lib":34}],266:[function(require,module,exports){
+},{"./constants":266,"./helpers":271,"assert":16,"bitcoinjs-lib":42}],274:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyRing;
@@ -47490,7 +48249,7 @@ var KeyChain = require('./keychain');
 
 // keyring: A collection of keychains
 
-function KeyRing (extendedKey, cache) {
+function KeyRing(extendedKey, cache) {
   this._receiveChain = null;
   this._changeChain = null;
   this.init(extendedKey, cache);
@@ -47499,11 +48258,15 @@ function KeyRing (extendedKey, cache) {
 Object.defineProperties(KeyRing.prototype, {
   'receive': {
     configurable: false,
-    get: function () { return this._receiveChain; }
+    get: function get() {
+      return this._receiveChain;
+    }
   },
   'change': {
     configurable: false,
-    get: function () { return this._changeChain; }
+    get: function get() {
+      return this._changeChain;
+    }
   }
 });
 
@@ -47511,10 +48274,8 @@ KeyRing.prototype.init = function (extendedKey, cache) {
   cache = cache || {};
   if (this._receiveChain && this._changeChain) return this;
   if (extendedKey || cache.receiveAccount && cache.changeAccount) {
-    this._receiveChain = cache.receiveAccount
-      ? new KeyChain(null, null, cache.receiveAccount) : new KeyChain(extendedKey, 0);
-    this._changeChain = cache.changeAccount
-      ? new KeyChain(null, null, cache.changeAccount) : new KeyChain(extendedKey, 1);
+    this._receiveChain = cache.receiveAccount ? new KeyChain(null, null, cache.receiveAccount) : new KeyChain(extendedKey, 0);
+    this._changeChain = cache.changeAccount ? new KeyChain(null, null, cache.changeAccount) : new KeyChain(extendedKey, 1);
   }
   return this;
 };
@@ -47523,15 +48284,12 @@ KeyRing.prototype.init = function (extendedKey, cache) {
 KeyRing.prototype.privateKeyFromPath = function (path) {
   var components = path.split('/');
   assert(components[0] === 'M', 'Invalid Path prefix');
-  assert(components[1] === '0' || components[1] === '1'
-    , 'Invalid Path: change/receive index out of bounds');
+  assert(components[1] === '0' || components[1] === '1', 'Invalid Path: change/receive index out of bounds');
   assert(components.length === 3, 'Invalid Path length');
   if (this._receiveChain.isNeutered) return null;
   var receiveOrChange = parseInt(components[1], 10);
   var index = parseInt(components[2], 10);
-  return receiveOrChange === 0
-      ? this._receiveChain.getPrivateKey(index)
-      : this._changeChain.getPrivateKey(index);
+  return receiveOrChange === 0 ? this._receiveChain.getPrivateKey(index) : this._changeChain.getPrivateKey(index);
 };
 
 KeyRing.prototype.toJSON = function () {
@@ -47542,7 +48300,7 @@ KeyRing.prototype.toJSON = function () {
   return cacheJSON;
 };
 
-},{"./keychain":265,"assert":16}],267:[function(require,module,exports){
+},{"./keychain":273,"assert":16}],275:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -47787,7 +48545,7 @@ Metadata.fromMasterHDNode = function (masterHDNode, typeId) {
 module.exports = Metadata;
 
 }).call(this,require("buffer").Buffer)
-},{"./api":238,"./constants":258,"./helpers":263,"./wallet-crypto":273,"bitcoinjs-lib":34,"buffer":76,"ramda":199}],268:[function(require,module,exports){
+},{"./api":246,"./constants":266,"./helpers":271,"./wallet-crypto":288,"bitcoinjs-lib":42,"buffer":84,"ramda":207}],276:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -47804,7 +48562,7 @@ var constants = require('./constants');
 
 // Payment Class
 
-function Payment (payment) {
+function Payment(payment) {
   EventEmitter.call(this);
 
   var serverFeeFallback = {
@@ -47841,22 +48599,22 @@ function Payment (payment) {
   };
 
   var initialState = {
-    fees: serverFeeFallback,  // fallback for fee-service
-    coins: [],  // original set of unspents (set by .from)
+    fees: serverFeeFallback, // fallback for fee-service
+    coins: [], // original set of unspents (set by .from)
     selectedCoins: [], // set of coins that are going to be passed to new Transaction
     from: null, // origin
     amounts: [], // list of amounts to spend entered in the form
     to: [], // list of destinations entered in the form
     feePerKb: serverFeeFallback.default.fee, // default fee-per-kb used in basic send
     extraFeeConsumption: 0, // if there is change consumption to fee will be reflected here
-    sweepFee: 0,  // computed fee to sweep an account in basic send (depends on fee-per-kb)
+    sweepFee: 0, // computed fee to sweep an account in basic send (depends on fee-per-kb)
     sweepAmount: 0, // computed max spendable amount depending on fee-per-kb
     balance: 0, // sum of all unspents values with any filtering     [ payment.sumOfCoins ]
     finalFee: 0, // final absolute fee that it is going to be used no matter how was obtained (advanced or regular send)
     changeAmount: 0, // final change
     absoluteFeeBounds: [0, 0, 0, 0, 0, 0], // fee bounds (absolute) per fixed amount
     sweepFees: [0, 0, 0, 0, 0, 0], // sweep absolute fee per each fee per kb (1, 2, 3, 4, 5, 6)
-    maxSpendableAmounts: [0, 0, 0, 0, 0, 0],  // max amount per each fee-per-kb
+    maxSpendableAmounts: [0, 0, 0, 0, 0, 0], // max amount per each fee-per-kb
     confEstimation: 'unknown',
     txSize: 0 // transaciton size
   };
@@ -47953,7 +48711,9 @@ Payment.prototype.publish = function () {
 };
 
 Payment.prototype.printJSON = function () {
-  var printJSON = function (p) { console.log(JSON.stringify(p, null, 2)); };
+  var printJSON = function printJSON(p) {
+    console.log(JSON.stringify(p, null, 2));
+  };
   this.sideEffect(printJSON);
   return this;
 };
@@ -47973,10 +48733,10 @@ Payment.sideEffect = function (myFunction) {
 
 Payment.to = function (destinations) {
   var formatDest = null;
-  var isValidIndex = function (i) {
-    return Helpers.isPositiveInteger(i) && MyWallet.wallet.isUpgradedToHD && (i < MyWallet.wallet.hdwallet.accounts.length);
+  var isValidIndex = function isValidIndex(i) {
+    return Helpers.isPositiveInteger(i) && MyWallet.wallet.isUpgradedToHD && i < MyWallet.wallet.hdwallet.accounts.length;
   };
-  var accountToAddress = function (i) {
+  var accountToAddress = function accountToAddress(i) {
     if (Helpers.isPositiveInteger(i)) {
       return MyWallet.wallet.hdwallet.accounts[i].receiveAddress;
     } else {
@@ -47993,9 +48753,7 @@ Payment.to = function (destinations) {
       formatDest = Helpers.toArrayFormat(accountToAddress(destinations));
       break;
     // multiple bitcoin addresses or accounts
-    case Array.isArray(destinations) &&
-         destinations.length > 0 &&
-         destinations.every(Helpers.o(Helpers.isBitcoinAddress, isValidIndex)):
+    case Array.isArray(destinations) && destinations.length > 0 && destinations.every(Helpers.o(Helpers.isBitcoinAddress, isValidIndex)):
       formatDest = destinations.map(accountToAddress);
       break;
     default:
@@ -48011,7 +48769,7 @@ Payment.useAll = function (absoluteFee) {
   return function (payment) {
     if (Helpers.isPositiveNumber(absoluteFee)) {
       var balance = payment.balance ? payment.balance : 0;
-      payment.amounts = (balance - absoluteFee) > 0 ? [balance - absoluteFee] : [];
+      payment.amounts = balance - absoluteFee > 0 ? [balance - absoluteFee] : [];
     } else {
       payment.amounts = payment.sweepAmount ? [payment.sweepAmount] : [];
     }
@@ -48027,9 +48785,7 @@ Payment.amount = function (amounts, absoluteFee) {
       formatAmo = Helpers.toArrayFormat(amounts);
       break;
     // multiple outputs
-    case Array.isArray(amounts) &&
-         amounts.length > 0 &&
-         amounts.every(Helpers.isPositiveNumber):
+    case Array.isArray(amounts) && amounts.length > 0 && amounts.every(Helpers.isPositiveNumber):
       formatAmo = amounts;
       break;
     default:
@@ -48062,22 +48818,19 @@ Payment.from = function (origin) {
       change = origin;
       break;
     // single account index
-    case Helpers.isPositiveInteger(origin) &&
-         (origin < MyWallet.wallet.hdwallet.accounts.length):
+    case Helpers.isPositiveInteger(origin) && origin < MyWallet.wallet.hdwallet.accounts.length:
       var fromAccount = MyWallet.wallet.hdwallet.accounts[origin];
       addresses = [fromAccount.extendedPublicKey];
       change = fromAccount.changeAddress;
       fromAccId = origin;
       break;
     // multiple legacy addresses
-    case Array.isArray(origin) &&
-         origin.length > 0 &&
-         origin.every(Helpers.isBitcoinAddress):
+    case Array.isArray(origin) && origin.length > 0 && origin.every(Helpers.isBitcoinAddress):
       addresses = origin;
       change = addresses[0];
       break;
     // from PrivateKey
-    case (pkFormat !== null):
+    case pkFormat !== null:
       var key = Helpers.privateKeyStringToKey(origin, pkFormat);
       key.compressed = false;
       var addrUncomp = key.getAddress();
@@ -48115,42 +48868,36 @@ Payment.from = function (origin) {
     payment.fromAccountIdx = fromAccId;
     payment.fromWatchOnly = watchOnly;
 
-    return getUnspentCoins(addresses, function onNotice (notice) {
+    return getUnspentCoins(addresses, function onNotice(notice) {
       that.emit('message', { text: notice });
-    }).then(
-      function (coins) {
-        payment.coins = coins;
-        return payment;
+    }).then(function (coins) {
+      payment.coins = coins;
+      return payment;
+    }).catch(
+    // this could fail for network issues or no-balance
+    function (error) {
+      if (error !== 'No free outputs to spend') {
+        that.emit('error', { error: 'ERR_FETCH_UNSPENT' });
       }
-    ).catch(
-      // this could fail for network issues or no-balance
-      function (error) {
-        if (error !== 'No free outputs to spend') {
-          that.emit('error', { error: 'ERR_FETCH_UNSPENT' });
-        }
-        console.log(error);
-        payment.coins = [];
-        return payment;
-      }
-    );
+      console.log(error);
+      payment.coins = [];
+      return payment;
+    });
   };
 };
 
 Payment.updateFees = function () {
   return function (payment) {
-    return API.getFees().then(
-          function (fees) {
-            payment.fees = fees;
-            payment.feePerKb = fees.default.fee;
-            return payment;
-          }
-        ).catch(
-          // this could fail for network issues - fallback default fee
-          function (error) {
-            console.log(error);
-            return payment;
-          }
-        );
+    return API.getFees().then(function (fees) {
+      payment.fees = fees;
+      payment.feePerKb = fees.default.fee;
+      return payment;
+    }).catch(
+    // this could fail for network issues - fallback default fee
+    function (error) {
+      console.log(error);
+      return payment;
+    });
   };
 };
 
@@ -48165,13 +48912,15 @@ Payment.prebuild = function (absoluteFee) {
     payment.balance = Transaction.sumOfCoins(payment.coins);
 
     // compute max spendable limits per each fee-per-kb
-    var maxSpendablesPerFeePerKb = function (e) {
+    var maxSpendablesPerFeePerKb = function maxSpendablesPerFeePerKb(e) {
       var c = Transaction.filterUsableCoins(payment.coins, e.fee);
       var s = Transaction.maxAvailableAmount(c, e.fee);
       return s.amount;
     };
     payment.maxSpendableAmounts = payment.fees.estimate.map(maxSpendablesPerFeePerKb);
-    payment.sweepFees = payment.maxSpendableAmounts.map(function (v) { return payment.balance - v; });
+    payment.sweepFees = payment.maxSpendableAmounts.map(function (v) {
+      return payment.balance - v;
+    });
 
     // if amounts defined refresh computations
     if (Array.isArray(payment.amounts) && payment.amounts.length > 0) {
@@ -48197,7 +48946,7 @@ Payment.prebuild = function (absoluteFee) {
       }
 
       // compute absolute fee bounds for 1,2,3,4,5,6 block confirmations
-      var toAbsoluteFee = function (e) {
+      var toAbsoluteFee = function toAbsoluteFee(e) {
         var c = Transaction.filterUsableCoins(payment.coins, e.fee);
         var s = Transaction.selectCoins(c, payment.amounts, e.fee, false);
         return s.fee;
@@ -48225,9 +48974,10 @@ Payment.build = function () {
 
 Payment.sign = function (password) {
   return function (payment) {
-    var importWIF = function (WIF) {
-      MyWallet.wallet.importLegacyAddress(WIF, 'Redeemed code.', password)
-        .then(function (A) { A.archived = true; });
+    var importWIF = function importWIF(WIF) {
+      MyWallet.wallet.importLegacyAddress(WIF, 'Redeemed code.', password).then(function (A) {
+        A.archived = true;
+      });
     };
 
     if (!payment.transaction) throw new Error('This transaction hasn\'t been built yet');
@@ -48242,19 +48992,18 @@ Payment.sign = function (password) {
 
 Payment.publish = function () {
   return function (payment) {
-    var success = function () {
+    var success = function success() {
       payment.txid = payment.transaction.getId();
       return payment;
     };
 
-    var handleError = function (e) {
+    var handleError = function handleError(e) {
       throw e.message || e.responseText || e;
     };
 
     payment.transaction = payment.transaction.build();
 
-    return API.pushTx(payment.transaction.toHex())
-      .then(success).catch(handleError);
+    return API.pushTx(payment.transaction.toHex()).then(success).catch(handleError);
   };
 };
 
@@ -48263,9 +49012,9 @@ module.exports = Payment;
 // Helper functions
 
 // getUnspentCoins :: [address] -> Promise [coins]
-function getUnspentCoins (addressList, notify) {
-  var processCoins = function (obj) {
-    var processCoin = function (utxo) {
+function getUnspentCoins(addressList, notify) {
+  var processCoins = function processCoins(obj) {
+    var processCoin = function processCoin(utxo) {
       var txBuffer = new Buffer(utxo.tx_hash, 'hex');
       Array.prototype.reverse.call(txBuffer);
       utxo.hash = txBuffer.toString('hex');
@@ -48279,12 +49028,12 @@ function getUnspentCoins (addressList, notify) {
   return API.getUnspent(addressList, -1).then(processCoins);
 }
 
-function getKey (priv, addr) {
+function getKey(priv, addr) {
   var format = Helpers.detectPrivateKeyFormat(priv);
   var key = Helpers.privateKeyStringToKey(priv, format);
   var network = constants.getNetwork();
-  var ckey = new Bitcoin.ECPair(key.d, null, {compressed: true, network: network});
-  var ukey = new Bitcoin.ECPair(key.d, null, {compressed: false, network: network});
+  var ckey = new Bitcoin.ECPair(key.d, null, { compressed: true, network: network });
+  var ukey = new Bitcoin.ECPair(key.d, null, { compressed: false, network: network });
   if (ckey.getAddress() === addr) {
     return ckey;
   } else if (ukey.getAddress() === addr) {
@@ -48295,31 +49044,26 @@ function getKey (priv, addr) {
 
 // obtain private key for an address
 // from Address
-function getKeyForAddress (password, addr) {
+function getKeyForAddress(password, addr) {
   var k = MyWallet.wallet.key(addr).priv;
-  var privateKeyBase58 = password == null ? k
-      : WalletCrypto.decryptSecretWithSecondPassword(k, password,
-          MyWallet.wallet.sharedKey, MyWallet.wallet.pbkdf2_iterations);
+  var privateKeyBase58 = password == null ? k : WalletCrypto.decryptSecretWithSecondPassword(k, password, MyWallet.wallet.sharedKey, MyWallet.wallet.pbkdf2_iterations);
   return getKey(privateKeyBase58, addr);
 }
 
 // getXPRIV :: password -> index -> xpriv
-function getXPRIV (password, accountIndex) {
+function getXPRIV(password, accountIndex) {
   var fromAccount = MyWallet.wallet.hdwallet.accounts[accountIndex];
-  return fromAccount.extendedPrivateKey == null || password == null
-    ? fromAccount.extendedPrivateKey
-    : WalletCrypto.decryptSecretWithSecondPassword(fromAccount.extendedPrivateKey, password,
-      MyWallet.wallet.sharedKey, MyWallet.wallet.pbkdf2_iterations);
+  return fromAccount.extendedPrivateKey == null || password == null ? fromAccount.extendedPrivateKey : WalletCrypto.decryptSecretWithSecondPassword(fromAccount.extendedPrivateKey, password, MyWallet.wallet.sharedKey, MyWallet.wallet.pbkdf2_iterations);
 }
 
 // getKeyForPath :: xpriv -> path -> ECPair
-function getKeyForPath (extendedPrivateKey, neededPrivateKeyPath) {
+function getKeyForPath(extendedPrivateKey, neededPrivateKeyPath) {
   var keyring = new KeyRing(extendedPrivateKey);
   return keyring.privateKeyFromPath(neededPrivateKeyPath).keyPair;
 }
 
 // getPrivateKeys :: password -> payment -> [private key]
-function getPrivateKeys (password, payment) {
+function getPrivateKeys(password, payment) {
   var transaction = payment.transaction;
   var privateKeys = [];
   // if from Account
@@ -48329,9 +49073,9 @@ function getPrivateKeys (password, payment) {
   }
   // if from Addresses or redeem code (private key)
   if (payment.from && payment.from.every(Helpers.isBitcoinAddress) && !payment.fromWatchOnly) {
-    privateKeys = payment.wifKeys.length
-      ? transaction.addressesOfNeededPrivateKeys.map(function (a, i) { return getKey(payment.wifKeys[i], a); })
-      : transaction.addressesOfNeededPrivateKeys.map(getKeyForAddress.bind(this, password));
+    privateKeys = payment.wifKeys.length ? transaction.addressesOfNeededPrivateKeys.map(function (a, i) {
+      return getKey(payment.wifKeys[i], a);
+    }) : transaction.addressesOfNeededPrivateKeys.map(getKeyForAddress.bind(this, password));
   }
   // if from Watch Only
   if (payment.from && Helpers.isBitcoinAddress(payment.from[0]) && payment.fromWatchOnly) {
@@ -48341,7 +49085,7 @@ function getPrivateKeys (password, payment) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./api":238,"./constants":258,"./helpers":263,"./keyring":266,"./transaction":272,"./wallet":279,"./wallet-crypto":273,"bitcoinjs-lib":34,"buffer":76,"events":170,"util":232}],269:[function(require,module,exports){
+},{"./api":246,"./constants":266,"./helpers":271,"./keyring":274,"./transaction":287,"./wallet":294,"./wallet-crypto":288,"bitcoinjs-lib":42,"buffer":84,"events":178,"util":240}],277:[function(require,module,exports){
 'use strict';
 
 module.exports = new RNG();
@@ -48354,20 +49098,17 @@ var Helpers = require('./helpers');
 
 module.exports.randomBytes = randomBytes;
 
-function RNG () {
+function RNG() {
   this.ACTION = 'GET';
   // API is undefined at this point
   // this.URL = API.API_ROOT_URL + 'v2/randombytes'
-  this.FORMAT = 'hex';  // raw, hex, base64
+  this.FORMAT = 'hex'; // raw, hex, base64
   this.BYTES = 32;
 }
 
 // xor :: Buffer -> Buffer -> Buffer
 RNG.prototype.xor = function (a, b) {
-  assert(
-    Buffer.isBuffer(a) && Buffer.isBuffer(b),
-    'Expected arguments to be buffers'
-  );
+  assert(Buffer.isBuffer(a) && Buffer.isBuffer(b), 'Expected arguments to be buffers');
 
   var length = Math.min(a.length, b.length);
   var buffer = new Buffer(length);
@@ -48386,38 +49127,23 @@ RNG.prototype.run = function (nBytes) {
     var serverH = this.getServerEntropy(nBytes);
     // Expose randomBytes for iOS to override
     var localH = module.exports.randomBytes(nBytes);
-    assert(
-      localH.length > 0,
-      'Local entropy should not be empty.'
-    );
-    assert(
-      serverH.length > 0,
-      'Server entropy should not be empty.'
-    );
+    assert(localH.length > 0, 'Local entropy should not be empty.');
+    assert(serverH.length > 0, 'Server entropy should not be empty.');
 
-    assert(
-      !Array.prototype.every.call(serverH, function (b) { return b === serverH[0]; }),
-      'The server entropy should not be the same byte repeated.'
-    );
-    assert(
-      !Array.prototype.every.call(localH, function (b) { return b === localH[0]; }),
-      'The browser entropy should not be the same byte repeated.'
-    );
-    assert(
-      serverH.length === localH.length,
-      'Both entropies should be same of the length.'
-    );
+    assert(!Array.prototype.every.call(serverH, function (b) {
+      return b === serverH[0];
+    }), 'The server entropy should not be the same byte repeated.');
+    assert(!Array.prototype.every.call(localH, function (b) {
+      return b === localH[0];
+    }), 'The browser entropy should not be the same byte repeated.');
+    assert(serverH.length === localH.length, 'Both entropies should be same of the length.');
 
     var combinedH = this.xor(localH, serverH);
 
-    assert(
-      !Array.prototype.every.call(combinedH, function (b) { return b === combinedH[0]; }),
-      'The combined entropy should not be the same byte repeated.'
-    );
-    assert(
-      combinedH.length === nBytes,
-      'Combined entropy should be of requested length.'
-    );
+    assert(!Array.prototype.every.call(combinedH, function (b) {
+      return b === combinedH[0];
+    }), 'The combined entropy should not be the same byte repeated.');
+    assert(combinedH.length === nBytes, 'Combined entropy should be of requested length.');
 
     return combinedH;
   } catch (e) {
@@ -48429,10 +49155,7 @@ RNG.prototype.run = function (nBytes) {
 
 // getServerEntropy :: int -> Buffer
 RNG.prototype.getServerEntropy = function (nBytes) {
-  assert(
-    this.FORMAT === 'hex',
-    'Only supported hex format.'
-  );
+  assert(this.FORMAT === 'hex', 'Only supported hex format.');
 
   nBytes = Helpers.isPositiveInteger(nBytes) ? nBytes : this.BYTES;
   var request = new XMLHttpRequest();
@@ -48444,17 +49167,11 @@ RNG.prototype.getServerEntropy = function (nBytes) {
   request.send(null);
 
   if (request.status === 200) {
-    assert(
-      Helpers.isHex(request.responseText),
-      'Non-hex server entropy answer.'
-    );
+    assert(Helpers.isHex(request.responseText), 'Non-hex server entropy answer.');
 
     var B = new Buffer(request.responseText, this.FORMAT);
 
-    assert(
-      B.length === nBytes,
-      'Different entropy length requested.'
-    );
+    assert(B.length === nBytes, 'Different entropy length requested.');
 
     return B;
   } else {
@@ -48462,7 +49179,1016 @@ RNG.prototype.getServerEntropy = function (nBytes) {
   }
 };
 
-},{"./api":238,"./helpers":263,"assert":16,"buffer":76,"randombytes":200}],270:[function(require,module,exports){
+},{"./api":246,"./helpers":271,"assert":16,"buffer":84,"randombytes":208}],278:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var assert = require('assert');
+var Exchange = require('bitcoin-exchange-client');
+
+var API = function (_Exchange$API) {
+  _inherits(API, _Exchange$API);
+
+  function API() {
+    _classCallCheck(this, API);
+
+    var _this = _possibleConstructorReturn(this, (API.__proto__ || Object.getPrototypeOf(API)).call(this));
+
+    _this._apiKey = null;
+    _this._partnerId = 'blockchain';
+    _this._accountToken = null;
+    return _this;
+  }
+
+  _createClass(API, [{
+    key: '_url',
+    value: function _url(subdomain, version, endpoint) {
+      assert(endpoint, 'endpoint required');
+      version = version || 'v2';
+      subdomain = subdomain || 'api';
+      return 'https://' + subdomain + (this._production ? '' : '.staging') + '.sfox.com/' + version + '/partner/' + this._partnerId + '/' + endpoint;
+    }
+  }, {
+    key: 'GET',
+    value: function GET(endpoint, data, version, subdomain) {
+      return this._request('GET', endpoint, version, subdomain, data);
+    }
+  }, {
+    key: 'authGET',
+    value: function authGET(endpoint, data, version, subdomain) {
+      return this._request('GET', endpoint, version, subdomain, data, true);
+    }
+  }, {
+    key: 'POST',
+    value: function POST(endpoint, data, version, subdomain) {
+      return this._request('POST', endpoint, version, subdomain, data);
+    }
+  }, {
+    key: 'authPOST',
+    value: function authPOST(endpoint, data, version, subdomain) {
+      return this._request('POST', endpoint, version, subdomain, data, true);
+    }
+  }, {
+    key: 'PATCH',
+    value: function PATCH(endpoint, data, version, subdomain) {
+      return this._request('PATCH', endpoint, version, subdomain, data);
+    }
+  }, {
+    key: 'authPATCH',
+    value: function authPATCH(endpoint, data, version, subdomain) {
+      return this._request('PATCH', endpoint, version, subdomain, data, true);
+    }
+  }, {
+    key: '_request',
+    value: function _request(method, endpoint, version, subdomain, data, authorized) {
+      assert(this._apiKey, 'API key required');
+      assert(!authorized || this.hasAccount, "Can't make authorized request without an account");
+
+      var url = this._url(subdomain, version, endpoint);
+
+      var headers = {};
+
+      if (subdomain !== 'quotes') {
+        headers['X-SFOX-PARTNER-ID'] = this._apiKey;
+      }
+
+      if (authorized) {
+        headers['Authorization'] = 'Bearer ' + this._accountToken;
+      }
+
+      return _get(API.prototype.__proto__ || Object.getPrototypeOf(API.prototype), '_request', this).call(this, method, url, data, headers);
+    }
+  }, {
+    key: 'apiKey',
+    get: function get() {
+      return this._apiKey;
+    },
+    set: function set(value) {
+      this._apiKey = value;
+    }
+  }, {
+    key: 'production',
+    set: function set(value) {
+      assert(Exchange.Helpers.isBoolean(value), 'Boolean expected');
+      this._production = value;
+    }
+  }, {
+    key: 'partnerId',
+    get: function get() {
+      return this._partnerId;
+    },
+    set: function set(value) {
+      this._partnerId = value;
+    }
+  }, {
+    key: 'accountToken',
+    get: function get() {
+      return this._accountToken;
+    }
+  }, {
+    key: 'hasAccount',
+    get: function get() {
+      return Boolean(this.accountToken);
+    }
+  }]);
+
+  return API;
+}(Exchange.API);
+
+module.exports = API;
+
+},{"assert":16,"bitcoin-exchange-client":26}],279:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var ExchangePaymentAccount = require('bitcoin-exchange-client').PaymentAccount;
+var Trade = require('./trade');
+var assert = require('assert');
+
+var PaymentAccount = function (_ExchangePaymentAccou) {
+  _inherits(PaymentAccount, _ExchangePaymentAccou);
+
+  function PaymentAccount(obj, api, quote) {
+    _classCallCheck(this, PaymentAccount);
+
+    var _this = _possibleConstructorReturn(this, (PaymentAccount.__proto__ || Object.getPrototypeOf(PaymentAccount)).call(this, api, 'ach', quote, Trade));
+
+    _this._TradeClass = Trade;
+
+    _this._id = obj.payment_method_id;
+    _this._status = obj.status;
+    _this._routingNumber = obj.routing_number;
+    _this._accountNumber = obj.account_number;
+    _this._name = obj.nickname;
+    _this._accountType = obj.account_type;
+    return _this;
+  }
+
+  _createClass(PaymentAccount, [{
+    key: 'buy',
+    value: function buy() {
+      if (this.status !== 'active') {
+        return Promise.reject('ACH_ACCOUNT_INACTIVE');
+      }
+      return _get(PaymentAccount.prototype.__proto__ || Object.getPrototypeOf(PaymentAccount.prototype), 'buy', this).call(this);
+    }
+  }, {
+    key: 'verify',
+    value: function verify(amount1, amount2) {
+      var _this2 = this;
+
+      assert(amount1 && amount2, 'Split amounts required');
+      return this._api.authPOST('payment-methods/verify', {
+        payment_method_id: this._id,
+        amount1: amount1,
+        amount2: amount2
+      }).then(function (res) {
+        _this2._status = res.status;
+        return _this2;
+      });
+    }
+  }, {
+    key: 'accountWithQuote',
+    value: function accountWithQuote(quote) {
+      // Reconstruct the object as the API would
+      var obj = {
+        payment_method_id: this._id,
+        status: this._status,
+        routing_number: this._routingNumber,
+        account_number: this._accountNumber,
+        nickname: this._name,
+        account_type: this._accountType
+      };
+      var account = new PaymentAccount(obj, this._api, quote);
+      return account;
+    }
+  }, {
+    key: 'status',
+    get: function get() {
+      return this._status;
+    }
+  }, {
+    key: 'routingNumber',
+    get: function get() {
+      return this._routingNumber;
+    }
+  }, {
+    key: 'accountNumber',
+    get: function get() {
+      return this._accountNumber;
+    }
+  }, {
+    key: 'accountType',
+    get: function get() {
+      return this._accountType;
+    }
+  }], [{
+    key: 'getAll',
+    value: function getAll(inMedium, outMedium, api, quote) {
+      return api.authGET('payment-methods').then(function (accounts) {
+        var accountsObj = [];
+        var _iteratorNormalCompletion = true;
+        var _didIteratorError = false;
+        var _iteratorError = undefined;
+
+        try {
+          for (var _iterator = accounts[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+            var account = _step.value;
+
+            accountsObj.push(new PaymentAccount(account, api, quote));
+          }
+        } catch (err) {
+          _didIteratorError = true;
+          _iteratorError = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion && _iterator.return) {
+              _iterator.return();
+            }
+          } finally {
+            if (_didIteratorError) {
+              throw _iteratorError;
+            }
+          }
+        }
+
+        return accountsObj;
+      });
+    }
+  }, {
+    key: 'add',
+    value: function add(api, routingNumber, accountNumber, name, type) {
+      assert(routingNumber && accountNumber, 'Routing and account number required');
+      assert(name, 'Account holder name required');
+
+      return api.authPOST('payment-methods', {
+        type: 'ach',
+        ach: {
+          currency: 'usd',
+          routing_number: routingNumber,
+          account_number: accountNumber,
+          name1: name,
+          type: type || 'checking'
+        }
+      }).then(function (res) {
+        return new PaymentAccount(res, api);
+      });
+    }
+  }]);
+
+  return PaymentAccount;
+}(ExchangePaymentAccount);
+
+module.exports = PaymentAccount;
+
+},{"./trade":284,"assert":16,"bitcoin-exchange-client":26}],280:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var ExchangePaymentMedium = require('bitcoin-exchange-client').PaymentMedium;
+var PaymentAccount = require('./payment-account');
+var assert = require('assert');
+
+var PaymentMedium = function (_ExchangePaymentMediu) {
+  _inherits(PaymentMedium, _ExchangePaymentMediu);
+
+  function PaymentMedium(obj, api, quote) {
+    _classCallCheck(this, PaymentMedium);
+
+    var _this = _possibleConstructorReturn(this, (PaymentMedium.__proto__ || Object.getPrototypeOf(PaymentMedium)).call(this, api, quote));
+
+    _this._inMedium = 'ach';
+    _this._outMedium = 'blockchain';
+
+    _this._inCurrencies = ['USD', 'BTC'];
+    _this._outCurrencies = ['BTC', 'USD'];
+
+    _this._inCurrency = 'USD';
+    _this._outCurrency = 'BTC';
+
+    _this._inFixedFee = 0;
+    _this._outFixedFee = 0;
+    _this._inPercentageFee = 0;
+    _this._outPercentageFee = 0;
+
+    if (quote) {
+      _this._fee = 0;
+      _this._total = -quote.baseAmount;
+    }
+    return _this;
+  }
+
+  _createClass(PaymentMedium, [{
+    key: 'addAccount',
+    value: function addAccount(routingNumber, accountNumber, name, nickname, type) {
+      var _this2 = this;
+
+      assert(this._inMedium === 'ach', 'Not ACH');
+
+      return PaymentAccount.add(this._api, routingNumber, accountNumber, name, nickname, type).then(function (account) {
+        _this2._accounts.push(account);
+        return account;
+      });
+    }
+  }, {
+    key: 'getAccounts',
+    value: function getAccounts() {
+      var _this3 = this;
+
+      return PaymentAccount.getAll(undefined, undefined, this._api).then(function (accounts) {
+        _this3._accounts = accounts;
+        return accounts;
+      });
+    }
+
+    // Buy from a specific account, avoids the need for .getAccounts()
+
+  }, {
+    key: 'buy',
+    value: function buy(account) {
+      assert(account, 'Specify account');
+      var acc = account.accountWithQuote(this._quote);
+      return acc.buy();
+    }
+  }], [{
+    key: 'getAll',
+    value: function getAll(inCurrency, outCurrency, api, quote) {
+      // Return ACH account as a type
+      return Promise.resolve({ ach: new PaymentMedium(undefined, api, quote) });
+    }
+  }]);
+
+  return PaymentMedium;
+}(ExchangePaymentMedium);
+
+module.exports = PaymentMedium;
+
+},{"./payment-account":279,"assert":16,"bitcoin-exchange-client":26}],281:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var assert = require('assert');
+
+var Profile = function () {
+  function Profile(obj, api) {
+    _classCallCheck(this, Profile);
+
+    this._api = api;
+    this._verification_status = obj.account.verification_status;
+    this._limits = obj.account.limits.available;
+  }
+
+  _createClass(Profile, [{
+    key: 'setAddress',
+    value: function setAddress(street1, street2, city, state, zipcode, country) {
+      assert(street1 && city && state && zipcode, 'Street, city, state, and zipcode required');
+      this._street1 = street1;
+      this._street2 = street2;
+      this._city = city;
+      this._state = state;
+      this._zipcode = zipcode;
+      this._country = country || 'US';
+    }
+  }, {
+    key: 'setDriversLicense',
+    value: function setDriversLicense(number, state, country) {
+      this._identityType = 'driver_license';
+      this._identityNumber = number;
+      this._identityState = state || this._state;
+      this._identityCountry = country || this._country;
+    }
+  }, {
+    key: 'setPassport',
+    value: function setPassport(number, state, country) {
+      this._identityType = 'passport';
+      this._identityNumber = number;
+      this._identityState = state || this._state;
+      this._identityCountry = country || this._country;
+    }
+  }, {
+    key: 'setSSN',
+    value: function setSSN(number, state, country) {
+      this._identityType = 'ssn';
+      this._identityNumber = number;
+      this._identityState = state || this._state;
+      this._identityCountry = country || this._country;
+    }
+  }, {
+    key: 'verify',
+    value: function verify() {
+      var _this = this;
+
+      assert(this._firstName && this._lastName, 'First and last name required');
+      assert(this.address, 'Address required');
+      assert(this._dateOfBirth, 'Date of birth required');
+      assert(this._identityType, 'Driver license, passport or SSN required');
+
+      return this.api.authPOST('account/verify', {
+        firstname: this.firstName,
+        middlename: this.middleName || '',
+        lastname: this.lastName,
+        street1: this.address.street.line1,
+        street2: this.address.street.line2 || '',
+        city: this.address.city,
+        state: this.address.state,
+        zipcode: this.address.zipcode,
+        country: this.address.country,
+        birth_day: this.dateOfBirth.getDate(),
+        birth_month: this.dateOfBirth.getMonth(),
+        birth_year: this.dateOfBirth.getFullYear(),
+        identity: this.identity
+      }).then(function (res) {
+        _this._can_buy = res.account.can_buy;
+        _this._can_sell = res.account.can_sell;
+        _this._limits = res.account.limits.available;
+        _this._verification_status = res.account.verification_status;
+      });
+    }
+  }, {
+    key: 'getSignedURL',
+    value: function getSignedURL(type, filename) {
+      return this.api.authPOST('account/uploads/sign', {
+        type: type,
+        filename: filename
+      });
+    }
+  }, {
+    key: 'api',
+    get: function get() {
+      return this._api;
+    }
+  }, {
+    key: 'firstName',
+    get: function get() {
+      return this._firstName;
+    },
+    set: function set(val) {
+      this._firstName = val;
+    }
+  }, {
+    key: 'middleName',
+    get: function get() {
+      return this._fullName;
+    },
+    set: function set(val) {
+      this._middleName = val;
+    }
+  }, {
+    key: 'lastName',
+    get: function get() {
+      return this._lastName;
+    },
+    set: function set(val) {
+      this._lastName = val;
+    }
+  }, {
+    key: 'address',
+    get: function get() {
+      return {
+        street: {
+          line1: this._street1,
+          line2: this._street2
+        },
+        city: this._city,
+        state: this._state,
+        zipcode: this._zipcode,
+        country: this._country
+      };
+    }
+  }, {
+    key: 'dateOfBirth',
+    get: function get() {
+      return this._dateOfBirth;
+    },
+    set: function set(val) {
+      assert(val instanceof Date, 'Date Object expected');
+      this._dateOfBirth = val;
+    }
+  }, {
+    key: 'identity',
+    get: function get() {
+      return {
+        type: this._identityType,
+        number: this._identityNumber,
+        state: this._identityState,
+        country: this._identityCountry
+      };
+    }
+  }, {
+    key: 'verificationStatus',
+    get: function get() {
+      return this._verification_status;
+    }
+  }, {
+    key: 'canBuy',
+    get: function get() {
+      return this._can_buy;
+    }
+  }, {
+    key: 'canSell',
+    get: function get() {
+      return this._can_sell;
+    }
+  }, {
+    key: 'limits',
+    get: function get() {
+      return this._limits;
+    }
+  }], [{
+    key: 'fetch',
+    value: function fetch(api) {
+      return api.authGET('account').then(function (res) {
+        var profile = new Profile(res, api);
+        return profile;
+      });
+    }
+  }]);
+
+  return Profile;
+}();
+
+module.exports = Profile;
+
+},{"assert":16}],282:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Exchange = require('bitcoin-exchange-client');
+var PaymentMethod = require('./payment-medium');
+var Trade = require('./trade');
+
+var _Exchange$Helpers = Exchange.Helpers,
+    toCents = _Exchange$Helpers.toCents,
+    toSatoshi = _Exchange$Helpers.toSatoshi;
+
+var isBTC = function isBTC(c) {
+  return c === 'BTC';
+};
+var flipCurrency = function flipCurrency(c) {
+  return isBTC(c) ? 'USD' : 'BTC';
+};
+
+var Quote = function (_Exchange$Quote) {
+  _inherits(Quote, _Exchange$Quote);
+
+  function Quote(obj, baseCurrency, api, delegate, debug) {
+    _classCallCheck(this, Quote);
+
+    var _this = _possibleConstructorReturn(this, (Quote.__proto__ || Object.getPrototypeOf(Quote)).call(this, api, delegate, Trade, PaymentMethod, debug));
+
+    var expiresAt = new Date(obj.expires_on);
+    var btcAmount = toSatoshi(obj.base_amount);
+    var usdAmount = toCents(obj.quote_amount);
+
+    _this._id = obj.quote_id;
+    _this._expiresAt = expiresAt;
+    _this._rate = (obj.quote_amount / obj.base_amount).toFixed(2);
+
+    _this._baseCurrency = baseCurrency.toUpperCase();
+    _this._baseAmount = isBTC(_this._baseCurrency) ? btcAmount : usdAmount;
+
+    _this._quoteCurrency = flipCurrency(_this._baseCurrency);
+    _this._quoteAmount = isBTC(_this._quoteCurrency) ? btcAmount : usdAmount;
+
+    _this._feeAmount = toCents(obj.fee_amount);
+    _this._feeCurrency = obj.fee_currency.toUpperCase();
+    return _this;
+  }
+
+  _createClass(Quote, [{
+    key: 'rate',
+    get: function get() {
+      return this._rate;
+    }
+  }], [{
+    key: 'getQuote',
+    value: function getQuote(api, delegate, amount, baseCurrency, quoteCurrency, debug) {
+      var processQuote = function processQuote(quote) {
+        var q = new Quote(quote, baseCurrency, api, delegate);
+        q.debug = debug;
+        return q;
+      };
+
+      var getQuote = function getQuote(_baseAmount) {
+        return api.POST('quote/', {
+          action: 'buy',
+          base_currency: 'btc',
+          quote_currency: 'usd',
+          amount: _baseAmount,
+          amount_currency: baseCurrency.toLowerCase()
+        }, 'v1', 'quotes');
+      };
+
+      return _get(Quote.__proto__ || Object.getPrototypeOf(Quote), 'getQuote', this).call(this, -amount, baseCurrency, quoteCurrency, ['BTC', 'EUR', 'GBP', 'USD', 'DKK'], debug).then(getQuote).then(processQuote);
+    }
+  }]);
+
+  return Quote;
+}(Exchange.Quote);
+
+module.exports = Quote;
+
+},{"./payment-medium":280,"./trade":284,"bitcoin-exchange-client":26}],283:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+/* To use this class, two things are needed:
+1 - a delegate object with functions that provide the following:
+      save() -> e.g. function () { return JSON.stringify(this._sfox); }
+      email() -> String            : the users email address
+      mobile() -> String           : the users mobile number
+      isEmailVerified() -> Boolean : whether the users email is verified
+      isMobileVerified() -> Boolean : whether the users mobile is verified
+      getToken() -> stringify : JSON web token {
+                                                  email: 'me@example.com',
+                                                  phone_number: '+155512345678'}
+      monitorAddress(address, callback) : callback(amount) if btc received
+      checkAddress(address) : look for existing transaction at address
+      getReceiveAddress(trade) : return the trades receive address
+      reserveReceiveAddress()
+      commitReceiveAddress()
+      releaseReceiveAddress()
+      serializeExtraFields(obj, trade) : e.g. obj.account_index = ...
+      deserializeExtraFields(obj, trade)
+
+2 - a SFOX partner identifier
+
+var object = {user: 1, account_token: 'token'};
+var sfox = new SFOX(object, delegate);
+sfox.api.apiKey = ...;
+sfox.delegate.save.bind(sfox.delegate)()
+// "{"user":1,"account_token":"token"}"
+*/
+
+var Exchange = require('bitcoin-exchange-client');
+
+var API = require('./api');
+var Profile = require('./profile');
+var Trade = require('./trade');
+var Quote = require('./quote');
+var PaymentMedium = require('./payment-medium');
+
+var assert = require('assert');
+
+var SFOX = function (_Exchange$Exchange) {
+  _inherits(SFOX, _Exchange$Exchange);
+
+  function SFOX(object, delegate) {
+    _classCallCheck(this, SFOX);
+
+    var _this = _possibleConstructorReturn(this, (SFOX.__proto__ || Object.getPrototypeOf(SFOX)).call(this, delegate, Trade, Quote, PaymentMedium));
+
+    var obj = object || {};
+    _this._partner_id = null;
+    _this._user = obj.user;
+    _this._auto_login = obj.auto_login;
+    _this._accountToken = obj.account_token;
+    _this._api = new API();
+    _this._api._accountToken = _this._accountToken;
+
+    _this._trades = [];
+    if (obj.trades) {
+      for (var i = 0; i < obj.trades.length; i++) {
+        var trade = new Trade(obj.trades[i], _this._api, delegate, _this);
+        trade.debug = _this._debug;
+        _this._trades.push(trade);
+      }
+    }
+    return _this;
+  }
+
+  _createClass(SFOX, [{
+    key: 'signup',
+
+
+    // Email must be set and verified
+    // Mobile must be set and verified
+    value: function signup() {
+      var self = this;
+      var runChecks = function runChecks() {
+        assert(!self.user, 'Already signed up');
+
+        assert(self.delegate, 'ExchangeDelegate required');
+
+        assert(self.delegate.email(), 'email required');
+        assert(self.delegate.mobile(), 'mobile required');
+        assert(self.delegate.isEmailVerified(), 'email must be verified');
+        assert(self.delegate.isMobileVerified(), 'mobile must be verified');
+      };
+
+      var doSignup = function doSignup(token) {
+        assert(token, 'email + mobile token missing');
+        return this._api.POST('account', {
+          username: self.delegate.email(),
+          user_data: token
+        });
+      };
+
+      var saveMetadata = function saveMetadata(res) {
+        this._user = res.account.id;
+        this._accountToken = res.token;
+        this._api._accountToken = this._accountToken;
+        return this._delegate.save.bind(this._delegate)().then(function () {
+          return res;
+        });
+      };
+
+      return Promise.resolve().then(runChecks.bind(this)).then(this.delegate.getToken.bind(this.delegate)).then(doSignup.bind(this)).then(saveMetadata.bind(this));
+    }
+  }, {
+    key: 'fetchProfile',
+    value: function fetchProfile() {
+      var setProfile = function setProfile(profile) {
+        this._profile = profile;
+        return profile;
+      };
+      return Profile.fetch(this._api).then(setProfile.bind(this));
+    }
+  }, {
+    key: 'toJSON',
+    value: function toJSON() {
+      var sfox = {
+        user: this._user,
+        account_token: this._accountToken,
+        auto_login: this._auto_login,
+        trades: this._TradeClass.filteredTrades(this._trades)
+      };
+
+      return sfox;
+    }
+  }, {
+    key: 'profile',
+    get: function get() {
+      return this._profile || null;
+    }
+  }, {
+    key: 'hasAccount',
+    get: function get() {
+      return Boolean(this._accountToken);
+    }
+  }, {
+    key: 'buyCurrencies',
+    get: function get() {
+      return ['USD'];
+    }
+  }, {
+    key: 'sellCurrencies',
+    get: function get() {
+      return ['USD'];
+    }
+  }], [{
+    key: 'new',
+    value: function _new(delegate) {
+      assert(delegate, 'SFOX.new requires delegate');
+      var object = {
+        auto_login: true
+      };
+      var sfox = new SFOX(object, delegate);
+      return sfox;
+    }
+  }]);
+
+  return SFOX;
+}(Exchange.Exchange);
+
+module.exports = SFOX;
+
+},{"./api":278,"./payment-medium":280,"./profile":281,"./quote":282,"./trade":284,"assert":16,"bitcoin-exchange-client":26}],284:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var assert = require('assert');
+
+var Exchange = require('bitcoin-exchange-client');
+
+var Trade = function (_Exchange$Trade) {
+  _inherits(Trade, _Exchange$Trade);
+
+  function Trade(obj, api, delegate) {
+    _classCallCheck(this, Trade);
+
+    var _this = _possibleConstructorReturn(this, (Trade.__proto__ || Object.getPrototypeOf(Trade)).call(this, api, delegate));
+
+    assert(obj, 'JSON missing');
+    _this._id = obj.id.toLowerCase();
+    _this.set(obj);
+    return _this;
+  }
+
+  _createClass(Trade, [{
+    key: 'setFromAPI',
+    value: function setFromAPI(obj) {
+      if (['pending', 'failed', 'rejected', 'completed', 'ready'].indexOf(obj.status) === -1) {
+        console.warn('Unknown status:', obj.status);
+      }
+
+      this._sfox_status = obj.status;
+
+      switch (obj.status) {
+        case 'pending':
+        case 'ready':
+          this._state = 'processing';
+          break;
+        default:
+          this._state = obj.status;
+      }
+
+      this._is_buy = obj.action === 'buy';
+
+      this._inCurrency = obj.quote_currency.toUpperCase();
+      this._outCurrency = obj.base_currency.toUpperCase();
+
+      this._sendAmount = this._inCurrency === 'BTC' ? Exchange.Helpers.toSatoshi(obj.quote_amount) : Exchange.Helpers.toCents(obj.quote_amount);
+
+      if (this._inCurrency === 'BTC') {
+        this._inAmount = Exchange.Helpers.toSatoshi(obj.quote_amount);
+        this._outAmount = Exchange.Helpers.toCents(obj.base_amount);
+        this._outAmountExpected = Exchange.Helpers.toCents(obj.base_amount);
+      } else {
+        this._inAmount = Exchange.Helpers.toCents(obj.quote_amount);
+        this._outAmount = Exchange.Helpers.toSatoshi(obj.base_amount);
+        this._outAmountExpected = Exchange.Helpers.toSatoshi(obj.base_amount);
+      }
+
+      /* istanbul ignore if */
+      if (this.debug) {
+        console.info('Trade ' + this.id + ' from API');
+      }
+      this._createdAt = new Date(obj.created_at);
+
+      if (this._outCurrency === 'BTC') {
+        this._txHash = obj.blockchain_tx_hash;
+        this._receiveAddress = obj.address;
+      }
+    }
+  }, {
+    key: 'setFromJSON',
+    value: function setFromJSON(obj) {
+      /* istanbul ignore if */
+      if (this.debug) {
+        console.info('Trade ' + this.id + ' from JSON');
+      }
+      this._state = obj.state;
+      this._is_buy = obj.is_buy;
+      this._delegate.deserializeExtraFields(obj, this);
+      this._receiveAddress = this._delegate.getReceiveAddress(this);
+      this._confirmed = obj.confirmed;
+      this._txHash = obj.tx_hash;
+    }
+  }, {
+    key: 'set',
+    value: function set(obj) {
+      if (Array.isArray(obj)) {
+        obj = obj[0];
+      }
+      if (obj.status) {
+        this.setFromAPI(obj);
+      } else {
+        this.setFromJSON(obj);
+      }
+      this._medium = 'ach';
+
+      return this;
+    }
+  }, {
+    key: 'refresh',
+    value: function refresh() {
+      /* istanbul ignore if */
+      if (this.debug) {
+        console.info('Refresh ' + this.state + ' trade ' + this.id);
+      }
+      return this._api.authGET('transaction/' + this._id).then(this.set.bind(this)).then(this._delegate.save.bind(this._delegate));
+    }
+
+    // QA tool:
+
+  }, {
+    key: 'fakeAchSuccess',
+    value: function fakeAchSuccess() {
+      var options = { id: this.id };
+      return this._api.authPOST('testing/approvedeposit', options).then(this.set.bind(this)).then(this._delegate.save.bind(this._delegate));
+    }
+
+    // QA tool:
+
+  }, {
+    key: 'fakeAchFail',
+    value: function fakeAchFail() {
+      var options = { id: this.id, status: 'rejected' };
+      return this._api.authPOST('testing/changestatus', options).then(this.set.bind(this)).then(this._delegate.save.bind(this._delegate));
+    }
+  }, {
+    key: 'toJSON',
+    value: function toJSON() {
+      var serialized = {
+        id: this._id,
+        state: this._state,
+        tx_hash: this._txHash,
+        confirmed: this.confirmed,
+        is_buy: this.isBuy
+      };
+
+      this._delegate.serializeExtraFields(serialized, this);
+
+      return serialized;
+    }
+  }, {
+    key: 'isBuy',
+    get: function get() {
+      return this._is_buy;
+    }
+  }], [{
+    key: 'fetchAll',
+    value: function fetchAll(api) {
+      return api.authGET('transaction');
+    }
+  }, {
+    key: 'filteredTrades',
+    value: function filteredTrades(trades) {
+      return trades.filter(function (trade) {
+        // Only consider transactions that are complete or that we're still
+        // expecting payment for:
+        return ['awaiting_transfer_in', 'completed', 'completed_test'].indexOf(trade.state) > -1;
+      });
+    }
+  }, {
+    key: 'buy',
+    value: function buy(quote, medium, paymentMethodId) {
+      var request = function request(receiveAddress) {
+        return quote.api.authPOST('transaction', {
+          quote_id: quote.id,
+          destination: {
+            type: 'address',
+            address: receiveAddress
+          },
+          payment_method_id: paymentMethodId
+        });
+      };
+      return _get(Trade.__proto__ || Object.getPrototypeOf(Trade), 'buy', this).call(this, quote, medium, request);
+    }
+  }]);
+
+  return Trade;
+}(Exchange.Trade);
+
+module.exports = Trade;
+
+},{"assert":16,"bitcoin-exchange-client":26}],285:[function(require,module,exports){
+'use strict';
+
 /* eslint-disable camelcase */
 var resource = 'Resources/';
 
@@ -48474,39 +50200,37 @@ module.exports = {
 
 // used iOS
 var _sounds = {};
-function playSound (id) {
+function playSound(id) {
   try {
     if (!_sounds[id]) {
       _sounds[id] = new Audio('/' + resource + id + '.wav');
     }
 
     _sounds[id].play();
-  } catch (e) { }
+  } catch (e) {}
 }
 
 // Ignore Console
 try {
   if (!window.console) {
-    var names = ['log', 'debug', 'info', 'warn', 'error', 'assert', 'dir', 'dirxml',
-                 'group', 'groupEnd', 'time', 'timeEnd', 'count', 'trace', 'profile', 'profileEnd'];
+    var names = ['log', 'debug', 'info', 'warn', 'error', 'assert', 'dir', 'dirxml', 'group', 'groupEnd', 'time', 'timeEnd', 'count', 'trace', 'profile', 'profileEnd'];
 
     window.console = {};
     for (var i = 0; i < names.length; ++i) {
       window.console[names[i]] = function () {};
     }
   }
-} catch (e) {
-}
+} catch (e) {}
 /* eslint-enable camelcase */
 
-},{}],271:[function(require,module,exports){
+},{}],286:[function(require,module,exports){
 'use strict';
 
 var EventEmitter = require('events');
 var Helpers = require('./helpers');
 var Tx = require('./wallet-transaction');
 
-var TransactionList = function (loadNumber) {
+var TransactionList = function TransactionList(loadNumber) {
   var DEFAULT_TX_LOAD = 50;
   this._loadNumber = loadNumber || DEFAULT_TX_LOAD;
   this._transactions = [];
@@ -48516,21 +50240,21 @@ var TransactionList = function (loadNumber) {
 Object.defineProperties(TransactionList.prototype, {
   'transactions': {
     configurable: false,
-    value: function (identity) {
-      return identity == null || identity === ''
-          ? this._transactions
-          : this._transactions.filter(function (tx) { return tx.belongsTo(identity); });
+    value: function value(identity) {
+      return identity == null || identity === '' ? this._transactions : this._transactions.filter(function (tx) {
+        return tx.belongsTo(identity);
+      });
     }
   },
   'transactionsForIOS': {
     configurable: false,
-    value: function (identity) {
+    value: function value(identity) {
       return this.transactions(identity).map(Tx.IOSfactory);
     }
   },
   'transaction': {
     configurable: false,
-    value: function (hash) {
+    value: function value(hash) {
       return this._transactions.filter(function (tx) {
         return tx.hash === hash;
       })[0];
@@ -48538,11 +50262,15 @@ Object.defineProperties(TransactionList.prototype, {
   },
   'loadNumber': {
     configurable: false,
-    get: function () { return this._loadNumber; }
+    get: function get() {
+      return this._loadNumber;
+    }
   },
   'fetched': {
     configurable: false,
-    get: function () { return this._transactions.length; }
+    get: function get() {
+      return this._transactions.length;
+    }
   }
 });
 
@@ -48566,7 +50294,7 @@ TransactionList.prototype.subscribe = function (listener) {
 
 module.exports = TransactionList;
 
-},{"./helpers":263,"./wallet-transaction":278,"events":170}],272:[function(require,module,exports){
+},{"./helpers":271,"./wallet-transaction":293,"events":178}],287:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -48579,7 +50307,7 @@ var constants = require('./constants');
 // {error: "NOT_GOOD", some_param: 1}
 // Error messages that should only appear during development can be any string.
 
-var Transaction = function (payment, emitter) {
+var Transaction = function Transaction(payment, emitter) {
   var unspentOutputs = payment.selectedCoins;
   var toAddresses = payment.to;
   var amounts = payment.amounts;
@@ -48587,8 +50315,12 @@ var Transaction = function (payment, emitter) {
   var changeAddress = payment.change;
   var BITCOIN_DUST = constants.getNetwork().dustThreshold;
 
-  if (!Array.isArray(toAddresses) && toAddresses != null) { toAddresses = [toAddresses]; }
-  if (!Array.isArray(amounts) && amounts != null) { amounts = [amounts]; }
+  if (!Array.isArray(toAddresses) && toAddresses != null) {
+    toAddresses = [toAddresses];
+  }
+  if (!Array.isArray(amounts) && amounts != null) {
+    amounts = [amounts];
+  }
 
   assert(toAddresses && toAddresses.length, 'Missing destination address');
   assert(amounts && amounts.length, 'Missing amount to pay');
@@ -48601,11 +50333,13 @@ var Transaction = function (payment, emitter) {
   this.pathsOfNeededPrivateKeys = [];
 
   assert(toAddresses.length === amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
-  assert(this.amount >= BITCOIN_DUST, {error: 'BELOW_DUST_THRESHOLD', amount: this.amount, threshold: BITCOIN_DUST});
-  assert(unspentOutputs && unspentOutputs.length > 0, {error: 'NO_UNSPENT_OUTPUTS'});
+  assert(this.amount >= BITCOIN_DUST, { error: 'BELOW_DUST_THRESHOLD', amount: this.amount, threshold: BITCOIN_DUST });
+  assert(unspentOutputs && unspentOutputs.length > 0, { error: 'NO_UNSPENT_OUTPUTS' });
   var transaction = new Bitcoin.TransactionBuilder(constants.getNetwork());
   // add all outputs
-  function addOutput (e, i) { transaction.addOutput(toAddresses[i], amounts[i]); }
+  function addOutput(e, i) {
+    transaction.addOutput(toAddresses[i], amounts[i]);
+  }
   toAddresses.map(addOutput);
 
   // add all inputs
@@ -48618,9 +50352,9 @@ var Transaction = function (payment, emitter) {
 
     // Generate address from output script and add to private list so we can check if the private keys match the inputs later
     var scriptBuffer = Buffer(output.script, 'hex');
-    assert.notEqual(Bitcoin.script.classifyOutput(scriptBuffer), 'nonstandard', {error: 'STRANGE_SCRIPT'});
+    assert.notEqual(Bitcoin.script.classifyOutput(scriptBuffer), 'nonstandard', { error: 'STRANGE_SCRIPT' });
     var address = Bitcoin.address.fromOutputScript(scriptBuffer, constants.getNetwork()).toString();
-    assert(address, {error: 'CANNOT_DECODE_OUTPUT_ADDRESS', tx_hash: output.tx_hash});
+    assert(address, { error: 'CANNOT_DECODE_OUTPUT_ADDRESS', tx_hash: output.tx_hash });
     this.addressesOfInputs.push(address);
 
     // Add to list of needed private keys
@@ -48655,7 +50389,7 @@ Transaction.prototype.addPrivateKeys = function (privateKeys) {
  */
 
 Transaction.prototype.sortBIP69 = function () {
-  var compareInputs = function (a, b) {
+  var compareInputs = function compareInputs(a, b) {
     var hasha = new Buffer(a[0].hash);
     var hashb = new Buffer(b[0].hash);
     var x = [].reverse.call(hasha);
@@ -48663,14 +50397,20 @@ Transaction.prototype.sortBIP69 = function () {
     return x.compare(y) || a[0].index - b[0].index;
   };
 
-  var compareOutputs = function (a, b) {
-    return (a.value - b.value) || (a.script).compare(b.script);
+  var compareOutputs = function compareOutputs(a, b) {
+    return a.value - b.value || a.script.compare(b.script);
   };
   var mix = Helpers.zip3(this.transaction.tx.ins, this.privateKeys, this.addressesOfInputs);
   mix.sort(compareInputs);
-  this.transaction.tx.ins = mix.map(function (a) { return a[0]; });
-  this.privateKeys = mix.map(function (a) { return a[1]; });
-  this.addressesOfInputs = mix.map(function (a) { return a[2]; });
+  this.transaction.tx.ins = mix.map(function (a) {
+    return a[0];
+  });
+  this.privateKeys = mix.map(function (a) {
+    return a[1];
+  });
+  this.addressesOfInputs = mix.map(function (a) {
+    return a[2];
+  });
   this.transaction.tx.outs.sort(compareOutputs);
 };
 /**
@@ -48705,8 +50445,10 @@ Transaction.inputCost = function (feePerKb) {
   return Math.ceil(feePerKb * 0.148);
 };
 Transaction.guessSize = function (nInputs, nOutputs) {
-  if (nInputs < 1 || nOutputs < 1) { return 0; }
-  return (nInputs * 148 + nOutputs * 34 + 10);
+  if (nInputs < 1 || nOutputs < 1) {
+    return 0;
+  }
+  return nInputs * 148 + nOutputs * 34 + 10;
 };
 
 Transaction.guessFee = function (nInputs, nOutputs, feePerKb) {
@@ -48717,23 +50459,31 @@ Transaction.guessFee = function (nInputs, nOutputs, feePerKb) {
 Transaction.filterUsableCoins = function (coins, feePerKb) {
   if (!Array.isArray(coins)) return [];
   var icost = Transaction.inputCost(feePerKb);
-  return coins.filter(function (c) { return c.value >= icost; });
+  return coins.filter(function (c) {
+    return c.value >= icost;
+  });
 };
 
 Transaction.maxAvailableAmount = function (usableCoins, feePerKb) {
   var len = usableCoins.length;
   var fee = Transaction.guessFee(len, 2, feePerKb);
-  return {'amount': usableCoins.reduce(function (a, e) { a = a + e.value; return a; }, 0) - fee, 'fee': fee};
+  return { 'amount': usableCoins.reduce(function (a, e) {
+      a = a + e.value;return a;
+    }, 0) - fee, 'fee': fee };
 };
 
 Transaction.sumOfCoins = function (coins) {
-  return coins.reduce(function (a, e) { a = a + e.value; return a; }, 0);
+  return coins.reduce(function (a, e) {
+    a = a + e.value;return a;
+  }, 0);
 };
 
 Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
   var amount = amounts.reduce(Helpers.add, 0);
   var nouts = amounts.length;
-  var sorted = usableCoins.sort(function (a, b) { return b.value - a.value; });
+  var sorted = usableCoins.sort(function (a, b) {
+    return b.value - a.value;
+  });
   var len = sorted.length;
   var sel = [];
   var accAm = 0;
@@ -48744,7 +50494,9 @@ Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
       var coin = sorted[i];
       accAm = accAm + coin.value;
       sel.push(coin);
-      if (accAm >= fee + amount) { return {'coins': sel, 'fee': fee}; }
+      if (accAm >= fee + amount) {
+        return { 'coins': sel, 'fee': fee };
+      }
     }
   } else {
     for (var ii = 0; ii < len; ii++) {
@@ -48752,10 +50504,12 @@ Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
       accAm = accAm + coin2.value;
       accFee = Transaction.guessFee(ii + 1, nouts + 1, fee);
       sel.push(coin2);
-      if (accAm >= accFee + amount) { return {'coins': sel, 'fee': accFee}; }
+      if (accAm >= accFee + amount) {
+        return { 'coins': sel, 'fee': accFee };
+      }
     }
   }
-  return {'coins': [], 'fee': 0};
+  return { 'coins': [], 'fee': 0 };
 };
 
 Transaction.confirmationEstimation = function (absoluteFees, fee) {
@@ -48764,14 +50518,16 @@ Transaction.confirmationEstimation = function (absoluteFees, fee) {
     if (absoluteFees[i] > 0 && fee >= absoluteFees[i]) {
       return i + 1;
     } else {
-      if (absoluteFees[i] > 0 && (i + 1 === len)) { return Infinity; }
+      if (absoluteFees[i] > 0 && i + 1 === len) {
+        return Infinity;
+      }
     }
   }
   return null;
 };
 module.exports = Transaction;
 
-},{"./constants":258,"./helpers":263,"assert":16,"bitcoinjs-lib":34,"buffer":76}],273:[function(require,module,exports){
+},{"./constants":266,"./helpers":271,"assert":16,"bitcoinjs-lib":42,"buffer":84}],288:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -48794,11 +50550,11 @@ var NoPadding = {
   *   Literally does nothing...
   */
 
-  pad: function (dataBytes) {
+  pad: function pad(dataBytes) {
     return dataBytes;
   },
 
-  unpad: function (dataBytes) {
+  unpad: function unpad(dataBytes) {
     return dataBytes;
   }
 };
@@ -48809,13 +50565,13 @@ var ZeroPadding = {
   *   May cause issues if data ends with any 0x00 bytes
   */
 
-  pad: function (dataBytes, nBytesPerBlock) {
+  pad: function pad(dataBytes, nBytesPerBlock) {
     var nPaddingBytes = nBytesPerBlock - dataBytes.length % nBytesPerBlock;
     var zeroBytes = new Buffer(nPaddingBytes).fill(0x00);
-    return Buffer.concat([ dataBytes, zeroBytes ]);
+    return Buffer.concat([dataBytes, zeroBytes]);
   },
 
-  unpad: function (dataBytes) {
+  unpad: function unpad(dataBytes) {
     var unpaddedHex = dataBytes.toString('hex').replace(/(00)+$/, '');
     return new Buffer(unpaddedHex, 'hex');
   }
@@ -48827,14 +50583,14 @@ var Iso10126 = {
   *   final byte, which denotes the byte length of the padding
   */
 
-  pad: function (dataBytes, nBytesPerBlock) {
+  pad: function pad(dataBytes, nBytesPerBlock) {
     var nPaddingBytes = nBytesPerBlock - dataBytes.length % nBytesPerBlock;
     var paddingBytes = crypto.randomBytes(nPaddingBytes - 1);
-    var endByte = new Buffer([ nPaddingBytes ]);
-    return Buffer.concat([ dataBytes, paddingBytes, endByte ]);
+    var endByte = new Buffer([nPaddingBytes]);
+    return Buffer.concat([dataBytes, paddingBytes, endByte]);
   },
 
-  unpad: function (dataBytes) {
+  unpad: function unpad(dataBytes) {
     var nPaddingBytes = dataBytes[dataBytes.length - 1];
     return dataBytes.slice(0, -nPaddingBytes);
   }
@@ -48846,12 +50602,12 @@ var Iso97971 = {
   *   which serves as a mark for where the padding begins
   */
 
-  pad: function (dataBytes, nBytesPerBlock) {
-    var withStartByte = Buffer.concat([ dataBytes, new Buffer([ 0x80 ]) ]);
+  pad: function pad(dataBytes, nBytesPerBlock) {
+    var withStartByte = Buffer.concat([dataBytes, new Buffer([0x80])]);
     return ZeroPadding.pad(withStartByte, nBytesPerBlock);
   },
 
-  unpad: function (dataBytes) {
+  unpad: function unpad(dataBytes) {
     var zeroBytesRemoved = ZeroPadding.unpad(dataBytes);
     return zeroBytesRemoved.slice(0, zeroBytesRemoved.length - 1);
   }
@@ -48868,7 +50624,7 @@ var AES = {
   *   - default options are mode=CBC and padding=auto (PKCS7)
   */
 
-  encrypt: function (dataBytes, key, salt, options) {
+  encrypt: function encrypt(dataBytes, key, salt, options) {
     options = options || {};
     assert(Buffer.isBuffer(dataBytes), 'expected `dataBytes` to be a Buffer');
     assert(Buffer.isBuffer(key), 'expected `key` to be a Buffer');
@@ -48878,12 +50634,12 @@ var AES = {
     cipher.setAutoPadding(!options.padding);
 
     if (options.padding) dataBytes = options.padding.pad(dataBytes, BLOCK_BIT_LEN / 8);
-    var encryptedBytes = Buffer.concat([ cipher.update(dataBytes), cipher.final() ]);
+    var encryptedBytes = Buffer.concat([cipher.update(dataBytes), cipher.final()]);
 
     return encryptedBytes;
   },
 
-  decrypt: function (dataBytes, key, salt, options) {
+  decrypt: function decrypt(dataBytes, key, salt, options) {
     options = options || {};
     assert(Buffer.isBuffer(dataBytes), 'expected `dataBytes` to be a Buffer');
     assert(Buffer.isBuffer(key), 'expected `key` to be a Buffer');
@@ -48892,14 +50648,14 @@ var AES = {
     var decipher = crypto.createDecipheriv(options.mode || AES.CBC, key, salt || '');
     decipher.setAutoPadding(!options.padding);
 
-    var decryptedBytes = Buffer.concat([ decipher.update(dataBytes), decipher.final() ]);
+    var decryptedBytes = Buffer.concat([decipher.update(dataBytes), decipher.final()]);
     if (options.padding) decryptedBytes = options.padding.unpad(decryptedBytes);
 
     return decryptedBytes;
   }
 };
 
-function encryptWallet (data, password, pbkdf2Iterations, version) {
+function encryptWallet(data, password, pbkdf2Iterations, version) {
   assert(data, 'data missing');
   assert(password, 'password missing');
   assert(pbkdf2Iterations, 'pbkdf2Iterations missing');
@@ -48912,7 +50668,7 @@ function encryptWallet (data, password, pbkdf2Iterations, version) {
   });
 }
 
-function decryptWallet (data, password, success, error) {
+function decryptWallet(data, password, success, error) {
   try {
     success(decryptWalletSync(data, password));
   } catch (e) {
@@ -48920,7 +50676,7 @@ function decryptWallet (data, password, success, error) {
   }
 }
 
-function decryptWalletSync (data, password) {
+function decryptWalletSync(data, password) {
   assert(data, 'function `decryptWallet` requires encrypted wallet data');
   assert(password, 'function `decryptWallet` requires a password');
 
@@ -48955,31 +50711,30 @@ function decryptWalletSync (data, password) {
   }
 }
 
-function decryptWalletV1 (data, password) {
+function decryptWalletV1(data, password) {
   // Possible decryption methods for v1 wallets
   var decryptFns = [
-    // v1: CBC, ISO10126, 10 iterations
-    decryptDataWithPassword.bind(null, data, password, 10),
+  // v1: CBC, ISO10126, 10 iterations
+  decryptDataWithPassword.bind(null, data, password, 10),
 
-    // v1: OFB, nopad, 1 iteration
-    decryptDataWithPassword.bind(null, data, password, 1, {
-      mode: AES.OFB,
-      padding: NoPadding
-    }),
+  // v1: OFB, nopad, 1 iteration
+  decryptDataWithPassword.bind(null, data, password, 1, {
+    mode: AES.OFB,
+    padding: NoPadding
+  }),
 
-    // v1: OFB, ISO7816, 1 iteration
-    // ISO/IEC 9797-1 Padding method 2 is the same as ISO/IEC 7816-4:2005
-    decryptDataWithPassword.bind(null, data, password, 1, {
-      mode: AES.OFB,
-      padding: Iso97971
-    }),
+  // v1: OFB, ISO7816, 1 iteration
+  // ISO/IEC 9797-1 Padding method 2 is the same as ISO/IEC 7816-4:2005
+  decryptDataWithPassword.bind(null, data, password, 1, {
+    mode: AES.OFB,
+    padding: Iso97971
+  }),
 
-    // v1: CBC, ISO10126, 1 iteration
-    decryptDataWithPassword.bind(null, data, password, 1, {
-      mode: AES.CBC,
-      padding: Iso10126
-    })
-  ];
+  // v1: CBC, ISO10126, 1 iteration
+  decryptDataWithPassword.bind(null, data, password, 1, {
+    mode: AES.CBC,
+    padding: Iso10126
+  })];
 
   return decryptFns.reduce(function (acc, decrypt) {
     if (acc) return acc;
@@ -48991,9 +50746,11 @@ function decryptWalletV1 (data, password) {
   }, null);
 }
 
-function cipherFunction (password, sharedKey, pbkdf2Iterations, operation) {
+function cipherFunction(password, sharedKey, pbkdf2Iterations, operation) {
   // operation can be 'enc' or 'dec'
-  var id = function (msg) { return msg; };
+  var id = function id(msg) {
+    return msg;
+  };
   if (!password || !sharedKey || !pbkdf2Iterations) {
     return id;
   } else {
@@ -49012,15 +50769,15 @@ function cipherFunction (password, sharedKey, pbkdf2Iterations, operation) {
   }
 }
 
-function encryptSecretWithSecondPassword (base58, password, sharedKey, pbkdf2Iterations) {
+function encryptSecretWithSecondPassword(base58, password, sharedKey, pbkdf2Iterations) {
   return encryptDataWithPassword(base58, sharedKey + password, pbkdf2Iterations);
 }
 
-function decryptSecretWithSecondPassword (secret, password, sharedKey, pbkdf2Iterations) {
+function decryptSecretWithSecondPassword(secret, password, sharedKey, pbkdf2Iterations) {
   return decryptDataWithPassword(secret, sharedKey + password, pbkdf2Iterations);
 }
 
-function decryptPasswordWithProcessedPin (data, password, pbkdf2Iterations) {
+function decryptPasswordWithProcessedPin(data, password, pbkdf2Iterations) {
   return decryptDataWithPassword(data, password, pbkdf2Iterations);
 }
 
@@ -49028,19 +50785,19 @@ function decryptPasswordWithProcessedPin (data, password, pbkdf2Iterations) {
 // key: AES key (256 bit Buffer)
 // iv: optional initialization vector
 // returns: concatenated and Base64 encoded iv + payload
-function encryptDataWithKey (data, key, iv) {
+function encryptDataWithKey(data, key, iv) {
   iv = iv || crypto.randomBytes(SALT_BYTES);
 
   var dataBytes = new Buffer(data, 'utf8');
   var options = { mode: AES.CBC, padding: Iso10126 };
 
   var encryptedBytes = AES.encrypt(dataBytes, key, iv, options);
-  var payload = Buffer.concat([ iv, encryptedBytes ]);
+  var payload = Buffer.concat([iv, encryptedBytes]);
 
   return payload.toString('base64');
 }
 
-function encryptDataWithPassword (data, password, iterations) {
+function encryptDataWithPassword(data, password, iterations) {
   assert(data, 'data missing');
   assert(password, 'password missing');
   assert(iterations, 'iterations missing');
@@ -49055,7 +50812,7 @@ function encryptDataWithPassword (data, password, iterations) {
 // payload: Base64 encoded concatenated payload + iv
 // key: AES key (256 bit Buffer)
 // returns: decrypted payload (e.g. a JSON string)
-function decryptDataWithKey (data, key) {
+function decryptDataWithKey(data, key) {
   var dataHex = new Buffer(data, 'base64');
 
   var iv = dataHex.slice(0, SALT_BYTES);
@@ -49069,7 +50826,7 @@ function decryptDataWithKey (data, key) {
 // key: AES key (256 bit Buffer)
 // options: (optional)
 // returns: decrypted payload (e.g. a JSON string)
-function decryptBufferWithKey (payload, iv, key, options) {
+function decryptBufferWithKey(payload, iv, key, options) {
   options = options || {};
   options.padding = options.padding || Iso10126;
 
@@ -49077,7 +50834,7 @@ function decryptBufferWithKey (payload, iv, key, options) {
   return decryptedBytes.toString('utf8');
 }
 
-function decryptDataWithPassword (data, password, iterations, options) {
+function decryptDataWithPassword(data, password, iterations, options) {
   assert(data, 'data missing');
   assert(password, 'password missing');
   assert(iterations, 'iterations missing');
@@ -49096,13 +50853,13 @@ function decryptDataWithPassword (data, password, iterations, options) {
   return res;
 }
 
-function stretchPassword (password, salt, iterations, keylen) {
+function stretchPassword(password, salt, iterations, keylen) {
   assert(salt, 'salt missing');
   assert(password, 'password missing');
   assert(iterations, 'iterations missing');
-  assert(typeof (sjcl.hash.sha1) === 'function', 'missing sha1, make sure sjcl is configured correctly');
+  assert(typeof sjcl.hash.sha1 === 'function', 'missing sha1, make sure sjcl is configured correctly');
 
-  var hmacSHA1 = function (key) {
+  var hmacSHA1 = function hmacSHA1(key) {
     var hasher = new sjcl.misc.hmac(key, sjcl.hash.sha1); // eslint-disable-line new-cap
     this.encrypt = hasher.encrypt.bind(hasher);
   };
@@ -49113,23 +50870,24 @@ function stretchPassword (password, salt, iterations, keylen) {
   return new Buffer(sjcl.codec.hex.fromBits(stretched), 'hex');
 }
 
-function pbkdf2 (password, salt, iterations, keylen, algorithm) {
+function pbkdf2(password, salt, iterations, keylen, algorithm) {
   algorithm = algorithm || ALGO.SHA1;
   var iv = salt.toString('binary');
   return crypto.pbkdf2Sync(password, iv, iterations, keylen, algorithm);
 }
 
-function hashNTimes (data, iterations) {
+function hashNTimes(data, iterations) {
   assert(iterations > 0, '`iterations` must be a number greater than 0');
-  while (iterations--) data = sha256(data);
-  return data.toString('hex');
+  while (iterations--) {
+    data = sha256(data);
+  }return data.toString('hex');
 }
 
-function sha256 (data) {
+function sha256(data) {
   return crypto.createHash('sha256').update(data).digest();
 }
 
-function smix (B, Bi, r, N, V, XY) {
+function smix(B, Bi, r, N, V, XY) {
   var Xi = 0;
   var Yi = 128 * r;
   var i;
@@ -49142,7 +50900,7 @@ function smix (B, Bi, r, N, V, XY) {
   }
 
   for (i = 0; i < N; i++) {
-    var j = integerify(XY, Xi, r) & (N - 1);
+    var j = integerify(XY, Xi, r) & N - 1;
     blockxor(V, j * Yi, XY, Xi, Yi);
     blockmix_salsa8(XY, Xi, Yi, r);
   }
@@ -49150,7 +50908,8 @@ function smix (B, Bi, r, N, V, XY) {
   arraycopy32(XY, Xi, B, Bi, Yi);
 }
 
-function blockmix_salsa8 (BY, Bi, Yi, r) { // eslint-disable-line camelcase
+function blockmix_salsa8(BY, Bi, Yi, r) {
+  // eslint-disable-line camelcase
   var X = [];
   var i;
 
@@ -49159,11 +50918,11 @@ function blockmix_salsa8 (BY, Bi, Yi, r) { // eslint-disable-line camelcase
   for (i = 0; i < 2 * r; i++) {
     blockxor(BY, i * 64, X, 0, 64);
     salsa20_8(X);
-    arraycopy32(X, 0, BY, Yi + (i * 64), 64);
+    arraycopy32(X, 0, BY, Yi + i * 64, 64);
   }
 
   for (i = 0; i < r; i++) {
-    arraycopy32(BY, Yi + (i * 2) * 64, BY, Bi + (i * 64), 64);
+    arraycopy32(BY, Yi + i * 2 * 64, BY, Bi + i * 64, 64);
   }
 
   for (i = 0; i < r; i++) {
@@ -49171,11 +50930,12 @@ function blockmix_salsa8 (BY, Bi, Yi, r) { // eslint-disable-line camelcase
   }
 }
 
-function R (a, b) {
-  return (a << b) | (a >>> (32 - b));
+function R(a, b) {
+  return a << b | a >>> 32 - b;
 }
 
-function salsa20_8 (B) { // eslint-disable-line camelcase
+function salsa20_8(B) {
+  // eslint-disable-line camelcase
   var B32 = new Array(32);
   var x = new Array(32);
   var i;
@@ -49191,82 +50951,82 @@ function salsa20_8 (B) { // eslint-disable-line camelcase
 
   for (i = 8; i > 0; i -= 2) {
     /*eslint-disable */
-    x[ 4] ^= R(x[ 0]+x[12], 7);  x[ 8] ^= R(x[ 4]+x[ 0], 9);
-    x[12] ^= R(x[ 8]+x[ 4],13);  x[ 0] ^= R(x[12]+x[ 8],18);
-    x[ 9] ^= R(x[ 5]+x[ 1], 7);  x[13] ^= R(x[ 9]+x[ 5], 9);
-    x[ 1] ^= R(x[13]+x[ 9],13);  x[ 5] ^= R(x[ 1]+x[13],18);
-    x[14] ^= R(x[10]+x[ 6], 7);  x[ 2] ^= R(x[14]+x[10], 9);
-    x[ 6] ^= R(x[ 2]+x[14],13);  x[10] ^= R(x[ 6]+x[ 2],18);
-    x[ 3] ^= R(x[15]+x[11], 7);  x[ 7] ^= R(x[ 3]+x[15], 9);
-    x[11] ^= R(x[ 7]+x[ 3],13);  x[15] ^= R(x[11]+x[ 7],18);
-    x[ 1] ^= R(x[ 0]+x[ 3], 7);  x[ 2] ^= R(x[ 1]+x[ 0], 9);
-    x[ 3] ^= R(x[ 2]+x[ 1],13);  x[ 0] ^= R(x[ 3]+x[ 2],18);
-    x[ 6] ^= R(x[ 5]+x[ 4], 7);  x[ 7] ^= R(x[ 6]+x[ 5], 9);
-    x[ 4] ^= R(x[ 7]+x[ 6],13);  x[ 5] ^= R(x[ 4]+x[ 7],18);
-    x[11] ^= R(x[10]+x[ 9], 7);  x[ 8] ^= R(x[11]+x[10], 9);
-    x[ 9] ^= R(x[ 8]+x[11],13);  x[10] ^= R(x[ 9]+x[ 8],18);
-    x[12] ^= R(x[15]+x[14], 7);  x[13] ^= R(x[12]+x[15], 9);
-    x[14] ^= R(x[13]+x[12],13);  x[15] ^= R(x[14]+x[13],18);
+    x[4] ^= R(x[0] + x[12], 7);x[8] ^= R(x[4] + x[0], 9);
+    x[12] ^= R(x[8] + x[4], 13);x[0] ^= R(x[12] + x[8], 18);
+    x[9] ^= R(x[5] + x[1], 7);x[13] ^= R(x[9] + x[5], 9);
+    x[1] ^= R(x[13] + x[9], 13);x[5] ^= R(x[1] + x[13], 18);
+    x[14] ^= R(x[10] + x[6], 7);x[2] ^= R(x[14] + x[10], 9);
+    x[6] ^= R(x[2] + x[14], 13);x[10] ^= R(x[6] + x[2], 18);
+    x[3] ^= R(x[15] + x[11], 7);x[7] ^= R(x[3] + x[15], 9);
+    x[11] ^= R(x[7] + x[3], 13);x[15] ^= R(x[11] + x[7], 18);
+    x[1] ^= R(x[0] + x[3], 7);x[2] ^= R(x[1] + x[0], 9);
+    x[3] ^= R(x[2] + x[1], 13);x[0] ^= R(x[3] + x[2], 18);
+    x[6] ^= R(x[5] + x[4], 7);x[7] ^= R(x[6] + x[5], 9);
+    x[4] ^= R(x[7] + x[6], 13);x[5] ^= R(x[4] + x[7], 18);
+    x[11] ^= R(x[10] + x[9], 7);x[8] ^= R(x[11] + x[10], 9);
+    x[9] ^= R(x[8] + x[11], 13);x[10] ^= R(x[9] + x[8], 18);
+    x[12] ^= R(x[15] + x[14], 7);x[13] ^= R(x[12] + x[15], 9);
+    x[14] ^= R(x[13] + x[12], 13);x[15] ^= R(x[14] + x[13], 18);
     /*eslint-enable */
   }
 
-  for (i = 0; i < 16; ++i) B32[i] = x[i] + B32[i];
-
-  for (i = 0; i < 16; i++) {
+  for (i = 0; i < 16; ++i) {
+    B32[i] = x[i] + B32[i];
+  }for (i = 0; i < 16; i++) {
     var bi = i * 4;
-    B[bi + 0] = (B32[i] >> 0 & 0xff);
-    B[bi + 1] = (B32[i] >> 8 & 0xff);
-    B[bi + 2] = (B32[i] >> 16 & 0xff);
-    B[bi + 3] = (B32[i] >> 24 & 0xff);
+    B[bi + 0] = B32[i] >> 0 & 0xff;
+    B[bi + 1] = B32[i] >> 8 & 0xff;
+    B[bi + 2] = B32[i] >> 16 & 0xff;
+    B[bi + 3] = B32[i] >> 24 & 0xff;
   }
 }
 
-function blockxor (S, Si, D, Di, len) {
+function blockxor(S, Si, D, Di, len) {
   var i = len >> 6;
   while (i--) {
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
 
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
 
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
 
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
 
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
 
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
 
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
 
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
+    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
   }
 }
 
-function integerify (B, bi, r) {
+function integerify(B, bi, r) {
   var n;
 
   bi += (2 * r - 1) * 64;
@@ -49279,39 +51039,39 @@ function integerify (B, bi, r) {
   return n;
 }
 
-function arraycopy (src, srcPos, dest, destPos, length) {
+function arraycopy(src, srcPos, dest, destPos, length) {
   while (length--) {
     dest[destPos++] = src[srcPos++];
   }
 }
 
-function arraycopy32 (src, srcPos, dest, destPos, length) {
+function arraycopy32(src, srcPos, dest, destPos, length) {
   var i = length >> 5;
   while (i--) {
-    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
 
-    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
 
-    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
 
-    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
+    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
   }
 }
 
-function scrypt (passwd, salt, N, r, p, dkLen, callback) {
-  if (N === 0 || (N & (N - 1)) !== 0) throw Error('N must be > 0 and a power of 2');
+function scrypt(passwd, salt, N, r, p, dkLen, callback) {
+  if (N === 0 || (N & N - 1) !== 0) throw Error('N must be > 0 and a power of 2');
 
   var MAX_VALUE = 2147483647;
   if (N > MAX_VALUE / 128 / r) throw Error('Parameter N is too large');
@@ -49325,7 +51085,7 @@ function scrypt (passwd, salt, N, r, p, dkLen, callback) {
     salt = new Buffer(salt, 'utf8');
   }
 
-  var B = pbkdf2(passwd, salt, 1, (p * 128 * r), ALGO.SHA256);
+  var B = pbkdf2(passwd, salt, 1, p * 128 * r, ALGO.SHA256);
 
   var XY = [];
   var V = [];
@@ -49368,8 +51128,10 @@ module.exports = {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"assert":16,"buffer":76,"crypto":136,"sjcl":221}],274:[function(require,module,exports){
+},{"assert":16,"buffer":84,"crypto":144,"sjcl":229}],289:[function(require,module,exports){
 'use strict';
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var API = require('./api');
 var Helpers = require('./helpers');
@@ -49378,16 +51140,14 @@ var WalletStore = require('./wallet-store');
 var MyWallet = require('./wallet');
 var assert = require('assert');
 
-function handleError (msg) {
+function handleError(msg) {
   return function (e) {
-    var errMsg = e.responseJSON && e.responseJSON.initial_error
-        ? e.responseJSON.initial_error
-        : e || msg;
+    var errMsg = e.responseJSON && e.responseJSON.initial_error ? e.responseJSON.initial_error : e || msg;
     return Promise.reject(errMsg);
   };
 }
 
-function handleResponse (obj) {
+function handleResponse(obj) {
   console.log(obj.success);
   if (obj.success) {
     return obj.message;
@@ -49396,21 +51156,20 @@ function handleResponse (obj) {
   }
 }
 
-function generateUUIDs (count) {
+function generateUUIDs(count) {
   var data = {
     format: 'json',
     n: count
   };
 
-  var extractUUIDs = function (data) {
+  var extractUUIDs = function extractUUIDs(data) {
     if (!data.uuids || data.uuids.length !== count) {
       return Promise.reject('Could not generate uuids');
     }
     return data.uuids;
   };
 
-  return API.retry(API.request.bind(API, 'GET', 'uuid-generator', data))
-    .then(extractUUIDs);
+  return API.retry(API.request.bind(API, 'GET', 'uuid-generator', data)).then(extractUUIDs);
 }
 
 /**
@@ -49419,7 +51178,7 @@ function generateUUIDs (count) {
  * @param {string} sessionToken.
  */
 // used in the frontend and in iOS
-function resendTwoFactorSms (userGuid, sessionToken) {
+function resendTwoFactorSms(userGuid, sessionToken) {
   assert(userGuid, 'wallet identifier required');
   assert(sessionToken, 'Session token required');
 
@@ -49429,10 +51188,9 @@ function resendTwoFactorSms (userGuid, sessionToken) {
     ct: Date.now()
   };
 
-  var headers = {sessionToken: sessionToken};
+  var headers = { sessionToken: sessionToken };
 
-  return API.request('GET', 'wallet/' + userGuid, data, headers)
-    .catch(handleError('Could not resend two factor sms'));
+  return API.request('GET', 'wallet/' + userGuid, data, headers).catch(handleError('Could not resend two factor sms'));
 }
 
 /**
@@ -49441,7 +51199,7 @@ function resendTwoFactorSms (userGuid, sessionToken) {
  * @param {string} captcha Spam protection
  */
 // used in the frontend
-function recoverGuid (sessionToken, userEmail, captcha) {
+function recoverGuid(sessionToken, userEmail, captcha) {
   var data = {
     method: 'recover-wallet',
     email: userEmail,
@@ -49453,13 +51211,12 @@ function recoverGuid (sessionToken, userEmail, captcha) {
     sessionToken: sessionToken
   };
 
-  return API.request('POST', 'wallet', data, headers)
-    .then(handleResponse).catch(handleError('Could not send recovery email'));
+  return API.request('POST', 'wallet', data, headers).then(handleResponse).catch(handleError('Could not send recovery email'));
 }
 
-function checkWalletChecksum (payloadChecksum, success, error) {
+function checkWalletChecksum(payloadChecksum, success, error) {
   assert(payloadChecksum, 'Payload checksum missing');
-  var data = {method: 'wallet.aes.json', format: 'json', checksum: payloadChecksum};
+  var data = { method: 'wallet.aes.json', format: 'json', checksum: payloadChecksum };
 
   API.securePostCallbacks('wallet', data, function (obj) {
     if (!obj.payload || obj.payload === 'Not modified') {
@@ -49480,14 +51237,7 @@ function checkWalletChecksum (payloadChecksum, success, error) {
  * @param {string} captcha Spam protection
  */
 // used in the frontend
-function requestTwoFactorReset (
-  sessionToken,
-  userGuid,
-  userEmail,
-  userNewEmail,
-  secret,
-  message,
-  captcha) {
+function requestTwoFactorReset(sessionToken, userGuid, userEmail, userNewEmail, secret, message, captcha) {
   var data = {
     method: 'reset-two-factor-form',
     guid: userGuid,
@@ -49503,12 +51253,11 @@ function requestTwoFactorReset (
     sessionToken: sessionToken
   };
 
-  return API.request('POST', 'wallet', data, headers)
-    .then(handleResponse);
+  return API.request('POST', 'wallet', data, headers).then(handleResponse);
 }
 
 // Save the javascript wallet to the remote server
-function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress, sessionToken) {
+function insertWallet(guid, sharedKey, password, extra, decryptWalletProgress, sessionToken) {
   assert(guid, 'GUID missing');
   assert(sharedKey, 'Shared Key missing');
   assert(password, 'Password missing');
@@ -49553,7 +51302,7 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress, 
   });
 
   var apiPromise = dataPromise.then(function (postData) {
-    var headers = {sessionToken: sessionToken};
+    var headers = { sessionToken: sessionToken };
 
     return API.securePost('wallet', postData, headers);
   });
@@ -49561,8 +51310,8 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress, 
   return Promise.all([dataPromise, apiPromise]);
 }
 
-function obtainSessionToken () {
-  var processResult = function (data) {
+function obtainSessionToken() {
+  var processResult = function processResult(data) {
     if (!data.token || !data.token.length) {
       return Promise.reject('Invalid session token');
     }
@@ -49572,7 +51321,7 @@ function obtainSessionToken () {
   return API.request('POST', 'sessions').then(processResult);
 }
 
-function establishSession (token) {
+function establishSession(token) {
   if (token) {
     return Promise.resolve(token);
   } else {
@@ -49582,8 +51331,8 @@ function establishSession (token) {
 
 // sharedKey is optional
 // token must be present if sharedKey isn't
-function callGetWalletEndpoint (guid, sharedKey, sessionToken) {
-  var clientTime = (new Date()).getTime();
+function callGetWalletEndpoint(guid, sharedKey, sessionToken) {
+  var clientTime = new Date().getTime();
   var data = { format: 'json', resend_code: null, ct: clientTime };
   var headers = {};
 
@@ -49596,11 +51345,11 @@ function callGetWalletEndpoint (guid, sharedKey, sessionToken) {
   return API.request('GET', 'wallet/' + guid, data, headers);
 }
 
-function fetchWallet (guid, token, needsTwoFactorCode, authorizationRequired) {
+function fetchWallet(guid, token, needsTwoFactorCode, authorizationRequired) {
   var promise = new Promise(function (resolve, reject) {
-    var success = function (obj) {
+    var success = function success(obj) {
       if (!obj.guid) {
-        WalletStore.sendEvent('msg', {type: 'error', message: 'Server returned null guid.'});
+        WalletStore.sendEvent('msg', { type: 'error', message: 'Server returned null guid.' });
         reject('Server returned null guid.');
         return;
       }
@@ -49618,8 +51367,8 @@ function fetchWallet (guid, token, needsTwoFactorCode, authorizationRequired) {
       }
     };
 
-    var error = function (e) {
-      var obj = typeof e === 'object' ? e : JSON.parse(e);
+    var error = function error(e) {
+      var obj = (typeof e === 'undefined' ? 'undefined' : _typeof(e)) === 'object' ? e : JSON.parse(e);
       if (obj && obj.initial_error && !obj.authorization_required) {
         reject(obj.initial_error);
         return;
@@ -49636,7 +51385,7 @@ function fetchWallet (guid, token, needsTwoFactorCode, authorizationRequired) {
   return promise;
 }
 
-function fetchWalletWithTwoFactor (guid, sessionToken, twoFactor) {
+function fetchWalletWithTwoFactor(guid, sessionToken, twoFactor) {
   var promise = new Promise(function (resolve, reject) {
     if (twoFactor.code.length === 0 || twoFactor.code.length > 255) {
       reject('You must enter a Two Factor Authentication code');
@@ -49648,20 +51397,23 @@ function fetchWalletWithTwoFactor (guid, sessionToken, twoFactor) {
     switch (twoFactor.type) {
       case 2: // email
       case 4: // sms
-      case 5: // Google Auth
+      case 5:
+        // Google Auth
         twoFactorAuthKey = twoFactorAuthKey.toUpperCase();
         break;
     }
 
-    var success = function (data) {
+    var success = function success(data) {
       if (data == null || data.length === 0) {
         reject('Server Return Empty Wallet Data');
         return;
       }
-      if (data !== 'Not modified') { WalletStore.setEncryptedWalletData(data); }
+      if (data !== 'Not modified') {
+        WalletStore.setEncryptedWalletData(data);
+      }
       resolve(data);
     };
-    var error = function (response) {
+    var error = function error(response) {
       WalletStore.setRestoringWallet(false);
       reject(response);
     };
@@ -49674,17 +51426,17 @@ function fetchWalletWithTwoFactor (guid, sessionToken, twoFactor) {
       format: 'plain'
     };
 
-    var headers = {sessionToken: sessionToken};
+    var headers = { sessionToken: sessionToken };
 
     API.request('POST', 'wallet', myData, headers).then(success).catch(error);
   });
   return promise;
 }
 
-function fetchWalletWithSharedKey (guid, sharedKey) {
-  var success = function (obj) {
+function fetchWalletWithSharedKey(guid, sharedKey) {
+  var success = function success(obj) {
     if (!obj.guid) {
-      throw (new Error('Server returned null guid.'));
+      throw new Error('Server returned null guid.');
     }
 
     // Even if Two Factor is enabled, some settings need to be saved here,
@@ -49696,15 +51448,15 @@ function fetchWalletWithSharedKey (guid, sharedKey) {
     if (obj.payload && obj.payload.length > 0 && obj.payload !== 'Not modified') {
       return obj;
     } else {
-      throw (new Error('Wallet payload missing, empty or not modified'));
+      throw new Error('Wallet payload missing, empty or not modified');
     }
   };
 
-  var error = function (e) {
+  var error = function error(e) {
     console.log(e);
-    var obj = typeof e === 'object' ? e : JSON.parse(e);
+    var obj = (typeof e === 'undefined' ? 'undefined' : _typeof(e)) === 'object' ? e : JSON.parse(e);
     if (obj && obj.initial_error) {
-      throw (new Error(obj.initial_error));
+      throw new Error(obj.initial_error);
     }
 
     WalletStore.sendEvent('did_fail_set_guid');
@@ -49713,16 +51465,16 @@ function fetchWalletWithSharedKey (guid, sharedKey) {
   return callGetWalletEndpoint(guid, sharedKey).then(success).catch(error);
 }
 
-function pollForSessionGUID (sessionToken) {
+function pollForSessionGUID(sessionToken) {
   var promise = new Promise(function (resolve, reject) {
     if (WalletStore.isPolling()) return;
     WalletStore.setIsPolling(true);
-    var data = {format: 'json'};
-    var headers = {sessionToken: sessionToken};
-    var success = function (obj) {
+    var data = { format: 'json' };
+    var headers = { sessionToken: sessionToken };
+    var success = function success(obj) {
       if (obj.guid) {
         WalletStore.setIsPolling(false);
-        WalletStore.sendEvent('msg', {type: 'success', message: 'Authorization Successful'});
+        WalletStore.sendEvent('msg', { type: 'success', message: 'Authorization Successful' });
         resolve();
       } else {
         if (WalletStore.getCounter() < 600) {
@@ -49735,7 +51487,7 @@ function pollForSessionGUID (sessionToken) {
         }
       }
     };
-    var error = function () {
+    var error = function error() {
       WalletStore.setIsPolling(false);
     };
     API.request('GET', 'wallet/poll-for-session-guid', data, headers).then(success).catch(error);
@@ -49743,18 +51495,18 @@ function pollForSessionGUID (sessionToken) {
   return promise;
 }
 
-function getCaptchaImage () {
+function getCaptchaImage() {
   var self = this;
   var promise = new Promise(function (resolve, reject) {
     self.obtainSessionToken().then(function (sessionToken) {
-      var success = function (data) {
+      var success = function success(data) {
         resolve({
           image: data,
           sessionToken: sessionToken
         });
       };
 
-      var error = function (e) {
+      var error = function error(e) {
         console.log(e);
         reject(e.initial_error);
       };
@@ -49763,7 +51515,7 @@ function getCaptchaImage () {
         timestamp: new Date().getTime()
       };
 
-      var headers = {sessionToken: sessionToken};
+      var headers = { sessionToken: sessionToken };
 
       API.request('GET', 'kaptcha.jpg', data, headers).then(success).catch(error);
     });
@@ -49787,7 +51539,7 @@ module.exports = {
   getCaptchaImage: getCaptchaImage
 };
 
-},{"./api":238,"./helpers":263,"./wallet":279,"./wallet-crypto":273,"./wallet-store":276,"assert":16}],275:[function(require,module,exports){
+},{"./api":246,"./helpers":271,"./wallet":294,"./wallet-crypto":288,"./wallet-store":291,"assert":16}],290:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -49795,7 +51547,7 @@ var assert = require('assert');
 var Wallet = require('./blockchain-wallet');
 var WalletNetwork = require('./wallet-network');
 
-function generateNewWallet (password, email, mnemonic, bip39Password, firstAccountName, success, error, generateUUIDProgress, decryptWalletProgress) {
+function generateNewWallet(password, email, mnemonic, bip39Password, firstAccountName, success, error, generateUUIDProgress, decryptWalletProgress) {
   assert(password.length <= 255, 'Passwords must be shorter than 256 characters');
   assert(!navigator.userAgent.match(/MeeGo/i), 'MeeGo browser currently not supported.'); // User reported this browser generated an invalid private key
 
@@ -49817,80 +51569,87 @@ module.exports = {
   generateNewWallet: generateNewWallet
 };
 
-},{"./blockchain-wallet":242,"./wallet-network":274,"assert":16}],276:[function(require,module,exports){
+},{"./blockchain-wallet":250,"./wallet-network":289,"assert":16}],291:[function(require,module,exports){
 'use strict';
 
 var MyWallet = require('./wallet');
 var WalletCrypto = require('./wallet-crypto');
 
-var WalletStore = (function () {
+var WalletStore = function () {
   var password; // Password
   var guid; // Wallet identifier
   var language = 'en';
   var pbkdf2Iterations = 5000; // pbkdf2_interations of the main password (to encrypt the full payload)
-  var disableLogout = false;
+  var _disableLogout = false;
   var realAuthType = 0; // The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
   var encryptedWalletData; // Encrypted wallet data (Base64, AES 256)
   var payloadChecksum; // SHA256 hash of the current wallet.aes.json
-  var isPolling = false;
-  var isRestoringWallet = false;
+  var _isPolling = false;
+  var _isRestoringWallet = false;
   var counter = 0;
   var syncPubkeys = false;
-  var isSynchronizedWithServer = true;
+  var _isSynchronizedWithServer = true;
   var eventListeners = [];
 
   return {
-    setPbkdf2Iterations: function (iterations) {
+    setPbkdf2Iterations: function setPbkdf2Iterations(iterations) {
       pbkdf2Iterations = iterations;
       return;
     },
-    getPbkdf2Iterations: function () {
+    getPbkdf2Iterations: function getPbkdf2Iterations() {
       return pbkdf2Iterations;
     },
-    getLanguage: function () {
+    getLanguage: function getLanguage() {
       return language;
     },
-    setLanguage: function (lan) {
+    setLanguage: function setLanguage(lan) {
       language = lan;
     },
-    disableLogout: function () {
-      disableLogout = true;
+    disableLogout: function disableLogout() {
+      _disableLogout = true;
     },
-    enableLogout: function () {
-      disableLogout = false;
+    enableLogout: function enableLogout() {
+      _disableLogout = false;
     },
-    isLogoutDisabled: function () {
-      return disableLogout;
+    isLogoutDisabled: function isLogoutDisabled() {
+      return _disableLogout;
     },
-    setRealAuthType: function (number) {
+    setRealAuthType: function setRealAuthType(number) {
       realAuthType = number;
     },
-    get2FAType: function () {
+    get2FAType: function get2FAType() {
       return realAuthType;
     },
-    get2FATypeString: function () {
+    get2FATypeString: function get2FATypeString() {
       var stringType = '';
       switch (realAuthType) {
-        case 0: stringType = null; break;
-        case 1: stringType = 'Yubikey'; break;
-        case 2: stringType = 'Email'; break;
-        case 3: stringType = 'Yubikey MtGox - Unsupported'; break;
-        case 4: stringType = 'Google Auth'; break;
-        case 5: stringType = 'SMS'; break;
-        default: stringType = null; break;
+        case 0:
+          stringType = null;break;
+        case 1:
+          stringType = 'Yubikey';break;
+        case 2:
+          stringType = 'Email';break;
+        case 3:
+          stringType = 'Yubikey MtGox - Unsupported';break;
+        case 4:
+          stringType = 'Google Auth';break;
+        case 5:
+          stringType = 'SMS';break;
+        default:
+          stringType = null;break;
       }
       return stringType;
     },
-    getGuid: function () {
+    getGuid: function getGuid() {
       return guid;
     },
-    setGuid: function (stringValue) {
+    setGuid: function setGuid(stringValue) {
       guid = stringValue;
     },
-    generatePayloadChecksum: function () {
+    generatePayloadChecksum: function generatePayloadChecksum() {
       return WalletCrypto.sha256(encryptedWalletData).toString('hex');
     },
-    setEncryptedWalletData: function (data) {
+    setEncryptedWalletData: function setEncryptedWalletData(data) {
       if (!data || data.length === 0) {
         encryptedWalletData = null;
         payloadChecksum = null;
@@ -49899,78 +51658,78 @@ var WalletStore = (function () {
         payloadChecksum = this.generatePayloadChecksum();
       }
     },
-    getEncryptedWalletData: function () {
+    getEncryptedWalletData: function getEncryptedWalletData() {
       return encryptedWalletData;
     },
-    getPayloadChecksum: function () {
+    getPayloadChecksum: function getPayloadChecksum() {
       return payloadChecksum;
     },
-    setPayloadChecksum: function (value) {
+    setPayloadChecksum: function setPayloadChecksum(value) {
       payloadChecksum = value;
     },
-    isPolling: function () {
-      return isPolling;
+    isPolling: function isPolling() {
+      return _isPolling;
     },
-    setIsPolling: function (bool) {
-      isPolling = bool;
+    setIsPolling: function setIsPolling(bool) {
+      _isPolling = bool;
     },
-    isRestoringWallet: function () {
-      return isRestoringWallet;
+    isRestoringWallet: function isRestoringWallet() {
+      return _isRestoringWallet;
     },
-    setRestoringWallet: function (bool) {
-      isRestoringWallet = bool;
+    setRestoringWallet: function setRestoringWallet(bool) {
+      _isRestoringWallet = bool;
     },
-    incrementCounter: function () {
+    incrementCounter: function incrementCounter() {
       counter = counter + 1;
     },
-    getCounter: function () {
+    getCounter: function getCounter() {
       return counter;
     },
-    setSyncPubKeys: function (bool) {
+    setSyncPubKeys: function setSyncPubKeys(bool) {
       syncPubkeys = bool;
     },
-    isSyncPubKeys: function () {
+    isSyncPubKeys: function isSyncPubKeys() {
       return syncPubkeys;
     },
-    isSynchronizedWithServer: function () {
-      return isSynchronizedWithServer;
+    isSynchronizedWithServer: function isSynchronizedWithServer() {
+      return _isSynchronizedWithServer;
     },
-    setIsSynchronizedWithServer: function (bool) {
-      isSynchronizedWithServer = bool;
+    setIsSynchronizedWithServer: function setIsSynchronizedWithServer(bool) {
+      _isSynchronizedWithServer = bool;
     },
-    addEventListener: function (func) {
+    addEventListener: function addEventListener(func) {
       eventListeners.push(func);
     },
-    sendEvent: function (eventName, obj) {
+    sendEvent: function sendEvent(eventName, obj) {
       for (var listener in eventListeners) {
         eventListeners[listener](eventName, obj);
       }
     },
-    isCorrectMainPassword: function (candidate) {
+    isCorrectMainPassword: function isCorrectMainPassword(candidate) {
       return password === candidate;
     },
-    changePassword: function (newPassword, success, error) {
+    changePassword: function changePassword(newPassword, success, error) {
       password = newPassword;
       MyWallet.syncWallet(success, error);
     },
-    unsafeSetPassword: function (newPassword) {
+    unsafeSetPassword: function unsafeSetPassword(newPassword) {
       password = newPassword;
     },
-    getPassword: function () {
+    getPassword: function getPassword() {
       return password;
     },
-    getLogoutTime: function () {
+    getLogoutTime: function getLogoutTime() {
       return MyWallet.wallet._logoutTime;
     },
-    setLogoutTime: function (logoutTime) {
+    setLogoutTime: function setLogoutTime(logoutTime) {
       MyWallet.wallet.logoutTime = logoutTime;
     }
   };
-})();
+}();
 
 module.exports = WalletStore;
 
-},{"./wallet":279,"./wallet-crypto":273}],277:[function(require,module,exports){
+},{"./wallet":294,"./wallet-crypto":288}],292:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -49978,15 +51737,15 @@ var assert = require('assert');
 var API = require('./api');
 var Helpers = require('./helpers');
 
-function postTokenEndpoint (method, token, extraParams) {
+function postTokenEndpoint(method, token, extraParams) {
   assert(token, 'Token required');
   assert(extraParams, 'Extra params dictionary required');
 
-  var handleResponse = function (res) {
+  var handleResponse = function handleResponse(res) {
     if (res && res.success !== undefined) {
       return res.success ? res : Promise.reject(res);
     } else {
-      return Promise.reject({error: 'TOKEN_ENDPOINT_UNEXPECTED_RESPONSE'});
+      return Promise.reject({ error: 'TOKEN_ENDPOINT_UNEXPECTED_RESPONSE' });
     }
   };
 
@@ -49999,22 +51758,21 @@ function postTokenEndpoint (method, token, extraParams) {
     params[k] = extraParams[k];
   }
 
-  return API.request('POST', 'wallet', params)
-    .then(handleResponse);
+  return API.request('POST', 'wallet', params).then(handleResponse);
 }
 
-function verifyEmail (token) {
+function verifyEmail(token) {
   return this.postTokenEndpoint('verify-email-token', token, {});
 }
 
-function unsubscribe (token) {
+function unsubscribe(token) {
   return this.postTokenEndpoint('unsubscribe', token, {});
 }
 
-function authorizeApprove (token, differentBrowserCallback, differentBrowserApproved) {
+function authorizeApprove(token, differentBrowserCallback, differentBrowserApproved) {
   assert(Helpers.isBoolean(differentBrowserApproved) || differentBrowserApproved == null, 'differentBrowserApproved must be null, false or true');
 
-  var handleError = function (res) {
+  var handleError = function handleError(res) {
     if (res.success === null) {
       differentBrowserCallback(res);
       return res;
@@ -50030,11 +51788,10 @@ function authorizeApprove (token, differentBrowserCallback, differentBrowserAppr
     extraParams.confirm_approval = differentBrowserApproved;
   }
 
-  return this.postTokenEndpoint('authorize-approve', token, extraParams)
-    .catch(handleError);
+  return this.postTokenEndpoint('authorize-approve', token, extraParams).catch(handleError);
 }
 
-function resetTwoFactor (token) {
+function resetTwoFactor(token) {
   return this.postTokenEndpoint('reset-two-factor-token', token, {});
 }
 
@@ -50046,14 +51803,14 @@ module.exports = {
   postTokenEndpoint: postTokenEndpoint // For tests
 };
 
-},{"./api":238,"./helpers":263,"assert":16}],278:[function(require,module,exports){
+},{"./api":246,"./helpers":271,"assert":16}],293:[function(require,module,exports){
 'use strict';
 
 module.exports = Tx;
 
 var MyWallet = require('./wallet');
 
-function Tx (object) {
+function Tx(object) {
   var obj = object || {};
   // original properties
   this.balance = obj.balance;
@@ -50125,18 +51882,20 @@ Tx.prototype.updateConfirmationsOnBlock = function (txIndexes) {
       // transaction included in the last block
       this.confirmations = this.confirmations + 1;
     }
-      // otherwise: Transaction not confirmed
+    // otherwise: Transaction not confirmed
   }
 };
 
 Object.defineProperties(Tx.prototype, {
   'belongsTo': {
     configurable: false,
-    value: function (identity) { return belongsTo(this, identity); }
+    value: function value(identity) {
+      return belongsTo(this, identity);
+    }
   }
 });
 
-function procOuts (acc, output) {
+function procOuts(acc, output) {
   var tagOut = tagCoin(output);
   acc.taggedOuts.push(tagOut);
   if (tagOut.isWatchOnly) {
@@ -50158,7 +51917,7 @@ function procOuts (acc, output) {
   return acc;
 }
 
-function procIns (acc, input) {
+function procIns(acc, input) {
   var f = tagCoin.compose(unpackInput.bind(this));
   var tagIn = f(input);
   acc.taggedIns.push(tagIn);
@@ -50170,41 +51929,38 @@ function procIns (acc, input) {
   return acc;
 }
 
-function belongsTo (tx, id) {
+function belongsTo(tx, id) {
   return tx.processedInputs.concat(tx.processedOutputs).some(function (p) {
-    return (
-      (p.identity === 'imported' && id === 'imported') ||
-      p.identity === parseInt(id, 10)
-    );
+    return p.identity === 'imported' && id === 'imported' || p.identity === parseInt(id, 10);
   });
 }
 // var memoizedBelongsTo = Helpers.memoize(belongsTo);
 
-function isAccount (x) {
+function isAccount(x) {
   return !!x.xpub;
 }
 
-function isLegacy (x) {
+function isLegacy(x) {
   return MyWallet.wallet.containsLegacyAddress(x.addr) && !MyWallet.wallet.key(x.addr).archived;
 }
 
-function isAccountChange (x) {
-  return (isAccount(x) && x.xpub.path.split('/')[1] === '1');
+function isAccountChange(x) {
+  return isAccount(x) && x.xpub.path.split('/')[1] === '1';
 }
 
-function accountPath (x) {
+function accountPath(x) {
   return account(x).index + x.xpub.path.substr(1);
 }
 
-function account (x) {
+function account(x) {
   return MyWallet.wallet.hdwallet.account(x.xpub.m);
 }
 
-function address (x) {
+function address(x) {
   return MyWallet.wallet.key(x.addr);
 }
 
-function tagCoin (x) {
+function tagCoin(x) {
   var ad = x.addr;
   var am = x.value;
   var coinType = null;
@@ -50241,16 +51997,18 @@ function tagCoin (x) {
   };
 }
 
-function unpackInput (input) {
+function unpackInput(input) {
   if (isCoinBase(input)) {
-    var totalOut = this.out.reduce(function (sum, out) { return sum + out.value; }, 0);
-    return {addr: 'Coinbase', value: totalOut};
+    var totalOut = this.out.reduce(function (sum, out) {
+      return sum + out.value;
+    }, 0);
+    return { addr: 'Coinbase', value: totalOut };
   } else {
     return input.prev_out;
   }
 }
 
-function computeAmount (Tx) {
+function computeAmount(Tx) {
   var am = 0;
   switch (Tx.txType) {
     case 'transfer':
@@ -50268,7 +52026,7 @@ function computeAmount (Tx) {
   return am;
 }
 
-function computeTxType (Tx) {
+function computeTxType(Tx) {
   var v = null;
   var impactNoFee = Tx.result + Tx.fee;
   switch (true) {
@@ -50287,33 +52045,33 @@ function computeTxType (Tx) {
   return v;
 }
 
-function computeFrom (Tx) {
+function computeFrom(Tx) {
   var formatted = formatTransactionCoins(Tx);
   return formatted.input;
 }
 
-function computeTo (Tx) {
+function computeTo(Tx) {
   var formatted = formatTransactionCoins(Tx);
   var recipients = [];
 
   if (formatted.outputs && formatted.outputs.length > 0) {
     recipients = formatted.outputs.filter(function (output) {
-      return Tx.txType === 'sent'
-          ? output.coinType === 'external' || output.coinType === 'legacy'
-          : output.coinType !== 'external';
+      return Tx.txType === 'sent' ? output.coinType === 'external' || output.coinType === 'legacy' : output.coinType !== 'external';
     });
   }
 
   return recipients;
 }
 
-function formatTransactionCoins (tx) {
-  var input = tx.processedInputs
-  .filter(function (input) { return !input.change; })[0] || tx.processedInputs[0];
-  var outputs = tx.processedOutputs
-  .filter(function (output) { return !output.change && output.address !== input.address; });
+function formatTransactionCoins(tx) {
+  var input = tx.processedInputs.filter(function (input) {
+    return !input.change;
+  })[0] || tx.processedInputs[0];
+  var outputs = tx.processedOutputs.filter(function (output) {
+    return !output.change && output.address !== input.address;
+  });
 
-  var setLabel = function (inputOrOutput) {
+  var setLabel = function setLabel(inputOrOutput) {
     if (inputOrOutput) {
       inputOrOutput.label = inputOrOutput.label || MyWallet.wallet.getAddressBookLabel(inputOrOutput.address) || inputOrOutput.address;
     }
@@ -50325,14 +52083,16 @@ function formatTransactionCoins (tx) {
   return { input: input, outputs: outputs };
 }
 
-function isCoinBase (input) {
-  return (input == null || input.prev_out == null || input.prev_out.addr == null);
+function isCoinBase(input) {
+  return input == null || input.prev_out == null || input.prev_out.addr == null;
 }
 
 Tx.factory = function (o) {
   if (o instanceof Object && !(o instanceof Tx)) {
     return new Tx(o);
-  } else { return o; }
+  } else {
+    return o;
+  }
 };
 
 Tx.IOSfactory = function (tx) {
@@ -50364,7 +52124,7 @@ Tx.setConfirmations = function (txBlockHeight) {
   return conf;
 };
 
-},{"./wallet":279}],279:[function(require,module,exports){
+},{"./wallet":294}],294:[function(require,module,exports){
 'use strict';
 
 var MyWallet = module.exports = {};
@@ -50396,22 +52156,22 @@ MyWallet.socketConnect = function () {
 
   var lastOnChange = { checksum: null };
 
-  function onMessage (message) {
+  function onMessage(message) {
     MyWallet.getSocketOnMessage(message, lastOnChange);
   }
 
-  function onOpen () {
+  function onOpen() {
     WalletStore.sendEvent('ws_on_open');
     MyWallet.ws.send(MyWallet.getSocketOnOpenMessage());
   }
 
-  function onClose () {
+  function onClose() {
     WalletStore.sendEvent('ws_on_close');
   }
 };
 
 // used two times
-function didDecryptWallet (success) {
+function didDecryptWallet(success) {
   // We need to check if the wallet has changed
   MyWallet.getWallet();
   success();
@@ -50451,7 +52211,7 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
     } else {
       // there is no reorg
       MyWallet.wallet.latestBlock = obj.x;
-      var up = function (t) {
+      var up = function up(t) {
         t.updateConfirmationsOnBlock(obj.x.txIndexes);
       };
       MyWallet.wallet.txList._transactions.forEach(up);
@@ -50477,7 +52237,7 @@ MyWallet.getSocketOnOpenMessage = function () {
 // success(modified true/false)
 // used locally and iOS
 MyWallet.getWallet = function (success, error) {
-  var data = {method: 'wallet.aes.json', format: 'json'};
+  var data = { method: 'wallet.aes.json', format: 'json' };
 
   if (WalletStore.getPayloadChecksum() && WalletStore.getPayloadChecksum().length > 0) {
     data.checksum = WalletStore.getPayloadChecksum();
@@ -50499,7 +52259,9 @@ MyWallet.getWallet = function (success, error) {
       // When re-fetching the wallet after a remote update, if we can't decrypt
       // it, logout for safety.
       MyWallet.logout(true);
-      if (error) { error(); }
+      if (error) {
+        error();
+      }
     });
   }, function (e) {
     if (error) error();
@@ -50515,35 +52277,30 @@ MyWallet.decryptAndInitializeWallet = function (success, error, decryptSuccess, 
     error('No Wallet Data To Decrypt');
     return;
   }
-  WalletCrypto.decryptWallet(
-    encryptedWalletData,
-    WalletStore.getPassword(),
-    function (obj, rootContainer) {
-      MyWallet.wallet = new Wallet(obj);
+  WalletCrypto.decryptWallet(encryptedWalletData, WalletStore.getPassword(), function (obj, rootContainer) {
+    MyWallet.wallet = new Wallet(obj);
 
-      // this sanity check should be done on the load
-      // if (!sharedKey || sharedKey.length == 0 || sharedKey.length != 36) {
-      //   throw new Error('Shared Key is invalid');
-      // }
+    // this sanity check should be done on the load
+    // if (!sharedKey || sharedKey.length == 0 || sharedKey.length != 36) {
+    //   throw new Error('Shared Key is invalid');
+    // }
 
-      // TODO: pbkdf2 iterations should be stored correctly on wallet wrapper
-      if (rootContainer) {
-        WalletStore.setPbkdf2Iterations(rootContainer.pbkdf2_iterations);
-      }
-      // If we don't have a checksum then the wallet is probably brand new - so we can generate our own
-      var checkSum = WalletStore.getPayloadChecksum();
-      if (checkSum === undefined || checkSum === null || checkSum.length === 0) {
-        WalletStore.setPayloadChecksum(WalletStore.generatePayloadChecksum());
-      }
-      if (MyWallet.wallet.isUpgradedToHD === false) {
-        WalletStore.sendEvent('hd_wallets_does_not_exist');
-      }
-      setIsInitialized();
-      decryptSuccess && decryptSuccess();
-      success();
-    },
-    error
-  );
+    // TODO: pbkdf2 iterations should be stored correctly on wallet wrapper
+    if (rootContainer) {
+      WalletStore.setPbkdf2Iterations(rootContainer.pbkdf2_iterations);
+    }
+    // If we don't have a checksum then the wallet is probably brand new - so we can generate our own
+    var checkSum = WalletStore.getPayloadChecksum();
+    if (checkSum === undefined || checkSum === null || checkSum.length === 0) {
+      WalletStore.setPayloadChecksum(WalletStore.generatePayloadChecksum());
+    }
+    if (MyWallet.wallet.isUpgradedToHD === false) {
+      WalletStore.sendEvent('hd_wallets_does_not_exist');
+    }
+    setIsInitialized();
+    decryptSuccess && decryptSuccess();
+    success();
+  }, error);
 };
 
 // used in the frontend
@@ -50576,46 +52333,42 @@ MyWallet.makePairingCode = function (success, error) {
 
 MyWallet.login = function (guid, password, credentials, callbacks) {
   assert(credentials.twoFactor !== undefined, '2FA code must be null or set');
-  assert(
-    credentials.twoFactor === null ||
-    (Helpers.isPositiveInteger(credentials.twoFactor.type) && Helpers.isString(credentials.twoFactor.code))
-  );
+  assert(credentials.twoFactor === null || Helpers.isPositiveInteger(credentials.twoFactor.type) && Helpers.isString(credentials.twoFactor.code));
 
   var loginPromise = new Promise(function (resolve, reject) {
     if (guid === WalletStore.getGuid() && WalletStore.getEncryptedWalletData()) {
       // If we already fetched the wallet before (e.g.
       // after user enters a wrong password), don't fetch it again:
       MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
-        resolve({guid: guid});
+        resolve({ guid: guid });
       }).catch(function (e) {
         reject(e);
       });
     } else if (credentials.sharedKey) {
       // If the shared key is known, 2FA and browser verification are skipped.
       // No session is needed in that case.
-      return WalletNetwork.fetchWalletWithSharedKey(guid, credentials.sharedKey)
-        .then(function (obj) {
-          callbacks.didFetch && callbacks.didFetch();
-          MyWallet.didFetchWallet(obj).then(function () {
-            MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
-              resolve({guid: guid});
-            }).catch(function (e) {
-              reject(e);
-            });
+      return WalletNetwork.fetchWalletWithSharedKey(guid, credentials.sharedKey).then(function (obj) {
+        callbacks.didFetch && callbacks.didFetch();
+        MyWallet.didFetchWallet(obj).then(function () {
+          MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
+            resolve({ guid: guid });
+          }).catch(function (e) {
+            reject(e);
           });
         });
+      });
     } else {
       // Estabish a session to enable 2FA and browser verification:
-      WalletNetwork.establishSession(credentials.sessionToken)
-      .then(function (token) {
+      WalletNetwork.establishSession(credentials.sessionToken).then(function (token) {
         if (typeof callbacks.newSessionToken === 'function') {
           callbacks.newSessionToken(token);
         }
         // If a new browser is used, the user receives a verification email.
         // We wait for them to click the link.
-        var authorizationRequired = function () {
-          var promise = new Promise(function (resolveA, rejectA) { // eslint-disable-line promise/param-names
-            if (typeof (callbacks.authorizationRequired) === 'function') {
+        var authorizationRequired = function authorizationRequired() {
+          var promise = new Promise(function (resolveA, rejectA) {
+            // eslint-disable-line promise/param-names
+            if (typeof callbacks.authorizationRequired === 'function') {
               callbacks.authorizationRequired(function () {
                 WalletNetwork.pollForSessionGUID(token).then(function () {
                   resolveA();
@@ -50628,17 +52381,16 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
           return promise;
         };
 
-        var needsTwoFactorCode = function (authType) {
+        var needsTwoFactorCode = function needsTwoFactorCode(authType) {
           callbacks.needsTwoFactorCode(authType);
         };
 
         if (credentials.twoFactor) {
-          WalletNetwork.fetchWalletWithTwoFactor(guid, token, credentials.twoFactor)
-          .then(function (obj) {
+          WalletNetwork.fetchWalletWithTwoFactor(guid, token, credentials.twoFactor).then(function (obj) {
             callbacks.didFetch && callbacks.didFetch();
             MyWallet.didFetchWallet(obj).then(function () {
               MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
-                resolve({guid: guid});
+                resolve({ guid: guid });
               }).catch(function (e) {
                 reject(e);
               });
@@ -50648,12 +52400,11 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
           });
         } else {
           // Try without 2FA:
-          WalletNetwork.fetchWallet(guid, token, needsTwoFactorCode, authorizationRequired)
-          .then(function (obj) {
+          WalletNetwork.fetchWallet(guid, token, needsTwoFactorCode, authorizationRequired).then(function (obj) {
             callbacks.didFetch && callbacks.didFetch();
             MyWallet.didFetchWallet(obj).then(function () {
               MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
-                resolve({guid: guid});
+                resolve({ guid: guid });
               }).catch(function (e) {
                 reject(e);
               });
@@ -50685,18 +52436,18 @@ MyWallet.didFetchWallet = function (obj) {
 };
 
 MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
-  var doInitialize = function () {
+  var doInitialize = function doInitialize() {
     if (isInitialized || WalletStore.isRestoringWallet()) {
       return;
     }
 
-    function _success () {
+    function _success() {
       return;
     }
 
-    function _error (e) {
+    function _error(e) {
       WalletStore.setRestoringWallet(false);
-      WalletStore.sendEvent('msg', {type: 'error', message: e});
+      WalletStore.sendEvent('msg', { type: 'error', message: e });
 
       WalletStore.sendEvent('error_restoring_wallet');
       throw e;
@@ -50705,20 +52456,15 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
     WalletStore.setRestoringWallet(true);
     WalletStore.unsafeSetPassword(pw);
 
-    MyWallet.decryptAndInitializeWallet(
-      function () {
-        WalletStore.setRestoringWallet(false);
-        didDecryptWallet(_success);
-      }
-      , _error
-      , decryptSuccess
-      , buildHdSuccess
-    );
+    MyWallet.decryptAndInitializeWallet(function () {
+      WalletStore.setRestoringWallet(false);
+      didDecryptWallet(_success);
+    }, _error, decryptSuccess, buildHdSuccess);
   };
 
   // Attempt to load metadata for buy-sell
-  var tryLoadExternal = function () {
-    var loadExternalFailed = function (message) {
+  var tryLoadExternal = function tryLoadExternal() {
+    var loadExternalFailed = function loadExternalFailed(message) {
       console.warn('wallet.external not set:', message);
     };
     return MyWallet.wallet.loadExternal.bind(MyWallet.wallet)().catch(loadExternalFailed);
@@ -50733,15 +52479,15 @@ MyWallet.getIsInitialized = function () {
 };
 
 // used once
-function setIsInitialized () {
+function setIsInitialized() {
   if (isInitialized) return;
   MyWallet.socketConnect();
   isInitialized = true;
 }
 
 // This should replace backup functions
-function syncWallet (successcallback, errorcallback) {
-  var panic = function (e) {
+function syncWallet(successcallback, errorcallback) {
+  var panic = function panic(e) {
     console.log('Panic ' + e);
     window.location.replace('/');
     throw new Error('Save disabled.');
@@ -50752,17 +52498,15 @@ function syncWallet (successcallback, errorcallback) {
     panic('The wallet was not fully enc/decrypted');
   }
 
-  if (!MyWallet.wallet || !MyWallet.wallet.sharedKey ||
-      MyWallet.wallet.sharedKey.length === 0 ||
-      MyWallet.wallet.sharedKey.length !== 36) {
+  if (!MyWallet.wallet || !MyWallet.wallet.sharedKey || MyWallet.wallet.sharedKey.length === 0 || MyWallet.wallet.sharedKey.length !== 36) {
     throw new Error('Cannot backup wallet now. Shared key is not set');
   }
 
   WalletStore.disableLogout();
 
-  var _errorcallback = function (e) {
+  var _errorcallback = function _errorcallback(e) {
     WalletStore.sendEvent('on_backup_wallet_error');
-    WalletStore.sendEvent('msg', {type: 'error', message: 'Error Saving Wallet: ' + e});
+    WalletStore.sendEvent('msg', { type: 'error', message: 'Error Saving Wallet: ' + e });
     // Re-fetch the wallet from server
     MyWallet.getWallet();
     // try to save again:
@@ -50772,12 +52516,7 @@ function syncWallet (successcallback, errorcallback) {
   try {
     var method = 'update';
     var data = JSON.stringify(MyWallet.wallet, null, 2);
-    var crypted = WalletCrypto.encryptWallet(
-      data,
-      WalletStore.getPassword(),
-      WalletStore.getPbkdf2Iterations(),
-      MyWallet.wallet.isUpgradedToHD ? 3.0 : 2.0
-    );
+    var crypted = WalletCrypto.encryptWallet(data, WalletStore.getPassword(), WalletStore.getPbkdf2Iterations(), MyWallet.wallet.isUpgradedToHD ? 3.0 : 2.0);
 
     if (crypted.length === 0) {
       throw new Error('Error encrypting the JSON output');
@@ -50807,40 +52546,35 @@ function syncWallet (successcallback, errorcallback) {
           // Include HD addresses unless in lame mode:
           var hdAddresses = [];
           if (MyWallet.wallet.hdwallet !== undefined && MyWallet.wallet.hdwallet.accounts !== undefined) {
-            var subscribeAccount = function (acc) {
+            var subscribeAccount = function subscribeAccount(acc) {
               var ri = acc.receiveIndex;
               var labeled = acc.labeledReceivingAddresses ? acc.labeledReceivingAddresses : [];
-              var getAddress = function (i) { return acc.receiveAddressAtIndex(i + ri); };
+              var getAddress = function getAddress(i) {
+                return acc.receiveAddressAtIndex(i + ri);
+              };
               return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map(getAddress).concat(labeled);
             };
-            hdAddresses = MyWallet.wallet.hdwallet.accounts.map(subscribeAccount).reduce(function (a, b) { return a.concat(b); }, []);
+            hdAddresses = MyWallet.wallet.hdwallet.accounts.map(subscribeAccount).reduce(function (a, b) {
+              return a.concat(b);
+            }, []);
           }
           data.active = hdAddresses.concat(MyWallet.wallet.activeAddresses).join('|');
         }
 
-        API.securePostCallbacks(
-            'wallet',
-            data,
-            function (data) {
-              WalletNetwork.checkWalletChecksum(
-                  newChecksum,
-                  function () {
-                    WalletStore.setIsSynchronizedWithServer(true);
-                    WalletStore.enableLogout();
-                    WalletStore.sendEvent('on_backup_wallet_success');
-                    successcallback && successcallback();
-                  },
-                  function () {
-                    _errorcallback('Checksum Did Not Match Expected Value');
-                    WalletStore.enableLogout();
-                  }
-              );
-            },
-            function (e) {
-              WalletStore.enableLogout();
-              _errorcallback(e);
-            }
-        );
+        API.securePostCallbacks('wallet', data, function (data) {
+          WalletNetwork.checkWalletChecksum(newChecksum, function () {
+            WalletStore.setIsSynchronizedWithServer(true);
+            WalletStore.enableLogout();
+            WalletStore.sendEvent('on_backup_wallet_success');
+            successcallback && successcallback();
+          }, function () {
+            _errorcallback('Checksum Did Not Match Expected Value');
+            WalletStore.enableLogout();
+          });
+        }, function (e) {
+          WalletStore.enableLogout();
+          _errorcallback(e);
+        });
       } catch (e) {
         _errorcallback(e);
         WalletStore.enableLogout();
@@ -50869,9 +52603,9 @@ MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function () {
  * @param {string} mnemonic: optional BIP 39 mnemonic
  * @param {string} bip39Password: optional BIP 39 passphrase
  */
- // used on mywallet, iOS and frontend
+// used on mywallet, iOS and frontend
 MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccountName, languageCode, currencyCode, successCallback, errorCallback) {
-  var success = function (createdGuid, createdSharedKey, createdPassword, sessionToken) {
+  var success = function success(createdGuid, createdSharedKey, createdPassword, sessionToken) {
     if (languageCode) {
       WalletStore.setLanguage(languageCode);
       BlockchainSettingsAPI.changeLanguage(languageCode, function () {});
@@ -50885,10 +52619,10 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
     successCallback(createdGuid, createdSharedKey, createdPassword, sessionToken);
   };
 
-  var saveWallet = function (wallet) {
+  var saveWallet = function saveWallet(wallet) {
     // Generate a session token to facilitate future login attempts:
     WalletNetwork.establishSession(null).then(function (sessionToken) {
-      WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, {email: inputedEmail}, undefined, sessionToken).then(function () {
+      WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, { email: inputedEmail }, undefined, sessionToken).then(function () {
         success(wallet.guid, wallet.sharedKey, inputedPassword, sessionToken);
       }).catch(function (e) {
         errorCallback(e);
@@ -50906,12 +52640,12 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
 
 // used on frontend
 MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic, bip39Password, successCallback, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
-  var walletGenerated = function (wallet) {
-    var saveWallet = function () {
+  var walletGenerated = function walletGenerated(wallet) {
+    var saveWallet = function saveWallet() {
       // Generate a session token to facilitate future login attempts:
       WalletNetwork.establishSession(null).then(function (sessionToken) {
-        WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, {email: inputedEmail}, decryptWalletProgress, sessionToken).then(function () {
-          successCallback({guid: wallet.guid, sharedKey: wallet.sharedKey, password: inputedPassword, sessionToken: sessionToken});
+        WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, { email: inputedEmail }, decryptWalletProgress, sessionToken).then(function () {
+          successCallback({ guid: wallet.guid, sharedKey: wallet.sharedKey, password: inputedPassword, sessionToken: sessionToken });
         });
       });
     };
@@ -51025,7 +52759,7 @@ MyWallet.browserCheckFast = function () {
   return true;
 };
 
-},{"./api":238,"./blockchain-settings-api":240,"./blockchain-socket":241,"./blockchain-wallet":242,"./constants":258,"./helpers":263,"./rng":269,"./wallet-crypto":273,"./wallet-network":274,"./wallet-signup":275,"./wallet-store":276,"assert":16,"bip39":23,"bitcoinjs-lib":34,"buffer":76,"pbkdf2":190}],280:[function(require,module,exports){
+},{"./api":246,"./blockchain-settings-api":248,"./blockchain-socket":249,"./blockchain-wallet":250,"./constants":266,"./helpers":271,"./rng":277,"./wallet-crypto":288,"./wallet-network":289,"./wallet-signup":290,"./wallet-store":291,"assert":16,"bip39":23,"bitcoinjs-lib":42,"buffer":84,"pbkdf2":198}],295:[function(require,module,exports){
 
 var global = (function () { return this; })();
 var WebSocket = global.WebSocket || global.MozWebSocket;
