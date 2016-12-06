@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.25.0",
+  "version": "3.25.1",
   "dependencies": {
     "abbrev": {
       "version": "1.0.9",
@@ -40,9 +40,9 @@
       "resolved": "https://registry.npmjs.org/after/-/after-0.8.1.tgz"
     },
     "ajv": {
-      "version": "4.9.1",
+      "version": "4.9.2",
       "from": "ajv@>=4.7.0 <5.0.0",
-      "resolved": "https://registry.npmjs.org/ajv/-/ajv-4.9.1.tgz",
+      "resolved": "https://registry.npmjs.org/ajv/-/ajv-4.9.2.tgz",
       "dependencies": {
         "json-stable-stringify": {
           "version": "1.0.1",
@@ -2400,9 +2400,9 @@
       "resolved": "https://registry.npmjs.org/http-errors/-/http-errors-1.5.1.tgz"
     },
     "http-proxy": {
-      "version": "1.16.1",
+      "version": "1.16.2",
       "from": "http-proxy@>=1.13.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/http-proxy/-/http-proxy-1.16.1.tgz"
+      "resolved": "https://registry.npmjs.org/http-proxy/-/http-proxy-1.16.2.tgz"
     },
     "http-signature": {
       "version": "1.1.1",
