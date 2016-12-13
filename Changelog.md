@@ -1,48 +1,31 @@
 __Blockchain Wallet V3__
 
-#   (2016-12-07)
+#   (2016-12-13)
 
 
 
 ---
 
-## Bug Fixes
-
-- **account:** use verify-email-token endpoint
-  ([3c679026](https://github.com/blockchain/My-Wallet-V3/commit/3c679026558222989eb4c1d6edc339c7784a1c8e))
-- **settings:** pass correct args for sendConfirmationCode
-  ([da7c531a](https://github.com/blockchain/My-Wallet-V3/commit/da7c531a180f4ebc74477c799ee1f704bbae5724))
-
-
 ## Features
 
-- **account:**
-  - fix verify-email-code test
-  ([fc49320d](https://github.com/blockchain/My-Wallet-V3/commit/fc49320dc74fcbf68c7903b8114b8789aa07f5a5))
-  - use verify-email-code endpoint
-  ([f6a1042a](https://github.com/blockchain/My-Wallet-V3/commit/f6a1042a8dd96d3dd0246f48d8075f4353ce7ffa))
-  - send email confirmation code
-  ([4bdac8cb](https://github.com/blockchain/My-Wallet-V3/commit/4bdac8cb66ff52168d0ae5bbc2f329511b23fa9f))
+- **buysell:** USA (#309)
+  ([02839364](https://github.com/blockchain/My-Wallet-V3/commit/02839364b2cbf9387f030f50665efa8ef97dec88))
+- **coinify:** pass wallet age bracket in signed token
+  ([a167b3d8](https://github.com/blockchain/My-Wallet-V3/commit/a167b3d88518ca00888a9118b4cfd4acf44c6bbc))
+- **stats:** second password usage. (#311)
+  ([b356e86a](https://github.com/blockchain/My-Wallet-V3/commit/b356e86a6f3758ab7b1cc945b62d310babf75c0f))
 
 
-## Chore
+## Refactor
 
-- **release:** v3.25.1
-  ([c89b3a57](https://github.com/blockchain/My-Wallet-V3/commit/c89b3a57898b8662e52198aa6d08238dc9f4c729))
-
-
-## Branchs merged
-
-- Merge branch 'master' into usa
-  ([4483f8a3](https://github.com/blockchain/My-Wallet-V3/commit/4483f8a318241bf868407f7e4cd5405620c6c631))
-- Merge branch 'master' into usa
-  ([2dea7112](https://github.com/blockchain/My-Wallet-V3/commit/2dea7112d201e57c617a4c9f631a1f0ed6d99dd7))
+- **sfox:** moved to blockchain/bitcoin-sfox-client
+  ([3901437f](https://github.com/blockchain/My-Wallet-V3/commit/3901437fc4e3f4977a9c773454b5976c89255a16))
 
 
-## Pull requests merged
+## Test
 
-- Merge pull request #306 from blockchain/email-confirmation-code
-  ([0cca84a3](https://github.com/blockchain/My-Wallet-V3/commit/0cca84a3090165fa9a62a20d7373ab9fe3aafd1f))
+- **exchangedelegate:** fixed token related tests
+  ([aee5e2f7](https://github.com/blockchain/My-Wallet-V3/commit/aee5e2f7570524423b455a39f5cd964a1c82ce1d))
 
 
 
