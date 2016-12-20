@@ -9465,6 +9465,10 @@ var SFOX = function (_Exchange$Exchange) {
         assert(self.delegate.isMobileVerified(), 'mobile must be verified');
       };
 
+      var getToken = function getToken() {
+        return self.delegate.getToken.bind(self.delegate)('sfox');
+      };
+
       var doSignup = function doSignup(token) {
         assert(token, 'email + mobile token missing');
         return this._api.POST('account', {
@@ -9482,7 +9486,7 @@ var SFOX = function (_Exchange$Exchange) {
         });
       };
 
-      return Promise.resolve().then(runChecks.bind(this)).then(this.delegate.getToken.bind(this.delegate)).then(doSignup.bind(this)).then(saveMetadata.bind(this));
+      return Promise.resolve().then(runChecks.bind(this)).then(getToken.bind(this)).then(doSignup.bind(this)).then(saveMetadata.bind(this));
     }
   }, {
     key: 'fetchProfile',
@@ -9615,7 +9619,7 @@ var Trade = function (_Exchange$Trade) {
       this._createdAt = new Date(obj.created_at);
 
       if (this._outCurrency === 'BTC') {
-        this._txHash = obj.blockchain_tx_hash;
+        this._txHash = obj.blockchain_tx_hash || this._txHash;
         this._receiveAddress = obj.address;
       }
     }
@@ -9706,7 +9710,7 @@ var Trade = function (_Exchange$Trade) {
       return trades.filter(function (trade) {
         // Only consider transactions that are complete or that we're still
         // expecting payment for:
-        return ['awaiting_transfer_in', 'completed', 'completed_test'].indexOf(trade.state) > -1;
+        return ['awaiting_transfer_in', 'processing', 'completed', 'completed_test'].indexOf(trade.state) > -1;
       });
     }
   }, {
@@ -47324,6 +47328,7 @@ var Base58 = require('bs58');
 var BIP39 = require('bip39');
 var ImportExport = require('./import-export');
 var constants = require('./constants');
+var WalletCrypo = require('./wallet-crypto');
 
 var Helpers = {};
 Math.log2 = function (x) {
@@ -47797,9 +47802,22 @@ Helpers.getMobileOperatingSystem = function () {
   }
 };
 
+Helpers.isEmailInvited = function (email, fraction) {
+  if (!email) {
+    return false;
+  }
+  if (!Helpers.isPositiveNumber(fraction)) {
+    return false;
+  }
+  if (fraction > 1) {
+    return false;
+  }
+  return WalletCrypo.sha256(email)[0] / 256 >= 1 - fraction;
+};
+
 module.exports = Helpers;
 
-},{"./constants":275,"./import-export":281,"bigi":21,"bip39":23,"bitcoinjs-lib":65,"bs58":100,"buffer":107}],281:[function(require,module,exports){
+},{"./constants":275,"./import-export":281,"./wallet-crypto":290,"bigi":21,"bip39":23,"bitcoinjs-lib":65,"bs58":100,"buffer":107}],281:[function(require,module,exports){
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');

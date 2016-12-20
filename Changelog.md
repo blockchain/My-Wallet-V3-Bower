@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2016-12-13)
+#   (2016-12-20)
 
 
 
@@ -8,24 +8,14 @@ __Blockchain Wallet V3__
 
 ## Features
 
-- **buysell:** USA (#309)
-  ([02839364](https://github.com/blockchain/My-Wallet-V3/commit/02839364b2cbf9387f030f50665efa8ef97dec88))
-- **coinify:** pass wallet age bracket in signed token
-  ([a167b3d8](https://github.com/blockchain/My-Wallet-V3/commit/a167b3d88518ca00888a9118b4cfd4acf44c6bbc))
-- **stats:** second password usage. (#311)
-  ([b356e86a](https://github.com/blockchain/My-Wallet-V3/commit/b356e86a6f3758ab7b1cc945b62d310babf75c0f))
+- **helpers:** determine if email address sha256 hash matches a fraction
+  ([0df719f0](https://github.com/blockchain/My-Wallet-V3/commit/0df719f0d5ed283b4e8b9541a123887d3133db86))
 
 
-## Refactor
+## Chore
 
-- **sfox:** moved to blockchain/bitcoin-sfox-client
-  ([3901437f](https://github.com/blockchain/My-Wallet-V3/commit/3901437fc4e3f4977a9c773454b5976c89255a16))
-
-
-## Test
-
-- **exchangedelegate:** fixed token related tests
-  ([aee5e2f7](https://github.com/blockchain/My-Wallet-V3/commit/aee5e2f7570524423b455a39f5cd964a1c82ce1d))
+- **release:** v3.25.3
+  ([7443a559](https://github.com/blockchain/My-Wallet-V3/commit/7443a55923964a77fb014552bf01594f8344bd2e))
 
 
 
