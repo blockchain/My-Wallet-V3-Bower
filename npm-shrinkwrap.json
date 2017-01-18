@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.25.6",
+  "version": "3.25.7",
   "dependencies": {
     "abbrev": {
       "version": "1.0.9",
@@ -526,9 +526,9 @@
       "resolved": "https://registry.npmjs.org/bitcoin-exchange-client/-/bitcoin-exchange-client-0.1.2.tgz"
     },
     "bitcoin-sfox-client": {
-      "version": "0.1.5",
+      "version": "0.1.6",
       "from": "bitcoin-sfox-client@>=0.1.0 <0.2.0",
-      "resolved": "https://registry.npmjs.org/bitcoin-sfox-client/-/bitcoin-sfox-client-0.1.5.tgz"
+      "resolved": "https://registry.npmjs.org/bitcoin-sfox-client/-/bitcoin-sfox-client-0.1.6.tgz"
     },
     "bitcoinjs-lib": {
       "version": "2.1.4",
