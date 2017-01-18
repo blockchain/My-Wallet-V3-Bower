@@ -6597,6 +6597,8 @@ var Coinify = function (_Exchange$Exchange) {
 
     var _this = _possibleConstructorReturn(this, (Coinify.__proto__ || Object.getPrototypeOf(Coinify)).call(this, delegate, Trade, Quote, PaymentMedium));
 
+    assert(delegate.getEmailToken, 'delegate.getEmailToken() required');
+
     var obj = object || {};
     _this._partner_id = null;
     _this._user = obj.user;
@@ -7262,7 +7264,7 @@ var PaymentMedium = function (_ExchangePaymentMediu) {
     key: 'buy',
     value: function buy() {
       var account = new PaymentAccount(this._api, this.fiatMedium, this._quote);
-      account.buy();
+      return account.buy();
     }
   }, {
     key: 'name',
@@ -46408,6 +46410,27 @@ Wallet.prototype.incStats = function () {
   return true;
 };
 
+Wallet.prototype.saveGUIDtoMetadata = function () {
+  var setOrCheckGuid = function setOrCheckGuid(res) {
+    if (res === null) {
+      return m.create({ guid: MyWallet.wallet.guid });
+    } else if (!res || !res.guid || res.guid !== MyWallet.wallet.guid) {
+      return Promise.reject();
+    } else {
+      return res.guid;
+    }
+  };
+
+  // backupGUID not enabled if secondPassword active
+  if (!this.isDoubleEncrypted && this.isUpgradedToHD) {
+    var GUID_METADATA_TYPE = 0;
+    var m = this.metadata(GUID_METADATA_TYPE);
+    return m.fetch().then(setOrCheckGuid);
+  } else {
+    return Promise.reject();
+  }
+};
+
 },{"./account-info":267,"./address":268,"./api":269,"./bitcoin-block":270,"./blockchain-settings-api":271,"./external":277,"./hd-wallet":279,"./helpers":280,"./keyring":283,"./metadata":284,"./rng":286,"./transaction-list":288,"./wallet":296,"./wallet-crypto":290,"./wallet-store":293,"assert":16,"bip39":23}],274:[function(require,module,exports){
 'use strict';
 
@@ -46556,13 +46579,16 @@ ExchangeDelegate.prototype.getEmailToken = function () {
   });
 };
 
-ExchangeDelegate.prototype.getToken = function () {
-  var self = this;
-  return API.request('GET', 'wallet/signed-token', {
-    guid: self._wallet.guid,
-    sharedKey: self._wallet.sharedKey,
+ExchangeDelegate.prototype.getToken = function (partner) {
+  var fields = {
+    guid: this._wallet.guid,
+    sharedKey: this._wallet.sharedKey,
     fields: 'email|mobile'
-  }).then(function (res) {
+  };
+  if (partner) {
+    fields.partner = partner;
+  }
+  return API.request('GET', 'wallet/signed-token', fields).then(function (res) {
     if (res.success) {
       return res.token;
     } else {
@@ -51437,7 +51463,11 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
   var incStats = function incStats() {
     return MyWallet.wallet.incStats.bind(MyWallet.wallet)();
   };
+  var saveGUID = function saveGUID() {
+    return MyWallet.wallet.saveGUIDtoMetadata();
+  };
   p.then(incStats);
+  p.then(saveGUID);
   return p.then(tryLoadExternal);
 };
 
