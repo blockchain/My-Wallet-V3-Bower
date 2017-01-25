@@ -7907,9 +7907,14 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var Helpers = require('./helpers');
+var assert = require('assert');
+
 var API = function () {
   function API() {
     _classCallCheck(this, API);
+
+    this._testnet = false;
   }
 
   _createClass(API, [{
@@ -7958,6 +7963,18 @@ var API = function () {
 
       return fetch(url, options).catch(handleNetworkError).then(checkStatus);
     }
+  }, {
+    key: 'testnet',
+    set: function set(value) {
+      assert(Helpers.isBoolean(value), 'Boolean expected');
+      this._testnet = value;
+    }
+  }, {
+    key: 'production',
+    set: function set(value) {
+      assert(Helpers.isBoolean(value), 'Boolean expected');
+      this._production = value;
+    }
   }]);
 
   return API;
@@ -7965,7 +7982,7 @@ var API = function () {
 
 module.exports = API;
 
-},{}],43:[function(require,module,exports){
+},{"./helpers":44,"assert":16}],43:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -8966,12 +8983,6 @@ var API = function (_Exchange$API) {
       this._apiKey = value;
     }
   }, {
-    key: 'production',
-    set: function set(value) {
-      assert(Exchange.Helpers.isBoolean(value), 'Boolean expected');
-      this._production = value;
-    }
-  }, {
     key: 'partnerId',
     get: function get() {
       return this._partnerId;
@@ -9667,7 +9678,7 @@ var SFOX = function (_Exchange$Exchange) {
       };
 
       var getToken = function getToken() {
-        return self.delegate.getToken.bind(self.delegate)('sfox');
+        return self.delegate.getToken.bind(self.delegate)('sfox', { mobile: true });
       };
 
       var doSignup = function doSignup(token) {
@@ -44069,9 +44080,7 @@ exports.createContext = Script.createContext = function (context) {
     options = options || {};
     var body = options.body;
 
-    if (typeof input === 'string') {
-      this.url = input;
-    } else {
+    if (input instanceof Request) {
       if (input.bodyUsed) {
         throw new TypeError('Already read');
       }
@@ -44086,6 +44095,8 @@ exports.createContext = Script.createContext = function (context) {
         body = input._bodyInit;
         input.bodyUsed = true;
       }
+    } else {
+      this.url = String(input);
     }
 
     this.credentials = options.credentials || this.credentials || 'omit';
@@ -44121,7 +44132,7 @@ exports.createContext = Script.createContext = function (context) {
 
   function parseHeaders(rawHeaders) {
     var headers = new Headers();
-    rawHeaders.split('\r\n').forEach(function (line) {
+    rawHeaders.split(/\r?\n/).forEach(function (line) {
       var parts = line.split(':');
       var key = parts.shift().trim();
       if (key) {
@@ -44552,15 +44563,9 @@ Object.defineProperties(Address.prototype, {
     },
     set: function set(value) {
       if (Helpers.isBoolean(value)) {
-        if (value) {
-          // Archive:
-          this._tag = 2;
-        } else {
-          // Unarchive:
-          this._tag = 0;
-          MyWallet.wallet.getHistory();
-        }
+        this._tag = value ? 2 : 0;
         MyWallet.syncWallet();
+        MyWallet.wallet.getHistory();
       } else {
         throw new Error('address.archived must be a boolean');
       }
@@ -45552,6 +45557,7 @@ var Block = require('./bitcoin-block');
 var External = require('./external');
 var AccountInfo = require('./account-info');
 var Metadata = require('./metadata');
+var constants = require('./constants');
 
 // Wallet
 
@@ -45566,10 +45572,11 @@ function Wallet(object) {
   this._double_encryption = obj.double_encryption || false;
   this._dpasswordhash = obj.dpasswordhash;
   // options
-  this._pbkdf2_iterations = obj.options.pbkdf2_iterations;
-  this._fee_per_kb = obj.options.fee_per_kb == null ? 10000 : obj.options.fee_per_kb;
-  this._html5_notifications = obj.options.html5_notifications;
-  this._logout_time = obj.options.logout_time;
+  var options = Object.assign(constants.getDefaultWalletOptions(), obj.options);
+  this._pbkdf2_iterations = options.pbkdf2_iterations;
+  this._fee_per_kb = options.fee_per_kb;
+  this._html5_notifications = options.html5_notifications;
+  this._logout_time = options.logout_time;
 
   // legacy addresses list
   this._addresses = obj.keys ? obj.keys.reduce(Address.factory, {}) : undefined;
@@ -46270,12 +46277,7 @@ Wallet.new = function (guid, sharedKey, mnemonic, bip39Password, firstAccountLab
     guid: guid,
     sharedKey: sharedKey,
     double_encryption: false,
-    options: {
-      pbkdf2_iterations: 5000,
-      html5_notifications: false,
-      fee_per_kb: 10000,
-      logout_time: 600000
-    }
+    options: constants.getDefaultWalletOptions()
   };
   MyWallet.wallet = new Wallet(object);
   var label = firstAccountLabel || 'My Bitcoin Wallet';
@@ -46492,7 +46494,7 @@ Wallet.prototype.saveGUIDtoMetadata = function () {
   }
 };
 
-},{"./account-info":268,"./address":269,"./api":270,"./bitcoin-block":271,"./blockchain-settings-api":272,"./external":278,"./hd-wallet":280,"./helpers":281,"./keyring":284,"./metadata":285,"./rng":287,"./transaction-list":289,"./wallet":297,"./wallet-crypto":291,"./wallet-store":294,"assert":16,"bip39":23}],275:[function(require,module,exports){
+},{"./account-info":268,"./address":269,"./api":270,"./bitcoin-block":271,"./blockchain-settings-api":272,"./constants":276,"./external":278,"./hd-wallet":280,"./helpers":281,"./keyring":284,"./metadata":285,"./rng":287,"./transaction-list":289,"./wallet":297,"./wallet-crypto":291,"./wallet-store":294,"assert":16,"bip39":23}],275:[function(require,module,exports){
 'use strict';
 
 module.exports = BuySell;
@@ -46556,6 +46558,14 @@ module.exports = {
   NETWORK: 'bitcoin',
   getNetwork: function getNetwork() {
     return Bitcoin.networks[this.NETWORK];
+  },
+  getDefaultWalletOptions: function getDefaultWalletOptions() {
+    return {
+      pbkdf2_iterations: 5000,
+      html5_notifications: false,
+      fee_per_kb: 10000,
+      logout_time: 600000
+    };
   }
 };
 
@@ -46966,11 +46976,7 @@ Object.defineProperties(HDAccount.prototype, {
       if (Helpers.isBoolean(value)) {
         this._archived = value;
         MyWallet.syncWallet();
-        if (!value) {
-          // Unarchive
-          // we should define a way to update only the account, not the whole wallet
-          MyWallet.wallet.getHistory();
-        }
+        MyWallet.wallet.getHistory();
       } else {
         throw new Error('account.archived must be a boolean');
       }
@@ -51189,7 +51195,6 @@ var API = require('./api');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
 var BlockchainSocket = require('./blockchain-socket');
-var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var RNG = require('./rng');
 var BIP39 = require('bip39');
 var Bitcoin = require('bitcoinjs-lib');
@@ -51248,7 +51253,9 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
     if (lastOnChange.checksum !== newChecksum && oldChecksum !== newChecksum) {
       lastOnChange.checksum = newChecksum;
 
-      MyWallet.getWallet();
+      MyWallet.getWallet(function () {
+        WalletStore.sendEvent('on_change');
+      });
     }
   } else if (obj.op === 'utx') {
     WalletStore.sendEvent('on_tx_received', obj.x);
@@ -51667,11 +51674,6 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
   var success = function success(createdGuid, createdSharedKey, createdPassword, sessionToken) {
     if (languageCode) {
       WalletStore.setLanguage(languageCode);
-      BlockchainSettingsAPI.changeLanguage(languageCode, function () {});
-    }
-
-    if (currencyCode) {
-      BlockchainSettingsAPI.changeLocalCurrency(currencyCode, function () {});
     }
 
     WalletStore.unsafeSetPassword(createdPassword);
@@ -51681,7 +51683,17 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
   var saveWallet = function saveWallet(wallet) {
     // Generate a session token to facilitate future login attempts:
     WalletNetwork.establishSession(null).then(function (sessionToken) {
-      WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, { email: inputedEmail }, undefined, sessionToken).then(function () {
+      var extra = { email: inputedEmail };
+
+      if (languageCode) {
+        extra.language = languageCode;
+      }
+
+      if (currencyCode) {
+        extra.currency = currencyCode;
+      }
+
+      WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, extra, undefined, sessionToken).then(function () {
         success(wallet.guid, wallet.sharedKey, inputedPassword, sessionToken);
       }).catch(function (e) {
         errorCallback(e);
@@ -51818,7 +51830,7 @@ MyWallet.browserCheckFast = function () {
   return true;
 };
 
-},{"./api":270,"./blockchain-settings-api":272,"./blockchain-socket":273,"./blockchain-wallet":274,"./constants":276,"./helpers":281,"./rng":287,"./wallet-crypto":291,"./wallet-network":292,"./wallet-signup":293,"./wallet-store":294,"assert":16,"bip39":23,"bitcoinjs-lib":66,"buffer":108,"pbkdf2":222}],298:[function(require,module,exports){
+},{"./api":270,"./blockchain-socket":273,"./blockchain-wallet":274,"./constants":276,"./helpers":281,"./rng":287,"./wallet-crypto":291,"./wallet-network":292,"./wallet-signup":293,"./wallet-store":294,"assert":16,"bip39":23,"bitcoinjs-lib":66,"buffer":108,"pbkdf2":222}],298:[function(require,module,exports){
 
 var global = (function () { return this; })();
 var WebSocket = global.WebSocket || global.MozWebSocket;
