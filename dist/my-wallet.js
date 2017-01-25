@@ -6597,7 +6597,7 @@ var Coinify = function (_Exchange$Exchange) {
 
     var _this = _possibleConstructorReturn(this, (Coinify.__proto__ || Object.getPrototypeOf(Coinify)).call(this, delegate, Trade, Quote, PaymentMedium));
 
-    assert(delegate.getEmailToken, 'delegate.getEmailToken() required');
+    assert(delegate.getToken, 'delegate.getToken() required');
 
     var obj = object || {};
     _this._partner_id = null;
@@ -6708,7 +6708,11 @@ var Coinify = function (_Exchange$Exchange) {
         });
       };
 
-      return Promise.resolve().then(runChecks.bind(this)).then(this.delegate.getEmailToken.bind(this.delegate)).then(doSignup.bind(this)).then(saveMetadata.bind(this));
+      var getToken = function getToken() {
+        return this.delegate.getToken.bind(this.delegate)('coinify', { walletAge: true });
+      };
+
+      return Promise.resolve().then(runChecks.bind(this)).then(getToken.bind(this)).then(doSignup.bind(this)).then(saveMetadata.bind(this));
     }
   }, {
     key: 'fetchProfile',
@@ -46635,30 +46639,21 @@ ExchangeDelegate.prototype.isMobileVerified = function () {
   return this._wallet.accountInfo.isMobileVerified;
 };
 
-ExchangeDelegate.prototype.getEmailToken = function () {
-  var self = this;
-  return API.request('GET', 'wallet/signed-token', {
-    guid: self._wallet.guid,
-    sharedKey: self._wallet.sharedKey,
-    fields: 'email|wallet_age'
-  }).then(function (res) {
-    if (res.success) {
-      return res.token;
-    } else {
-      throw new Error('Unable to obtain email verification proof');
-    }
-  });
-};
+ExchangeDelegate.prototype.getToken = function (partner, options) {
+  options = options || {};
+  // assert(partner, 'Specify exchange partner');
 
-ExchangeDelegate.prototype.getToken = function (partner) {
   var fields = {
+    // partner: partner, // Coinify doesn't support this yet
     guid: this._wallet.guid,
     sharedKey: this._wallet.sharedKey,
-    fields: 'email|mobile'
+    fields: 'email' + (options.mobile ? '|mobile' : '') + (options.walletAge ? '|wallet_age' : '')
   };
+
   if (partner) {
     fields.partner = partner;
   }
+
   return API.request('GET', 'wallet/signed-token', fields).then(function (res) {
     if (res.success) {
       return res.token;
