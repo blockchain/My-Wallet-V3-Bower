@@ -6,10 +6,10 @@ __Blockchain Wallet V3__
 
 ---
 
-## Bug Fixes
+## Chore
 
-- **exchangedelegate:** actually remove getEmailToken(), repair tests
-  ([5e5bc900](https://github.com/blockchain/My-Wallet-V3/commit/5e5bc9006115c0e382eed4bbb9a54ad8fb09afe7))
+- **release:** v3.26.2
+  ([4f1846a4](https://github.com/blockchain/My-Wallet-V3/commit/4f1846a4da248937c2c7cd44ad33142cee85c483))
 
 
 

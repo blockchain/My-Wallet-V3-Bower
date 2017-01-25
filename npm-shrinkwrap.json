@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.26.1",
+  "version": "3.26.2",
   "dependencies": {
     "abbrev": {
       "version": "1.0.9",
@@ -516,9 +516,9 @@
       "resolved": "https://registry.npmjs.org/bip66/-/bip66-1.1.4.tgz"
     },
     "bitcoin-coinify-client": {
-      "version": "0.3.0",
+      "version": "0.3.1",
       "from": "bitcoin-coinify-client@>=0.3.0 <0.4.0",
-      "resolved": "https://registry.npmjs.org/bitcoin-coinify-client/-/bitcoin-coinify-client-0.3.0.tgz"
+      "resolved": "https://registry.npmjs.org/bitcoin-coinify-client/-/bitcoin-coinify-client-0.3.1.tgz"
     },
     "bitcoin-exchange-client": {
       "version": "0.1.4",
@@ -2842,9 +2842,9 @@
       }
     },
     "karma-browserify": {
-      "version": "5.1.0",
+      "version": "5.1.1",
       "from": "karma-browserify@>=5.1.0 <5.2.0",
-      "resolved": "https://registry.npmjs.org/karma-browserify/-/karma-browserify-5.1.0.tgz",
+      "resolved": "https://registry.npmjs.org/karma-browserify/-/karma-browserify-5.1.1.tgz",
       "dependencies": {
         "lodash": {
           "version": "3.10.1",
