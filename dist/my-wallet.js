@@ -33,7 +33,6 @@ module.exports = {
   Helpers: require('./src/helpers'),
   API: require('./src/api'),
   Tx: require('./src/wallet-transaction'),
-  Shared: require('./src/shared'),
   WalletTokenEndpoints: require('./src/wallet-token-endpoints'),
   WalletNetwork: require('./src/wallet-network'),
   RNG: require('./src/rng'),
@@ -52,7 +51,7 @@ module.exports = {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./src/address":269,"./src/api":270,"./src/blockchain-settings-api":272,"./src/buy-sell":275,"./src/constants":276,"./src/external":278,"./src/helpers":281,"./src/import-export":282,"./src/metadata":285,"./src/payment":286,"./src/rng":287,"./src/shared":288,"./src/transaction":290,"./src/wallet":297,"./src/wallet-crypto":291,"./src/wallet-network":292,"./src/wallet-store":294,"./src/wallet-token-endpoints":295,"./src/wallet-transaction":296,"bigi/lib":21,"bip39":23,"bitcoinjs-lib":66,"bitcoinjs-lib/src/ecdsa":62,"bitcoinjs-lib/src/networks":68,"buffer":108,"core-js/es6/symbol":110,"es6-promise":201,"isomorphic-fetch":215,"ramda":231}],2:[function(require,module,exports){
+},{"./src/address":269,"./src/api":270,"./src/blockchain-settings-api":272,"./src/buy-sell":275,"./src/constants":276,"./src/external":278,"./src/helpers":281,"./src/import-export":282,"./src/metadata":285,"./src/payment":286,"./src/rng":287,"./src/transaction":289,"./src/wallet":296,"./src/wallet-crypto":290,"./src/wallet-network":291,"./src/wallet-store":293,"./src/wallet-token-endpoints":294,"./src/wallet-transaction":295,"bigi/lib":21,"bip39":23,"bitcoinjs-lib":66,"bitcoinjs-lib/src/ecdsa":62,"bitcoinjs-lib/src/networks":68,"buffer":108,"core-js/es6/symbol":110,"es6-promise":201,"isomorphic-fetch":215,"ramda":231}],2:[function(require,module,exports){
 'use strict';
 
 var asn1 = exports;
@@ -10925,7 +10924,7 @@ HDNode.fromBase58 = function (string, networks) {
 
     // Verify that the X coordinate in the public point corresponds to a point on the curve.
     // If not, the extended public key is invalid.
-    // curve.validate(Q)
+    curve.validate(Q);
 
     keyPair = new ECPair(null, Q, {
       network: network
@@ -44431,7 +44430,6 @@ var API = require('./api');
 var Bitcoin = require('bitcoinjs-lib');
 var Helpers = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
-var shared = require('./shared');
 var ImportExport = require('./import-export');
 var WalletCrypto = require('./wallet-crypto');
 var constants = require('./constants');
@@ -44602,8 +44600,8 @@ Address.import = function (key, label) {
     addr: null,
     priv: null,
     created_time: Date.now(),
-    created_device_name: shared.APP_NAME,
-    created_device_version: shared.APP_VERSION
+    created_device_name: constants.APP_NAME,
+    created_device_version: constants.APP_VERSION
   };
   switch (true) {
     case Helpers.isBitcoinAddress(key):
@@ -44752,7 +44750,7 @@ Address.prototype.persist = function () {
   return this;
 };
 
-},{"./api":270,"./constants":276,"./helpers":281,"./import-export":282,"./rng":287,"./shared":288,"./wallet":297,"./wallet-crypto":291,"bitcoinjs-lib":66,"bs58":101}],270:[function(require,module,exports){
+},{"./api":270,"./constants":276,"./helpers":281,"./import-export":282,"./rng":287,"./wallet":296,"./wallet-crypto":290,"bitcoinjs-lib":66,"bs58":101}],270:[function(require,module,exports){
 'use strict';
 
 module.exports = new API();
@@ -45017,7 +45015,7 @@ API.prototype.incrementSecPassStats = function (activeBool) {
   return fetch(this.ROOT_URL + 'event?name=wallet_login_second_password_' + active);
 };
 
-},{"./helpers":281,"./wallet":297,"./wallet-crypto":291,"./wallet-store":294,"assert":16}],271:[function(require,module,exports){
+},{"./helpers":281,"./wallet":296,"./wallet-crypto":290,"./wallet-store":293,"assert":16}],271:[function(require,module,exports){
 'use strict';
 
 module.exports = Block;
@@ -45432,7 +45430,7 @@ module.exports = {
   updateAuthType: updateAuthType
 };
 
-},{"./api":270,"./wallet-store.js":294,"./wallet.js":297,"assert":16}],273:[function(require,module,exports){
+},{"./api":270,"./wallet-store.js":293,"./wallet.js":296,"assert":16}],273:[function(require,module,exports){
 
 var WebSocket = require('ws');
 var Helpers = require('./helpers');
@@ -45539,7 +45537,7 @@ BlockchainSocket.prototype.msgOnOpen = function (guid, addresses, xpubs) {
 
 module.exports = BlockchainSocket;
 
-},{"./helpers":281,"ws":298}],274:[function(require,module,exports){
+},{"./helpers":281,"ws":297}],274:[function(require,module,exports){
 'use strict';
 
 module.exports = Wallet;
@@ -46500,7 +46498,7 @@ Wallet.prototype.saveGUIDtoMetadata = function () {
   }
 };
 
-},{"./account-info":268,"./address":269,"./api":270,"./bitcoin-block":271,"./blockchain-settings-api":272,"./constants":276,"./external":278,"./hd-wallet":280,"./helpers":281,"./keyring":284,"./metadata":285,"./rng":287,"./transaction-list":289,"./wallet":297,"./wallet-crypto":291,"./wallet-store":294,"assert":16,"bip39":23}],275:[function(require,module,exports){
+},{"./account-info":268,"./address":269,"./api":270,"./bitcoin-block":271,"./blockchain-settings-api":272,"./constants":276,"./external":278,"./hd-wallet":280,"./helpers":281,"./keyring":284,"./metadata":285,"./rng":287,"./transaction-list":288,"./wallet":296,"./wallet-crypto":290,"./wallet-store":293,"assert":16,"bip39":23}],275:[function(require,module,exports){
 'use strict';
 
 module.exports = BuySell;
@@ -46562,6 +46560,8 @@ var Bitcoin = require('bitcoinjs-lib');
 
 module.exports = {
   NETWORK: 'bitcoin',
+  APP_NAME: 'javascript_web',
+  APP_VERSION: '3.0',
   getNetwork: function getNetwork() {
     return Bitcoin.networks[this.NETWORK];
   },
@@ -46781,7 +46781,7 @@ ExchangeDelegate.prototype.deserializeExtraFields = function (obj, trade) {
   trade._receive_index = obj.receive_index;
 };
 
-},{"./api":270,"./helpers":281,"./wallet-store":294,"./wallet-transaction":296,"assert":16}],278:[function(require,module,exports){
+},{"./api":270,"./helpers":281,"./wallet-store":293,"./wallet-transaction":295,"assert":16}],278:[function(require,module,exports){
 'use strict';
 
 var Coinify = require('bitcoin-coinify-client');
@@ -47268,7 +47268,7 @@ HDAccount.prototype.persist = function () {
   return this;
 };
 
-},{"./constants":276,"./helpers":281,"./keyring":284,"./wallet":297,"assert":16,"bitcoinjs-lib":66}],280:[function(require,module,exports){
+},{"./constants":276,"./helpers":281,"./keyring":284,"./wallet":296,"assert":16,"bitcoinjs-lib":66}],280:[function(require,module,exports){
 'use strict';
 
 module.exports = HDWallet;
@@ -47579,7 +47579,7 @@ HDWallet.prototype.isValidAccountIndex = function (index) {
   return Helpers.isPositiveInteger(index) && index < this._accounts.length;
 };
 
-},{"./constants":276,"./hd-account":279,"./helpers":281,"./wallet":297,"assert":16,"bip39":23,"bitcoinjs-lib":66}],281:[function(require,module,exports){
+},{"./constants":276,"./hd-account":279,"./helpers":281,"./wallet":296,"assert":16,"bip39":23,"bitcoinjs-lib":66}],281:[function(require,module,exports){
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -48078,7 +48078,7 @@ Helpers.isEmailInvited = function (email, fraction) {
 
 module.exports = Helpers;
 
-},{"./constants":276,"./import-export":282,"./wallet-crypto":291,"bigi":21,"bip39":23,"bitcoinjs-lib":66,"bs58":101,"buffer":108}],282:[function(require,module,exports){
+},{"./constants":276,"./import-export":282,"./wallet-crypto":290,"bigi":21,"bip39":23,"bitcoinjs-lib":66,"bs58":101,"buffer":108}],282:[function(require,module,exports){
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -48235,7 +48235,7 @@ var ImportExport = new function () {
 
 module.exports = ImportExport;
 
-},{"./constants":276,"./wallet-crypto":291,"bigi":21,"bitcoinjs-lib":66,"bs58":101,"buffer":108,"unorm":260}],283:[function(require,module,exports){
+},{"./constants":276,"./wallet-crypto":290,"bigi":21,"bitcoinjs-lib":66,"bs58":101,"buffer":108,"unorm":260}],283:[function(require,module,exports){
 'use strict';
 
 module.exports = KeyChain;
@@ -48605,7 +48605,7 @@ Metadata.fromMasterHDNode = function (masterHDNode, typeId) {
 module.exports = Metadata;
 
 }).call(this,require("buffer").Buffer)
-},{"./api":270,"./constants":276,"./helpers":281,"./wallet-crypto":291,"bitcoinjs-lib":66,"buffer":108,"ramda":231}],286:[function(require,module,exports){
+},{"./api":270,"./constants":276,"./helpers":281,"./wallet-crypto":290,"bitcoinjs-lib":66,"buffer":108,"ramda":231}],286:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -49145,7 +49145,7 @@ function getPrivateKeys(password, payment) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"./api":270,"./constants":276,"./helpers":281,"./keyring":284,"./transaction":290,"./wallet":297,"./wallet-crypto":291,"bitcoinjs-lib":66,"buffer":108,"events":202,"util":264}],287:[function(require,module,exports){
+},{"./api":270,"./constants":276,"./helpers":281,"./keyring":284,"./transaction":289,"./wallet":296,"./wallet-crypto":290,"bitcoinjs-lib":66,"buffer":108,"events":202,"util":264}],287:[function(require,module,exports){
 'use strict';
 
 module.exports = new RNG();
@@ -49242,43 +49242,6 @@ RNG.prototype.getServerEntropy = function (nBytes) {
 },{"./api":270,"./helpers":281,"assert":16,"buffer":108,"randombytes":232}],288:[function(require,module,exports){
 'use strict';
 
-/* eslint-disable camelcase */
-var resource = 'Resources/';
-
-module.exports = {
-  APP_NAME: 'javascript_web',
-  APP_VERSION: '3.0',
-  playSound: playSound
-};
-
-// used iOS
-var _sounds = {};
-function playSound(id) {
-  try {
-    if (!_sounds[id]) {
-      _sounds[id] = new Audio('/' + resource + id + '.wav');
-    }
-
-    _sounds[id].play();
-  } catch (e) {}
-}
-
-// Ignore Console
-try {
-  if (!window.console) {
-    var names = ['log', 'debug', 'info', 'warn', 'error', 'assert', 'dir', 'dirxml', 'group', 'groupEnd', 'time', 'timeEnd', 'count', 'trace', 'profile', 'profileEnd'];
-
-    window.console = {};
-    for (var i = 0; i < names.length; ++i) {
-      window.console[names[i]] = function () {};
-    }
-  }
-} catch (e) {}
-/* eslint-enable camelcase */
-
-},{}],289:[function(require,module,exports){
-'use strict';
-
 var EventEmitter = require('events');
 var Helpers = require('./helpers');
 var Tx = require('./wallet-transaction');
@@ -49347,7 +49310,7 @@ TransactionList.prototype.subscribe = function (listener) {
 
 module.exports = TransactionList;
 
-},{"./helpers":281,"./wallet-transaction":296,"events":202}],290:[function(require,module,exports){
+},{"./helpers":281,"./wallet-transaction":295,"events":202}],289:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -49580,7 +49543,7 @@ Transaction.confirmationEstimation = function (absoluteFees, fee) {
 };
 module.exports = Transaction;
 
-},{"./constants":276,"./helpers":281,"assert":16,"bitcoinjs-lib":66,"buffer":108}],291:[function(require,module,exports){
+},{"./constants":276,"./helpers":281,"assert":16,"bitcoinjs-lib":66,"buffer":108}],290:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -50181,7 +50144,7 @@ module.exports = {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"assert":16,"buffer":108,"crypto":168,"sjcl":253}],292:[function(require,module,exports){
+},{"assert":16,"buffer":108,"crypto":168,"sjcl":253}],291:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -50371,7 +50334,7 @@ function obtainSessionToken() {
     return data.token;
   };
 
-  return API.request('POST', 'sessions').then(processResult);
+  return API.request('POST', 'wallet/sessions').then(processResult);
 }
 
 function establishSession(token) {
@@ -50592,7 +50555,7 @@ module.exports = {
   getCaptchaImage: getCaptchaImage
 };
 
-},{"./api":270,"./helpers":281,"./wallet":297,"./wallet-crypto":291,"./wallet-store":294,"assert":16}],293:[function(require,module,exports){
+},{"./api":270,"./helpers":281,"./wallet":296,"./wallet-crypto":290,"./wallet-store":293,"assert":16}],292:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -50622,7 +50585,7 @@ module.exports = {
   generateNewWallet: generateNewWallet
 };
 
-},{"./blockchain-wallet":274,"./wallet-network":292,"assert":16}],294:[function(require,module,exports){
+},{"./blockchain-wallet":274,"./wallet-network":291,"assert":16}],293:[function(require,module,exports){
 'use strict';
 
 var MyWallet = require('./wallet');
@@ -50782,7 +50745,7 @@ var WalletStore = function () {
 
 module.exports = WalletStore;
 
-},{"./wallet":297,"./wallet-crypto":291}],295:[function(require,module,exports){
+},{"./wallet":296,"./wallet-crypto":290}],294:[function(require,module,exports){
 'use strict';
 
 var assert = require('assert');
@@ -50856,7 +50819,7 @@ module.exports = {
   postTokenEndpoint: postTokenEndpoint // For tests
 };
 
-},{"./api":270,"./helpers":281,"assert":16}],296:[function(require,module,exports){
+},{"./api":270,"./helpers":281,"assert":16}],295:[function(require,module,exports){
 'use strict';
 
 module.exports = Tx;
@@ -51177,7 +51140,7 @@ Tx.setConfirmations = function (txBlockHeight) {
   return conf;
 };
 
-},{"./wallet":297}],297:[function(require,module,exports){
+},{"./wallet":296}],296:[function(require,module,exports){
 'use strict';
 
 var MyWallet = module.exports = {};
@@ -51827,7 +51790,7 @@ MyWallet.browserCheckFast = function () {
   return true;
 };
 
-},{"./api":270,"./blockchain-socket":273,"./blockchain-wallet":274,"./constants":276,"./helpers":281,"./rng":287,"./wallet-crypto":291,"./wallet-network":292,"./wallet-signup":293,"./wallet-store":294,"assert":16,"bip39":23,"bitcoinjs-lib":66,"buffer":108,"pbkdf2":222}],298:[function(require,module,exports){
+},{"./api":270,"./blockchain-socket":273,"./blockchain-wallet":274,"./constants":276,"./helpers":281,"./rng":287,"./wallet-crypto":290,"./wallet-network":291,"./wallet-signup":292,"./wallet-store":293,"assert":16,"bip39":23,"bitcoinjs-lib":66,"buffer":108,"pbkdf2":222}],297:[function(require,module,exports){
 
 var global = (function () { return this; })();
 var WebSocket = global.WebSocket || global.MozWebSocket;

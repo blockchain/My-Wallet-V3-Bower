@@ -1,15 +1,17 @@
 __Blockchain Wallet V3__
 
-#   (2017-01-30)
+#   (2017-02-01)
 
 
 
 ---
 
-## Chore
+## Refactor
 
-- **release:** v3.26.2
-  ([4f1846a4](https://github.com/blockchain/My-Wallet-V3/commit/4f1846a4da248937c2c7cd44ad33142cee85c483))
+- **sessions:** endpoint moved (#323)
+  ([4744a943](https://github.com/blockchain/My-Wallet-V3/commit/4744a94354e82d8446d698ede7c4e0af8efb8ba3))
+- **sharedjs:** no more shared.js (#321)
+  ([25f196d8](https://github.com/blockchain/My-Wallet-V3/commit/25f196d81d893cdb009e65e7ab613297162b88ed))
 
 
 
