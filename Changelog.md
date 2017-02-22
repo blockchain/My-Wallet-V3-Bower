@@ -6,28 +6,16 @@ __Blockchain Wallet V3__
 
 ---
 
-## Bug Fixes
+## Build process
 
-- **login:** call callback and didFetchWallet for if sharedKey is known
-  ([9317feeb](https://github.com/blockchain/My-Wallet-V3/commit/9317feeb0b7c17f820dc23cb15bbe441f1dec843))
-
-
-## Dependencies
-
-- **coinify:** use latest version, bump release
-  ([251ebb94](https://github.com/blockchain/My-Wallet-V3/commit/251ebb9413948e532571feceab02f9d2f14bd3e7))
+- **make:** also add non-minified JS to bower
+  ([d69d0181](https://github.com/blockchain/My-Wallet-V3/commit/d69d01818f4b28f71ee88b62c9fbe9dac29af4a6))
 
 
-## Documentation
+## Chore
 
-- **changelog:** added 'dev'
-  ([247cddf0](https://github.com/blockchain/My-Wallet-V3/commit/247cddf0fc97b15fc6187cb23961ddacf2292457))
-
-
-## Pull requests merged
-
-- Merge pull request #332 from blockchain/iOS-login-fix
-  ([028b708f](https://github.com/blockchain/My-Wallet-V3/commit/028b708fdf0106a543280ff01ae608edfa3a71dd))
+- **release:** v3.28.2
+  ([bf829bfb](https://github.com/blockchain/My-Wallet-V3/commit/bf829bfb4d665fcf5b5cacb42c265ed52b8521d3))
 
 
 
