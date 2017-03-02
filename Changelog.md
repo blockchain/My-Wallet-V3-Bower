@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2017-02-28)
+#   (2017-03-02)
 
 
 
@@ -8,17 +8,26 @@ __Blockchain Wallet V3__
 
 ## Bug Fixes
 
-- **webpack:** disable uglifyjs compression, caused syntax error
-  ([23419e31](https://github.com/blockchain/My-Wallet-V3/commit/23419e3185b2b87e4281bc68fdfae7ac31654693))
+- **testnet:** sign metadata entries correctly
+  ([eca17c0d](https://github.com/blockchain/My-Wallet-V3/commit/eca17c0d7c4f01b72693bc4cef8d8d858b3aa302))
+
+
+## Build process
+
+- **make:** build task depends on node_modules
+  ([9b6160ee](https://github.com/blockchain/My-Wallet-V3/commit/9b6160ee79c8eba8167cf66750dc8cbee1c5190c))
+
+
+## Features
+
+- **account:** add canBuy method to AccountInfo (#333)
+  ([2687aed8](https://github.com/blockchain/My-Wallet-V3/commit/2687aed849a6881b2888a1f137e64beef4798f12))
 
 
 ## Chore
 
-- **release:**
-  - v3.28.4
-  ([a794b90c](https://github.com/blockchain/My-Wallet-V3/commit/a794b90c3d625f14a6ec59a63aa8812dd487a607))
-  - v3.28.3
-  ([040441db](https://github.com/blockchain/My-Wallet-V3/commit/040441db20d0a40fbb0d86facbaa4161a75238b2))
+- **release:** 3.28.5
+  ([3bfa6351](https://github.com/blockchain/My-Wallet-V3/commit/3bfa635163c1be145510fec00a5b791c55c690a3))
 
 
 

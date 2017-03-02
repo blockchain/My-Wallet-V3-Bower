@@ -12562,12 +12562,12 @@ Metadata.magic = curry(function (payload, prevMagic) {
 });
 
 Metadata.verify = function (address, signature, hash) {
-  return Bitcoin.message.verify(address, signature, hash);
+  return Bitcoin.message.verify(address, signature, hash, constants.getNetwork());
 };
 
 // Metadata.sign :: keyPair -> msg -> Buffer
 Metadata.sign = function (keyPair, msg) {
-  return Bitcoin.message.sign(keyPair, msg, Bitcoin.networks.bitcoin);
+  return Bitcoin.message.sign(keyPair, msg, constants.getNetwork());
 };
 
 // Metadata.computeSignature :: keypair -> buffer -> buffer -> base64
@@ -12646,6 +12646,7 @@ Metadata.prototype.fetch = function () {
       return res;
     };
     return M.GET(_this2._address).then(M.verifyResponse(_this2._address)).then(saveMagicHash).then(M.extractResponse(_this2._encKeyBuffer)).then(saveValue).catch(function (e) {
+      console.error('Failed to fetch metadata entry ' + _this2._typeId + ' at ' + _this2._address + ':', e);
       return Promise.reject('METADATA_FETCH_FAILED');
     });
   });
@@ -16235,6 +16236,19 @@ Object.defineProperties(External.prototype, {
     }
   }
 });
+
+External.prototype.canBuy = function (accountInfo, options) {
+  if (!accountInfo || !options) return false;
+
+  var whitelist = options.showBuySellTab || [];
+  var countryCodeGuess = accountInfo.countryCodeGuess;
+
+  var isCoinifyCountry = options.partners.coinify.countries.indexOf(countryCodeGuess) > -1;
+  var isCountryWhitelisted = whitelist.indexOf(countryCodeGuess) > -1;
+  var isUserInvited = accountInfo.invited && accountInfo.invited.sfox;
+
+  return this.hasExchangeAccount || isCoinifyCountry || isUserInvited && isCountryWhitelisted;
+};
 
 External.prototype.toJSON = function () {
   var external = {
