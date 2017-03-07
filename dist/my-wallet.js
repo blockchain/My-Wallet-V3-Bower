@@ -7248,7 +7248,7 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
 
   if (obj.op === 'on_change') {
     var oldChecksum = WalletStore.generatePayloadChecksum();
-    var newChecksum = obj.checksum;
+    var newChecksum = obj.x.checksum;
 
     if (lastOnChange.checksum !== newChecksum && oldChecksum !== newChecksum) {
       lastOnChange.checksum = newChecksum;
@@ -40455,6 +40455,10 @@ exports.createContext = Script.createContext = function (context) {
     if (headers instanceof Headers) {
       headers.forEach(function (value, name) {
         this.append(name, value);
+      }, this);
+    } else if (Array.isArray(headers)) {
+      headers.forEach(function (header) {
+        this.append(header[0], header[1]);
       }, this);
     } else if (headers) {
       Object.getOwnPropertyNames(headers).forEach(function (name) {

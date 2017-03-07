@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2017-03-02)
+#   (2017-03-07)
 
 
 
@@ -8,26 +8,14 @@ __Blockchain Wallet V3__
 
 ## Bug Fixes
 
-- **testnet:** sign metadata entries correctly
-  ([eca17c0d](https://github.com/blockchain/My-Wallet-V3/commit/eca17c0d7c4f01b72693bc4cef8d8d858b3aa302))
-
-
-## Build process
-
-- **make:** build task depends on node_modules
-  ([9b6160ee](https://github.com/blockchain/My-Wallet-V3/commit/9b6160ee79c8eba8167cf66750dc8cbee1c5190c))
-
-
-## Features
-
-- **account:** add canBuy method to AccountInfo (#333)
-  ([2687aed8](https://github.com/blockchain/My-Wallet-V3/commit/2687aed849a6881b2888a1f137e64beef4798f12))
+- **on change:** set newChecksum correctly (#336)
+  ([e52f1e91](https://github.com/blockchain/My-Wallet-V3/commit/e52f1e9190c38d42cbf54ec0629c63859cad4b71))
 
 
 ## Chore
 
-- **release:** 3.28.5
-  ([3bfa6351](https://github.com/blockchain/My-Wallet-V3/commit/3bfa635163c1be145510fec00a5b791c55c690a3))
+- **release:** v3.28.6
+  ([eca29e77](https://github.com/blockchain/My-Wallet-V3/commit/eca29e7766bb538838d18dc3b8e5caa4d40d9375))
 
 
 
