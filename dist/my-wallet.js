@@ -2,41 +2,41 @@ var Blockchain =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
-
+/******/
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
-
+/******/
 /******/ 		// Check if module is in cache
 /******/ 		if(installedModules[moduleId])
 /******/ 			return installedModules[moduleId].exports;
-
+/******/
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = installedModules[moduleId] = {
 /******/ 			i: moduleId,
 /******/ 			l: false,
 /******/ 			exports: {}
 /******/ 		};
-
+/******/
 /******/ 		// Execute the module function
 /******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-
+/******/
 /******/ 		// Flag the module as loaded
 /******/ 		module.l = true;
-
+/******/
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-
-
+/******/
+/******/
 /******/ 	// expose the modules object (__webpack_modules__)
 /******/ 	__webpack_require__.m = modules;
-
+/******/
 /******/ 	// expose the module cache
 /******/ 	__webpack_require__.c = installedModules;
-
+/******/
 /******/ 	// identity function for calling harmony imports with the correct context
 /******/ 	__webpack_require__.i = function(value) { return value; };
-
+/******/
 /******/ 	// define getter function for harmony exports
 /******/ 	__webpack_require__.d = function(exports, name, getter) {
 /******/ 		if(!__webpack_require__.o(exports, name)) {
@@ -47,7 +47,7 @@ var Blockchain =
 /******/ 			});
 /******/ 		}
 /******/ 	};
-
+/******/
 /******/ 	// getDefaultExport function for compatibility with non-harmony modules
 /******/ 	__webpack_require__.n = function(module) {
 /******/ 		var getter = module && module.__esModule ?
@@ -56,15 +56,15 @@ var Blockchain =
 /******/ 		__webpack_require__.d(getter, 'a', getter);
 /******/ 		return getter;
 /******/ 	};
-
+/******/
 /******/ 	// Object.prototype.hasOwnProperty.call
 /******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
-
+/******/
 /******/ 	// __webpack_public_path__
 /******/ 	__webpack_require__.p = "";
-
+/******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 326);
+/******/ 	return __webpack_require__(__webpack_require__.s = 329);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -2319,6 +2319,513 @@ if (typeof Object.create === 'function') {
 
 /***/ }),
 /* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var Bitcoin = __webpack_require__(7);
+var BigInteger = __webpack_require__(10);
+var Buffer = __webpack_require__(0).Buffer;
+var Base58 = __webpack_require__(76);
+var BIP39 = __webpack_require__(35);
+var ImportExport = __webpack_require__(69);
+var constants = __webpack_require__(9);
+var WalletCrypo = __webpack_require__(11);
+
+var Helpers = {};
+Math.log2 = function (x) {
+  return Math.log(x) / Math.LN2;
+};
+
+Helpers.isString = function (str) {
+  return typeof str === 'string' || str instanceof String;
+};
+Helpers.isKey = function (bitcoinKey) {
+  return Helpers.isInstanceOf(bitcoinKey, Bitcoin.ECPair);
+};
+Helpers.isInstanceOf = function (object, theClass) {
+  return object instanceof theClass;
+};
+Helpers.isBitcoinAddress = function (candidate) {
+  try {
+    var d = Bitcoin.address.fromBase58Check(candidate);
+    var n = constants.getNetwork();
+    return d.version === n.pubKeyHash || d.version === n.scriptHash;
+  } catch (e) {
+    return false;
+  }
+};
+Helpers.isBitcoinPrivateKey = function (candidate) {
+  try {
+    Bitcoin.ECPair.fromWIF(candidate, constants.getNetwork());
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+Helpers.isBase58Key = function (str) {
+  return Helpers.isString(str) && /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{40,44}$/.test(str);
+};
+Helpers.isXprivKey = function (k) {
+  return Helpers.isString(k) && /^(x|t)prv/.test(k);
+};
+Helpers.isXpubKey = function (k) {
+  return Helpers.isString(k) && /^(x|t)pub/.test(k);
+};
+Helpers.isAlphaNum = function (str) {
+  return Helpers.isString(str) && /^[\-+,._\w\d\s]+$/.test(str);
+};
+Helpers.isHex = function (str) {
+  return Helpers.isString(str) && /^[A-Fa-f0-9]+$/.test(str);
+};
+Helpers.isSeedHex = function (str) {
+  return Helpers.isString(str) && /^[A-Fa-f0-9]{32}$/.test(str);
+};
+Helpers.isBase64 = function (str) {
+  return Helpers.isString(str) && /^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789=+\/]+$/.test(str);
+};
+Helpers.isNumber = function (num) {
+  return typeof num === 'number' && !isNaN(num);
+};
+Helpers.isPositiveNumber = function (num) {
+  return Helpers.isNumber(num) && num >= 0;
+};
+Helpers.isPositiveInteger = function (num) {
+  return Helpers.isPositiveNumber(num) && num % 1 === 0;
+};
+Helpers.isNotNumber = function (num) {
+  return !Helpers.isNumber(num);
+};
+Helpers.isBoolean = function (value) {
+  return typeof value === 'boolean';
+};
+Helpers.isValidLabel = function (text) {
+  return Helpers.isString(text);
+};
+Helpers.isInRange = function (val, min, max) {
+  return min <= val && val < max;
+};
+Helpers.add = function (x, y) {
+  return x + y;
+};
+Helpers.and = function (x, y) {
+  return x && y;
+};
+Helpers.pluck = function (prop) {
+  return function (o) {
+    return o[prop];
+  };
+};
+Helpers.eq = function (value1) {
+  return function (value0) {
+    return value0 === value1;
+  };
+};
+Helpers.notEq = function (value1) {
+  return function (value0) {
+    return value0 !== value1;
+  };
+};
+Helpers.propEq = function (prop, value) {
+  return function (o) {
+    return o[prop] === value;
+  };
+};
+Helpers.o = function (pred1, pred2) {
+  return function (element) {
+    return pred1(element) || pred2(element);
+  };
+};
+Helpers.noop = function () {};
+Helpers.isValidSharedKey = function (sharedKey) {
+  return Helpers.isString(sharedKey) && sharedKey.length === 36;
+};
+Helpers.isValidGUID = function (guid) {
+  return Helpers.isString(guid);
+};
+// Return a memoized version of function f
+Helpers.memoize = function (f) {
+  var cache = {};
+  return function () {
+    var key = arguments.length + Array.prototype.join.call(arguments, ',');
+    if (key in cache) return cache[key];else {
+      var value = cache[key] = f.apply(this, arguments);
+      return value;
+    }
+  };
+};
+
+Helpers.toArrayFormat = function (x) {
+  return Array.isArray(x) ? x : [x];
+};
+
+Helpers.isEmptyObject = function (x) {
+  return Object.keys(x).length === 0 && x.constructor === Object;
+};
+
+Helpers.isEmptyArray = function (x) {
+  return Array.isArray(x) && x.length === 0;
+};
+// Return an async version of f that it will run after miliseconds
+// no matter how many times you call the new function, it will run only once
+Helpers.asyncOnce = function (f, milliseconds, before) {
+  var timer = null;
+  var oldArguments = [];
+
+  trigger.cancel = function () {
+    clearTimeout(timer);
+  };
+
+  function trigger() {
+    trigger.cancel();
+    before && before();
+    var myArgs = [];
+    // this is needed because arguments is not an 'Array' instance
+    for (var i = 0; i < arguments.length; i++) {
+      myArgs[i] = arguments[i];
+    }
+    myArgs = Helpers.zipLong(Helpers.maybeCompose, myArgs, oldArguments);
+    oldArguments = myArgs;
+    timer = setTimeout(function () {
+      f.apply(this, myArgs);
+      oldArguments = [];
+    }, milliseconds);
+  }
+
+  return trigger;
+};
+
+Helpers.exponentialBackoff = function (f, maxTime) {
+  maxTime = maxTime || Infinity;
+  var timer;
+  var run = function run(e) {
+    var nextTime = Math.pow(2, e) * 1000;
+    timer = setTimeout(function () {
+      f.call(f);
+      run(e + 1);
+    }, nextTime > maxTime ? maxTime : nextTime);
+  };
+  run(0);
+  return function () {
+    clearTimeout(timer);
+  };
+};
+
+// merges the properties of two objects
+Helpers.merge = function (o, p) {
+  for (var prop in p) {
+    if (!o.hasOwnProperty(prop)) {
+      o[prop] = p[prop];
+    }
+  }
+  return o;
+};
+
+Helpers.zipLong = function (f, xs, ys) {
+  if (!(f instanceof Function && xs instanceof Array && ys instanceof Array)) {
+    return null;
+  } else {
+    var zs = xs.length > ys.length ? xs : ys;
+    return zs.map(function (v, i) {
+      return f(xs[i], ys[i]);
+    });
+  }
+};
+
+Helpers.zip3 = function (xs, ys, zs) {
+  if (!(xs instanceof Array && ys instanceof Array && zs instanceof Array)) {
+    return null;
+  } else {
+    return xs.map(function (v, i) {
+      return [xs[i], ys[i], zs[i]];
+    });
+  }
+};
+
+Helpers.maybeCompose = function (f, g) {
+  if (f instanceof Function && g instanceof Function) {
+    return f.compose(g);
+  } else {
+    if (f instanceof Function) {
+      return f;
+    }
+    if (g instanceof Function) {
+      return g;
+    }
+    // otherwise
+    return f;
+  }
+};
+
+Function.prototype.compose = function (g) {
+  // eslint-disable-line no-extend-native
+  var fn = this;
+  return function () {
+    return fn.call(this, g.apply(this, arguments));
+  };
+};
+
+Helpers.guessSize = function (nInputs, nOutputs) {
+  return nInputs * 148 + nOutputs * 34 + 10;
+};
+
+Helpers.guessFee = function (nInputs, nOutputs, feePerKb) {
+  var sizeBytes = Helpers.guessSize(nInputs, nOutputs);
+  return Math.ceil(feePerKb * (sizeBytes / 1000));
+};
+
+// password scorer
+Helpers.scorePassword = function (password) {
+  if (!Helpers.isString(password)) {
+    return 0;
+  }
+
+  var patternsList = [[0.25, /^[\d\s]+$/], [0.25, /^[a-z\s]+\d$/], [0.25, /^[A-Z\s]+\d$/], [0.5, /^[a-zA-Z\s]+\d$/], [0.5, /^[a-z\s]+\d+$/], [0.25, /^[a-z\s]+$/], [0.25, /^[A-Z\s]+$/], [0.25, /^[A-Z][a-z\s]+$/], [0.25, /^[A-Z][a-z\s]+\d$/], [0.5, /^[A-Z][a-z\s]+\d+$/], [0.25, /^[a-z\s]+[._!\- @*#]$/], [0.25, /^[A-Z\s]+[._!\- @*#]$/], [0.5, /^[a-zA-Z\s]+[._!\- @*#]$/], [0, /^[a-zA-Z0-9_]+@[a-zA-Z0-9]+\.[a-zA-Z]+$/], // email must always score bad
+  [1, /^.*$/]];
+
+  var hasDigits = function hasDigits(str) {
+    return (/[0-9]/.test(str)
+    );
+  };
+  var hasLowerCase = function hasLowerCase(str) {
+    return (/[a-z]/.test(str)
+    );
+  };
+  var hasUpperCase = function hasUpperCase(str) {
+    return (/[A-Z]/.test(str)
+    );
+  };
+  var hasSymbol = function hasSymbol(str) {
+    return (/[^0-9a-zA-z]/.test(str)
+    );
+  };
+  var computeSet = function computeSet(str) {
+    var maxChar = Math.max.apply(Math, str.split('').map(function (c) {
+      return c.charCodeAt(0);
+    }));
+    return maxChar + 256 - maxChar % 256;
+  };
+
+  var base = function base(str) {
+    var tuples = [[10, hasDigits(str)], [26, hasLowerCase(str)], [26, hasUpperCase(str)]];
+    var bases = tuples.filter(function (t) {
+      return t[1];
+    }).map(function (t) {
+      return t[0];
+    });
+    var setSize = hasSymbol(str) ? computeSet(str) : bases.reduce(Helpers.add, 0);
+    var ret = setSize === 0 ? 1 : setSize;
+    return ret;
+  };
+
+  var entropy = function entropy(str) {
+    return Math.log2(Math.pow(base(str), str.length));
+  };
+
+  var quality = function quality(str) {
+    var pats = patternsList.filter(function (p) {
+      return p[1].test(str);
+    }).map(function (p) {
+      return p[0];
+    });
+    return Math.min.apply(Math, pats);
+  };
+
+  var entropyWeighted = function entropyWeighted(str) {
+    return quality(str) * entropy(str);
+  };
+
+  return entropyWeighted(password);
+};
+
+Helpers.getHostName = function () {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  if (typeof window.location === 'undefined' || window.location.hostname === 'undefined') {
+    return null;
+  }
+
+  return window.location.hostname;
+};
+
+Helpers.tor = function () {
+  var hostname = Helpers.getHostName();
+
+  // NodeJS TOR detection not supported:
+  if (typeof hostname !== 'string') return null;
+
+  return hostname.slice(-6) === '.onion';
+};
+
+Helpers.buffertoByteArray = function (value) {
+  return BigInteger.fromBuffer(value).toByteArray();
+};
+
+function parseMiniKey(miniKey) {
+  var check = Bitcoin.crypto.sha256(miniKey + '?');
+  if (check[0] !== 0x00) {
+    throw new Error('Invalid mini key');
+  }
+  return Bitcoin.crypto.sha256(miniKey);
+}
+
+Helpers.privateKeyStringToKey = function (value, format) {
+  var keyBytes = null;
+  var tbytes;
+
+  if (format === 'base58') {
+    keyBytes = Helpers.buffertoByteArray(Base58.decode(value));
+  } else if (format === 'base64') {
+    keyBytes = Helpers.buffertoByteArray(new Buffer(value, 'base64'));
+  } else if (format === 'hex') {
+    keyBytes = Helpers.buffertoByteArray(new Buffer(value, 'hex'));
+  } else if (format === 'mini') {
+    keyBytes = Helpers.buffertoByteArray(parseMiniKey(value));
+  } else if (format === 'sipa') {
+    tbytes = Helpers.buffertoByteArray(Base58.decode(value));
+    tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
+    tbytes.shift();
+    keyBytes = tbytes.slice(0, tbytes.length - 4);
+  } else if (format === 'compsipa') {
+    tbytes = Helpers.buffertoByteArray(Base58.decode(value));
+    tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
+    tbytes.shift();
+    tbytes.pop();
+    keyBytes = tbytes.slice(0, tbytes.length - 4);
+  } else {
+    throw new Error('Unsupported Key Format');
+  }
+
+  return new Bitcoin.ECPair(new BigInteger.fromByteArrayUnsigned(keyBytes), // eslint-disable-line new-cap
+  null, { compressed: format !== 'sipa', network: constants.getNetwork() });
+};
+
+Helpers.detectPrivateKeyFormat = function (key) {
+  var isTestnet = constants.NETWORK === 'testnet';
+
+  // 51 characters base58, always starts with 5 (or 9, for testnet)
+  var sipaRegex = isTestnet ? /^[9][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/ : /^[5][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/;
+
+  if (sipaRegex.test(key)) {
+    return 'sipa';
+  }
+
+  // 52 character compressed starts with L or K (or c, for testnet)
+  var compsipaRegex = isTestnet ? /^[c][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/ : /^[LK][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/;
+
+  if (compsipaRegex.test(key)) {
+    return 'compsipa';
+  }
+
+  // 40-44 characters base58
+  if (Helpers.isBase58Key(key)) {
+    return 'base58';
+  }
+
+  if (/^[A-Fa-f0-9]{64}$/.test(key)) {
+    return 'hex';
+  }
+
+  if (/^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789=+\/]{44}$/.test(key)) {
+    return 'base64';
+  }
+
+  if (/^6P[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{56}$/.test(key)) {
+    return 'bip38';
+  }
+
+  if (/^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{21}$/.test(key) || /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{25}$/.test(key) || /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{29}$/.test(key) || /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{30}$/.test(key)) {
+    var testBytes = Bitcoin.crypto.sha256(key + '?');
+
+    if (testBytes[0] === 0x00 || testBytes[0] === 0x01) {
+      return 'mini';
+    }
+  }
+  return null;
+};
+
+Helpers.isValidBIP39Mnemonic = function (mnemonic) {
+  return BIP39.validateMnemonic(mnemonic);
+};
+
+Helpers.isValidPrivateKey = function (candidate) {
+  try {
+    var format = Helpers.detectPrivateKeyFormat(candidate);
+    if (format === 'bip38') {
+      return true;
+    }
+    var key = Helpers.privateKeyStringToKey(candidate, format);
+    return key.getAddress();
+  } catch (e) {
+    return false;
+  }
+};
+
+Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
+  var asyncParse = function asyncParse(resolve, reject) {
+    var format = Helpers.detectPrivateKeyFormat(priv);
+    var okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
+    if (format === 'bip38') {
+      if (bipPass === undefined || bipPass === null || bipPass === '') {
+        return reject('needsBip38');
+      }
+      ImportExport.parseBIP38toECPair(priv, bipPass, function (key) {
+        resolve(key);
+      }, function () {
+        reject('wrongBipPass');
+      }, function () {
+        reject('importError');
+      });
+    } else if (okFormats.indexOf(format) > -1) {
+      var k = Helpers.privateKeyStringToKey(priv, format);
+      return resolve(k);
+    } else {
+      reject('unknown key format');
+    }
+  };
+  var predicate = function predicate(key) {
+    var a = key.getAddress();
+    return a === address ? Base58.encode(key.d.toBuffer(32)) : null;
+  };
+  return new Promise(asyncParse).then(predicate);
+};
+
+Helpers.verifyMessage = function (address, signature, message) {
+  return Bitcoin.message.verify(address, signature, message, constants.getNetwork());
+};
+
+Helpers.getMobileOperatingSystem = function () {
+  var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+
+  if (userAgent.match(/iPad/i) || userAgent.match(/iPhone/i) || userAgent.match(/iPod/i)) {
+    return 'iOS';
+  } else if (userAgent.match(/Android/i)) {
+    return 'Android';
+  } else {
+    return 'unknown';
+  }
+};
+
+Helpers.isEmailInvited = function (email, fraction) {
+  if (!email) {
+    return false;
+  }
+  if (!Helpers.isPositiveNumber(fraction)) {
+    return false;
+  }
+  if (fraction > 1) {
+    return false;
+  }
+  return WalletCrypo.sha256(email)[0] / 256 >= 1 - fraction;
+};
+
+module.exports = Helpers;
+
+/***/ }),
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(module) {var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -5685,509 +6192,6 @@ if (typeof Object.create === 'function') {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(153)(module)))
 
 /***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var Bitcoin = __webpack_require__(7);
-var BigInteger = __webpack_require__(9);
-var Buffer = __webpack_require__(0).Buffer;
-var Base58 = __webpack_require__(76);
-var BIP39 = __webpack_require__(35);
-var ImportExport = __webpack_require__(68);
-var constants = __webpack_require__(8);
-var WalletCrypo = __webpack_require__(11);
-
-var Helpers = {};
-Math.log2 = function (x) {
-  return Math.log(x) / Math.LN2;
-};
-
-Helpers.isString = function (str) {
-  return typeof str === 'string' || str instanceof String;
-};
-Helpers.isKey = function (bitcoinKey) {
-  return Helpers.isInstanceOf(bitcoinKey, Bitcoin.ECPair);
-};
-Helpers.isInstanceOf = function (object, theClass) {
-  return object instanceof theClass;
-};
-Helpers.isBitcoinAddress = function (candidate) {
-  try {
-    var d = Bitcoin.address.fromBase58Check(candidate);
-    var n = constants.getNetwork();
-    return d.version === n.pubKeyHash || d.version === n.scriptHash;
-  } catch (e) {
-    return false;
-  }
-};
-Helpers.isBitcoinPrivateKey = function (candidate) {
-  try {
-    Bitcoin.ECPair.fromWIF(candidate, constants.getNetwork());
-    return true;
-  } catch (e) {
-    return false;
-  }
-};
-Helpers.isBase58Key = function (str) {
-  return Helpers.isString(str) && /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{40,44}$/.test(str);
-};
-Helpers.isXprivKey = function (k) {
-  return Helpers.isString(k) && /^(x|t)prv/.test(k);
-};
-Helpers.isXpubKey = function (k) {
-  return Helpers.isString(k) && /^(x|t)pub/.test(k);
-};
-Helpers.isAlphaNum = function (str) {
-  return Helpers.isString(str) && /^[\-+,._\w\d\s]+$/.test(str);
-};
-Helpers.isHex = function (str) {
-  return Helpers.isString(str) && /^[A-Fa-f0-9]+$/.test(str);
-};
-Helpers.isSeedHex = function (str) {
-  return Helpers.isString(str) && /^[A-Fa-f0-9]{32}$/.test(str);
-};
-Helpers.isBase64 = function (str) {
-  return Helpers.isString(str) && /^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789=+\/]+$/.test(str);
-};
-Helpers.isNumber = function (num) {
-  return typeof num === 'number' && !isNaN(num);
-};
-Helpers.isPositiveNumber = function (num) {
-  return Helpers.isNumber(num) && num >= 0;
-};
-Helpers.isPositiveInteger = function (num) {
-  return Helpers.isPositiveNumber(num) && num % 1 === 0;
-};
-Helpers.isNotNumber = function (num) {
-  return !Helpers.isNumber(num);
-};
-Helpers.isBoolean = function (value) {
-  return typeof value === 'boolean';
-};
-Helpers.isValidLabel = function (text) {
-  return Helpers.isString(text);
-};
-Helpers.isInRange = function (val, min, max) {
-  return min <= val && val < max;
-};
-Helpers.add = function (x, y) {
-  return x + y;
-};
-Helpers.and = function (x, y) {
-  return x && y;
-};
-Helpers.pluck = function (prop) {
-  return function (o) {
-    return o[prop];
-  };
-};
-Helpers.eq = function (value1) {
-  return function (value0) {
-    return value0 === value1;
-  };
-};
-Helpers.notEq = function (value1) {
-  return function (value0) {
-    return value0 !== value1;
-  };
-};
-Helpers.propEq = function (prop, value) {
-  return function (o) {
-    return o[prop] === value;
-  };
-};
-Helpers.o = function (pred1, pred2) {
-  return function (element) {
-    return pred1(element) || pred2(element);
-  };
-};
-Helpers.noop = function () {};
-Helpers.isValidSharedKey = function (sharedKey) {
-  return Helpers.isString(sharedKey) && sharedKey.length === 36;
-};
-Helpers.isValidGUID = function (guid) {
-  return Helpers.isString(guid);
-};
-// Return a memoized version of function f
-Helpers.memoize = function (f) {
-  var cache = {};
-  return function () {
-    var key = arguments.length + Array.prototype.join.call(arguments, ',');
-    if (key in cache) return cache[key];else {
-      var value = cache[key] = f.apply(this, arguments);
-      return value;
-    }
-  };
-};
-
-Helpers.toArrayFormat = function (x) {
-  return Array.isArray(x) ? x : [x];
-};
-
-Helpers.isEmptyArray = function (x) {
-  return Array.isArray(x) && x.length === 0;
-};
-// Return an async version of f that it will run after miliseconds
-// no matter how many times you call the new function, it will run only once
-Helpers.asyncOnce = function (f, milliseconds, before) {
-  var timer = null;
-  var oldArguments = [];
-
-  trigger.cancel = function () {
-    clearTimeout(timer);
-  };
-
-  function trigger() {
-    trigger.cancel();
-    before && before();
-    var myArgs = [];
-    // this is needed because arguments is not an 'Array' instance
-    for (var i = 0; i < arguments.length; i++) {
-      myArgs[i] = arguments[i];
-    }
-    myArgs = Helpers.zipLong(Helpers.maybeCompose, myArgs, oldArguments);
-    oldArguments = myArgs;
-    timer = setTimeout(function () {
-      f.apply(this, myArgs);
-      oldArguments = [];
-    }, milliseconds);
-  }
-
-  return trigger;
-};
-
-Helpers.exponentialBackoff = function (f, maxTime) {
-  maxTime = maxTime || Infinity;
-  var timer;
-  var run = function run(e) {
-    var nextTime = Math.pow(2, e) * 1000;
-    timer = setTimeout(function () {
-      f.call(f);
-      run(e + 1);
-    }, nextTime > maxTime ? maxTime : nextTime);
-  };
-  run(0);
-  return function () {
-    clearTimeout(timer);
-  };
-};
-
-// merges the properties of two objects
-Helpers.merge = function (o, p) {
-  for (var prop in p) {
-    if (!o.hasOwnProperty(prop)) {
-      o[prop] = p[prop];
-    }
-  }
-  return o;
-};
-
-Helpers.zipLong = function (f, xs, ys) {
-  if (!(f instanceof Function && xs instanceof Array && ys instanceof Array)) {
-    return null;
-  } else {
-    var zs = xs.length > ys.length ? xs : ys;
-    return zs.map(function (v, i) {
-      return f(xs[i], ys[i]);
-    });
-  }
-};
-
-Helpers.zip3 = function (xs, ys, zs) {
-  if (!(xs instanceof Array && ys instanceof Array && zs instanceof Array)) {
-    return null;
-  } else {
-    return xs.map(function (v, i) {
-      return [xs[i], ys[i], zs[i]];
-    });
-  }
-};
-
-Helpers.maybeCompose = function (f, g) {
-  if (f instanceof Function && g instanceof Function) {
-    return f.compose(g);
-  } else {
-    if (f instanceof Function) {
-      return f;
-    }
-    if (g instanceof Function) {
-      return g;
-    }
-    // otherwise
-    return f;
-  }
-};
-
-Function.prototype.compose = function (g) {
-  // eslint-disable-line no-extend-native
-  var fn = this;
-  return function () {
-    return fn.call(this, g.apply(this, arguments));
-  };
-};
-
-Helpers.guessSize = function (nInputs, nOutputs) {
-  return nInputs * 148 + nOutputs * 34 + 10;
-};
-
-Helpers.guessFee = function (nInputs, nOutputs, feePerKb) {
-  var sizeBytes = Helpers.guessSize(nInputs, nOutputs);
-  return Math.ceil(feePerKb * (sizeBytes / 1000));
-};
-
-// password scorer
-Helpers.scorePassword = function (password) {
-  if (!Helpers.isString(password)) {
-    return 0;
-  }
-
-  var patternsList = [[0.25, /^[\d\s]+$/], [0.25, /^[a-z\s]+\d$/], [0.25, /^[A-Z\s]+\d$/], [0.5, /^[a-zA-Z\s]+\d$/], [0.5, /^[a-z\s]+\d+$/], [0.25, /^[a-z\s]+$/], [0.25, /^[A-Z\s]+$/], [0.25, /^[A-Z][a-z\s]+$/], [0.25, /^[A-Z][a-z\s]+\d$/], [0.5, /^[A-Z][a-z\s]+\d+$/], [0.25, /^[a-z\s]+[._!\- @*#]$/], [0.25, /^[A-Z\s]+[._!\- @*#]$/], [0.5, /^[a-zA-Z\s]+[._!\- @*#]$/], [0, /^[a-zA-Z0-9_]+@[a-zA-Z0-9]+\.[a-zA-Z]+$/], // email must always score bad
-  [1, /^.*$/]];
-
-  var hasDigits = function hasDigits(str) {
-    return (/[0-9]/.test(str)
-    );
-  };
-  var hasLowerCase = function hasLowerCase(str) {
-    return (/[a-z]/.test(str)
-    );
-  };
-  var hasUpperCase = function hasUpperCase(str) {
-    return (/[A-Z]/.test(str)
-    );
-  };
-  var hasSymbol = function hasSymbol(str) {
-    return (/[^0-9a-zA-z]/.test(str)
-    );
-  };
-  var computeSet = function computeSet(str) {
-    var maxChar = Math.max.apply(Math, str.split('').map(function (c) {
-      return c.charCodeAt(0);
-    }));
-    return maxChar + 256 - maxChar % 256;
-  };
-
-  var base = function base(str) {
-    var tuples = [[10, hasDigits(str)], [26, hasLowerCase(str)], [26, hasUpperCase(str)]];
-    var bases = tuples.filter(function (t) {
-      return t[1];
-    }).map(function (t) {
-      return t[0];
-    });
-    var setSize = hasSymbol(str) ? computeSet(str) : bases.reduce(Helpers.add, 0);
-    var ret = setSize === 0 ? 1 : setSize;
-    return ret;
-  };
-
-  var entropy = function entropy(str) {
-    return Math.log2(Math.pow(base(str), str.length));
-  };
-
-  var quality = function quality(str) {
-    var pats = patternsList.filter(function (p) {
-      return p[1].test(str);
-    }).map(function (p) {
-      return p[0];
-    });
-    return Math.min.apply(Math, pats);
-  };
-
-  var entropyWeighted = function entropyWeighted(str) {
-    return quality(str) * entropy(str);
-  };
-
-  return entropyWeighted(password);
-};
-
-Helpers.getHostName = function () {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  if (typeof window.location === 'undefined' || window.location.hostname === 'undefined') {
-    return null;
-  }
-
-  return window.location.hostname;
-};
-
-Helpers.tor = function () {
-  var hostname = Helpers.getHostName();
-
-  // NodeJS TOR detection not supported:
-  if (typeof hostname !== 'string') return null;
-
-  return hostname.slice(-6) === '.onion';
-};
-
-Helpers.buffertoByteArray = function (value) {
-  return BigInteger.fromBuffer(value).toByteArray();
-};
-
-function parseMiniKey(miniKey) {
-  var check = Bitcoin.crypto.sha256(miniKey + '?');
-  if (check[0] !== 0x00) {
-    throw new Error('Invalid mini key');
-  }
-  return Bitcoin.crypto.sha256(miniKey);
-}
-
-Helpers.privateKeyStringToKey = function (value, format) {
-  var keyBytes = null;
-  var tbytes;
-
-  if (format === 'base58') {
-    keyBytes = Helpers.buffertoByteArray(Base58.decode(value));
-  } else if (format === 'base64') {
-    keyBytes = Helpers.buffertoByteArray(new Buffer(value, 'base64'));
-  } else if (format === 'hex') {
-    keyBytes = Helpers.buffertoByteArray(new Buffer(value, 'hex'));
-  } else if (format === 'mini') {
-    keyBytes = Helpers.buffertoByteArray(parseMiniKey(value));
-  } else if (format === 'sipa') {
-    tbytes = Helpers.buffertoByteArray(Base58.decode(value));
-    tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
-    tbytes.shift();
-    keyBytes = tbytes.slice(0, tbytes.length - 4);
-  } else if (format === 'compsipa') {
-    tbytes = Helpers.buffertoByteArray(Base58.decode(value));
-    tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
-    tbytes.shift();
-    tbytes.pop();
-    keyBytes = tbytes.slice(0, tbytes.length - 4);
-  } else {
-    throw new Error('Unsupported Key Format');
-  }
-
-  return new Bitcoin.ECPair(new BigInteger.fromByteArrayUnsigned(keyBytes), // eslint-disable-line new-cap
-  null, { compressed: format !== 'sipa', network: constants.getNetwork() });
-};
-
-Helpers.detectPrivateKeyFormat = function (key) {
-  var isTestnet = constants.NETWORK === 'testnet';
-
-  // 51 characters base58, always starts with 5 (or 9, for testnet)
-  var sipaRegex = isTestnet ? /^[9][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/ : /^[5][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/;
-
-  if (sipaRegex.test(key)) {
-    return 'sipa';
-  }
-
-  // 52 character compressed starts with L or K (or c, for testnet)
-  var compsipaRegex = isTestnet ? /^[c][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/ : /^[LK][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/;
-
-  if (compsipaRegex.test(key)) {
-    return 'compsipa';
-  }
-
-  // 40-44 characters base58
-  if (Helpers.isBase58Key(key)) {
-    return 'base58';
-  }
-
-  if (/^[A-Fa-f0-9]{64}$/.test(key)) {
-    return 'hex';
-  }
-
-  if (/^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789=+\/]{44}$/.test(key)) {
-    return 'base64';
-  }
-
-  if (/^6P[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{56}$/.test(key)) {
-    return 'bip38';
-  }
-
-  if (/^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{21}$/.test(key) || /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{25}$/.test(key) || /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{29}$/.test(key) || /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{30}$/.test(key)) {
-    var testBytes = Bitcoin.crypto.sha256(key + '?');
-
-    if (testBytes[0] === 0x00 || testBytes[0] === 0x01) {
-      return 'mini';
-    }
-  }
-  return null;
-};
-
-Helpers.isValidBIP39Mnemonic = function (mnemonic) {
-  return BIP39.validateMnemonic(mnemonic);
-};
-
-Helpers.isValidPrivateKey = function (candidate) {
-  try {
-    var format = Helpers.detectPrivateKeyFormat(candidate);
-    if (format === 'bip38') {
-      return true;
-    }
-    var key = Helpers.privateKeyStringToKey(candidate, format);
-    return key.getAddress();
-  } catch (e) {
-    return false;
-  }
-};
-
-Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
-  var asyncParse = function asyncParse(resolve, reject) {
-    var format = Helpers.detectPrivateKeyFormat(priv);
-    var okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
-    if (format === 'bip38') {
-      if (bipPass === undefined || bipPass === null || bipPass === '') {
-        return reject('needsBip38');
-      }
-      ImportExport.parseBIP38toECPair(priv, bipPass, function (key) {
-        resolve(key);
-      }, function () {
-        reject('wrongBipPass');
-      }, function () {
-        reject('importError');
-      });
-    } else if (okFormats.indexOf(format) > -1) {
-      var k = Helpers.privateKeyStringToKey(priv, format);
-      return resolve(k);
-    } else {
-      reject('unknown key format');
-    }
-  };
-  var predicate = function predicate(key) {
-    var a = key.getAddress();
-    return a === address ? Base58.encode(key.d.toBuffer(32)) : null;
-  };
-  return new Promise(asyncParse).then(predicate);
-};
-
-Helpers.verifyMessage = function (address, signature, message) {
-  return Bitcoin.message.verify(address, signature, message, constants.getNetwork());
-};
-
-Helpers.getMobileOperatingSystem = function () {
-  var userAgent = navigator.userAgent || navigator.vendor || window.opera;
-
-  if (userAgent.match(/iPad/i) || userAgent.match(/iPhone/i) || userAgent.match(/iPod/i)) {
-    return 'iOS';
-  } else if (userAgent.match(/Android/i)) {
-    return 'Android';
-  } else {
-    return 'unknown';
-  }
-};
-
-Helpers.isEmailInvited = function (email, fraction) {
-  if (!email) {
-    return false;
-  }
-  if (!Helpers.isPositiveNumber(fraction)) {
-    return false;
-  }
-  if (fraction > 1) {
-    return false;
-  }
-  return WalletCrypo.sha256(email)[0] / 256 >= 1 - fraction;
-};
-
-module.exports = Helpers;
-
-/***/ }),
 /* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -6198,7 +6202,7 @@ module.exports = {
   PaymentMedium: __webpack_require__(186),
   Quote: __webpack_require__(187),
   Trade: __webpack_require__(188),
-  Helpers: __webpack_require__(47)
+  Helpers: __webpack_require__(48)
 };
 
 /***/ }),
@@ -6210,10 +6214,10 @@ module.exports = {
 
 var elliptic = exports;
 
-elliptic.version = __webpack_require__(321).version;
+elliptic.version = __webpack_require__(324).version;
 elliptic.utils = __webpack_require__(254);
 elliptic.rand = __webpack_require__(109);
-elliptic.curve = __webpack_require__(60);
+elliptic.curve = __webpack_require__(61);
 elliptic.curves = __webpack_require__(246);
 
 // Protocols
@@ -6226,58 +6230,23 @@ elliptic.eddsa = __webpack_require__(250);
 
 module.exports = {
   Block: __webpack_require__(196),
-  ECPair: __webpack_require__(48),
-  ECSignature: __webpack_require__(49),
-  HDNode: __webpack_require__(299),
+  ECPair: __webpack_require__(49),
+  ECSignature: __webpack_require__(50),
+  HDNode: __webpack_require__(300),
   Transaction: __webpack_require__(73),
   TransactionBuilder: __webpack_require__(198),
 
   address: __webpack_require__(108),
-  bufferutils: __webpack_require__(37),
+  bufferutils: __webpack_require__(38),
   crypto: __webpack_require__(21),
   message: __webpack_require__(197),
   networks: __webpack_require__(19),
-  opcodes: __webpack_require__(43),
-  script: __webpack_require__(50)
+  opcodes: __webpack_require__(44),
+  script: __webpack_require__(51)
 };
 
 /***/ }),
 /* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-
-var Bitcoin = __webpack_require__(7);
-
-module.exports = {
-  NETWORK: 'bitcoin',
-  APP_NAME: 'javascript_web',
-  APP_VERSION: '3.0',
-  getNetwork: function getNetwork() {
-    return Bitcoin.networks[this.NETWORK];
-  },
-  getDefaultWalletOptions: function getDefaultWalletOptions() {
-    return {
-      pbkdf2_iterations: 5000,
-      html5_notifications: false,
-      fee_per_kb: 10000,
-      logout_time: 600000
-    };
-  }
-};
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var BigInteger = __webpack_require__(103);
-
-//addons
-__webpack_require__(170);
-
-module.exports = BigInteger;
-
-/***/ }),
-/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6286,7 +6255,7 @@ module.exports = BigInteger;
 module.exports = new API();
 
 var assert = __webpack_require__(1);
-var Helpers = __webpack_require__(4);
+var Helpers = __webpack_require__(3);
 var WalletStore = __webpack_require__(20);
 var WalletCrypto = __webpack_require__(11);
 var MyWallet = __webpack_require__(13);
@@ -6493,6 +6462,11 @@ API.prototype.securePostCallbacks = function (url, data, success, error) {
 
 // 01000000013e095250cb35129c7dee081b8c89b4bff69f72222a25c45ba9747a704a6d0bcd010000006b4830450221009b4f6619b1499ea19494aec34c36fdeac9146b9f87f010b7ebf1eb8a1b590c6e02202f5d9b0cfa4107d586b5b370494b9932eba1411468af06e431001932c12bf245012103cf91e6b06d1a2432721559a010ee67e98f8ef0421b15cca66dc9717ac1af8d1effffffff0210270000000000001976a91402549a8a872fbe54721a899e5ac2a87daac2358088acf0ba0400000000001976a9148ee77b3dd0e33783c11a6c28473d16e9b63dc38588ac00000000
 API.prototype.pushTx = function (txHex, note) {
+  var self = this;
+  if (!self.failedBefore) {
+    self.failedBefore = true;
+    return Promise.reject('Failed on purpose');
+  }
   assert(txHex, 'transaction required');
 
   var data = {
@@ -6546,6 +6520,41 @@ API.prototype.incrementSecPassStats = function (activeBool) {
 };
 
 /***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+
+var Bitcoin = __webpack_require__(7);
+
+module.exports = {
+  NETWORK: 'bitcoin',
+  APP_NAME: 'javascript_web',
+  APP_VERSION: '3.0',
+  getNetwork: function getNetwork() {
+    return Bitcoin.networks[this.NETWORK];
+  },
+  getDefaultWalletOptions: function getDefaultWalletOptions() {
+    return {
+      pbkdf2_iterations: 5000,
+      html5_notifications: false,
+      fee_per_kb: 10000,
+      logout_time: 600000
+    };
+  }
+};
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var BigInteger = __webpack_require__(103);
+
+//addons
+__webpack_require__(170);
+
+module.exports = BigInteger;
+
+/***/ }),
 /* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -6554,7 +6563,7 @@ API.prototype.incrementSecPassStats = function (activeBool) {
 
 var crypto = __webpack_require__(131);
 var assert = __webpack_require__(1);
-var sjcl = __webpack_require__(298);
+var sjcl = __webpack_require__(299);
 
 var SUPPORTED_ENCRYPTION_VERSION = 3;
 var SALT_BYTES = 16;
@@ -6893,8 +6902,7 @@ function stretchPassword(password, salt, iterations, keylen) {
 
 function pbkdf2(password, salt, iterations, keylen, algorithm) {
   algorithm = algorithm || ALGO.SHA1;
-  var iv = salt.toString('binary');
-  return crypto.pbkdf2Sync(password, iv, iterations, keylen, algorithm);
+  return crypto.pbkdf2Sync(password, salt, iterations, keylen, algorithm);
 }
 
 function hashNTimes(data, iterations) {
@@ -7180,26 +7188,23 @@ module.exports = g;
 /* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-
 var MyWallet = module.exports = {};
 
 var assert = __webpack_require__(1);
 var Buffer = __webpack_require__(0).Buffer;
 var WalletStore = __webpack_require__(20);
 var WalletCrypto = __webpack_require__(11);
-var WalletSignup = __webpack_require__(315);
+var WalletSignup = __webpack_require__(318);
 var WalletNetwork = __webpack_require__(70);
-var API = __webpack_require__(10);
+var API = __webpack_require__(8);
 var Wallet = __webpack_require__(154);
-var Helpers = __webpack_require__(4);
-var BlockchainSocket = __webpack_require__(309);
-var RNG = __webpack_require__(44);
+var Helpers = __webpack_require__(3);
+var BlockchainSocket = __webpack_require__(311);
+var RNG = __webpack_require__(46);
 var BIP39 = __webpack_require__(35);
 var Bitcoin = __webpack_require__(7);
-var pbkdf2 = __webpack_require__(63);
-var constants = __webpack_require__(8);
+var pbkdf2 = __webpack_require__(64);
+var constants = __webpack_require__(9);
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -7375,15 +7380,34 @@ MyWallet.makePairingCode = function (success, error) {
   }
 };
 
-MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHex, password) {
+MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHexExternal, stringLabels, magicHashHexLabels, password) {
+  assert(stringWallet, 'Wallet JSON required');
+
+  // If metadata service returned 404, do not pass in a string.
+  var externalJSON = null;
+  var labelsJSON = null;
+
+  if (stringExternal) {
+    assert(magicHashHexExternal, 'Magic hash for external required');
+    externalJSON = JSON.parse(stringExternal);
+  }
+
+  if (stringExternal) {
+    assert(magicHashHexLabels, 'Magic hash for labels required');
+    labelsJSON = JSON.parse(stringLabels);
+  }
+
   var walletJSON = JSON.parse(stringWallet);
-  var externalJSON = JSON.parse(stringExternal);
+
   MyWallet.wallet = new Wallet(walletJSON);
   WalletStore.unsafeSetPassword(password);
-  MyWallet.wallet.loadExternalFromJSON(externalJSON);
-  if (magicHashHex) {
-    MyWallet.wallet._external._metadata._magicHash = Buffer.from(magicHashHex, 'hex');
-  }
+  MyWallet.wallet.loadMetaData({
+    external: externalJSON,
+    labels: labelsJSON
+  }, {
+    external: magicHashHexExternal ? Buffer.from(magicHashHexExternal, 'hex') : null,
+    labels: magicHashHexExternal ? Buffer.from(magicHashHexLabels, 'hex') : null
+  });
   setIsInitialized();
   return true;
 };
@@ -7481,14 +7505,6 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
     }, _error, decryptSuccess, buildHdSuccess);
   };
 
-  // Attempt to load metadata for buy-sell
-  var tryLoadExternal = function tryLoadExternal() {
-    var loadExternalFailed = function loadExternalFailed(message) {
-      console.warn('wallet.external not set:', message);
-    };
-    return MyWallet.wallet.loadExternal.bind(MyWallet.wallet)().catch(loadExternalFailed);
-  };
-
   var p = Promise.resolve().then(doInitialize);
   var incStats = function incStats() {
     return MyWallet.wallet.incStats.bind(MyWallet.wallet)();
@@ -7496,9 +7512,12 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
   var saveGUID = function saveGUID() {
     return MyWallet.wallet.saveGUIDtoMetadata();
   };
+  var loadMetadata = function loadMetadata() {
+    return MyWallet.wallet.loadMetadata.bind(MyWallet.wallet)();
+  };
   p.then(incStats);
   p.then(saveGUID);
-  return p.then(tryLoadExternal);
+  return p.then(loadMetadata);
 };
 
 // used on iOS
@@ -7802,8 +7821,8 @@ MyWallet.browserCheckFast = function () {
 
 var inherits = __webpack_require__(2);
 var md5 = __webpack_require__(130);
-var rmd160 = __webpack_require__(291);
-var sha = __webpack_require__(293);
+var rmd160 = __webpack_require__(292);
+var sha = __webpack_require__(294);
 
 var Base = __webpack_require__(26);
 
@@ -8317,7 +8336,7 @@ for (typeName in TYPES) {
   typeforce[typeName] = TYPES[typeName];
 }
 
-var extra = __webpack_require__(300);
+var extra = __webpack_require__(301);
 for (typeName in extra) {
   typeforce[typeName] = extra[typeName];
 }
@@ -8733,7 +8752,7 @@ var processNextTick = __webpack_require__(88);
 /*</replacement>*/
 
 /*<replacement>*/
-var util = __webpack_require__(41);
+var util = __webpack_require__(42);
 util.inherits = __webpack_require__(2);
 /*</replacement>*/
 
@@ -8886,7 +8905,7 @@ CipherBase.prototype._toString = function (value, enc, fin) {
 /***/ (function(module, exports, __webpack_require__) {
 
 // Thank's IE8 for his funny defineProperty
-module.exports = !__webpack_require__(57)(function () {
+module.exports = !__webpack_require__(58)(function () {
   return Object.defineProperty({}, 'a', { get: function get() {
       return 7;
     } }).a != 7;
@@ -8905,7 +8924,7 @@ module.exports = function (it, key) {
 /* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var anObject = __webpack_require__(55),
+var anObject = __webpack_require__(56),
     IE8_DOM_DEFINE = __webpack_require__(122),
     toPrimitive = __webpack_require__(85),
     dP = Object.defineProperty;
@@ -9213,7 +9232,7 @@ function isUndefined(arg) {
 /* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var _isPlaceholder = __webpack_require__(66);
+var _isPlaceholder = __webpack_require__(67);
 
 /**
  * Optimized internal one-arity curry function.
@@ -9339,11 +9358,11 @@ var EE = __webpack_require__(31).EventEmitter;
 var inherits = __webpack_require__(2);
 
 inherits(Stream, EE);
-Stream.Readable = __webpack_require__(288);
-Stream.Writable = __webpack_require__(290);
-Stream.Duplex = __webpack_require__(285);
-Stream.Transform = __webpack_require__(289);
-Stream.PassThrough = __webpack_require__(287);
+Stream.Readable = __webpack_require__(289);
+Stream.Writable = __webpack_require__(291);
+Stream.Duplex = __webpack_require__(286);
+Stream.Transform = __webpack_require__(290);
+Stream.PassThrough = __webpack_require__(288);
 
 // Backwards-compat with node 0.4.x
 Stream.Stream = Stream;
@@ -9443,11 +9462,11 @@ Stream.prototype.pipe = function (dest, options) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var assert = __webpack_require__(1);
 var createHash = __webpack_require__(14);
-var pbkdf2 = __webpack_require__(63).pbkdf2Sync;
+var pbkdf2 = __webpack_require__(64).pbkdf2Sync;
 var randomBytes = __webpack_require__(17);
 var unorm = __webpack_require__(151);
 
-var DEFAULT_WORDLIST = __webpack_require__(318);
+var DEFAULT_WORDLIST = __webpack_require__(321);
 
 function mnemonicToSeed(mnemonic, password) {
   var mnemonicBuffer = new Buffer(mnemonic, 'utf8');
@@ -9574,6 +9593,20 @@ module.exports = {
 /* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
+var asn1 = exports;
+
+asn1.bignum = __webpack_require__(4);
+
+asn1.define = __webpack_require__(160).define;
+asn1.base = __webpack_require__(37);
+asn1.constants = __webpack_require__(100);
+asn1.decoders = __webpack_require__(164);
+asn1.encoders = __webpack_require__(166);
+
+/***/ }),
+/* 37 */
+/***/ (function(module, exports, __webpack_require__) {
+
 var base = exports;
 
 base.Reporter = __webpack_require__(162).Reporter;
@@ -9582,10 +9615,10 @@ base.EncoderBuffer = __webpack_require__(99).EncoderBuffer;
 base.Node = __webpack_require__(161);
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var opcodes = __webpack_require__(43);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var opcodes = __webpack_require__(44);
 
 // https://github.com/feross/buffer/blob/master/index.js#L1127
 function verifuint(value, max) {
@@ -9764,7 +9797,7 @@ module.exports = {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {module.exports = function xor(a, b) {
@@ -9780,7 +9813,7 @@ module.exports = {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports) {
 
 var id = 0,
@@ -9790,11 +9823,11 @@ module.exports = function (key) {
 };
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var store = __webpack_require__(84)('wks'),
-    uid = __webpack_require__(39),
+    uid = __webpack_require__(40),
     _Symbol = __webpack_require__(15).Symbol,
     USE_SYMBOL = typeof _Symbol == 'function';
 
@@ -9805,7 +9838,7 @@ var $exports = module.exports = function (name) {
 $exports.store = store;
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -9916,7 +9949,7 @@ function objectToString(o) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9991,7 +10024,7 @@ module.exports = function createHmac(alg, key) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -10114,7 +10147,278 @@ module.exports = {
 };
 
 /***/ }),
-/* 44 */
+/* 45 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(Buffer) {
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var WalletCrypto = __webpack_require__(11);
+var Bitcoin = __webpack_require__(7);
+var API = __webpack_require__(8);
+var Helpers = __webpack_require__(3);
+var constants = __webpack_require__(9);
+
+// individual imports to reduce bundle size
+var assoc = __webpack_require__(270);
+var curry = __webpack_require__(273);
+var compose = __webpack_require__(272);
+var prop = __webpack_require__(281);
+
+var Metadata = function () {
+  function Metadata(ecPair, encKeyBuffer, typeId) {
+    _classCallCheck(this, Metadata);
+
+    // ecPair :: ECPair object - bitcoinjs-lib
+    // encKeyBuffer :: Buffer (nullable = no encrypted save)
+    // TypeId :: Int (nullable = default -1)
+    this.VERSION = 1;
+    this._typeId = typeId || -1;
+    this._magicHash = null;
+    this._address = ecPair.getAddress();
+    this._signKey = ecPair;
+    this._encKeyBuffer = encKeyBuffer;
+    this._sequence = Promise.resolve();
+  }
+
+  _createClass(Metadata, [{
+    key: 'existsOnServer',
+    get: function get() {
+      return Boolean(this._magicHash);
+    }
+  }]);
+
+  return Metadata;
+}();
+
+// network
+
+
+Metadata.request = function (method, endpoint, data) {
+  var url = API.API_ROOT_URL + 'metadata/' + endpoint;
+  var options = {
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'omit'
+  };
+  if (method !== 'GET') {
+    options.body = JSON.stringify(data);
+  }
+  options.method = method;
+  var handleNetworkError = function handleNetworkError(e) {
+    return Promise.reject({ error: 'METADATA_CONNECT_ERROR', message: e });
+  };
+
+  var checkStatus = function checkStatus(response) {
+    if (response.status >= 200 && response.status < 300) {
+      return response.json();
+    } else if (method === 'GET' && response.status === 404) {
+      return null;
+    } else {
+      return response.text().then(Promise.reject.bind(Promise));
+    }
+  };
+  return fetch(url, options).catch(handleNetworkError).then(checkStatus);
+};
+
+Metadata.GET = function (e, d) {
+  return Metadata.request('GET', e, d);
+};
+Metadata.PUT = function (e, d) {
+  return Metadata.request('PUT', e, d);
+};
+Metadata.read = function (address) {
+  return Metadata.request('GET', address).then(Metadata.extractResponse(null));
+};
+
+// //////////////////////////////////////////////////////////////////////////////
+Metadata.encrypt = curry(function (key, data) {
+  return WalletCrypto.encryptDataWithKey(data, key);
+});
+Metadata.decrypt = curry(function (key, data) {
+  return WalletCrypto.decryptDataWithKey(data, key);
+});
+Metadata.B64ToBuffer = function (base64) {
+  return Buffer.from(base64, 'base64');
+};
+Metadata.BufferToB64 = function (buff) {
+  return buff.toString('base64');
+};
+Metadata.StringToBuffer = function (base64) {
+  return Buffer.from(base64);
+};
+Metadata.BufferToString = function (buff) {
+  return buff.toString();
+};
+
+// Metadata.message :: Buffer -> Buffer -> Base64String
+Metadata.message = curry(function (payload, prevMagic) {
+  if (prevMagic) {
+    var hash = WalletCrypto.sha256(payload);
+    var buff = Buffer.concat([prevMagic, hash]);
+    return buff.toString('base64');
+  } else {
+    return payload.toString('base64');
+  }
+});
+
+// Metadata.magic :: Buffer -> Buffer -> Buffer
+Metadata.magic = curry(function (payload, prevMagic) {
+  var msg = this.message(payload, prevMagic);
+  return Bitcoin.message.magicHash(msg, constants.getNetwork());
+});
+
+Metadata.verify = function (address, signature, hash) {
+  return Bitcoin.message.verify(address, signature, hash, constants.getNetwork());
+};
+
+// Metadata.sign :: keyPair -> msg -> Buffer
+Metadata.sign = function (keyPair, msg) {
+  return Bitcoin.message.sign(keyPair, msg, constants.getNetwork());
+};
+
+// Metadata.computeSignature :: keypair -> buffer -> buffer -> base64
+Metadata.computeSignature = function (key, payloadBuff, magicHash) {
+  return Metadata.sign(key, Metadata.message(payloadBuff, magicHash));
+};
+
+Metadata.verifyResponse = curry(function (address, res) {
+  if (res === null) return res;
+  var M = Metadata;
+  var sB = res.signature ? Buffer.from(res.signature, 'base64') : undefined;
+  var pB = res.payload ? Buffer.from(res.payload, 'base64') : undefined;
+  var mB = res.prev_magic_hash ? Buffer.from(res.prev_magic_hash, 'hex') : undefined;
+  var verified = Metadata.verify(address, sB, M.message(pB, mB));
+  if (!verified) throw new Error('METADATA_SIGNATURE_VERIFICATION_ERROR');
+  return assoc('compute_new_magic_hash', M.magic(pB, mB), res);
+});
+
+Metadata.extractResponse = curry(function (encKey, res) {
+  var M = Metadata;
+  if (res === null) {
+    return res;
+  } else {
+    return encKey ? compose(JSON.parse, M.decrypt(encKey), prop('payload'))(res) : compose(JSON.parse, M.BufferToString, M.B64ToBuffer, prop('payload'))(res);
+  }
+});
+
+Metadata.toImmutable = compose(Object.freeze, JSON.parse, JSON.stringify);
+
+Metadata.prototype.create = function (payload) {
+  var _this = this;
+
+  var M = Metadata;
+  payload = M.toImmutable(payload);
+  return this.next(function () {
+    var encPayloadBuffer = _this._encKeyBuffer ? compose(M.B64ToBuffer, M.encrypt(_this._encKeyBuffer), JSON.stringify)(payload) : compose(M.StringToBuffer, JSON.stringify)(payload);
+    var signatureBuffer = M.computeSignature(_this._signKey, encPayloadBuffer, _this._magicHash);
+    var body = {
+      'version': _this.VERSION,
+      'payload': encPayloadBuffer.toString('base64'),
+      'signature': signatureBuffer.toString('base64'),
+      'prev_magic_hash': _this._magicHash ? _this._magicHash.toString('hex') : null,
+      'type_id': _this._typeId
+    };
+    return M.PUT(_this._address, body).then(function (response) {
+      _this._value = payload;
+      _this._magicHash = M.magic(encPayloadBuffer, _this._magicHash);
+      return payload;
+    });
+  });
+};
+
+Metadata.prototype.update = function (payload) {
+  if (JSON.stringify(payload) === JSON.stringify(this._value)) {
+    return this.next(function () {
+      return Promise.resolve(Metadata.toImmutable(payload));
+    });
+  } else {
+    return this.create(payload);
+  }
+};
+
+Metadata.prototype.fromObject = function (payload, magicHashHex) {
+  var _this2 = this;
+
+  if (magicHashHex) {
+    this._magicHash = Buffer.from(magicHashHex, 'hex');
+  }
+
+  var saveValue = function saveValue(res) {
+    if (res === null) return res;
+    _this2._value = Metadata.toImmutable(res);
+    return res;
+  };
+
+  return Promise.resolve(payload).then(saveValue);
+};
+
+Metadata.prototype.fetch = function () {
+  var _this3 = this;
+
+  var saveMagicHash = function saveMagicHash(res) {
+    if (res === null) return res;
+    _this3._magicHash = prop('compute_new_magic_hash', res);
+    return res;
+  };
+
+  return this.next(function () {
+    var M = Metadata;
+
+    return M.GET(_this3._address).then(M.verifyResponse(_this3._address)).then(saveMagicHash).then(M.extractResponse(_this3._encKeyBuffer)).then(_this3.fromObject.bind(_this3)).catch(function (e) {
+      console.error('Failed to fetch metadata entry ' + _this3._typeId + ' at ' + _this3._address + ':', e);
+      return Promise.reject('METADATA_FETCH_FAILED');
+    });
+  });
+};
+
+Metadata.prototype.next = function (f) {
+  var nextInSeq = this._sequence.then(f);
+  this._sequence = nextInSeq.then(Helpers.noop, Helpers.noop);
+  return nextInSeq;
+};
+
+// CONSTRUCTORS
+// used to restore metadata from purpose xpriv (second password)
+Metadata.fromMetadataHDNode = function (metadataHDNode, typeId) {
+  // Payload types:
+  // 0: reserved (guid)
+  // 1: reserved
+  // 2: whats-new
+  // 3: buy-sell
+  // 4: contacts
+  var payloadTypeNode = metadataHDNode.deriveHardened(typeId);
+  // purpose' / type' / 0' : https://meta.blockchain.info/{address}
+  //                       signature used to authenticate
+  // purpose' / type' / 1' : sha256(private key) used as 256 bit AES key
+  var node = payloadTypeNode.deriveHardened(0);
+  var privateKeyBuffer = payloadTypeNode.deriveHardened(1).keyPair.d.toBuffer();
+  var encryptionKey = WalletCrypto.sha256(privateKeyBuffer);
+  return new Metadata(node.keyPair, encryptionKey, typeId);
+};
+
+Metadata.deriveMetadataNode = function (masterHDNode) {
+  // BIP 43 purpose needs to be 31 bit or less. For lack of a BIP number
+  // we take the first 31 bits of the SHA256 hash of a reverse domain.
+  var hash = WalletCrypto.sha256('info.blockchain.metadata');
+  var purpose = hash.slice(0, 4).readUInt32BE(0) & 0x7FFFFFFF; // 510742
+  return masterHDNode.deriveHardened(purpose);
+};
+
+// used to create a new metadata entry from wallet master hd node
+Metadata.fromMasterHDNode = function (masterHDNode, typeId) {
+  var metadataHDNode = Metadata.deriveMetadataNode(masterHDNode);
+  return Metadata.fromMetadataHDNode(metadataHDNode, typeId);
+};
+
+module.exports = Metadata;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
+
+/***/ }),
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10123,10 +10427,10 @@ module.exports = {
 module.exports = new RNG();
 
 var randomBytes = __webpack_require__(17);
-var API = __webpack_require__(10);
+var API = __webpack_require__(8);
 var Buffer = __webpack_require__(0).Buffer;
 var assert = __webpack_require__(1);
-var Helpers = __webpack_require__(4);
+var Helpers = __webpack_require__(3);
 
 module.exports.randomBytes = randomBytes;
 
@@ -10212,21 +10516,7 @@ RNG.prototype.getServerEntropy = function (nBytes) {
 };
 
 /***/ }),
-/* 45 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var asn1 = exports;
-
-asn1.bignum = __webpack_require__(3);
-
-asn1.define = __webpack_require__(160).define;
-asn1.base = __webpack_require__(36);
-asn1.constants = __webpack_require__(100);
-asn1.decoders = __webpack_require__(164);
-asn1.encoders = __webpack_require__(166);
-
-/***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10509,7 +10799,7 @@ var Trade = function (_Exchange$Trade) {
 module.exports = Trade;
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports) {
 
 var Helpers = {};
@@ -10548,19 +10838,19 @@ Helpers.fromSatoshi = function (satoshi) {
 module.exports = Helpers;
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var bcrypto = __webpack_require__(21);
-var bs58check = __webpack_require__(54);
-var ecdsa = __webpack_require__(67);
+var bs58check = __webpack_require__(55);
+var ecdsa = __webpack_require__(68);
 var randomBytes = __webpack_require__(17);
 var typeforce = __webpack_require__(18);
 var types = __webpack_require__(22);
-var wif = __webpack_require__(306);
+var wif = __webpack_require__(307);
 
 var NETWORKS = __webpack_require__(19);
-var BigInteger = __webpack_require__(9);
+var BigInteger = __webpack_require__(10);
 
 var ecurve = __webpack_require__(87);
 var secp256k1 = ecdsa.__curve;
@@ -10686,14 +10976,14 @@ module.exports = ECPair;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 49 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var bip66 = __webpack_require__(104);
 var typeforce = __webpack_require__(18);
 var types = __webpack_require__(22);
 
-var BigInteger = __webpack_require__(9);
+var BigInteger = __webpack_require__(10);
 
 function ECSignature(r, s) {
   typeforce(types.tuple(types.BigInt, types.BigInt), arguments);
@@ -10779,15 +11069,15 @@ module.exports = ECSignature;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var bip66 = __webpack_require__(104);
-var bufferutils = __webpack_require__(37);
+var bufferutils = __webpack_require__(38);
 var typeforce = __webpack_require__(18);
 var types = __webpack_require__(22);
 
-var OPS = __webpack_require__(43);
+var OPS = __webpack_require__(44);
 var REVERSE_OPS = function () {
   var result = {};
   for (var op in OPS) {
@@ -11162,7 +11452,7 @@ module.exports = {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {// based on the aes implimentation in triple sec
@@ -11340,7 +11630,7 @@ exports.AES = AES;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 52 */
+/* 53 */
 /***/ (function(module, exports) {
 
 exports['aes-128-ecb'] = {
@@ -11516,10 +11806,10 @@ exports['aes-256-gcm'] = {
 };
 
 /***/ }),
-/* 53 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(38);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(39);
 
 function incr32(iv) {
   var len = iv.length;
@@ -11553,7 +11843,7 @@ exports.encrypt = function (self, chunk) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 54 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11613,24 +11903,24 @@ module.exports = {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 55 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isObject = __webpack_require__(58);
+var isObject = __webpack_require__(59);
 module.exports = function (it) {
   if (!isObject(it)) throw TypeError(it + ' is not an object!');
   return it;
 };
 
 /***/ }),
-/* 56 */
+/* 57 */
 /***/ (function(module, exports) {
 
 var core = module.exports = { version: '2.4.0' };
 if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 
 /***/ }),
-/* 57 */
+/* 58 */
 /***/ (function(module, exports) {
 
 module.exports = function (exec) {
@@ -11642,7 +11932,7 @@ module.exports = function (exec) {
 };
 
 /***/ }),
-/* 58 */
+/* 59 */
 /***/ (function(module, exports) {
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -11652,7 +11942,7 @@ module.exports = function (it) {
 };
 
 /***/ }),
-/* 59 */
+/* 60 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // 19.1.2.14 / 15.2.3.14 Object.keys(O)
@@ -11664,7 +11954,7 @@ module.exports = Object.keys || function keys(O) {
 };
 
 /***/ }),
-/* 60 */
+/* 61 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11678,7 +11968,7 @@ curve.mont = __webpack_require__(244);
 curve.edwards = __webpack_require__(243);
 
 /***/ }),
-/* 61 */
+/* 62 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var md5 = __webpack_require__(130);
@@ -11752,16 +12042,16 @@ function EVP_BytesToKey(password, salt, keyLen, ivLen) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 62 */
+/* 63 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var asn1 = __webpack_require__(264);
-var aesid = __webpack_require__(322);
-var fixProc = __webpack_require__(265);
+var aesid = __webpack_require__(325);
+var fixProc = __webpack_require__(266);
 var ciphers = __webpack_require__(74);
-var compat = __webpack_require__(63);
+var compat = __webpack_require__(64);
 module.exports = parseKeys;
 
 function parseKeys(buffer) {
@@ -11780,8 +12070,13 @@ function parseKeys(buffer) {
   var data = stripped.data;
   var subtype, ndata;
   switch (type) {
+    case 'CERTIFICATE':
+      ndata = asn1.certificate.decode(data, 'der').tbsCertificate.subjectPublicKeyInfo;
+    // falls through
     case 'PUBLIC KEY':
-      ndata = asn1.PublicKey.decode(data, 'der');
+      if (!ndata) {
+        ndata = asn1.PublicKey.decode(data, 'der');
+      }
       subtype = ndata.algorithm.algorithm.join('.');
       switch (subtype) {
         case '1.2.840.113549.1.1.1':
@@ -11864,10 +12159,10 @@ function decrypt(data, password) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 63 */
+/* 64 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var createHmac = __webpack_require__(42);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var createHmac = __webpack_require__(43);
 var MAX_ALLOC = Math.pow(2, 30) - 1; // default in iojs
 
 exports.pbkdf2 = pbkdf2;
@@ -11950,7 +12245,7 @@ function pbkdf2Sync(password, salt, iterations, keylen, digest) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 64 */
+/* 65 */
 /***/ (function(module, exports) {
 
 module.exports = function _arity(n, fn) {
@@ -12006,11 +12301,11 @@ module.exports = function _arity(n, fn) {
 };
 
 /***/ }),
-/* 65 */
+/* 66 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _curry1 = __webpack_require__(32);
-var _isPlaceholder = __webpack_require__(66);
+var _isPlaceholder = __webpack_require__(67);
 
 /**
  * Optimized internal two-arity curry function.
@@ -12040,7 +12335,7 @@ module.exports = function _curry2(fn) {
 };
 
 /***/ }),
-/* 66 */
+/* 67 */
 /***/ (function(module, exports) {
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -12050,15 +12345,15 @@ module.exports = function _isPlaceholder(a) {
 };
 
 /***/ }),
-/* 67 */
+/* 68 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var createHmac = __webpack_require__(42);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var createHmac = __webpack_require__(43);
 var typeforce = __webpack_require__(18);
 var types = __webpack_require__(22);
 
-var BigInteger = __webpack_require__(9);
-var ECSignature = __webpack_require__(49);
+var BigInteger = __webpack_require__(10);
+var ECSignature = __webpack_require__(50);
 
 var ZERO = new Buffer([0]);
 var ONE = new Buffer([1]);
@@ -12276,19 +12571,19 @@ module.exports = {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 68 */
+/* 69 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var Bitcoin = __webpack_require__(7);
-var BigInteger = __webpack_require__(9);
+var BigInteger = __webpack_require__(10);
 var Base58 = __webpack_require__(76);
 var Unorm = __webpack_require__(151);
 var WalletCrypto = __webpack_require__(11);
 var Buffer = __webpack_require__(0).Buffer;
-var constants = __webpack_require__(8);
+var constants = __webpack_require__(9);
 
 var hash256 = Bitcoin.crypto.hash256;
 
@@ -12437,260 +12732,6 @@ var ImportExport = new function () {
 module.exports = ImportExport;
 
 /***/ }),
-/* 69 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(Buffer) {
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var WalletCrypto = __webpack_require__(11);
-var Bitcoin = __webpack_require__(7);
-var API = __webpack_require__(10);
-var Helpers = __webpack_require__(4);
-var constants = __webpack_require__(8);
-
-// individual imports to reduce bundle size
-var assoc = __webpack_require__(269);
-var curry = __webpack_require__(272);
-var compose = __webpack_require__(271);
-var prop = __webpack_require__(280);
-
-var Metadata = function () {
-  function Metadata(ecPair, encKeyBuffer, typeId) {
-    _classCallCheck(this, Metadata);
-
-    // ecPair :: ECPair object - bitcoinjs-lib
-    // encKeyBuffer :: Buffer (nullable = no encrypted save)
-    // TypeId :: Int (nullable = default -1)
-    this.VERSION = 1;
-    this._typeId = typeId || -1;
-    this._magicHash = null;
-    this._address = ecPair.getAddress();
-    this._signKey = ecPair;
-    this._encKeyBuffer = encKeyBuffer;
-    this._sequence = Promise.resolve();
-  }
-
-  _createClass(Metadata, [{
-    key: 'existsOnServer',
-    get: function get() {
-      return Boolean(this._magicHash);
-    }
-  }]);
-
-  return Metadata;
-}();
-
-// network
-
-
-Metadata.request = function (method, endpoint, data) {
-  var url = API.API_ROOT_URL + 'metadata/' + endpoint;
-  var options = {
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'omit'
-  };
-  if (method !== 'GET') {
-    options.body = JSON.stringify(data);
-  }
-  options.method = method;
-  var handleNetworkError = function handleNetworkError(e) {
-    return Promise.reject({ error: 'METADATA_CONNECT_ERROR', message: e });
-  };
-
-  var checkStatus = function checkStatus(response) {
-    if (response.status >= 200 && response.status < 300) {
-      return response.json();
-    } else if (method === 'GET' && response.status === 404) {
-      return null;
-    } else {
-      return response.text().then(Promise.reject.bind(Promise));
-    }
-  };
-  return fetch(url, options).catch(handleNetworkError).then(checkStatus);
-};
-
-Metadata.GET = function (e, d) {
-  return Metadata.request('GET', e, d);
-};
-Metadata.PUT = function (e, d) {
-  return Metadata.request('PUT', e, d);
-};
-Metadata.read = function (address) {
-  return Metadata.request('GET', address).then(Metadata.extractResponse(null));
-};
-
-// //////////////////////////////////////////////////////////////////////////////
-Metadata.encrypt = curry(function (key, data) {
-  return WalletCrypto.encryptDataWithKey(data, key);
-});
-Metadata.decrypt = curry(function (key, data) {
-  return WalletCrypto.decryptDataWithKey(data, key);
-});
-Metadata.B64ToBuffer = function (base64) {
-  return Buffer.from(base64, 'base64');
-};
-Metadata.BufferToB64 = function (buff) {
-  return buff.toString('base64');
-};
-Metadata.StringToBuffer = function (base64) {
-  return Buffer.from(base64);
-};
-Metadata.BufferToString = function (buff) {
-  return buff.toString();
-};
-
-// Metadata.message :: Buffer -> Buffer -> Base64String
-Metadata.message = curry(function (payload, prevMagic) {
-  if (prevMagic) {
-    var hash = WalletCrypto.sha256(payload);
-    var buff = Buffer.concat([prevMagic, hash]);
-    return buff.toString('base64');
-  } else {
-    return payload.toString('base64');
-  }
-});
-
-// Metadata.magic :: Buffer -> Buffer -> Buffer
-Metadata.magic = curry(function (payload, prevMagic) {
-  var msg = this.message(payload, prevMagic);
-  return Bitcoin.message.magicHash(msg, constants.getNetwork());
-});
-
-Metadata.verify = function (address, signature, hash) {
-  return Bitcoin.message.verify(address, signature, hash, constants.getNetwork());
-};
-
-// Metadata.sign :: keyPair -> msg -> Buffer
-Metadata.sign = function (keyPair, msg) {
-  return Bitcoin.message.sign(keyPair, msg, constants.getNetwork());
-};
-
-// Metadata.computeSignature :: keypair -> buffer -> buffer -> base64
-Metadata.computeSignature = function (key, payloadBuff, magicHash) {
-  return Metadata.sign(key, Metadata.message(payloadBuff, magicHash));
-};
-
-Metadata.verifyResponse = curry(function (address, res) {
-  if (res === null) return res;
-  var M = Metadata;
-  var sB = res.signature ? Buffer.from(res.signature, 'base64') : undefined;
-  var pB = res.payload ? Buffer.from(res.payload, 'base64') : undefined;
-  var mB = res.prev_magic_hash ? Buffer.from(res.prev_magic_hash, 'hex') : undefined;
-  var verified = Metadata.verify(address, sB, M.message(pB, mB));
-  if (!verified) throw new Error('METADATA_SIGNATURE_VERIFICATION_ERROR');
-  return assoc('compute_new_magic_hash', M.magic(pB, mB), res);
-});
-
-Metadata.extractResponse = curry(function (encKey, res) {
-  var M = Metadata;
-  if (res === null) {
-    return res;
-  } else {
-    return encKey ? compose(JSON.parse, M.decrypt(encKey), prop('payload'))(res) : compose(JSON.parse, M.BufferToString, M.B64ToBuffer, prop('payload'))(res);
-  }
-});
-
-Metadata.toImmutable = compose(Object.freeze, JSON.parse, JSON.stringify);
-
-Metadata.prototype.create = function (payload) {
-  var _this = this;
-
-  var M = Metadata;
-  payload = M.toImmutable(payload);
-  return this.next(function () {
-    var encPayloadBuffer = _this._encKeyBuffer ? compose(M.B64ToBuffer, M.encrypt(_this._encKeyBuffer), JSON.stringify)(payload) : compose(M.StringToBuffer, JSON.stringify)(payload);
-    var signatureBuffer = M.computeSignature(_this._signKey, encPayloadBuffer, _this._magicHash);
-    var body = {
-      'version': _this.VERSION,
-      'payload': encPayloadBuffer.toString('base64'),
-      'signature': signatureBuffer.toString('base64'),
-      'prev_magic_hash': _this._magicHash ? _this._magicHash.toString('hex') : null,
-      'type_id': _this._typeId
-    };
-    return M.PUT(_this._address, body).then(function (response) {
-      _this._value = payload;
-      _this._magicHash = M.magic(encPayloadBuffer, _this._magicHash);
-      return payload;
-    });
-  });
-};
-
-Metadata.prototype.update = function (payload) {
-  if (JSON.stringify(payload) === JSON.stringify(this._value)) {
-    return this.next(function () {
-      return Promise.resolve(Metadata.toImmutable(payload));
-    });
-  } else {
-    return this.create(payload);
-  }
-};
-
-Metadata.prototype.fetch = function () {
-  var _this2 = this;
-
-  return this.next(function () {
-    var M = Metadata;
-    var saveMagicHash = function saveMagicHash(res) {
-      if (res === null) return res;
-      _this2._magicHash = prop('compute_new_magic_hash', res);
-      return res;
-    };
-    var saveValue = function saveValue(res) {
-      if (res === null) return res;
-      _this2._value = Metadata.toImmutable(res);
-      return res;
-    };
-    return M.GET(_this2._address).then(M.verifyResponse(_this2._address)).then(saveMagicHash).then(M.extractResponse(_this2._encKeyBuffer)).then(saveValue).catch(function (e) {
-      console.error('Failed to fetch metadata entry ' + _this2._typeId + ' at ' + _this2._address + ':', e);
-      return Promise.reject('METADATA_FETCH_FAILED');
-    });
-  });
-};
-
-Metadata.prototype.next = function (f) {
-  var nextInSeq = this._sequence.then(f);
-  this._sequence = nextInSeq.then(Helpers.noop, Helpers.noop);
-  return nextInSeq;
-};
-
-// CONSTRUCTORS
-// used to restore metadata from purpose xpriv (second password)
-Metadata.fromMetadataHDNode = function (metadataHDNode, typeId) {
-  // Payload types:
-  // 0: reserved (guid)
-  // 1: reserved
-  // 2: whats-new
-  // 3: buy-sell
-  // 4: contacts
-  var payloadTypeNode = metadataHDNode.deriveHardened(typeId);
-  // purpose' / type' / 0' : https://meta.blockchain.info/{address}
-  //                       signature used to authenticate
-  // purpose' / type' / 1' : sha256(private key) used as 256 bit AES key
-  var node = payloadTypeNode.deriveHardened(0);
-  var privateKeyBuffer = payloadTypeNode.deriveHardened(1).keyPair.d.toBuffer();
-  var encryptionKey = WalletCrypto.sha256(privateKeyBuffer);
-  return new Metadata(node.keyPair, encryptionKey, typeId);
-};
-
-// used to create a new metadata entry from wallet master hd node
-Metadata.fromMasterHDNode = function (masterHDNode, typeId) {
-  // BIP 43 purpose needs to be 31 bit or less. For lack of a BIP number
-  // we take the first 31 bits of the SHA256 hash of a reverse domain.
-  var hash = WalletCrypto.sha256('info.blockchain.metadata');
-  var purpose = hash.slice(0, 4).readUInt32BE(0) & 0x7FFFFFFF; // 510742
-  var metadataHDNode = masterHDNode.deriveHardened(purpose);
-  return Metadata.fromMetadataHDNode(metadataHDNode, typeId);
-};
-
-module.exports = Metadata;
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
-
-/***/ }),
 /* 70 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -12699,8 +12740,8 @@ module.exports = Metadata;
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-var API = __webpack_require__(10);
-var Helpers = __webpack_require__(4);
+var API = __webpack_require__(8);
+var Helpers = __webpack_require__(3);
 var WalletCrypto = __webpack_require__(11);
 var WalletStore = __webpack_require__(20);
 var MyWallet = __webpack_require__(13);
@@ -13266,41 +13307,45 @@ function address(x) {
   return MyWallet.wallet.key(x.addr);
 }
 
+function receiveIndex(x) {
+  if (!x || !x.xpub || !x.xpub.path) return;
+  if (!x.xpub.path.split('/').length === 3) return;
+  return parseInt(x.xpub.path.substr(1).split('/')[2]);
+}
+
 function tagCoin(x) {
-  var ad = x.addr;
-  var am = x.value;
-  var coinType = null;
-  var change = false;
-  var id;
-  var label = null;
-  var isWatchOnly = null;
+  var result = {
+    address: x.addr,
+    amount: x.value,
+    change: false,
+    coinType: null,
+    label: null,
+    isWatchOnly: null,
+    identity: undefined
+  };
 
   switch (true) {
     case isLegacy(x):
-      coinType = 'legacy';
-      id = 'imported';
+      result.coinType = 'legacy';
+      result.identity = 'imported';
       var addr = address(x);
-      label = addr.label;
-      isWatchOnly = addr.isWatchOnly;
+      result.label = addr.label;
+      result.isWatchOnly = addr.isWatchOnly;
       break;
     case isAccount(x):
-      coinType = accountPath(x);
-      change = isAccountChange(x);
-      id = account(x).index;
-      label = account(x).label;
+      result.coinType = accountPath(x);
+      result.change = isAccountChange(x);
+      result.identity = account(x).index;
+      result.label = account(x).label;
+      result.accountIndex = account(x).index;
+      if (!result.change) {
+        result.receiveIndex = receiveIndex(x);
+      }
       break;
     default:
-      coinType = 'external';
+      result.coinType = 'external';
   }
-  return {
-    address: ad,
-    amount: am,
-    coinType: coinType,
-    change: change,
-    label: label,
-    identity: id,
-    isWatchOnly: isWatchOnly
-  };
+  return result;
 }
 
 function unpackInput(input) {
@@ -13628,9 +13673,9 @@ module.exports = Trade;
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var bcrypto = __webpack_require__(21);
-var bscript = __webpack_require__(50);
-var bufferutils = __webpack_require__(37);
-var opcodes = __webpack_require__(43);
+var bscript = __webpack_require__(51);
+var bufferutils = __webpack_require__(38);
+var opcodes = __webpack_require__(44);
 var typeforce = __webpack_require__(18);
 var types = __webpack_require__(22);
 
@@ -13949,7 +13994,7 @@ exports.createCipheriv = exports.Cipheriv = ciphers.createCipheriv;
 var deciphers = __webpack_require__(199);
 exports.createDecipher = exports.Decipher = deciphers.createDecipher;
 exports.createDecipheriv = exports.Decipheriv = deciphers.createDecipheriv;
-var modes = __webpack_require__(52);
+var modes = __webpack_require__(53);
 function getCiphers() {
   return Object.keys(modes);
 }
@@ -13959,7 +14004,7 @@ exports.listCiphers = exports.getCiphers = getCiphers;
 /* 75 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var bn = __webpack_require__(3);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var bn = __webpack_require__(4);
 var randomBytes = __webpack_require__(17);
 module.exports = crt;
 function blind(priv) {
@@ -14266,12 +14311,12 @@ module.exports = function (bitmap, value) {
 var global = __webpack_require__(15),
     hide = __webpack_require__(80),
     has = __webpack_require__(28),
-    SRC = __webpack_require__(39)('src'),
+    SRC = __webpack_require__(40)('src'),
     TO_STRING = 'toString',
     $toString = Function[TO_STRING],
     TPL = ('' + $toString).split(TO_STRING);
 
-__webpack_require__(56).inspectSource = function (it) {
+__webpack_require__(57).inspectSource = function (it) {
   return $toString.call(it);
 };
 
@@ -14311,7 +14356,7 @@ module.exports = function (key) {
 /***/ (function(module, exports, __webpack_require__) {
 
 // 7.1.1 ToPrimitive(input [, PreferredType])
-var isObject = __webpack_require__(58);
+var isObject = __webpack_require__(59);
 // instead of the ES6 spec version, we didn't implement @@toPrimitive case
 // and the second argument - flag - preferred type is a string
 module.exports = function (it, S) {
@@ -14404,8 +14449,8 @@ function nextTick(fn, arg1, arg2, arg3) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var _curry1 = __webpack_require__(32);
-var _curry2 = __webpack_require__(65);
-var _isPlaceholder = __webpack_require__(66);
+var _curry2 = __webpack_require__(66);
+var _isPlaceholder = __webpack_require__(67);
 
 /**
  * Optimized internal three-arity curry function.
@@ -14504,7 +14549,7 @@ module.exports = Transform;
 var Duplex = __webpack_require__(25);
 
 /*<replacement>*/
-var util = __webpack_require__(41);
+var util = __webpack_require__(42);
 util.inherits = __webpack_require__(2);
 /*</replacement>*/
 
@@ -14651,6 +14696,14 @@ function done(stream, er, data) {
 
 module.exports = Writable;
 
+// It seems a linked list but it is not
+// there will be only 2 of these for each stream
+function CorkedRequest(state) {
+  this.next = null;
+  this.entry = null;
+  this.finish = onCorkedFinish.bind(undefined, this, state);
+}
+
 /*<replacement>*/
 var processNextTick = __webpack_require__(88);
 /*</replacement>*/
@@ -14666,13 +14719,13 @@ var Duplex;
 Writable.WritableState = WritableState;
 
 /*<replacement>*/
-var util = __webpack_require__(41);
+var util = __webpack_require__(42);
 util.inherits = __webpack_require__(2);
 /*</replacement>*/
 
 /*<replacement>*/
 var internalUtil = {
-  deprecate: __webpack_require__(301)
+  deprecate: __webpack_require__(302)
 };
 /*</replacement>*/
 
@@ -14877,20 +14930,16 @@ function writeAfterEnd(stream, cb) {
   processNextTick(cb, er);
 }
 
-// If we get something that is not a buffer, string, null, or undefined,
-// and we're not in objectMode, then that's an error.
-// Otherwise stream chunks are all considered to be of length=1, and the
-// watermarks determine how many objects to keep in the buffer, rather than
-// how many bytes or characters.
+// Checks that a user-supplied chunk is valid, especially for the particular
+// mode the stream is in. Currently this means that `null` is never accepted
+// and undefined/non-string values are only allowed in object mode.
 function validChunk(stream, state, chunk, cb) {
   var valid = true;
   var er = false;
-  // Always throw error if a null is written
-  // if we are not in object mode then throw
-  // if it is not a buffer, string, or undefined.
+
   if (chunk === null) {
     er = new TypeError('May not write null values to stream');
-  } else if (!Buffer.isBuffer(chunk) && typeof chunk !== 'string' && chunk !== undefined && !state.objectMode) {
+  } else if (typeof chunk !== 'string' && chunk !== undefined && !state.objectMode) {
     er = new TypeError('Invalid non-string/buffer chunk');
   }
   if (er) {
@@ -14904,19 +14953,20 @@ function validChunk(stream, state, chunk, cb) {
 Writable.prototype.write = function (chunk, encoding, cb) {
   var state = this._writableState;
   var ret = false;
+  var isBuf = Buffer.isBuffer(chunk);
 
   if (typeof encoding === 'function') {
     cb = encoding;
     encoding = null;
   }
 
-  if (Buffer.isBuffer(chunk)) encoding = 'buffer';else if (!encoding) encoding = state.defaultEncoding;
+  if (isBuf) encoding = 'buffer';else if (!encoding) encoding = state.defaultEncoding;
 
   if (typeof cb !== 'function') cb = nop;
 
-  if (state.ended) writeAfterEnd(this, cb);else if (validChunk(this, state, chunk, cb)) {
+  if (state.ended) writeAfterEnd(this, cb);else if (isBuf || validChunk(this, state, chunk, cb)) {
     state.pendingcb++;
-    ret = writeOrBuffer(this, state, chunk, encoding, cb);
+    ret = writeOrBuffer(this, state, isBuf, chunk, encoding, cb);
   }
 
   return ret;
@@ -14956,10 +15006,11 @@ function decodeChunk(state, chunk, encoding) {
 // if we're already writing something, then just put this
 // in the queue, and wait our turn.  Otherwise, call _write
 // If we return false, then we need a drain event, so set that flag.
-function writeOrBuffer(stream, state, chunk, encoding, cb) {
-  chunk = decodeChunk(state, chunk, encoding);
-
-  if (Buffer.isBuffer(chunk)) encoding = 'buffer';
+function writeOrBuffer(stream, state, isBuf, chunk, encoding, cb) {
+  if (!isBuf) {
+    chunk = decodeChunk(state, chunk, encoding);
+    if (Buffer.isBuffer(chunk)) encoding = 'buffer';
+  }
   var len = state.objectMode ? 1 : chunk.length;
 
   state.length += len;
@@ -15180,7 +15231,6 @@ function CorkedRequest(state) {
 
   this.next = null;
   this.entry = null;
-
   this.finish = function (err) {
     var entry = _this.entry;
     _this.entry = null;
@@ -15431,7 +15481,7 @@ function base64DetectIncompleteChar(buffer) {
 module.exports = KeyRing;
 
 var assert = __webpack_require__(1);
-var KeyChain = __webpack_require__(313);
+var KeyChain = __webpack_require__(315);
 
 // keyring: A collection of keychains
 
@@ -15496,14 +15546,14 @@ KeyRing.prototype.toJSON = function () {
 module.exports = Address;
 
 var Base58 = __webpack_require__(76);
-var RNG = __webpack_require__(44);
-var API = __webpack_require__(10);
+var RNG = __webpack_require__(46);
+var API = __webpack_require__(8);
 var Bitcoin = __webpack_require__(7);
-var Helpers = __webpack_require__(4);
+var Helpers = __webpack_require__(3);
 var MyWallet = __webpack_require__(13); // This cyclic import should be avoided once the refactor is complete
-var ImportExport = __webpack_require__(68);
+var ImportExport = __webpack_require__(69);
 var WalletCrypto = __webpack_require__(11);
-var constants = __webpack_require__(8);
+var constants = __webpack_require__(9);
 
 // Address class
 function Address(object) {
@@ -15834,7 +15884,7 @@ var assert = __webpack_require__(1);
 
 var WalletStore = __webpack_require__(20);
 var MyWallet = __webpack_require__(13);
-var API = __webpack_require__(10);
+var API = __webpack_require__(8);
 
 function fetchAccountInfo() {
   return API.securePost('wallet', { method: 'get-info', format: 'json' }).catch(function (data) {
@@ -16186,24 +16236,33 @@ module.exports = {
 /* 96 */
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-
 var Coinify = __webpack_require__(171);
 var SFOX = __webpack_require__(189);
-var Metadata = __webpack_require__(69);
-var ExchangeDelegate = __webpack_require__(310);
+var Metadata = __webpack_require__(45);
+var ExchangeDelegate = __webpack_require__(312);
 
 var METADATA_TYPE_EXTERNAL = 3;
 
 module.exports = External;
 
-function External(wallet) {
-  var masterhdnode = wallet.hdwallet.getMasterHDNode();
-  this._metadata = Metadata.fromMasterHDNode(masterhdnode, METADATA_TYPE_EXTERNAL);
+function External(metadata, wallet, object) {
   this._coinify = undefined;
   this._sfox = undefined;
   this._wallet = wallet;
+  this._metadata = metadata;
+
+  if (object !== null) {
+    if (object.coinify) {
+      var coinifyDelegate = new ExchangeDelegate(wallet);
+      this._coinify = new Coinify(object.coinify, coinifyDelegate);
+      coinifyDelegate.trades = this._coinify.trades;
+    }
+    if (object.sfox) {
+      var sfoxDelegate = new ExchangeDelegate(wallet);
+      this._sfox = new SFOX(object.sfox, sfoxDelegate);
+      sfoxDelegate.trades = this._sfox.trades;
+    }
+  }
 }
 
 Object.defineProperties(External.prototype, {
@@ -16232,7 +16291,7 @@ Object.defineProperties(External.prototype, {
   'hasExchangeAccount': {
     configurable: false,
     get: function get() {
-      return this._coinify && this._coinify.hasAccount || this._sfox && this._sfox.hasAccount;
+      return this._coinify && this._coinify.hasAccount || this._sfox && this._sfox.hasAccount || false;
     }
   }
 });
@@ -16258,30 +16317,30 @@ External.prototype.toJSON = function () {
   return external;
 };
 
-External.prototype.fetch = function () {
-  var fetchFailed = function fetchFailed(e) {
-    // Metadata service is down or unreachable.
-    this.loaded = false;
-    return Promise.reject(e);
-  };
-  return this._metadata.fetch().then(this.fromJSON.bind(this)).catch(fetchFailed.bind(this));
+External.initMetadata = function (wallet) {
+  return Metadata.fromMasterHDNode(wallet._metadataHDNode, METADATA_TYPE_EXTERNAL);
 };
 
-External.prototype.fromJSON = function (object) {
-  this.loaded = true;
-  if (object !== null) {
-    if (object.coinify) {
-      var coinifyDelegate = new ExchangeDelegate(this._wallet);
-      this._coinify = new Coinify(object.coinify, coinifyDelegate);
-      coinifyDelegate.trades = this._coinify.trades;
-    }
-    if (object.sfox) {
-      var sfoxDelegate = new ExchangeDelegate(this._wallet);
-      this._sfox = new SFOX(object.sfox, sfoxDelegate);
-      sfoxDelegate.trades = this._sfox.trades;
-    }
-  }
-  return this;
+External.fromJSON = function (wallet, json, magicHash) {
+  var success = function success(payload) {
+    return new External(metadata, wallet, payload);
+  };
+  var metadata = External.initMetadata(wallet);
+  return metadata.fromObject(JSON.parse(json), magicHash).then(success);
+};
+
+External.fetch = function (wallet) {
+  var metadata = External.initMetadata(wallet);
+
+  var fetchSuccess = function fetchSuccess(payload) {
+    return new External(metadata, wallet, payload);
+  };
+
+  var fetchFailed = function fetchFailed(e) {
+    // Metadata service is down or unreachable.
+    return Promise.reject(e);
+  };
+  return metadata.fetch().then(fetchSuccess).catch(fetchFailed);
 };
 
 External.prototype.save = function () {
@@ -16308,12 +16367,12 @@ External.prototype.wipe = function () {
 var Bitcoin = __webpack_require__(7);
 var WalletCrypto = __webpack_require__(11);
 var Transaction = __webpack_require__(98);
-var API = __webpack_require__(10);
-var Helpers = __webpack_require__(4);
+var API = __webpack_require__(8);
+var Helpers = __webpack_require__(3);
 var KeyRing = __webpack_require__(93);
 var EventEmitter = __webpack_require__(31);
 var util = __webpack_require__(152);
-var constants = __webpack_require__(8);
+var constants = __webpack_require__(9);
 
 // Payment Class
 
@@ -16853,9 +16912,9 @@ function getPrivateKeys(wallet, password, payment) {
 
 var assert = __webpack_require__(1);
 var Bitcoin = __webpack_require__(7);
-var Helpers = __webpack_require__(4);
+var Helpers = __webpack_require__(3);
 var Buffer = __webpack_require__(0).Buffer;
-var constants = __webpack_require__(8);
+var constants = __webpack_require__(9);
 
 // Error messages that can be seen by the user should take the form of:
 // {error: "NOT_GOOD", some_param: 1}
@@ -17088,7 +17147,7 @@ module.exports = Transaction;
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var inherits = __webpack_require__(2);
-var Reporter = __webpack_require__(36).Reporter;
+var Reporter = __webpack_require__(37).Reporter;
 var Buffer = __webpack_require__(0).Buffer;
 
 function DecoderBuffer(base, options) {
@@ -17219,7 +17278,7 @@ constants.der = __webpack_require__(163);
 
 var inherits = __webpack_require__(2);
 
-var asn1 = __webpack_require__(45);
+var asn1 = __webpack_require__(36);
 var base = asn1.base;
 var bignum = asn1.bignum;
 
@@ -17499,7 +17558,7 @@ function derDecodeLen(buf, primitive, fail) {
 var inherits = __webpack_require__(2);
 var Buffer = __webpack_require__(0).Buffer;
 
-var asn1 = __webpack_require__(45);
+var asn1 = __webpack_require__(36);
 var base = asn1.base;
 
 // Import DER constants
@@ -17754,7 +17813,7 @@ function BigInteger(a, b, c) {
 var proto = BigInteger.prototype;
 
 // duck-typed isBigInteger
-proto.__bigi = __webpack_require__(317).version;
+proto.__bigi = __webpack_require__(320).version;
 BigInteger.isBigInteger = function (obj, check_ver) {
   return obj && obj.__bigi && (!check_ver || obj.__bigi === proto.__bigi);
 };
@@ -19392,7 +19451,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var ExchangePaymentMedium = __webpack_require__(5).PaymentMedium;
 var PaymentAccount = __webpack_require__(180);
-var Trade = __webpack_require__(46);
+var Trade = __webpack_require__(47);
 
 var PaymentMedium = function (_ExchangePaymentMediu) {
   _inherits(PaymentMedium, _ExchangePaymentMediu);
@@ -19589,8 +19648,8 @@ module.exports = PaymentMedium;
 /* 108 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var bs58check = __webpack_require__(54);
-var bscript = __webpack_require__(50);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var bs58check = __webpack_require__(55);
+var bscript = __webpack_require__(51);
 var networks = __webpack_require__(19);
 var typeforce = __webpack_require__(18);
 var types = __webpack_require__(22);
@@ -19702,7 +19761,7 @@ if ((typeof self === 'undefined' ? 'undefined' : _typeof(self)) === 'object') {
 } else {
   // Node.js or Web worker with no crypto support
   try {
-    var crypto = __webpack_require__(323);
+    var crypto = __webpack_require__(326);
     if (typeof crypto.randomBytes !== 'function') throw new Error('Not supported');
 
     Rand.prototype._rand = function _rand(n) {
@@ -19715,11 +19774,11 @@ if ((typeof self === 'undefined' ? 'undefined' : _typeof(self)) === 'object') {
 /* 110 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(51);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(52);
 var Transform = __webpack_require__(26);
 var inherits = __webpack_require__(2);
 var GHASH = __webpack_require__(201);
-var xor = __webpack_require__(38);
+var xor = __webpack_require__(39);
 inherits(StreamCipher, Transform);
 module.exports = StreamCipher;
 
@@ -19818,7 +19877,7 @@ function xorTest(a, b) {
 /* 111 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var xor = __webpack_require__(38);
+var xor = __webpack_require__(39);
 
 exports.encrypt = function (self, block) {
   var data = xor(block, self._prev);
@@ -19840,7 +19899,7 @@ exports.decrypt = function (self, block) {
 /* 112 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(38);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(39);
 
 exports.encrypt = function (self, data, decrypt) {
   var out = new Buffer('');
@@ -19949,7 +20008,7 @@ exports.decrypt = function (self, block) {
 /* 116 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(38);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(39);
 
 function getBlock(self) {
   self._prev = self._cipher.encryptBlock(self._prev);
@@ -19971,7 +20030,7 @@ exports.encrypt = function (self, chunk) {
 /* 117 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(51);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(52);
 var Transform = __webpack_require__(26);
 var inherits = __webpack_require__(2);
 
@@ -20135,7 +20194,7 @@ module.exports = function (a, b) {
 /* 121 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isObject = __webpack_require__(58),
+var isObject = __webpack_require__(59),
     document = __webpack_require__(15).document
 // in old IE typeof document.createElement is 'object'
 ,
@@ -20148,7 +20207,7 @@ module.exports = function (it) {
 /* 122 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = !__webpack_require__(27) && !__webpack_require__(57)(function () {
+module.exports = !__webpack_require__(27) && !__webpack_require__(58)(function () {
   return Object.defineProperty(__webpack_require__(121)('div'), 'a', { get: function get() {
       return 7;
     } }).a != 7;
@@ -20207,7 +20266,7 @@ module.exports = function (object, names) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var shared = __webpack_require__(84)('keys'),
-    uid = __webpack_require__(39);
+    uid = __webpack_require__(40);
 module.exports = function (key) {
   return shared[key] || (shared[key] = uid(key));
 };
@@ -20227,7 +20286,7 @@ module.exports = function (it) {
 /* 129 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports.f = __webpack_require__(40);
+exports.f = __webpack_require__(41);
 
 /***/ }),
 /* 130 */
@@ -20390,14 +20449,14 @@ module.exports = function md5(buf) {
 
 exports.randomBytes = exports.rng = exports.pseudoRandomBytes = exports.prng = __webpack_require__(17);
 exports.createHash = exports.Hash = __webpack_require__(14);
-exports.createHmac = exports.Hmac = __webpack_require__(42);
+exports.createHmac = exports.Hmac = __webpack_require__(43);
 
 var hashes = ['sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'md5', 'rmd160'].concat(Object.keys(__webpack_require__(118)));
 exports.getHashes = function () {
   return hashes;
 };
 
-var p = __webpack_require__(63);
+var p = __webpack_require__(64);
 exports.pbkdf2 = p.pbkdf2;
 exports.pbkdf2Sync = p.pbkdf2Sync;
 
@@ -20415,7 +20474,7 @@ var sign = __webpack_require__(205);['createSign', 'Sign', 'createVerify', 'Veri
 
 exports.createECDH = __webpack_require__(232);
 
-var publicEncrypt = __webpack_require__(266);['publicEncrypt', 'privateEncrypt', 'publicDecrypt', 'privateDecrypt'].forEach(function (key) {
+var publicEncrypt = __webpack_require__(267);['publicEncrypt', 'privateEncrypt', 'publicDecrypt', 'privateDecrypt'].forEach(function (key) {
   exports[key] = publicEncrypt[key];
 })
 
@@ -20434,7 +20493,7 @@ var randomBytes = __webpack_require__(17);
 module.exports = findPrime;
 findPrime.simpleSieve = simpleSieve;
 findPrime.fermatTest = fermatTest;
-var BN = __webpack_require__(3);
+var BN = __webpack_require__(4);
 var TWENTYFOUR = new BN(24);
 var MillerRabin = __webpack_require__(136);
 var millerRabin = new MillerRabin();
@@ -20533,7 +20592,7 @@ function findPrime(bits, gen) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var assert = __webpack_require__(1);
-var BigInteger = __webpack_require__(9);
+var BigInteger = __webpack_require__(10);
 
 var Point = __webpack_require__(134);
 
@@ -20615,7 +20674,7 @@ module.exports = Curve;
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var assert = __webpack_require__(1);
-var BigInteger = __webpack_require__(9);
+var BigInteger = __webpack_require__(10);
 
 var THREE = BigInteger.valueOf(3);
 
@@ -20873,7 +20932,7 @@ module.exports = Array.isArray || function (arr) {
 /* 136 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var bn = __webpack_require__(3);
+var bn = __webpack_require__(4);
 var brorand = __webpack_require__(109);
 
 function MillerRabin(rand) {
@@ -21055,7 +21114,7 @@ function i2ops(c) {
 /* 139 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var bn = __webpack_require__(3);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var bn = __webpack_require__(4);
 function withPublic(paddedMsg, key) {
   return new Buffer(paddedMsg.toRed(bn.mont(key.modulus)).redPow(new bn(key.publicExponent)).fromRed().toArray());
 }
@@ -21187,7 +21246,7 @@ module.exports = PassThrough;
 var Transform = __webpack_require__(90);
 
 /*<replacement>*/
-var util = __webpack_require__(41);
+var util = __webpack_require__(42);
 util.inherits = __webpack_require__(2);
 /*</replacement>*/
 
@@ -21251,12 +21310,12 @@ var bufferShim = __webpack_require__(77);
 /*</replacement>*/
 
 /*<replacement>*/
-var util = __webpack_require__(41);
+var util = __webpack_require__(42);
 util.inherits = __webpack_require__(2);
 /*</replacement>*/
 
 /*<replacement>*/
-var debugUtil = __webpack_require__(325);
+var debugUtil = __webpack_require__(328);
 var debug = void 0;
 if (debugUtil && debugUtil.debuglog) {
   debug = debugUtil.debuglog('stream');
@@ -21265,7 +21324,7 @@ if (debugUtil && debugUtil.debuglog) {
 }
 /*</replacement>*/
 
-var BufferList = __webpack_require__(286);
+var BufferList = __webpack_require__(287);
 var StringDecoder;
 
 util.inherits(Readable, Stream);
@@ -23627,7 +23686,7 @@ function isPrimitive(arg) {
 }
 exports.isPrimitive = isPrimitive;
 
-exports.isBuffer = __webpack_require__(303);
+exports.isBuffer = __webpack_require__(304);
 
 function objectToString(o) {
   return Object.prototype.toString.call(o);
@@ -23664,7 +23723,7 @@ exports.log = function () {
  *     prototype.
  * @param {function} superCtor Constructor function to inherit prototype from.
  */
-exports.inherits = __webpack_require__(302);
+exports.inherits = __webpack_require__(303);
 
 exports._extend = function (origin, add) {
   // Don't do anything if add isn't an object
@@ -23714,32 +23773,31 @@ module.exports = function (module) {
 /* 154 */
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-
 module.exports = Wallet;
 
 // dependencies
 var assert = __webpack_require__(1);
 var BIP39 = __webpack_require__(35);
-var RNG = __webpack_require__(44);
+var RNG = __webpack_require__(46);
 
 var WalletStore = __webpack_require__(20);
 var WalletCrypto = __webpack_require__(11);
-var HDWallet = __webpack_require__(312);
+var HDWallet = __webpack_require__(314);
 var Address = __webpack_require__(94);
-var Helpers = __webpack_require__(4);
+var Helpers = __webpack_require__(3);
 var MyWallet = __webpack_require__(13); // This cyclic import should be avoided once the refactor is complete
-var API = __webpack_require__(10);
+var API = __webpack_require__(8);
 var BlockchainSettingsAPI = __webpack_require__(95);
 var KeyRing = __webpack_require__(93);
-var TxList = __webpack_require__(314);
-var Block = __webpack_require__(308);
+var TxList = __webpack_require__(317);
+var Block = __webpack_require__(310);
 var External = __webpack_require__(96);
-var AccountInfo = __webpack_require__(307);
-var Metadata = __webpack_require__(69);
-var constants = __webpack_require__(8);
+var AccountInfo = __webpack_require__(308);
+var Metadata = __webpack_require__(45);
+var constants = __webpack_require__(9);
 var Payment = __webpack_require__(97);
+var Labels = __webpack_require__(316);
+var Bitcoin = __webpack_require__(7);
 
 // Wallet
 
@@ -23774,6 +23832,17 @@ function Wallet(object) {
     return o;
   }, {}) : {};
 
+  this._metadataHDNode = null;
+
+  if (obj.metadataHDNode) {
+    this._metadataHDNode = Bitcoin.HDNode.fromBase58(obj.metadataHDNode, constants.getNetwork());
+  } else if (!this.isUpgradedToHD) {} else if (!this.isDoubleEncrypted) {
+    this._metadataHDNode = Metadata.deriveMetadataNode(this.hdwallet.getMasterHDNode());
+    MyWallet.syncWallet();
+  } else {
+    console.warn('Second password required to prepare KV Store');
+  }
+
   // tx_notes dictionary
   this._tx_notes = obj.tx_notes || {};
 
@@ -23795,6 +23864,12 @@ function Wallet(object) {
 }
 
 Object.defineProperties(Wallet.prototype, {
+  'isMetadataReady': {
+    configurable: false,
+    get: function get() {
+      return this._metadataHDNode != null;
+    }
+  },
   'guid': {
     configurable: false,
     get: function get() {
@@ -24092,6 +24167,12 @@ Object.defineProperties(Wallet.prototype, {
     get: function get() {
       return this._accountInfo;
     }
+  },
+  'labels': {
+    configurable: false,
+    get: function get() {
+      return this._labels;
+    }
   }
 });
 
@@ -24122,12 +24203,8 @@ Wallet.prototype._updateWalletInfo = function (obj) {
       if (account) {
         account.balance = e.final_balance;
         account.n_tx = e.n_tx;
-        account.lastUsedReceiveIndex = e.account_index;
-        account.receiveIndex = Math.max(account.lastUsedReceiveIndex, account.maxLabeledReceiveIndex);
+        account.lastUsedReceiveIndex = e.account_index - 1;
         account.changeIndex = e.change_index;
-        if (account.getLabelForReceivingAddress(account.receiveIndex)) {
-          account.incrementReceiveIndex();
-        }
       }
     }
     var address = this.activeKey(e.address);
@@ -24183,6 +24260,7 @@ Wallet.prototype.toJSON = function () {
     sharedKey: this.sharedKey,
     double_encryption: this.isDoubleEncrypted,
     dpasswordhash: this.dpasswordhash,
+    metadataHDNode: this._metadataHDNode && this._metadataHDNode.toBase58(),
     options: {
       pbkdf2_iterations: this.pbkdf2_iterations,
       fee_per_kb: this.fee_per_kb,
@@ -24485,7 +24563,7 @@ Wallet.prototype.upgradeToV3 = function (firstAccountLabel, pw, success, error) 
   this._hd_wallets.push(hd);
   var label = firstAccountLabel || 'My Bitcoin Wallet';
   this.newAccount(label, pw, this._hd_wallets.length - 1, true);
-  this.loadExternal();
+  this.loadMetadata();
   MyWallet.syncWallet(function (res) {
     success();
   }, error);
@@ -24539,38 +24617,6 @@ Wallet.prototype.setNote = function (txHash, text) {
 Wallet.prototype.deleteNote = function (txHash) {
   delete this._tx_notes[txHash];
   MyWallet.syncWallet();
-};
-
-Wallet.prototype.getNotePlaceholder = function (filter, tx) {
-  // Given a filter and received transaction, returns the first label shared by both the output(s') hd addresses and the account, otherwise returns a string of length 0.
-  // If using no account filter or filtering by imported addresses, pass in a non-numeric string. It will use the first account found in the outputs as the filtered account.
-  if (tx.txType === 'received' && this.isUpgradedToHD) {
-    var account = parseInt(filter, 10);
-    var addresses = tx.processedOutputs.filter(function (processedOutput) {
-      return processedOutput.identity >= 0;
-    });
-    var indexesAndLabels = addresses.map(function (processedOutput) {
-      var coinType = processedOutput.coinType.split('/');
-      var addressIndex = coinType[2];
-      return { index: addressIndex, label: processedOutput.label };
-    });
-
-    if (addresses.length) {
-      var match = function match(a, b, prop) {
-        var seen = [];
-        for (var i = 0, aLength = a.length; i < aLength; i++) {
-          seen[prop ? a[i][prop] : a[i]] = true;
-        }for (var j = 0, bLength = b.length; j < bLength; j++) {
-          if (seen[prop ? b[j][prop] : b[j]]) return b[j];
-        }return false;
-      };
-      if (isNaN(account)) account = addresses[0].identity;
-      var hdAddresses = this.hdwallet.accounts[account].receivingAddressesLabels;
-      var matchedLabel = match(indexesAndLabels, hdAddresses, 'index').label;
-      if (matchedLabel && matchedLabel.length) return matchedLabel;
-    }
-  }
-  return '';
 };
 
 Wallet.prototype.getMnemonic = function (password) {
@@ -24635,29 +24681,63 @@ Wallet.prototype.fetchAccountInfo = function () {
   });
 };
 
-Wallet.prototype.loadExternal = function () {
-  // patch (buy-sell does not work with double encryption for now)
-  if (this.isDoubleEncrypted === true || !this.isUpgradedToHD) {
-    return Promise.resolve();
-  } else {
-    this._external = new External(this);
-    return this._external.fetch();
-  }
-};
-
-Wallet.prototype.loadExternalFromJSON = function (object) {
-  // patch (buy-sell does not work with double encryption for now)
-  if (this.isDoubleEncrypted === true || !this.isUpgradedToHD) {
-    return;
-  } else {
-    this._external = new External(this);
-    return this._external.fromJSON(object);
-  }
-};
-
 Wallet.prototype.metadata = function (typeId) {
   var masterhdnode = this.hdwallet.getMasterHDNode();
   return Metadata.fromMasterHDNode(masterhdnode, typeId);
+};
+
+Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
+  optionalPayloads = optionalPayloads || {};
+
+  var self = this;
+
+  var fetchExternal = function fetchExternal() {
+    var success = function success(external) {
+      self._external = external;
+    };
+
+    var error = function error(message) {
+      console.warn('wallet.external not set:', message);
+      self._external = null;
+      return Promise.resolve();
+    };
+
+    if (optionalPayloads.external) {
+      return External.fromJSON(this, optionalPayloads.external, magicHashes.external).then(success);
+    } else {
+      return External.fetch(this).then(success).catch(error);
+    }
+  };
+
+  var fetchLabels = function fetchLabels() {
+    var success = function success(labels) {
+      self._labels = labels;
+    };
+
+    var error = function error(message) {
+      console.warn('wallet.labels not set:', message);
+      self._labels = null;
+      return Promise.resolve();
+    };
+
+    if (optionalPayloads.labels) {
+      return Labels.fromJSON(this, optionalPayloads.labels, magicHashes.labels).then(success);
+    } else {
+      return Labels.fetch(this).then(success).catch(error);
+    }
+  };
+
+  var promises = [];
+
+  if (this.isMetadataReady) {
+    // No fallback is metadata is disabled
+    promises.push(fetchExternal.bind(this)());
+  }
+
+  // Falls back to read-only based on wallet payload if metadata is disabled
+  promises.push(fetchLabels.bind(this)());
+
+  return Promise.all(promises);
 };
 
 Wallet.prototype.incStats = function () {
@@ -24676,8 +24756,7 @@ Wallet.prototype.saveGUIDtoMetadata = function () {
     }
   };
 
-  // backupGUID not enabled if secondPassword active
-  if (!this.isDoubleEncrypted && this.isUpgradedToHD) {
+  if (this.isMetadataReady) {
     var GUID_METADATA_TYPE = 0;
     var m = this.metadata(GUID_METADATA_TYPE);
     return m.fetch().then(setOrCheckGuid);
@@ -24690,13 +24769,26 @@ Wallet.prototype.createPayment = function (initialState) {
   return new Payment(this, initialState);
 };
 
+Wallet.prototype.cacheMetadataKey = function (secondPassword) {
+  if (!secondPassword) {
+    return Promise.reject('second password needed');
+  }
+  if (!this.validateSecondPassword(secondPassword)) {
+    return Promise.reject('wrong second password');
+  }
+  var cipher = WalletCrypto.cipherFunction.bind(undefined, secondPassword, this._sharedKey, this._pbkdf2_iterations);
+  this._metadataHDNode = Metadata.deriveMetadataNode(this.hdwallet.getMasterHDNode(cipher));
+  MyWallet.syncWallet();
+  return Promise.resolve();
+};
+
 /***/ }),
 /* 155 */
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(231);
 __webpack_require__(230);
-module.exports = __webpack_require__(56).Symbol;
+module.exports = __webpack_require__(57).Symbol;
 
 /***/ }),
 /* 156 */
@@ -24839,7 +24931,7 @@ module.exports = __webpack_require__(56).Symbol;
   function attemptVertx() {
     try {
       var r = require;
-      var vertx = __webpack_require__(324);
+      var vertx = __webpack_require__(327);
       vertxNext = vertx.runOnLoop || vertx.runOnContext;
       return useVertxTimer();
     } catch (e) {
@@ -25870,7 +25962,7 @@ module.exports = __webpack_require__(56).Symbol;
 // on the global object (window or self)
 //
 // Return that as the export for use in Webpack, Browserify etc.
-__webpack_require__(305);
+__webpack_require__(306);
 module.exports = self.fetch.bind(self);
 
 /***/ }),
@@ -25901,7 +25993,7 @@ function BuySell(wallet, debug) {
   }
 
   // Stop if meta data failed to load;
-  if (!wallet.external.loaded) {
+  if (wallet.external === null) {
     return;
   }
 
@@ -25914,14 +26006,14 @@ Object.defineProperties(BuySell.prototype, {
     configurable: false,
     get: function get() {
       return {
-        metaDataService: this._wallet.external && this._wallet.external.loaded
+        metaDataService: this._wallet.external
       };
     }
   },
   'exchanges': {
     configurable: false,
     get: function get() {
-      if (this._wallet.external === null || !this._wallet.external.loaded) return;
+      if (this._wallet.external === null) return;
       return {
         coinify: this._wallet.external.coinify,
         sfox: this._wallet.external.sfox
@@ -25939,8 +26031,8 @@ Object.defineProperties(BuySell.prototype, {
 
 var assert = __webpack_require__(1);
 
-var API = __webpack_require__(10);
-var Helpers = __webpack_require__(4);
+var API = __webpack_require__(8);
+var Helpers = __webpack_require__(3);
 
 function postTokenEndpoint(method, token, extraParams) {
   assert(token, 'Token required');
@@ -26012,7 +26104,7 @@ module.exports = {
 /* 160 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var asn1 = __webpack_require__(45);
+var asn1 = __webpack_require__(36);
 var inherits = __webpack_require__(2);
 
 var api = exports;
@@ -26032,7 +26124,7 @@ function Entity(name, body) {
 Entity.prototype._createNamed = function createNamed(base) {
   var named;
   try {
-    named = __webpack_require__(304).runInThisContext('(function ' + this.name + '(entity) {\n' + '  this._initNamed(entity);\n' + '})');
+    named = __webpack_require__(305).runInThisContext('(function ' + this.name + '(entity) {\n' + '  this._initNamed(entity);\n' + '})');
   } catch (e) {
     named = function named(entity) {
       this._initNamed(entity);
@@ -26074,9 +26166,9 @@ Entity.prototype.encode = function encode(data, enc, /* internal */reporter) {
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-var Reporter = __webpack_require__(36).Reporter;
-var EncoderBuffer = __webpack_require__(36).EncoderBuffer;
-var DecoderBuffer = __webpack_require__(36).DecoderBuffer;
+var Reporter = __webpack_require__(37).Reporter;
+var EncoderBuffer = __webpack_require__(37).EncoderBuffer;
+var DecoderBuffer = __webpack_require__(37).DecoderBuffer;
 var assert = __webpack_require__(24);
 
 // Supported tags
@@ -27482,7 +27574,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var Exchange = __webpack_require__(5);
 var CoinifyProfile = __webpack_require__(181);
-var Trade = __webpack_require__(46);
+var Trade = __webpack_require__(47);
 var CoinifyKYC = __webpack_require__(177);
 var PaymentMedium = __webpack_require__(106);
 var ExchangeRate = __webpack_require__(176);
@@ -28054,7 +28146,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var ExchangePaymentAccount = __webpack_require__(5).PaymentAccount;
-var Trade = __webpack_require__(46);
+var Trade = __webpack_require__(47);
 
 var PaymentAccount = function (_ExchangePaymentAccou) {
   _inherits(PaymentAccount, _ExchangePaymentAccou);
@@ -28313,7 +28405,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var PaymentMethod = __webpack_require__(106);
 var Exchange = __webpack_require__(5);
-var Trade = __webpack_require__(46);
+var Trade = __webpack_require__(47);
 
 var Quote = function (_Exchange$Quote) {
   _inherits(Quote, _Exchange$Quote);
@@ -28401,7 +28493,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Helpers = __webpack_require__(47);
+var Helpers = __webpack_require__(48);
 var assert = __webpack_require__(1);
 
 var API = function () {
@@ -28485,7 +28577,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var assert = __webpack_require__(1);
-var Helpers = __webpack_require__(47);
+var Helpers = __webpack_require__(48);
 
 // This is poor man's abstract class:
 // https://gist.github.com/Zodiase/af44115098b20d69c531
@@ -28834,7 +28926,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Helpers = __webpack_require__(47);
+var Helpers = __webpack_require__(48);
 var assert = __webpack_require__(1);
 
 var Quote = function () {
@@ -30147,7 +30239,7 @@ module.exports = SFOX;
 /* 196 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var bufferutils = __webpack_require__(37);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var bufferutils = __webpack_require__(38);
 var bcrypto = __webpack_require__(21);
 
 var Transaction = __webpack_require__(73);
@@ -30271,14 +30363,14 @@ module.exports = Block;
 /* 197 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var bufferutils = __webpack_require__(37);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var bufferutils = __webpack_require__(38);
 var bcrypto = __webpack_require__(21);
-var ecdsa = __webpack_require__(67);
+var ecdsa = __webpack_require__(68);
 var networks = __webpack_require__(19);
 
-var BigInteger = __webpack_require__(9);
-var ECPair = __webpack_require__(48);
-var ECSignature = __webpack_require__(49);
+var BigInteger = __webpack_require__(10);
+var ECPair = __webpack_require__(49);
+var ECSignature = __webpack_require__(50);
 
 function magicHash(message, network) {
   var messagePrefix = new Buffer(network.messagePrefix);
@@ -30333,13 +30425,13 @@ module.exports = {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var baddress = __webpack_require__(108);
 var bcrypto = __webpack_require__(21);
-var bscript = __webpack_require__(50);
+var bscript = __webpack_require__(51);
 var bufferEquals = __webpack_require__(120);
 var networks = __webpack_require__(19);
-var ops = __webpack_require__(43);
+var ops = __webpack_require__(44);
 
-var ECPair = __webpack_require__(48);
-var ECSignature = __webpack_require__(49);
+var ECPair = __webpack_require__(49);
+var ECSignature = __webpack_require__(50);
 var Transaction = __webpack_require__(73);
 
 // re-orders signatures to match pubKeys, fills undefined otherwise
@@ -30780,13 +30872,13 @@ module.exports = TransactionBuilder;
 /* 199 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(51);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(52);
 var Transform = __webpack_require__(26);
 var inherits = __webpack_require__(2);
-var modes = __webpack_require__(52);
+var modes = __webpack_require__(53);
 var StreamCipher = __webpack_require__(117);
 var AuthCipher = __webpack_require__(110);
-var ebtk = __webpack_require__(61);
+var ebtk = __webpack_require__(62);
 
 inherits(Decipher, Transform);
 function Decipher(mode, key, iv) {
@@ -30878,8 +30970,8 @@ var modelist = {
   CFB8: __webpack_require__(114),
   CFB1: __webpack_require__(113),
   OFB: __webpack_require__(116),
-  CTR: __webpack_require__(53),
-  GCM: __webpack_require__(53)
+  CTR: __webpack_require__(54),
+  GCM: __webpack_require__(54)
 };
 
 function createDecipheriv(suite, password, iv) {
@@ -30923,11 +31015,11 @@ exports.createDecipheriv = createDecipheriv;
 /* 200 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(51);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(52);
 var Transform = __webpack_require__(26);
 var inherits = __webpack_require__(2);
-var modes = __webpack_require__(52);
-var ebtk = __webpack_require__(61);
+var modes = __webpack_require__(53);
+var ebtk = __webpack_require__(62);
 var StreamCipher = __webpack_require__(117);
 var AuthCipher = __webpack_require__(110);
 inherits(Cipher, Transform);
@@ -31006,8 +31098,8 @@ var modelist = {
   CFB8: __webpack_require__(114),
   CFB1: __webpack_require__(113),
   OFB: __webpack_require__(116),
-  CTR: __webpack_require__(53),
-  GCM: __webpack_require__(53)
+  CTR: __webpack_require__(54),
+  GCM: __webpack_require__(54)
 };
 
 function createCipheriv(suite, password, iv) {
@@ -31142,11 +31234,11 @@ function xor(a, b) {
 /* 202 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var ebtk = __webpack_require__(61);
+var ebtk = __webpack_require__(62);
 var aes = __webpack_require__(74);
 var DES = __webpack_require__(203);
 var desModes = __webpack_require__(204);
-var aesModes = __webpack_require__(52);
+var aesModes = __webpack_require__(53);
 function createCipher(suite, password) {
   var keyLen, ivLen;
   suite = suite.toLowerCase();
@@ -31408,13 +31500,13 @@ module.exports = {
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {// much of this based on https://github.com/indutny/self-signed/blob/gh-pages/lib/rsa.js
-var createHmac = __webpack_require__(42);
+var createHmac = __webpack_require__(43);
 var crt = __webpack_require__(75);
 var curves = __webpack_require__(119);
 var elliptic = __webpack_require__(6);
-var parseKeys = __webpack_require__(62);
+var parseKeys = __webpack_require__(63);
 
-var BN = __webpack_require__(3);
+var BN = __webpack_require__(4);
 var EC = elliptic.ec;
 
 function sign(hash, key, hashType, signType) {
@@ -31580,9 +31672,9 @@ module.exports.makeKey = makeKey;
 /* WEBPACK VAR INJECTION */(function(Buffer) {// much of this based on https://github.com/indutny/self-signed/blob/gh-pages/lib/rsa.js
 var curves = __webpack_require__(119);
 var elliptic = __webpack_require__(6);
-var parseKeys = __webpack_require__(62);
+var parseKeys = __webpack_require__(63);
 
-var BN = __webpack_require__(3);
+var BN = __webpack_require__(4);
 var EC = elliptic.ec;
 
 function verify(sig, hash, key, signType) {
@@ -31743,7 +31835,7 @@ module.exports = function (IS_INCLUDES) {
 
 // getting tag from 19.1.3.6 Object.prototype.toString()
 var cof = __webpack_require__(78),
-    TAG = __webpack_require__(40)('toStringTag')
+    TAG = __webpack_require__(41)('toStringTag')
 // ES3 wrong here
 ,
     ARG = cof(function () {
@@ -31811,7 +31903,7 @@ module.exports = function (it) {
 /***/ (function(module, exports, __webpack_require__) {
 
 // all enumerable object keys, includes symbols
-var getKeys = __webpack_require__(59),
+var getKeys = __webpack_require__(60),
     gOPS = __webpack_require__(125),
     pIE = __webpack_require__(81);
 module.exports = function (it) {
@@ -31833,7 +31925,7 @@ module.exports = function (it) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var global = __webpack_require__(15),
-    core = __webpack_require__(56),
+    core = __webpack_require__(57),
     hide = __webpack_require__(80),
     redefine = __webpack_require__(83),
     ctx = __webpack_require__(213),
@@ -31909,7 +32001,7 @@ module.exports = Array.isArray || function isArray(arg) {
 /* 220 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var getKeys = __webpack_require__(59),
+var getKeys = __webpack_require__(60),
     toIObject = __webpack_require__(30);
 module.exports = function (object, el) {
   var O = toIObject(object),
@@ -31928,15 +32020,15 @@ module.exports = function (object, el) {
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-var META = __webpack_require__(39)('meta'),
-    isObject = __webpack_require__(58),
+var META = __webpack_require__(40)('meta'),
+    isObject = __webpack_require__(59),
     has = __webpack_require__(28),
     setDesc = __webpack_require__(29).f,
     id = 0;
 var isExtensible = Object.isExtensible || function () {
   return true;
 };
-var FREEZE = !__webpack_require__(57)(function () {
+var FREEZE = !__webpack_require__(58)(function () {
   return isExtensible(Object.preventExtensions({}));
 });
 var setMeta = function setMeta(it) {
@@ -31987,7 +32079,7 @@ var meta = module.exports = {
 /***/ (function(module, exports, __webpack_require__) {
 
 // 19.1.2.2 / 15.2.3.5 Object.create(O [, Properties])
-var anObject = __webpack_require__(55),
+var anObject = __webpack_require__(56),
     dPs = __webpack_require__(223),
     enumBugKeys = __webpack_require__(79),
     IE_PROTO = __webpack_require__(127)('IE_PROTO'),
@@ -32034,8 +32126,8 @@ module.exports = Object.create || function create(O, Properties) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var dP = __webpack_require__(29),
-    anObject = __webpack_require__(55),
-    getKeys = __webpack_require__(59);
+    anObject = __webpack_require__(56),
+    getKeys = __webpack_require__(60);
 
 module.exports = __webpack_require__(27) ? Object.defineProperties : function defineProperties(O, Properties) {
   anObject(O);
@@ -32100,7 +32192,7 @@ module.exports.f = function getOwnPropertyNames(it) {
 
 var def = __webpack_require__(29).f,
     has = __webpack_require__(28),
-    TAG = __webpack_require__(40)('toStringTag');
+    TAG = __webpack_require__(41)('toStringTag');
 
 module.exports = function (it, tag, stat) {
   if (it && !has(it = stat ? it : it.prototype, TAG)) def(it, TAG, { configurable: true, value: tag });
@@ -32134,7 +32226,7 @@ module.exports = function (it) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var global = __webpack_require__(15),
-    core = __webpack_require__(56),
+    core = __webpack_require__(57),
     LIBRARY = __webpack_require__(123),
     wksExt = __webpack_require__(129),
     defineProperty = __webpack_require__(29).f;
@@ -32153,7 +32245,7 @@ module.exports = function (name) {
 
 var classof = __webpack_require__(212),
     test = {};
-test[__webpack_require__(40)('toStringTag')] = 'z';
+test[__webpack_require__(41)('toStringTag')] = 'z';
 if (test + '' != '[object z]') {
   __webpack_require__(83)(Object.prototype, 'toString', function toString() {
     return '[object ' + classof(this) + ']';
@@ -32176,17 +32268,17 @@ var global = __webpack_require__(15),
     $export = __webpack_require__(216),
     redefine = __webpack_require__(83),
     META = __webpack_require__(221).KEY,
-    $fails = __webpack_require__(57),
+    $fails = __webpack_require__(58),
     shared = __webpack_require__(84),
     setToStringTag = __webpack_require__(226),
-    uid = __webpack_require__(39),
-    wks = __webpack_require__(40),
+    uid = __webpack_require__(40),
+    wks = __webpack_require__(41),
     wksExt = __webpack_require__(129),
     wksDefine = __webpack_require__(229),
     keyOf = __webpack_require__(220),
     enumKeys = __webpack_require__(215),
     isArray = __webpack_require__(219),
-    anObject = __webpack_require__(55),
+    anObject = __webpack_require__(56),
     toIObject = __webpack_require__(30),
     toPrimitive = __webpack_require__(85),
     createDesc = __webpack_require__(82),
@@ -32194,7 +32286,7 @@ var global = __webpack_require__(15),
     gOPNExt = __webpack_require__(225),
     $GOPD = __webpack_require__(224),
     $DP = __webpack_require__(29),
-    $keys = __webpack_require__(59),
+    $keys = __webpack_require__(60),
     gOPD = $GOPD.f,
     dP = $DP.f,
     gOPN = gOPNExt.f,
@@ -32415,7 +32507,7 @@ setToStringTag(global.JSON, 'JSON', true);
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var elliptic = __webpack_require__(6);
-var BN = __webpack_require__(3);
+var BN = __webpack_require__(4);
 
 module.exports = function createECDH(curve) {
 	return new ECDH(curve);
@@ -33192,7 +33284,7 @@ exports.padSplit = function padSplit(num, size, group) {
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var generatePrime = __webpack_require__(132);
-var primes = __webpack_require__(319);
+var primes = __webpack_require__(322);
 
 var DH = __webpack_require__(240);
 
@@ -33239,7 +33331,7 @@ exports.createDiffieHellman = exports.DiffieHellman = createDiffieHellman;
 /* 240 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var BN = __webpack_require__(3);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var BN = __webpack_require__(4);
 var MillerRabin = __webpack_require__(136);
 var millerRabin = new MillerRabin();
 var TWENTYFOUR = new BN(24);
@@ -33406,9 +33498,9 @@ function formatReturnValue(bn, enc) {
 /* 241 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var BigInteger = __webpack_require__(9);
+var BigInteger = __webpack_require__(10);
 
-var curves = __webpack_require__(320);
+var curves = __webpack_require__(323);
 var Curve = __webpack_require__(133);
 
 function getCurveByName(name) {
@@ -33435,7 +33527,7 @@ module.exports = getCurveByName;
 "use strict";
 
 
-var BN = __webpack_require__(3);
+var BN = __webpack_require__(4);
 var elliptic = __webpack_require__(6);
 var utils = elliptic.utils;
 var getNAF = utils.getNAF;
@@ -33771,9 +33863,9 @@ BasePoint.prototype.dblp = function dblp(k) {
 "use strict";
 
 
-var curve = __webpack_require__(60);
+var curve = __webpack_require__(61);
 var elliptic = __webpack_require__(6);
-var BN = __webpack_require__(3);
+var BN = __webpack_require__(4);
 var inherits = __webpack_require__(2);
 var Base = curve.base;
 
@@ -34163,8 +34255,8 @@ Point.prototype.mixedAdd = Point.prototype.add;
 "use strict";
 
 
-var curve = __webpack_require__(60);
-var BN = __webpack_require__(3);
+var curve = __webpack_require__(61);
+var BN = __webpack_require__(4);
 var inherits = __webpack_require__(2);
 var Base = curve.base;
 
@@ -34344,9 +34436,9 @@ Point.prototype.getX = function getX() {
 "use strict";
 
 
-var curve = __webpack_require__(60);
+var curve = __webpack_require__(61);
 var elliptic = __webpack_require__(6);
-var BN = __webpack_require__(3);
+var BN = __webpack_require__(4);
 var inherits = __webpack_require__(2);
 var Base = curve.base;
 
@@ -35377,7 +35469,7 @@ defineCurve('secp256k1', {
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-var BN = __webpack_require__(3);
+var BN = __webpack_require__(4);
 var HmacDRBG = __webpack_require__(260);
 var elliptic = __webpack_require__(6);
 var utils = elliptic.utils;
@@ -35597,7 +35689,7 @@ EC.prototype.getKeyRecoveryParam = function (e, signature, Q, enc) {
 "use strict";
 
 
-var BN = __webpack_require__(3);
+var BN = __webpack_require__(4);
 var elliptic = __webpack_require__(6);
 var utils = elliptic.utils;
 var assert = utils.assert;
@@ -35708,7 +35800,7 @@ KeyPair.prototype.inspect = function inspect() {
 "use strict";
 
 
-var BN = __webpack_require__(3);
+var BN = __webpack_require__(4);
 
 var elliptic = __webpack_require__(6);
 var utils = elliptic.utils;
@@ -36061,7 +36153,7 @@ module.exports = KeyPair;
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-var BN = __webpack_require__(3);
+var BN = __webpack_require__(4);
 var elliptic = __webpack_require__(6);
 var utils = elliptic.utils;
 var assert = utils.assert;
@@ -36146,7 +36238,7 @@ module.exports = {
 
 
 var utils = exports;
-var BN = __webpack_require__(3);
+var BN = __webpack_require__(4);
 var minAssert = __webpack_require__(24);
 var minUtils = __webpack_require__(137);
 
@@ -37407,7 +37499,7 @@ exports._unrefActive = exports.active = function (item) {
 };
 
 // setimmediate attaches itself to the global object
-__webpack_require__(292);
+__webpack_require__(293);
 exports.setImmediate = setImmediate;
 exports.clearImmediate = clearImmediate;
 
@@ -37415,10 +37507,14 @@ exports.clearImmediate = clearImmediate;
 /* 264 */
 /***/ (function(module, exports, __webpack_require__) {
 
+"use strict";
 // from https://github.com/indutny/self-signed/blob/gh-pages/lib/asn1.js
 // Fedor, you are amazing.
 
-var asn1 = __webpack_require__(45);
+
+var asn1 = __webpack_require__(36);
+
+exports.certificate = __webpack_require__(265);
 
 var RSAPrivateKey = asn1.define('RSAPrivateKey', function () {
   this.seq().obj(this.key('version').int(), this.key('modulus').int(), this.key('publicExponent').int(), this.key('privateExponent').int(), this.key('prime1').int(), this.key('prime2').int(), this.key('exponent1').int(), this.key('exponent2').int(), this.key('coefficient').int());
@@ -37457,10 +37553,12 @@ exports.DSAPrivateKey = DSAPrivateKey;
 exports.DSAparam = asn1.define('DSAparam', function () {
   this.int();
 });
+
 var ECPrivateKey = asn1.define('ECPrivateKey', function () {
   this.seq().obj(this.key('version').int(), this.key('privateKey').octstr(), this.key('parameters').optional().explicit(0).use(ECParameters), this.key('publicKey').optional().explicit(1).bitstr());
 });
 exports.ECPrivateKey = ECPrivateKey;
+
 var ECParameters = asn1.define('ECParameters', function () {
   this.choice({
     namedCurve: this.objid()
@@ -37475,11 +37573,74 @@ exports.signature = asn1.define('signature', function () {
 /* 265 */
 /***/ (function(module, exports, __webpack_require__) {
 
+"use strict";
+// from https://github.com/Rantanen/node-dtls/blob/25a7dc861bda38cfeac93a723500eea4f0ac2e86/Certificate.js
+// thanks to @Rantanen
+
+
+
+var asn = __webpack_require__(36);
+
+var Time = asn.define('Time', function () {
+  this.choice({
+    utcTime: this.utctime(),
+    generalTime: this.gentime()
+  });
+});
+
+var AttributeTypeValue = asn.define('AttributeTypeValue', function () {
+  this.seq().obj(this.key('type').objid(), this.key('value').any());
+});
+
+var AlgorithmIdentifier = asn.define('AlgorithmIdentifier', function () {
+  this.seq().obj(this.key('algorithm').objid(), this.key('parameters').optional());
+});
+
+var SubjectPublicKeyInfo = asn.define('SubjectPublicKeyInfo', function () {
+  this.seq().obj(this.key('algorithm').use(AlgorithmIdentifier), this.key('subjectPublicKey').bitstr());
+});
+
+var RelativeDistinguishedName = asn.define('RelativeDistinguishedName', function () {
+  this.setof(AttributeTypeValue);
+});
+
+var RDNSequence = asn.define('RDNSequence', function () {
+  this.seqof(RelativeDistinguishedName);
+});
+
+var Name = asn.define('Name', function () {
+  this.choice({
+    rdnSequence: this.use(RDNSequence)
+  });
+});
+
+var Validity = asn.define('Validity', function () {
+  this.seq().obj(this.key('notBefore').use(Time), this.key('notAfter').use(Time));
+});
+
+var Extension = asn.define('Extension', function () {
+  this.seq().obj(this.key('extnID').objid(), this.key('critical').bool().def(false), this.key('extnValue').octstr());
+});
+
+var TBSCertificate = asn.define('TBSCertificate', function () {
+  this.seq().obj(this.key('version').explicit(0).int(), this.key('serialNumber').int(), this.key('signature').use(AlgorithmIdentifier), this.key('issuer').use(Name), this.key('validity').use(Validity), this.key('subject').use(Name), this.key('subjectPublicKeyInfo').use(SubjectPublicKeyInfo), this.key('issuerUniqueID').implicit(1).bitstr().optional(), this.key('subjectUniqueID').implicit(2).bitstr().optional(), this.key('extensions').explicit(3).seqof(Extension).optional());
+});
+
+var X509Certificate = asn.define('X509Certificate', function () {
+  this.seq().obj(this.key('tbsCertificate').use(TBSCertificate), this.key('signatureAlgorithm').use(AlgorithmIdentifier), this.key('signatureValue').bitstr());
+});
+
+module.exports = X509Certificate;
+
+/***/ }),
+/* 266 */
+/***/ (function(module, exports, __webpack_require__) {
+
 /* WEBPACK VAR INJECTION */(function(Buffer) {// adapted from https://github.com/apatil/pemstrip
-var findProc = /Proc-Type: 4,ENCRYPTED\r?\nDEK-Info: AES-((?:128)|(?:192)|(?:256))-CBC,([0-9A-H]+)\r?\n\r?\n([0-9A-z\n\r\+\/\=]+)\r?\n/m;
-var startRegex = /^-----BEGIN (.*) KEY-----\r?\n/m;
-var fullRegex = /^-----BEGIN (.*) KEY-----\r?\n([0-9A-z\n\r\+\/\=]+)\r?\n-----END \1 KEY-----$/m;
-var evp = __webpack_require__(61);
+var findProc = /Proc-Type: 4,ENCRYPTED\n\r?DEK-Info: AES-((?:128)|(?:192)|(?:256))-CBC,([0-9A-H]+)\n\r?\n\r?([0-9A-z\n\r\+\/\=]+)\n\r?/m;
+var startRegex = /^-----BEGIN ((?:.* KEY)|CERTIFICATE)-----\n/m;
+var fullRegex = /^-----BEGIN ((?:.* KEY)|CERTIFICATE)-----\n\r?([0-9A-z\n\r\+\/\=]+)\n\r?-----END \1-----$/m;
+var evp = __webpack_require__(62);
 var ciphers = __webpack_require__(74);
 module.exports = function (okey, password) {
   var key = okey.toString();
@@ -37499,7 +37660,7 @@ module.exports = function (okey, password) {
     out.push(cipher.final());
     decrypted = Buffer.concat(out);
   }
-  var tag = key.match(startRegex)[1] + ' KEY';
+  var tag = key.match(startRegex)[1];
   return {
     tag: tag,
     data: decrypted
@@ -37508,11 +37669,11 @@ module.exports = function (okey, password) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 266 */
+/* 267 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports.publicEncrypt = __webpack_require__(268);
-exports.privateDecrypt = __webpack_require__(267);
+exports.publicEncrypt = __webpack_require__(269);
+exports.privateDecrypt = __webpack_require__(268);
 
 exports.privateEncrypt = function privateEncrypt(key, buf) {
   return exports.publicEncrypt(key, buf, true);
@@ -37523,13 +37684,13 @@ exports.publicDecrypt = function publicDecrypt(key, buf) {
 };
 
 /***/ }),
-/* 267 */
+/* 268 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var parseKeys = __webpack_require__(62);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var parseKeys = __webpack_require__(63);
 var mgf = __webpack_require__(138);
 var xor = __webpack_require__(140);
-var bn = __webpack_require__(3);
+var bn = __webpack_require__(4);
 var crt = __webpack_require__(75);
 var createHash = __webpack_require__(14);
 var withPublic = __webpack_require__(139);
@@ -37637,15 +37798,15 @@ function compare(a, b) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 268 */
+/* 269 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var parseKeys = __webpack_require__(62);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var parseKeys = __webpack_require__(63);
 var randomBytes = __webpack_require__(17);
 var createHash = __webpack_require__(14);
 var mgf = __webpack_require__(138);
 var xor = __webpack_require__(140);
-var bn = __webpack_require__(3);
+var bn = __webpack_require__(4);
 var withPublic = __webpack_require__(139);
 var crt = __webpack_require__(75);
 
@@ -37738,7 +37899,7 @@ function nonZero(len, crypto) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 269 */
+/* 270 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _curry3 = __webpack_require__(89);
@@ -37773,11 +37934,11 @@ module.exports = _curry3(function assoc(prop, val, obj) {
 });
 
 /***/ }),
-/* 270 */
+/* 271 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var _arity = __webpack_require__(64);
-var _curry2 = __webpack_require__(65);
+var _arity = __webpack_require__(65);
+var _curry2 = __webpack_require__(66);
 
 /**
  * Creates a function that is bound to a context.
@@ -37807,11 +37968,11 @@ module.exports = _curry2(function bind(fn, thisObj) {
 });
 
 /***/ }),
-/* 271 */
+/* 272 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var pipe = __webpack_require__(279);
-var reverse = __webpack_require__(282);
+var pipe = __webpack_require__(280);
+var reverse = __webpack_require__(283);
 
 /**
  * Performs right-to-left function composition. The rightmost function may have
@@ -37841,11 +38002,11 @@ module.exports = function compose() {
 };
 
 /***/ }),
-/* 272 */
+/* 273 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _curry1 = __webpack_require__(32);
-var curryN = __webpack_require__(273);
+var curryN = __webpack_require__(274);
 
 /**
  * Returns a curried equivalent of the provided function. The curried function
@@ -37893,13 +38054,13 @@ module.exports = _curry1(function curry(fn) {
 });
 
 /***/ }),
-/* 273 */
+/* 274 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var _arity = __webpack_require__(64);
+var _arity = __webpack_require__(65);
 var _curry1 = __webpack_require__(32);
-var _curry2 = __webpack_require__(65);
-var _curryN = __webpack_require__(274);
+var _curry2 = __webpack_require__(66);
+var _curryN = __webpack_require__(275);
 
 /**
  * Returns a curried equivalent of the provided function, with the specified
@@ -37951,11 +38112,11 @@ module.exports = _curry2(function curryN(length, fn) {
 });
 
 /***/ }),
-/* 274 */
+/* 275 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var _arity = __webpack_require__(64);
-var _isPlaceholder = __webpack_require__(66);
+var _arity = __webpack_require__(65);
+var _isPlaceholder = __webpack_require__(67);
 
 /**
  * Internal curryN function.
@@ -37992,7 +38153,7 @@ module.exports = function _curryN(length, received, fn) {
 };
 
 /***/ }),
-/* 275 */
+/* 276 */
 /***/ (function(module, exports) {
 
 module.exports = function _pipe(f, g) {
@@ -38002,12 +38163,12 @@ module.exports = function _pipe(f, g) {
 };
 
 /***/ }),
-/* 276 */
+/* 277 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var _xwrap = __webpack_require__(277);
-var bind = __webpack_require__(270);
-var isArrayLike = __webpack_require__(278);
+var _xwrap = __webpack_require__(278);
+var bind = __webpack_require__(271);
+var isArrayLike = __webpack_require__(279);
 
 module.exports = function () {
   function _arrayReduce(xf, acc, list) {
@@ -38063,7 +38224,7 @@ module.exports = function () {
 }();
 
 /***/ }),
-/* 277 */
+/* 278 */
 /***/ (function(module, exports) {
 
 module.exports = function () {
@@ -38086,7 +38247,7 @@ module.exports = function () {
 }();
 
 /***/ }),
-/* 278 */
+/* 279 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -38140,13 +38301,13 @@ module.exports = _curry1(function isArrayLike(x) {
 });
 
 /***/ }),
-/* 279 */
+/* 280 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var _arity = __webpack_require__(64);
-var _pipe = __webpack_require__(275);
-var reduce = __webpack_require__(281);
-var tail = __webpack_require__(284);
+var _arity = __webpack_require__(65);
+var _pipe = __webpack_require__(276);
+var reduce = __webpack_require__(282);
+var tail = __webpack_require__(285);
 
 /**
  * Performs left-to-right function composition. The leftmost function may have
@@ -38178,10 +38339,10 @@ module.exports = function pipe() {
 };
 
 /***/ }),
-/* 280 */
+/* 281 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var _curry2 = __webpack_require__(65);
+var _curry2 = __webpack_require__(66);
 
 /**
  * Returns a function that when supplied an object returns the indicated
@@ -38206,11 +38367,11 @@ module.exports = _curry2(function prop(p, obj) {
 });
 
 /***/ }),
-/* 281 */
+/* 282 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _curry3 = __webpack_require__(89);
-var _reduce = __webpack_require__(276);
+var _reduce = __webpack_require__(277);
 
 /**
  * Returns a single item by iterating through the list, successively calling
@@ -38248,7 +38409,7 @@ var _reduce = __webpack_require__(276);
 module.exports = _curry3(_reduce);
 
 /***/ }),
-/* 282 */
+/* 283 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _curry1 = __webpack_require__(32);
@@ -38284,7 +38445,7 @@ module.exports = _curry1(function reverse(list) {
 });
 
 /***/ }),
-/* 283 */
+/* 284 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _checkForMethod = __webpack_require__(141);
@@ -38319,11 +38480,11 @@ module.exports = _curry3(_checkForMethod('slice', function slice(fromIndex, toIn
 }));
 
 /***/ }),
-/* 284 */
+/* 285 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _checkForMethod = __webpack_require__(141);
-var slice = __webpack_require__(283);
+var slice = __webpack_require__(284);
 
 /**
  * Returns all but the first element of the given list or string (or object
@@ -38355,13 +38516,13 @@ var slice = __webpack_require__(283);
 module.exports = _checkForMethod('tail', slice(1, Infinity));
 
 /***/ }),
-/* 285 */
+/* 286 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__(25);
 
 /***/ }),
-/* 286 */
+/* 287 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -38431,13 +38592,13 @@ BufferList.prototype.concat = function (n) {
 };
 
 /***/ }),
-/* 287 */
+/* 288 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__(145);
 
 /***/ }),
-/* 288 */
+/* 289 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {var Stream = function () {
@@ -38459,19 +38620,19 @@ if (!process.browser && process.env.READABLE_STREAM === 'disable' && Stream) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(16)))
 
 /***/ }),
-/* 289 */
+/* 290 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__(90);
 
 /***/ }),
-/* 290 */
+/* 291 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__(91);
 
 /***/ }),
-/* 291 */
+/* 292 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {/*
@@ -38658,7 +38819,7 @@ module.exports = ripemd160;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 292 */
+/* 293 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
@@ -38846,7 +39007,7 @@ module.exports = ripemd160;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(12), __webpack_require__(16)))
 
 /***/ }),
-/* 293 */
+/* 294 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var exports = module.exports = function SHA(algorithm) {
@@ -38858,15 +39019,15 @@ var exports = module.exports = function SHA(algorithm) {
   return new Algorithm();
 };
 
-exports.sha = __webpack_require__(294);
-exports.sha1 = __webpack_require__(295);
-exports.sha224 = __webpack_require__(296);
+exports.sha = __webpack_require__(295);
+exports.sha1 = __webpack_require__(296);
+exports.sha224 = __webpack_require__(297);
 exports.sha256 = __webpack_require__(147);
-exports.sha384 = __webpack_require__(297);
+exports.sha384 = __webpack_require__(298);
 exports.sha512 = __webpack_require__(148);
 
 /***/ }),
-/* 294 */
+/* 295 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {/*
@@ -38964,7 +39125,7 @@ module.exports = Sha;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 295 */
+/* 296 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {/*
@@ -39067,7 +39228,7 @@ module.exports = Sha1;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 296 */
+/* 297 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -39125,7 +39286,7 @@ module.exports = Sha224;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 297 */
+/* 298 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(2);
@@ -39187,7 +39348,7 @@ module.exports = Sha384;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 298 */
+/* 299 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -39743,18 +39904,18 @@ sjcl.json = { defaults: { v: 1, iter: 1E3, ks: 128, ts: 64, mode: "ccm", adata: 
 };
 
 /***/ }),
-/* 299 */
+/* 300 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var base58check = __webpack_require__(54);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var base58check = __webpack_require__(55);
 var bcrypto = __webpack_require__(21);
-var createHmac = __webpack_require__(42);
+var createHmac = __webpack_require__(43);
 var typeforce = __webpack_require__(18);
 var types = __webpack_require__(22);
 var NETWORKS = __webpack_require__(19);
 
-var BigInteger = __webpack_require__(9);
-var ECPair = __webpack_require__(48);
+var BigInteger = __webpack_require__(10);
+var ECPair = __webpack_require__(49);
 
 var ecurve = __webpack_require__(87);
 var curve = ecurve.getCurveByName('secp256k1');
@@ -40033,7 +40194,7 @@ module.exports = HDNode;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 300 */
+/* 301 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var errors = __webpack_require__(149);
@@ -40125,7 +40286,7 @@ module.exports = {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 301 */
+/* 302 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {
@@ -40198,7 +40359,7 @@ function config(name) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(12)))
 
 /***/ }),
-/* 302 */
+/* 303 */
 /***/ (function(module, exports) {
 
 if (typeof Object.create === 'function') {
@@ -40226,7 +40387,7 @@ if (typeof Object.create === 'function') {
 }
 
 /***/ }),
-/* 303 */
+/* 304 */
 /***/ (function(module, exports) {
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -40236,7 +40397,7 @@ module.exports = function isBuffer(arg) {
 };
 
 /***/ }),
-/* 304 */
+/* 305 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -40377,7 +40538,7 @@ exports.createContext = Script.createContext = function (context) {
 };
 
 /***/ }),
-/* 305 */
+/* 306 */
 /***/ (function(module, exports) {
 
 (function (self) {
@@ -40839,10 +41000,10 @@ exports.createContext = Script.createContext = function (context) {
 })(typeof self !== 'undefined' ? self : this);
 
 /***/ }),
-/* 306 */
+/* 307 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var bs58check = __webpack_require__(54);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var bs58check = __webpack_require__(55);
 
 function decodeRaw(version, buffer) {
   if (buffer[0] !== version) throw new Error('Invalid network version');
@@ -40899,14 +41060,14 @@ module.exports = {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 307 */
+/* 308 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var assert = __webpack_require__(1);
-var Helpers = __webpack_require__(4);
+var Helpers = __webpack_require__(3);
 
 module.exports = AccountInfo;
 
@@ -41023,7 +41184,86 @@ Object.defineProperties(AccountInfo.prototype, {
 });
 
 /***/ }),
-/* 308 */
+/* 309 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Helpers = __webpack_require__(3);
+
+var assert = __webpack_require__(1);
+
+var AddressHD = function () {
+  function AddressHD(object, account, index) {
+    _classCallCheck(this, AddressHD);
+
+    assert(object || object === null, 'Data (or null) missing');
+    assert(account.constructor.name === 'HDAccount', 'HDAccount missing');
+    assert(Helpers.isPositiveInteger(index), 'Receive index missing');
+
+    this._account = account;
+    this._index = index;
+    if (object === null) {
+      this._label = null;
+    } else {
+      this._label = object.label;
+    }
+    this._used = null;
+    this._balance = null;
+    this._address = undefined;
+  }
+
+  _createClass(AddressHD, [{
+    key: 'toJSON',
+    value: function toJSON() {
+      if (this._label === null) return null;
+      return {
+        label: this._label
+      };
+    }
+  }, {
+    key: 'address',
+    get: function get() {
+      if (!this._address) {
+        this._address = this._account.receiveAddressAtIndex(this._index);
+      }
+      return this._address;
+    }
+  }, {
+    key: 'label',
+    get: function get() {
+      return this._label;
+    },
+    set: function set(value) {
+      this._label = value;
+    }
+  }, {
+    key: 'balance',
+    get: function get() {
+      return this._balance;
+    },
+    set: function set(value) {
+      this._balance = value;
+    }
+  }, {
+    key: 'used',
+    get: function get() {
+      return this._used;
+    },
+    set: function set(value) {
+      this._used = value;
+    }
+  }]);
+
+  return AddressHD;
+}();
+
+module.exports = AddressHD;
+
+/***/ }),
+/* 310 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -41085,12 +41325,12 @@ Block.fromJSON = function (json) {
 };
 
 /***/ }),
-/* 309 */
+/* 311 */
 /***/ (function(module, exports, __webpack_require__) {
 
 
-var WebSocket = __webpack_require__(316);
-var Helpers = __webpack_require__(4);
+var WebSocket = __webpack_require__(319);
+var Helpers = __webpack_require__(3);
 
 function BlockchainSocket() {
   this.wsUrl = 'wss://ws.blockchain.info/inv';
@@ -41200,13 +41440,13 @@ BlockchainSocket.prototype.msgOnOpen = function (guid, addresses, xpubs) {
 module.exports = BlockchainSocket;
 
 /***/ }),
-/* 310 */
+/* 312 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var API = __webpack_require__(10);
+var API = __webpack_require__(8);
 var WalletStore = __webpack_require__(20);
 var TX = __webpack_require__(71);
-var Helpers = __webpack_require__(4);
+var Helpers = __webpack_require__(3);
 var assert = __webpack_require__(1);
 
 module.exports = ExchangeDelegate;
@@ -41325,56 +41565,46 @@ ExchangeDelegate.prototype.getReceiveAddress = function (trade) {
   }
 };
 
-ExchangeDelegate.prototype.reserveReceiveAddress = function () {
-  assert(this._trades, 'delegate.trades array should be set for reserveReceiveAddress');
+ExchangeDelegate.prototype.findLastExchangeIndex = function () {
   var account = this._wallet.hdwallet.defaultAccount;
   var receiveAddressIndex = account.receiveIndex;
 
+  var receiveIndexes = this._trades.map(Helpers.pluck('_receive_index'));
+  var index = receiveAddressIndex;
+  for (var i = index - 1; i > index - 20; i--) {
+    if (receiveIndexes.filter(Helpers.eq(i)).length > 0) return i;
+  }
+  return null;
+};
+
+ExchangeDelegate.prototype.reserveReceiveAddress = function () {
+  assert(this._trades, 'delegate.trades array should be set for reserveReceiveAddress');
+
   var self = this;
 
-  // Respect the GAP limit:
-  if (receiveAddressIndex - account.lastUsedReceiveIndex >= 19) {
-    receiveAddressIndex = findLastExchangeIndex(account.receiveIndex);
-    if (receiveAddressIndex == null) throw new Error('gap_limit');
-  }
+  var account = this._wallet.hdwallet.defaultAccount;
 
-  var receiveAddress = account.receiveAddressAtIndex(receiveAddressIndex);
-
-  function findLastExchangeIndex(currentReceiveIndex) {
-    var receiveIndexes = self._trades.map(Helpers.pluck('_receive_index'));
-    var index = currentReceiveIndex;
-    for (var i = index - 1; i > index - 20; i--) {
-      if (receiveIndexes.filter(Helpers.eq(i)).length > 0) return i;
-    }
-    return null;
-  }
-
-  function commitAddressLabel(trade) {
-    var ids = self._trades.filter(Helpers.propEq('receiveAddress', receiveAddress)).map(Helpers.pluck('id')).concat(trade.id);
-
-    var label = self.labelBase + ' #' + ids.join(', #');
-    /* istanbul ignore if */
-    if (self.debug) {
-      console.info('Set label for receive index', receiveAddressIndex, label);
-    }
-
-    account.setLabelForReceivingAddress(receiveAddressIndex, label);
-    trade._account_index = account.index;
-    trade._receive_index = receiveAddressIndex;
-  }
+  var reservation = this._wallet.labels.reserveReceiveAddress(account.index, {
+    reusableIndex: this.findLastExchangeIndex()
+  });
 
   return {
-    receiveAddress: receiveAddress,
-    commit: commitAddressLabel
+    receiveAddress: reservation.receiveAddress,
+    commit: function commit(trade) {
+      /* istanbul ignore if */
+      if (self.debug) {
+        console.info('Set label for receive index', reservation.receiveIndex);
+      }
+      trade._account_index = account.index;
+      trade._receive_index = reservation.receiveIndex;
+      reservation.commit(self.labelBase + ' #' + trade.id);
+    }
   };
 };
 
 ExchangeDelegate.prototype.releaseReceiveAddress = function (trade) {
   assert(this._trades, 'delegate.trades array should be set for releaseReceiveAddress');
-  var labelBase = 'Coinify order';
   if (Helpers.isPositiveInteger(trade._account_index) && Helpers.isPositiveInteger(trade._receive_index)) {
-    var account = this._wallet.hdwallet.accounts[trade._account_index];
-
     var ids = this._trades.filter(Helpers.propEq('receiveAddress', trade.receiveAddress)).map(Helpers.pluck('id')).filter(Helpers.notEq(trade.id));
 
     var self = this;
@@ -41384,14 +41614,15 @@ ExchangeDelegate.prototype.releaseReceiveAddress = function (trade) {
       if (self.debug) {
         console.info('Remove label for receive index', trade._receive_index);
       }
-      account.removeLabelForReceivingAddress(trade._receive_index);
+      this._wallet.labels.releaseReceiveAddress(trade._account_index, trade._receive_index);
     } else {
-      var label = labelBase + ' #' + ids.join(', #');
       /* istanbul ignore if */
       if (self.debug) {
-        console.info('Rename label for receive index', trade._receive_index, label);
+        console.info('Rename label for receive index', trade._receive_index);
       }
-      account.setLabelForReceivingAddress(trade._receive_index, label);
+      this._wallet.labels.releaseReceiveAddress(trade._account_index, trade._receive_index, {
+        expectedLabel: self.labelBase + ' #' + trade.id
+      });
     }
   }
 };
@@ -41407,7 +41638,7 @@ ExchangeDelegate.prototype.deserializeExtraFields = function (obj, trade) {
 };
 
 /***/ }),
-/* 311 */
+/* 313 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -41417,18 +41648,16 @@ module.exports = HDAccount;
 
 var Bitcoin = __webpack_require__(7);
 var assert = __webpack_require__(1);
-var Helpers = __webpack_require__(4);
+var Helpers = __webpack_require__(3);
 var KeyRing = __webpack_require__(93);
 var MyWallet = __webpack_require__(13); // This cyclic import should be avoided once the refactor is complete
-var constants = __webpack_require__(8);
+var constants = __webpack_require__(9);
 
 // HDAccount Class
 
 function HDAccount(object) {
-  var self = this;
   var obj = object || {};
   obj.cache = obj.cache || {};
-  obj.address_labels = obj.address_labels || [];
   // serializable data
   this._label = obj.label;
   this._archived = obj.archived || false;
@@ -41436,16 +41665,15 @@ function HDAccount(object) {
   this._xpub = obj.xpub;
   this._network = obj.network || Bitcoin.networks.bitcoin;
 
-  this._address_labels = [];
-  obj.address_labels.map(function (e) {
-    self._address_labels[e.index] = e.label;
-  });
+  // Prevent deleting address_labels field when saving wallet:
+  // * backwards compatibility with mobile (we'll keep one entry for the highest label)
+  // * if user has 2nd password enabled and doesn't enter it during migration step
+  this._address_labels_backup = obj.address_labels;
 
   // computed properties
   this._keyRing = new KeyRing(obj.xpub, obj.cache);
-  this._receiveIndex = 0;
   // The highest receive index with transactions, as returned by the server:
-  this._lastUsedReceiveIndex = 0;
+  this._lastUsedReceiveIndex = -1;
   this._changeIndex = 0;
   this._n_tx = 0;
   this._balance = null;
@@ -41455,7 +41683,6 @@ function HDAccount(object) {
 // PUBLIC PROPERTIES
 
 Object.defineProperties(HDAccount.prototype, {
-
   'label': {
     configurable: false,
     get: function get() {
@@ -41522,14 +41749,13 @@ Object.defineProperties(HDAccount.prototype, {
   'receiveIndex': {
     configurable: false,
     get: function get() {
-      return this._receiveIndex;
-    },
-    set: function set(value) {
-      if (Helpers.isPositiveInteger(value)) {
-        this._receiveIndex = value;
-      } else {
-        throw new Error('account.receiveIndex must be a number');
+      var maxLabeledReceiveIndex = -1;
+      if (MyWallet.wallet.labels) {
+        maxLabeledReceiveIndex = MyWallet.wallet.labels.maxLabeledReceiveIndex(this.index);
+      } else if (this._address_labels_backup && this._address_labels_backup.length) {
+        maxLabeledReceiveIndex = this._address_labels_backup.reverse()[0].index;
       }
+      return Math.max(this.lastUsedReceiveIndex, maxLabeledReceiveIndex) + 1;
     }
   },
   'lastUsedReceiveIndex': {
@@ -41538,24 +41764,8 @@ Object.defineProperties(HDAccount.prototype, {
       return this._lastUsedReceiveIndex;
     },
     set: function set(value) {
-      if (Helpers.isPositiveInteger(value)) {
-        this._lastUsedReceiveIndex = value;
-      } else {
-        throw new Error('account.lastUsedReceiveIndex must be a number');
-      }
-    }
-  },
-  'maxLabeledReceiveIndex': {
-    configurable: false,
-    get: function get() {
-      var keys = Object.keys(this._address_labels).map(function (k) {
-        return parseInt(k, 10);
-      });
-      if (keys.length === 0) {
-        return -1;
-      } else {
-        return Math.max.apply(null, keys);
-      }
+      assert(Helpers.isPositiveInteger(value + 1), 'should be >= -1');
+      this._lastUsedReceiveIndex = value;
     }
   },
   'changeIndex': {
@@ -41569,27 +41779,6 @@ Object.defineProperties(HDAccount.prototype, {
       } else {
         throw new Error('account.changeIndex must be a number');
       }
-    }
-  },
-  'receivingAddressesLabels': {
-    configurable: false,
-    get: function get() {
-      var denseArray = [];
-      this._address_labels.map(function (lab, ind) {
-        denseArray.push({ 'index': ind, 'label': lab });
-      });
-      return denseArray;
-    }
-  },
-  'labeledReceivingAddresses': {
-    configurable: false,
-    get: function get() {
-      var denseArray = [];
-      var outerThis = this;
-      this._address_labels.map(function (lab, i) {
-        denseArray.push(outerThis.receiveAddressAtIndex(i));
-      });
-      return denseArray;
     }
   },
   'extendedPublicKey': {
@@ -41613,7 +41802,7 @@ Object.defineProperties(HDAccount.prototype, {
   'receiveAddress': {
     configurable: false,
     get: function get() {
-      return this._keyRing.receive.getAddress(this._receiveIndex);
+      return this._keyRing.receive.getAddress(this.receiveIndex);
     }
   },
   'changeAddress': {
@@ -41695,13 +41884,24 @@ HDAccount.factory = function (o) {
 // JSON SERIALIZER
 
 HDAccount.prototype.toJSON = function () {
-  // should we add checks on the serializer too?
+  var labelsJSON = this._address_labels_backup;
+
+  // Hold on to the backup until labels are saved in KV store.
+  if (MyWallet.wallet.labels && !MyWallet.wallet.labels.readOnly && !MyWallet.wallet.labels.dirty) {
+    // Use placeholder entry to prevent address reuse:
+    labelsJSON = [];
+    var max = MyWallet.wallet.labels.maxLabeledReceiveIndex(this._index);
+    if (max > -1) {
+      labelsJSON.push({ index: max, label: '' });
+    }
+  }
+
   var hdaccount = {
     label: this._label,
     archived: this._archived,
     xpriv: this._xpriv,
     xpub: this._xpub,
-    address_labels: this.receivingAddressesLabels,
+    address_labels: labelsJSON,
     cache: this._keyRing
   };
 
@@ -41711,60 +41911,6 @@ HDAccount.prototype.toJSON = function () {
 HDAccount.reviver = function (k, v) {
   if (k === '') return new HDAccount(v);
   return v;
-};
-
-HDAccount.prototype.incrementReceiveIndex = function () {
-  this._receiveIndex++;
-  return this;
-};
-HDAccount.prototype.incrementReceiveIndexIfLast = function (index) {
-  if (this._receiveIndex === index) {
-    this.incrementReceiveIndex();
-  }
-  return this;
-};
-HDAccount.prototype.decrementReceiveIndex = function () {
-  this._receiveIndex--;
-  return this;
-};
-HDAccount.prototype.decrementReceiveIndexIfLast = function (index) {
-  if (this._receiveIndex === index + 1) {
-    this.decrementReceiveIndex();
-  }
-  return this;
-};
-
-// address labels
-HDAccount.prototype.setLabelForReceivingAddress = function (index, label, maxGap) {
-  maxGap = maxGap || 19;
-  assert(maxGap <= 19, 'Max gap must be less than 20');
-  assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
-
-  if (!Helpers.isValidLabel(label)) {
-    return Promise.reject('NOT_ALPHANUMERIC');
-    // Error: address label must be alphanumeric
-  } else if (index - this.lastUsedReceiveIndex >= maxGap) {
-    // Exceeds BIP 44 unused address gap limit
-    return Promise.reject('GAP');
-  } else {
-    this._address_labels[index] = label;
-    this.incrementReceiveIndexIfLast(index);
-    MyWallet.syncWallet();
-    return Promise.resolve();
-  }
-};
-
-HDAccount.prototype.removeLabelForReceivingAddress = function (index) {
-  assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
-  delete this._address_labels[index];
-  this.decrementReceiveIndexIfLast(index);
-  MyWallet.syncWallet();
-  return this;
-};
-
-HDAccount.prototype.getLabelForReceivingAddress = function (index) {
-  assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
-  return this._address_labels[index];
 };
 
 HDAccount.prototype.receiveAddressAtIndex = function (index) {
@@ -41800,7 +41946,7 @@ HDAccount.prototype.persist = function () {
 };
 
 /***/ }),
-/* 312 */
+/* 314 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -41810,11 +41956,11 @@ module.exports = HDWallet;
 
 var Bitcoin = __webpack_require__(7);
 var assert = __webpack_require__(1);
-var Helpers = __webpack_require__(4);
-var HDAccount = __webpack_require__(311);
+var Helpers = __webpack_require__(3);
+var HDAccount = __webpack_require__(313);
 var BIP39 = __webpack_require__(35);
 var MyWallet = __webpack_require__(13); // This cyclic import should be avoided once the refactor is complete
-var constants = __webpack_require__(8);
+var constants = __webpack_require__(9);
 
 function HDWallet(object) {
   function addAccount(o, index) {
@@ -42115,7 +42261,7 @@ HDWallet.prototype.isValidAccountIndex = function (index) {
 };
 
 /***/ }),
-/* 313 */
+/* 315 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -42125,8 +42271,8 @@ module.exports = KeyChain;
 
 var Bitcoin = __webpack_require__(7);
 var assert = __webpack_require__(1);
-var Helpers = __webpack_require__(4);
-var constants = __webpack_require__(8);
+var Helpers = __webpack_require__(3);
+var constants = __webpack_require__(9);
 
 // keychain
 function KeyChain(extendedKey, index, cache) {
@@ -42183,14 +42329,654 @@ KeyChain.prototype.getPrivateKey = function (index) {
 };
 
 /***/ }),
-/* 314 */
+/* 316 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Metadata = __webpack_require__(45);
+var Helpers = __webpack_require__(3);
+var AddressHD = __webpack_require__(309);
+var BlockchainAPI = __webpack_require__(8);
+
+var assert = __webpack_require__(1);
+
+var METADATA_TYPE_LABELS = 4;
+
+var Labels = function () {
+  function Labels(metadata, wallet, object) {
+    _classCallCheck(this, Labels);
+
+    this._readOnly = false; // Default
+    this._dirty = true;
+    this._wallet = wallet;
+    this._metadata = metadata;
+
+    var before = JSON.stringify(object);
+    object = this.migrateIfNeeded(object);
+
+    this.init(object);
+
+    if (JSON.stringify(object) !== before) {
+      this.save();
+    } else {
+      this._dirty = false;
+    }
+  }
+
+  _createClass(Labels, [{
+    key: 'init',
+    value: function init(object) {
+      this._version = object.version;
+      this._accounts = [];
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = object.accounts[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var accountObject = _step.value;
+
+          var accountIndex = object.accounts.indexOf(accountObject);
+          var addresses = [];
+          var _iteratorNormalCompletion2 = true;
+          var _didIteratorError2 = false;
+          var _iteratorError2 = undefined;
+
+          try {
+            for (var _iterator2 = accountObject[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+              var addressObject = _step2.value;
+
+              if (addressObject === null) {
+                addresses.push(null);
+              } else {
+                var hdAccount = this._wallet.hdwallet.accounts[accountIndex];
+                var addressIndex = accountObject.indexOf(addressObject);
+                addresses.push(new AddressHD(addressObject, hdAccount, addressIndex));
+              }
+            }
+          } catch (err) {
+            _didIteratorError2 = true;
+            _iteratorError2 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                _iterator2.return();
+              }
+            } finally {
+              if (_didIteratorError2) {
+                throw _iteratorError2;
+              }
+            }
+          }
+
+          this._accounts[accountIndex] = addresses;
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+    }
+  }, {
+    key: 'toJSON',
+    value: function toJSON() {
+      return {
+        version: this.version,
+        accounts: this._accounts.map(function (addresses) {
+          if (addresses.length > 1) {
+            // Remove trailing null values:
+            while (!addresses[addresses.length - 1] || addresses[addresses.length - 1].label === null) {
+              addresses.pop();
+            }
+          }
+          return addresses;
+        })
+      };
+    }
+  }, {
+    key: 'save',
+    value: function save() {
+      var _this = this;
+
+      if (this.readOnly) {
+        console.info('Labels KV store is read-only, not saving');
+        return Promise.resolve();
+      }
+      if (!this._metadata.existsOnServer) {
+        return this._metadata.create(this).then(function () {
+          _this._dirty = false;
+        });
+      } else {
+        return this._metadata.update(this).then(function () {
+          _this._dirty = false;
+        });
+      }
+    }
+  }, {
+    key: 'wipe',
+    value: function wipe() {
+      this._metadata.update(null).then(function () {
+        console.log('Wipe complete. Reload browser.');
+      });
+    }
+  }, {
+    key: 'migrateIfNeeded',
+    value: function migrateIfNeeded(object) {
+      var major = void 0;
+      var minor = void 0;
+      var patch = void 0;
+
+      if (object && object.version) {
+        major = parseInt(object.version.split('.')[0]);
+        minor = parseInt(object.version.split('.')[1]);
+        patch = parseInt(object.version.split('.')[2]);
+      }
+
+      // First time, migrate from wallet payload if needed
+      if (object === null || Helpers.isEmptyObject(object)) {
+        if (this._wallet.hdwallet.accounts[0]._address_labels_backup) {
+          console.info('Migrate address labels from wallet to KV-Store v1.0.0');
+        } else {
+          // This is a new wallet
+        }
+
+        if (!this._wallet.isMetadataReady) {
+          // 2nd password is enabled and we can't write to the KV store
+          this._readOnly = true;
+        }
+
+        object = {
+          version: '1.0.0',
+          accounts: []
+        };
+
+        var _iteratorNormalCompletion3 = true;
+        var _didIteratorError3 = false;
+        var _iteratorError3 = undefined;
+
+        try {
+          for (var _iterator3 = this._wallet.hdwallet.accounts[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+            var account = _step3.value;
+
+            var labels = [];
+            var _iteratorNormalCompletion4 = true;
+            var _didIteratorError4 = false;
+            var _iteratorError4 = undefined;
+
+            try {
+              for (var _iterator4 = (account._address_labels_backup || [])[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+                var label = _step4.value;
+
+                labels[label.index] = { label: label.label };
+              }
+              // Set undefined entries to null:
+            } catch (err) {
+              _didIteratorError4 = true;
+              _iteratorError4 = err;
+            } finally {
+              try {
+                if (!_iteratorNormalCompletion4 && _iterator4.return) {
+                  _iterator4.return();
+                }
+              } finally {
+                if (_didIteratorError4) {
+                  throw _iteratorError4;
+                }
+              }
+            }
+
+            for (var i = 0; i < labels.length; i++) {
+              if (!labels[i]) {
+                labels[i] = null;
+              }
+            }
+            object.accounts.push(labels);
+          }
+        } catch (err) {
+          _didIteratorError3 = true;
+          _iteratorError3 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion3 && _iterator3.return) {
+              _iterator3.return();
+            }
+          } finally {
+            if (_didIteratorError3) {
+              throw _iteratorError3;
+            }
+          }
+        }
+      } else if (major > 1) {
+        // Payload contains unsuppored new major version, abort:
+        throw new Error('LABELS_UNSUPPORTED_MAJOR_VERSION');
+      } else if (major === 1 && minor > 0) {
+        // New minor version can safely be used in read-only mode:
+        this._readOnly = true;
+      } else if (major === 1 && minor === 0 && patch > 0) {}
+      // New patch version can safely to be used.
+
+
+      // Run (future) migration scripts:
+      // switch (object.version) {
+      //   case '1.0.0':
+      //     // Migrate from 1.0.1 to e.g. 1.0.2 or 1.1.0:
+      //     // ...
+      //     object.version = '1.0.1';
+      //     // falls through
+      //   case '1.0.1':
+      //     // Migrate from 1.0.1 to e.g. 1.0.2 or 1.1.0:
+      //     // ...
+      //     object.version = '1.0.2';
+      //     // falls through
+      //   default:
+      // }
+      return object;
+    }
+
+    // Goes through all labeled addresses and checks which ones have transactions.
+    // This result will be cached in the future. Although we obtain the balance,
+    // this is an implementation detail and we don't save it.
+
+  }, {
+    key: 'checkIfUsed',
+    value: function checkIfUsed(accountIndex) {
+      assert(Helpers.isPositiveInteger(accountIndex), 'specify accountIndex');
+      var labeledAddresses = this.all(accountIndex).filter(function (a) {
+        return a !== null;
+      });
+      var addresses = labeledAddresses.map(function (a) {
+        return a.address;
+      });
+
+      if (addresses.length === 0) return Promise.resolve();
+
+      BlockchainAPI.getBalances(addresses).then(function (data) {
+        var _iteratorNormalCompletion5 = true;
+        var _didIteratorError5 = false;
+        var _iteratorError5 = undefined;
+
+        try {
+          for (var _iterator5 = labeledAddresses[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+            var labeledAddress = _step5.value;
+
+            if (data[labeledAddress.address]) {
+              labeledAddress.used = data[labeledAddress.address].n_tx > 0;
+            }
+          }
+        } catch (err) {
+          _didIteratorError5 = true;
+          _iteratorError5 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion5 && _iterator5.return) {
+              _iterator5.return();
+            }
+          } finally {
+            if (_didIteratorError5) {
+              throw _iteratorError5;
+            }
+          }
+        }
+      });
+
+      return Promise.resolve();
+    }
+  }, {
+    key: 'fetchBalance',
+    value: function fetchBalance(hdAddresses) {
+      assert(Array.isArray(hdAddresses), 'hdAddresses missing');
+      var _iteratorNormalCompletion6 = true;
+      var _didIteratorError6 = false;
+      var _iteratorError6 = undefined;
+
+      try {
+        for (var _iterator6 = hdAddresses[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+          var addressHD = _step6.value;
+
+          assert(addressHD.constructor.name === 'AddressHD', 'AddressHD required');
+        }
+      } catch (err) {
+        _didIteratorError6 = true;
+        _iteratorError6 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion6 && _iterator6.return) {
+            _iterator6.return();
+          }
+        } finally {
+          if (_didIteratorError6) {
+            throw _iteratorError6;
+          }
+        }
+      }
+
+      var addresses = hdAddresses.filter(function (a) {
+        return a.balance === null;
+      }).map(function (a) {
+        return a.address;
+      });
+
+      if (addresses.length === 0) return Promise.resolve();
+
+      return BlockchainAPI.getBalances(addresses).then(function (data) {
+        var _iteratorNormalCompletion7 = true;
+        var _didIteratorError7 = false;
+        var _iteratorError7 = undefined;
+
+        try {
+          for (var _iterator7 = hdAddresses[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
+            var a = _step7.value;
+
+            if (data[a.address]) {
+              a.used = data[a.address].n_tx > 0;
+              a.balance = data[a.address].final_balance;
+            }
+          }
+        } catch (err) {
+          _didIteratorError7 = true;
+          _iteratorError7 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion7 && _iterator7.return) {
+              _iterator7.return();
+            }
+          } finally {
+            if (_didIteratorError7) {
+              throw _iteratorError7;
+            }
+          }
+        }
+      });
+    }
+  }, {
+    key: 'all',
+    value: function all(accountIndex) {
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+      assert(Helpers.isPositiveInteger(accountIndex), 'specify accountIndex');
+      if (!this._accounts[accountIndex]) return null;
+
+      if (options.includeUnlabeled) {
+        // Add null entries up to the current receive index
+        var receiveIndex = this._wallet.hdwallet.accounts[accountIndex].receiveIndex;
+        for (var i = 0; i < receiveIndex; i++) {
+          if (!this._accounts[accountIndex][i]) {
+            this._accounts[accountIndex][i] = new AddressHD(null, this._wallet.hdwallet.accounts[accountIndex], i);
+          }
+        }
+      }
+
+      return this._accounts[accountIndex].filter(function (a) {
+        return a !== null;
+      });
+    }
+  }, {
+    key: 'maxLabeledReceiveIndex',
+    value: function maxLabeledReceiveIndex(accountIndex) {
+      if (!this._accounts[accountIndex]) return -1;
+      var labeledAddresses = this._accounts[accountIndex].filter(function (a) {
+        return a && a.label;
+      });
+      if (labeledAddresses.length === 0) return -1;
+      return this._accounts[accountIndex].indexOf(labeledAddresses.reverse()[0]);
+    }
+  }, {
+    key: 'getAddress',
+    value: function getAddress(accountIndex, receiveIndex) {
+      if (!this._accounts[accountIndex]) {
+        if (this._wallet.hdwallet.accounts.length > accountIndex) {
+          this._accounts[accountIndex] = [];
+        } else {
+          return null;
+        }
+      }
+
+      var entry = this._accounts[accountIndex][receiveIndex];
+
+      if (!entry) {
+        entry = new AddressHD(null, this._wallet.hdwallet.accounts[accountIndex], receiveIndex);
+        entry.used = null;
+        this._accounts[accountIndex][receiveIndex] = entry;
+      }
+
+      return entry;
+    }
+  }, {
+    key: 'getLabel',
+    value: function getLabel(accountIndex, addressIndex) {
+      var entry = this.getAddress(accountIndex, addressIndex);
+      return entry.label;
+    }
+  }, {
+    key: 'addLabel',
+    value: function addLabel(accountIndex, maxGap, label) {
+      assert(Helpers.isPositiveInteger(accountIndex), 'specify accountIndex');
+      assert(Helpers.isString(label), 'specify label');
+      assert(Helpers.isPositiveInteger(maxGap) && maxGap <= 20, 'Max gap must be less than 20');
+
+      if (this.readOnly) return Promise.reject('KV_LABELS_READ_ONLY');
+
+      var receiveIndex = this._wallet.hdwallet.accounts[accountIndex].receiveIndex;
+      var lastUsedReceiveIndex = this._wallet.hdwallet.accounts[accountIndex].lastUsedReceiveIndex;
+
+      if (!Helpers.isValidLabel(label)) {
+        return Promise.reject('NOT_ALPHANUMERIC');
+      } else if (receiveIndex - lastUsedReceiveIndex >= maxGap) {
+        // Exceeds BIP 44 unused address gap limit
+        return Promise.reject('GAP');
+      }
+
+      var addr = this.getAddress(accountIndex, receiveIndex);
+
+      addr.label = label;
+      addr.used = false;
+
+      this._dirty = true;
+
+      return this.save().then(function () {
+        return addr;
+      });
+    }
+
+    // address: either an AddressHD object or a receive index Integer
+
+  }, {
+    key: 'setLabel',
+    value: function setLabel(accountIndex, address, label) {
+      assert(Helpers.isPositiveInteger(accountIndex), 'Account index required');
+      assert(this._accounts[accountIndex], '_accounts[' + accountIndex + '] should exist');
+      assert(Helpers.isPositiveInteger(address) || address.constructor && address.constructor.name === 'AddressHD', 'address should be AddressHD instance or Int');
+
+      if (this.readOnly) return Promise.reject('KV_LABELS_READ_ONLY');
+
+      if (Helpers.isPositiveInteger(address)) {
+        var receiveIndex = address;
+        address = this.getAddress(accountIndex, receiveIndex);
+      } else {
+        var _receiveIndex = this._accounts[accountIndex].indexOf(address);
+        assert(Helpers.isPositiveInteger(_receiveIndex), 'Address not found');
+      }
+
+      if (!Helpers.isValidLabel(label)) {
+        return Promise.reject('NOT_ALPHANUMERIC');
+      }
+
+      if (address.label === label) {
+        return Promise.resolve();
+      }
+
+      address.label = label;
+
+      this._dirty = true;
+
+      return this.save();
+    }
+  }, {
+    key: 'removeLabel',
+    value: function removeLabel(accountIndex, address) {
+      if (this.readOnly) return Promise.reject('KV_LABELS_READ_ONLY');
+      assert(address.constructor && address.constructor.name === 'AddressHD', 'address should be AddressHD instance');
+
+      assert(Helpers.isPositiveInteger(accountIndex), 'Account index required');
+      assert(this._accounts[accountIndex], '_accounts[' + accountIndex + '] should exist');
+
+      var addressIndex = this._accounts[accountIndex].indexOf(address);
+
+      assert(Helpers.isPositiveInteger(addressIndex), 'Address not found');
+
+      address.label = null;
+
+      this._dirty = true;
+
+      return this.save();
+    }
+
+    // options:
+    //   Int || null reusableIndex: allow reuse in case of the gap limit
+
+  }, {
+    key: 'reserveReceiveAddress',
+    value: function reserveReceiveAddress(accountIndex) {
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+      assert(Helpers.isPositiveInteger(accountIndex), 'Account index required');
+      if (options.reusableIndex !== undefined) {
+        assert(options.reusableIndex === null || Helpers.isPositiveInteger(options.reusableIndex), 'not an integer');
+      }
+
+      var self = this;
+      var account = this._wallet.hdwallet.accounts[accountIndex];
+
+      var receiveIndex = account.receiveIndex;
+      var originalLabel; // In case of address reuse
+
+      // Respect the GAP limit:
+      if (receiveIndex - account.lastUsedReceiveIndex >= 20) {
+        receiveIndex = options.reusableIndex;
+        if (receiveIndex == null) throw new Error('gap_limit');
+        originalLabel = this.getLabel(accountIndex, receiveIndex);
+      }
+
+      var receiveAddress = account.receiveAddressAtIndex(receiveIndex);
+
+      //   String label: will be appended in case of reuse
+      function commitAddressLabel() {
+        var label = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+
+        if (originalLabel) label = originalLabel + ', ' + label;
+
+        self.setLabel(accountIndex, receiveIndex, label);
+      }
+
+      return {
+        receiveIndex: receiveIndex,
+        receiveAddress: receiveAddress,
+        commit: commitAddressLabel
+      };
+    }
+  }, {
+    key: 'releaseReceiveAddress',
+    value: function releaseReceiveAddress(accountIndex, receiveIndex) {
+      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+      assert(Helpers.isPositiveInteger(accountIndex), 'Account index required');
+      assert(Helpers.isPositiveInteger(receiveIndex), 'Receive index required');
+
+      if (options.expectedLabel !== undefined) {
+        assert(options.expectedLabel === null || Helpers.isString(options.expectedLabel), 'not a string');
+      }
+
+      var address = this.getAddress(accountIndex, receiveIndex);
+
+      if (options.expectedLabel) {
+        if (address.label.includes(options.expectedLabel)) {
+          var firstEntry = address.label.indexOf(options.expectedLabel) === 0;
+          this.setLabel(accountIndex, address, firstEntry ? address.label.replace(options.expectedLabel + ', ', '') : address.label.replace(', ' + options.expectedLabel, ''));
+        } else {
+          // Don't touch the label
+        }
+      } else {
+        // Remove label
+        this.removeLabel(accountIndex, address);
+      }
+    }
+  }, {
+    key: 'readOnly',
+    get: function get() {
+      return this._readOnly || !this._wallet.isMetadataReady;
+    }
+  }, {
+    key: 'dirty',
+    get: function get() {
+      return this._dirty;
+    }
+  }, {
+    key: 'version',
+    get: function get() {
+      return this._version;
+    }
+  }], [{
+    key: 'initMetadata',
+    value: function initMetadata(wallet) {
+      return Metadata.fromMasterHDNode(wallet._metadataHDNode, METADATA_TYPE_LABELS);
+    }
+  }, {
+    key: 'fromJSON',
+    value: function fromJSON(wallet, json, magicHash) {
+      var success = function success(payload) {
+        return new Labels(metadata, wallet, payload);
+      };
+      var metadata = Labels.initMetadata(wallet);
+      return metadata.fromObject(JSON.parse(json), magicHash).then(success);
+    }
+  }, {
+    key: 'fetch',
+    value: function fetch(wallet) {
+      var metadata = wallet.isMetadataReady ? Labels.initMetadata(wallet) : null;
+
+      var fetchSuccess = function fetchSuccess(payload) {
+        return new Labels(metadata, wallet, payload);
+      };
+
+      var fetchFailed = function fetchFailed(e) {
+        // Metadata service is down or unreachable.
+        return Promise.reject(e);
+      };
+
+      if (wallet.isMetadataReady) {
+        return metadata.fetch().then(fetchSuccess).catch(fetchFailed);
+      } else {
+        return Promise.resolve(null).then(fetchSuccess);
+      }
+    }
+  }]);
+
+  return Labels;
+}();
+
+module.exports = Labels;
+
+/***/ }),
+/* 317 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var EventEmitter = __webpack_require__(31);
-var Helpers = __webpack_require__(4);
+var Helpers = __webpack_require__(3);
 var Tx = __webpack_require__(71);
 
 var TransactionList = function TransactionList(loadNumber) {
@@ -42258,7 +43044,7 @@ TransactionList.prototype.subscribe = function (listener) {
 module.exports = TransactionList;
 
 /***/ }),
-/* 315 */
+/* 318 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -42292,7 +43078,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 316 */
+/* 319 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {
@@ -42325,7 +43111,7 @@ module.exports = WebSocket ? ws : null;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(12)))
 
 /***/ }),
-/* 317 */
+/* 320 */
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -42463,7 +43249,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 318 */
+/* 321 */
 /***/ (function(module, exports) {
 
 module.exports = [
@@ -44518,7 +45304,7 @@ module.exports = [
 ];
 
 /***/ }),
-/* 319 */
+/* 322 */
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -44557,7 +45343,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 320 */
+/* 323 */
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -44627,7 +45413,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 321 */
+/* 324 */
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -44754,7 +45540,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 322 */
+/* 325 */
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -44773,25 +45559,25 @@ module.exports = {
 };
 
 /***/ }),
-/* 323 */
-/***/ (function(module, exports) {
-
-/* (ignored) */
-
-/***/ }),
-/* 324 */
-/***/ (function(module, exports) {
-
-/* (ignored) */
-
-/***/ }),
-/* 325 */
-/***/ (function(module, exports) {
-
-/* (ignored) */
-
-/***/ }),
 /* 326 */
+/***/ (function(module, exports) {
+
+/* (ignored) */
+
+/***/ }),
+/* 327 */
+/***/ (function(module, exports) {
+
+/* (ignored) */
+
+/***/ }),
+/* 328 */
+/***/ (function(module, exports) {
+
+/* (ignored) */
+
+/***/ }),
+/* 329 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -44823,25 +45609,25 @@ module.exports = {
   WalletStore: __webpack_require__(20),
   WalletCrypto: __webpack_require__(11),
   Payment: __webpack_require__(97),
-  ImportExport: __webpack_require__(68),
+  ImportExport: __webpack_require__(69),
   BlockchainSettingsAPI: __webpack_require__(95),
-  Helpers: __webpack_require__(4),
-  API: __webpack_require__(10),
+  Helpers: __webpack_require__(3),
+  API: __webpack_require__(8),
   Tx: __webpack_require__(71),
   WalletTokenEndpoints: __webpack_require__(159),
   WalletNetwork: __webpack_require__(70),
-  RNG: __webpack_require__(44),
+  RNG: __webpack_require__(46),
   Transaction: __webpack_require__(98),
   Address: __webpack_require__(94),
-  Metadata: __webpack_require__(69),
+  Metadata: __webpack_require__(45),
   Bitcoin: __webpack_require__(7),
   External: __webpack_require__(96),
   BuySell: __webpack_require__(158),
-  constants: __webpack_require__(8),
-  BigInteger: __webpack_require__(9),
+  constants: __webpack_require__(9),
+  BigInteger: __webpack_require__(10),
   BIP39: __webpack_require__(35),
   Networks: __webpack_require__(19),
-  ECDSA: __webpack_require__(67)
+  ECDSA: __webpack_require__(68)
 };
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(12)))
 
