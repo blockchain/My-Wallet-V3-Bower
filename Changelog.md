@@ -1,15 +1,21 @@
 __Blockchain Wallet V3__
 
-#   (2017-03-15)
+#   (2017-03-21)
 
 
 
 ---
 
-## Bug Fixes
+## Refactor
 
-- **api:** remove accidental test code
-  ([600ee040](https://github.com/blockchain/My-Wallet-V3/commit/600ee0402c5b4bd1d006262b51ad906cae308905))
+- **labels:** move address labels to metadata service (#334)
+  ([a0779d27](https://github.com/blockchain/My-Wallet-V3/commit/a0779d27181b3690466d20191070502c7bc0402d))
+
+
+## Chore
+
+- **release:** v3.29.2
+  ([f70b9235](https://github.com/blockchain/My-Wallet-V3/commit/f70b9235bf70ce75198399ceb52422ed49d7a870))
 
 
 

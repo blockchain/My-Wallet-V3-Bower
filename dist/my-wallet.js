@@ -2822,6 +2822,10 @@ Helpers.isEmailInvited = function (email, fraction) {
   return WalletCrypo.sha256(email)[0] / 256 >= 1 - fraction;
 };
 
+Helpers.deepClone = function (object) {
+  return JSON.parse(JSON.stringify(object));
+};
+
 module.exports = Helpers;
 
 /***/ }),
@@ -7387,7 +7391,7 @@ MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHexExt
     externalJSON = JSON.parse(stringExternal);
   }
 
-  if (stringExternal) {
+  if (stringLabels) {
     assert(magicHashHexLabels, 'Magic hash for labels required');
     labelsJSON = JSON.parse(stringLabels);
   }
@@ -14691,14 +14695,6 @@ function done(stream, er, data) {
 
 module.exports = Writable;
 
-// It seems a linked list but it is not
-// there will be only 2 of these for each stream
-function CorkedRequest(state) {
-  this.next = null;
-  this.entry = null;
-  this.finish = onCorkedFinish.bind(undefined, this, state);
-}
-
 /*<replacement>*/
 var processNextTick = __webpack_require__(88);
 /*</replacement>*/
@@ -16305,6 +16301,9 @@ External.prototype.canBuy = function (accountInfo, options) {
 };
 
 External.prototype.toJSON = function () {
+  if (!this.hasExchangeAccount) {
+    return undefined;
+  }
   var external = {
     coinify: this._coinify,
     sfox: this._sfox
@@ -16339,6 +16338,11 @@ External.fetch = function (wallet) {
 };
 
 External.prototype.save = function () {
+  if (this.toJSON() === undefined) {
+    console.info('Not saving before any exchange account is created.');
+    return Promise.resolve();
+  }
+
   if (!this._metadata.existsOnServer) {
     return this._metadata.create(this);
   } else {
@@ -24198,7 +24202,7 @@ Wallet.prototype._updateWalletInfo = function (obj) {
       if (account) {
         account.balance = e.final_balance;
         account.n_tx = e.n_tx;
-        account.lastUsedReceiveIndex = e.account_index - 1;
+        account.lastUsedReceiveIndex = e.account_index === 0 ? null : e.account_index - 1;
         account.changeIndex = e.change_index;
       }
     }
@@ -24716,9 +24720,9 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     };
 
     if (optionalPayloads.labels) {
-      return Labels.fromJSON(this, optionalPayloads.labels, magicHashes.labels).then(success);
+      return Labels.fromJSON(this, optionalPayloads.labels, magicHashes.labels, MyWallet.syncWallet).then(success);
     } else {
-      return Labels.fetch(this).then(success).catch(error);
+      return Labels.fetch(this, MyWallet.syncWallet).then(success).catch(error);
     }
   };
 
@@ -24726,11 +24730,11 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
 
   if (this.isMetadataReady) {
     // No fallback is metadata is disabled
-    promises.push(fetchExternal.bind(this)());
+    promises.push(fetchExternal.call(this));
   }
 
   // Falls back to read-only based on wallet payload if metadata is disabled
-  promises.push(fetchLabels.bind(this)());
+  promises.push(fetchLabels.call(this));
 
   return Promise.all(promises);
 };
@@ -41557,6 +41561,9 @@ ExchangeDelegate.prototype.getReceiveAddress = function (trade) {
   if (Helpers.isPositiveInteger(trade._account_index)) {
     var account = this._wallet.hdwallet.accounts[trade._account_index];
     return account.receiveAddressAtIndex(trade._receive_index);
+  } else {
+    // trade.account_index could be missing, although that shouldn't happen
+    return null;
   }
 };
 
@@ -41584,6 +41591,7 @@ ExchangeDelegate.prototype.reserveReceiveAddress = function () {
   });
 
   return {
+    _reservation: reservation,
     receiveAddress: reservation.receiveAddress,
     commit: function commit(trade) {
       /* istanbul ignore if */
@@ -41618,6 +41626,12 @@ ExchangeDelegate.prototype.releaseReceiveAddress = function (trade) {
       this._wallet.labels.releaseReceiveAddress(trade._account_index, trade._receive_index, {
         expectedLabel: self.labelBase + ' #' + trade.id
       });
+    }
+  } else {
+    // trade.account_index could be missing, although that shouldn't happen
+    /* istanbul ignore if */
+    if (this.debug) {
+      console.info('account_index missing for trade #', trade.id);
     }
   }
 };
@@ -41668,7 +41682,7 @@ function HDAccount(object) {
   // computed properties
   this._keyRing = new KeyRing(obj.xpub, obj.cache);
   // The highest receive index with transactions, as returned by the server:
-  this._lastUsedReceiveIndex = -1;
+  this._lastUsedReceiveIndex = null;
   this._changeIndex = 0;
   this._n_tx = 0;
   this._balance = null;
@@ -41744,13 +41758,13 @@ Object.defineProperties(HDAccount.prototype, {
   'receiveIndex': {
     configurable: false,
     get: function get() {
-      var maxLabeledReceiveIndex = -1;
+      var maxLabeledReceiveIndex = null;
       if (MyWallet.wallet.labels) {
         maxLabeledReceiveIndex = MyWallet.wallet.labels.maxLabeledReceiveIndex(this.index);
       } else if (this._address_labels_backup && this._address_labels_backup.length) {
-        maxLabeledReceiveIndex = this._address_labels_backup.reverse()[0].index;
+        maxLabeledReceiveIndex = this._address_labels_backup[this._address_labels_backup.length - 1].index;
       }
-      return Math.max(this.lastUsedReceiveIndex, maxLabeledReceiveIndex) + 1;
+      return Math.max(this.lastUsedReceiveIndex === null ? -1 : this.lastUsedReceiveIndex, maxLabeledReceiveIndex === null ? -1 : maxLabeledReceiveIndex) + 1;
     }
   },
   'lastUsedReceiveIndex': {
@@ -41759,7 +41773,7 @@ Object.defineProperties(HDAccount.prototype, {
       return this._lastUsedReceiveIndex;
     },
     set: function set(value) {
-      assert(Helpers.isPositiveInteger(value + 1), 'should be >= -1');
+      assert(value === null || Helpers.isPositiveInteger(value), 'should be null or >= 0');
       this._lastUsedReceiveIndex = value;
     }
   },
@@ -42327,6 +42341,8 @@ KeyChain.prototype.getPrivateKey = function (index) {
 /* 316 */
 /***/ (function(module, exports, __webpack_require__) {
 
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -42341,24 +42357,25 @@ var assert = __webpack_require__(1);
 var METADATA_TYPE_LABELS = 4;
 
 var Labels = function () {
-  function Labels(metadata, wallet, object) {
+  function Labels(metadata, wallet, object, syncWallet) {
     _classCallCheck(this, Labels);
 
+    assert(syncWallet instanceof Function, 'syncWallet function required');
     this._readOnly = false; // Default
-    this._dirty = true;
     this._wallet = wallet;
     this._metadata = metadata;
 
-    var before = JSON.stringify(object);
+    // Required for initial migration and whenever placeholder needs an update
+    this._syncWallet = syncWallet;
+    this._walletNeedsSync = false;
+
+    this._before = JSON.stringify(object);
+
     object = this.migrateIfNeeded(object);
 
     this.init(object);
 
-    if (JSON.stringify(object) !== before) {
-      this.save();
-    } else {
-      this._dirty = false;
-    }
+    this.save(); // Only saves if migration changed something
   }
 
   _createClass(Labels, [{
@@ -42375,7 +42392,10 @@ var Labels = function () {
           var accountObject = _step.value;
 
           var accountIndex = object.accounts.indexOf(accountObject);
+          var hdAccount = this._wallet.hdwallet.accounts[accountIndex];
+          var receiveIndex = hdAccount.receiveIndex;
           var addresses = [];
+
           var _iteratorNormalCompletion2 = true;
           var _didIteratorError2 = false;
           var _iteratorError2 = undefined;
@@ -42385,13 +42405,14 @@ var Labels = function () {
               var addressObject = _step2.value;
 
               if (addressObject === null) {
-                addresses.push(null);
+                addresses.push(null); // Placeholder, will be replaced below
               } else {
-                var hdAccount = this._wallet.hdwallet.accounts[accountIndex];
                 var addressIndex = accountObject.indexOf(addressObject);
                 addresses.push(new AddressHD(addressObject, hdAccount, addressIndex));
               }
             }
+
+            // Add null entries up to the current receive index
           } catch (err) {
             _didIteratorError2 = true;
             _iteratorError2 = err;
@@ -42407,6 +42428,11 @@ var Labels = function () {
             }
           }
 
+          for (var i = 0; i < receiveIndex; i++) {
+            if (!addresses[i]) {
+              addresses[i] = new AddressHD(null, hdAccount, i);
+            }
+          }
           this._accounts[accountIndex] = addresses;
         }
       } catch (err) {
@@ -42431,6 +42457,7 @@ var Labels = function () {
         version: this.version,
         accounts: this._accounts.map(function (addresses) {
           if (addresses.length > 1) {
+            addresses = Helpers.deepClone(addresses);
             // Remove trailing null values:
             while (!addresses[addresses.length - 1] || addresses[addresses.length - 1].label === null) {
               addresses.pop();
@@ -42445,19 +42472,28 @@ var Labels = function () {
     value: function save() {
       var _this = this;
 
+      if (!this.dirty) {
+        return Promise.resolve();
+      }
       if (this.readOnly) {
         console.info('Labels KV store is read-only, not saving');
         return Promise.resolve();
       }
+      var promise = void 0;
       if (!this._metadata.existsOnServer) {
-        return this._metadata.create(this).then(function () {
-          _this._dirty = false;
-        });
+        promise = this._metadata.create(this);
       } else {
-        return this._metadata.update(this).then(function () {
-          _this._dirty = false;
-        });
+        promise = this._metadata.update(this);
       }
+      return promise.then(function () {
+        _this._before = JSON.stringify(_this);
+        if (_this._walletNeedsSync) {
+          console.info('Sync MyWallet address label placeholder');
+          _this._syncWallet(function () {
+            _this._walletNeedsSync = false;
+          });
+        }
+      });
     }
   }, {
     key: 'wipe',
@@ -42469,89 +42505,97 @@ var Labels = function () {
   }, {
     key: 'migrateIfNeeded',
     value: function migrateIfNeeded(object) {
-      var major = void 0;
-      var minor = void 0;
-      var patch = void 0;
+      var major = void 0,
+          minor = void 0,
+          patch = void 0;
 
       if (object && object.version) {
-        major = parseInt(object.version.split('.')[0]);
-        minor = parseInt(object.version.split('.')[1]);
-        patch = parseInt(object.version.split('.')[2]);
+        var _object$version$split = object.version.split('.').map(function (n) {
+          return parseInt(n, 10);
+        });
+
+        var _object$version$split2 = _slicedToArray(_object$version$split, 3);
+
+        major = _object$version$split2[0];
+        minor = _object$version$split2[1];
+        patch = _object$version$split2[2];
       }
 
       // First time, migrate from wallet payload if needed
       if (object === null || Helpers.isEmptyObject(object)) {
-        if (this._wallet.hdwallet.accounts[0]._address_labels_backup) {
-          console.info('Migrate address labels from wallet to KV-Store v1.0.0');
-        } else {
-          // This is a new wallet
-        }
-
-        if (!this._wallet.isMetadataReady) {
-          // 2nd password is enabled and we can't write to the KV store
-          this._readOnly = true;
-        }
-
         object = {
           version: '1.0.0',
           accounts: []
         };
 
-        var _iteratorNormalCompletion3 = true;
-        var _didIteratorError3 = false;
-        var _iteratorError3 = undefined;
+        if (this._wallet.hdwallet.accounts[0]._address_labels_backup) {
+          console.info('Migrate address labels from wallet to KV-Store v1.0.0');
 
-        try {
-          for (var _iterator3 = this._wallet.hdwallet.accounts[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-            var account = _step3.value;
+          var _iteratorNormalCompletion3 = true;
+          var _didIteratorError3 = false;
+          var _iteratorError3 = undefined;
 
-            var labels = [];
-            var _iteratorNormalCompletion4 = true;
-            var _didIteratorError4 = false;
-            var _iteratorError4 = undefined;
-
-            try {
-              for (var _iterator4 = (account._address_labels_backup || [])[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-                var label = _step4.value;
-
-                labels[label.index] = { label: label.label };
-              }
-              // Set undefined entries to null:
-            } catch (err) {
-              _didIteratorError4 = true;
-              _iteratorError4 = err;
-            } finally {
-              try {
-                if (!_iteratorNormalCompletion4 && _iterator4.return) {
-                  _iterator4.return();
-                }
-              } finally {
-                if (_didIteratorError4) {
-                  throw _iteratorError4;
-                }
-              }
-            }
-
-            for (var i = 0; i < labels.length; i++) {
-              if (!labels[i]) {
-                labels[i] = null;
-              }
-            }
-            object.accounts.push(labels);
-          }
-        } catch (err) {
-          _didIteratorError3 = true;
-          _iteratorError3 = err;
-        } finally {
           try {
-            if (!_iteratorNormalCompletion3 && _iterator3.return) {
-              _iterator3.return();
+            for (var _iterator3 = this._wallet.hdwallet.accounts[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+              var account = _step3.value;
+
+              var labels = [];
+              var _iteratorNormalCompletion4 = true;
+              var _didIteratorError4 = false;
+              var _iteratorError4 = undefined;
+
+              try {
+                for (var _iterator4 = (account._address_labels_backup || [])[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+                  var label = _step4.value;
+
+                  labels[label.index] = { label: label.label };
+                }
+                // Set undefined entries to null:
+              } catch (err) {
+                _didIteratorError4 = true;
+                _iteratorError4 = err;
+              } finally {
+                try {
+                  if (!_iteratorNormalCompletion4 && _iterator4.return) {
+                    _iterator4.return();
+                  }
+                } finally {
+                  if (_didIteratorError4) {
+                    throw _iteratorError4;
+                  }
+                }
+              }
+
+              for (var i = 0; i < labels.length; i++) {
+                if (!labels[i]) {
+                  labels[i] = null;
+                }
+              }
+              object.accounts.push(labels);
             }
+          } catch (err) {
+            _didIteratorError3 = true;
+            _iteratorError3 = err;
           } finally {
-            if (_didIteratorError3) {
-              throw _iteratorError3;
+            try {
+              if (!_iteratorNormalCompletion3 && _iterator3.return) {
+                _iterator3.return();
+              }
+            } finally {
+              if (_didIteratorError3) {
+                throw _iteratorError3;
+              }
             }
           }
+
+          if (!this.readOnly) {
+            this._walletNeedsSync = true;
+          }
+        } else {
+          // This is a new wallet, create placeholders for each account:
+          object.accounts = this._wallet.hdwallet.accounts.map(function () {
+            return [];
+          });
         }
       } else if (major > 1) {
         // Payload contains unsuppored new major version, abort:
@@ -42591,13 +42635,15 @@ var Labels = function () {
       var labeledAddresses = this.all(accountIndex).filter(function (a) {
         return a !== null;
       });
-      var addresses = labeledAddresses.map(function (a) {
+      var addresses = labeledAddresses.filter(function (a) {
+        return a.label;
+      }).map(function (a) {
         return a.address;
       });
 
       if (addresses.length === 0) return Promise.resolve();
 
-      BlockchainAPI.getBalances(addresses).then(function (data) {
+      return BlockchainAPI.getBalances(addresses).then(function (data) {
         var _iteratorNormalCompletion5 = true;
         var _didIteratorError5 = false;
         var _iteratorError5 = undefined;
@@ -42625,8 +42671,6 @@ var Labels = function () {
           }
         }
       });
-
-      return Promise.resolve();
     }
   }, {
     key: 'fetchBalance',
@@ -42701,32 +42745,25 @@ var Labels = function () {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
       assert(Helpers.isPositiveInteger(accountIndex), 'specify accountIndex');
-      if (!this._accounts[accountIndex]) return null;
-
-      if (options.includeUnlabeled) {
-        // Add null entries up to the current receive index
-        var receiveIndex = this._wallet.hdwallet.accounts[accountIndex].receiveIndex;
-        for (var i = 0; i < receiveIndex; i++) {
-          if (!this._accounts[accountIndex][i]) {
-            this._accounts[accountIndex][i] = new AddressHD(null, this._wallet.hdwallet.accounts[accountIndex], i);
-          }
-        }
-      }
-
-      return this._accounts[accountIndex].filter(function (a) {
-        return a !== null;
-      });
+      return this._accounts[accountIndex] || [];
     }
+
+    // returns Int or null
+
   }, {
     key: 'maxLabeledReceiveIndex',
     value: function maxLabeledReceiveIndex(accountIndex) {
-      if (!this._accounts[accountIndex]) return -1;
+      if (!this._accounts[accountIndex]) return null;
       var labeledAddresses = this._accounts[accountIndex].filter(function (a) {
         return a && a.label;
       });
-      if (labeledAddresses.length === 0) return -1;
-      return this._accounts[accountIndex].indexOf(labeledAddresses.reverse()[0]);
+      if (labeledAddresses.length === 0) return null;
+      var indexOf = this._accounts[accountIndex].indexOf(labeledAddresses[labeledAddresses.length - 1]);
+      return indexOf > -1 ? indexOf : null;
     }
+
+    // Side-effect: adds a new entry if there is a new account or receive index.
+
   }, {
     key: 'getAddress',
     value: function getAddress(accountIndex, receiveIndex) {
@@ -42778,7 +42815,7 @@ var Labels = function () {
       addr.label = label;
       addr.used = false;
 
-      this._dirty = true;
+      this._walletNeedsSync = true;
 
       return this.save().then(function () {
         return addr;
@@ -42796,12 +42833,14 @@ var Labels = function () {
 
       if (this.readOnly) return Promise.reject('KV_LABELS_READ_ONLY');
 
+      var receiveIndex = void 0;
+
       if (Helpers.isPositiveInteger(address)) {
-        var receiveIndex = address;
+        receiveIndex = address;
         address = this.getAddress(accountIndex, receiveIndex);
       } else {
-        var _receiveIndex = this._accounts[accountIndex].indexOf(address);
-        assert(Helpers.isPositiveInteger(_receiveIndex), 'Address not found');
+        receiveIndex = this._accounts[accountIndex].indexOf(address);
+        assert(Helpers.isPositiveInteger(receiveIndex), 'Address not found');
       }
 
       if (!Helpers.isValidLabel(label)) {
@@ -42812,9 +42851,13 @@ var Labels = function () {
         return Promise.resolve();
       }
 
+      var maxLabeledReceiveIndexBefore = this.maxLabeledReceiveIndex(accountIndex);
+
       address.label = label;
 
-      this._dirty = true;
+      if (receiveIndex > maxLabeledReceiveIndexBefore) {
+        this._walletNeedsSync = true;
+      }
 
       return this.save();
     }
@@ -42822,18 +42865,29 @@ var Labels = function () {
     key: 'removeLabel',
     value: function removeLabel(accountIndex, address) {
       if (this.readOnly) return Promise.reject('KV_LABELS_READ_ONLY');
-      assert(address.constructor && address.constructor.name === 'AddressHD', 'address should be AddressHD instance');
 
       assert(Helpers.isPositiveInteger(accountIndex), 'Account index required');
+
+      assert(Helpers.isPositiveInteger(address) || address.constructor && address.constructor.name === 'AddressHD', 'address should be AddressHD instance or Int');
+
       assert(this._accounts[accountIndex], '_accounts[' + accountIndex + '] should exist');
 
-      var addressIndex = this._accounts[accountIndex].indexOf(address);
+      var addressIndex = void 0;
+      if (Helpers.isPositiveInteger(address)) {
+        addressIndex = address;
+        address = this._accounts[accountIndex][address];
+      } else {
+        addressIndex = this._accounts[accountIndex].indexOf(address);
+        assert(Helpers.isPositiveInteger(addressIndex), 'Address not found');
+      }
 
-      assert(Helpers.isPositiveInteger(addressIndex), 'Address not found');
+      var maxLabeledReceiveIndexBefore = this.maxLabeledReceiveIndex(accountIndex);
 
       address.label = null;
 
-      this._dirty = true;
+      if (addressIndex === maxLabeledReceiveIndexBefore) {
+        this._walletNeedsSync = true;
+      }
 
       return this.save();
     }
@@ -42915,7 +42969,7 @@ var Labels = function () {
   }, {
     key: 'dirty',
     get: function get() {
-      return this._dirty;
+      return this._before !== JSON.stringify(this);
     }
   }, {
     key: 'version',
@@ -42929,20 +42983,20 @@ var Labels = function () {
     }
   }, {
     key: 'fromJSON',
-    value: function fromJSON(wallet, json, magicHash) {
+    value: function fromJSON(wallet, json, magicHash, syncWallet) {
       var success = function success(payload) {
-        return new Labels(metadata, wallet, payload);
+        return new Labels(metadata, wallet, payload, syncWallet);
       };
       var metadata = Labels.initMetadata(wallet);
       return metadata.fromObject(JSON.parse(json), magicHash).then(success);
     }
   }, {
     key: 'fetch',
-    value: function fetch(wallet) {
+    value: function fetch(wallet, syncWallet) {
       var metadata = wallet.isMetadataReady ? Labels.initMetadata(wallet) : null;
 
       var fetchSuccess = function fetchSuccess(payload) {
-        return new Labels(metadata, wallet, payload);
+        return new Labels(metadata, wallet, payload, syncWallet);
       };
 
       var fetchFailed = function fetchFailed(e) {
