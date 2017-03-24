@@ -41231,6 +41231,11 @@ var AddressHD = function () {
       return this._address;
     }
   }, {
+    key: 'index',
+    get: function get() {
+      return this._index;
+    }
+  }, {
     key: 'label',
     get: function get() {
       return this._label;
@@ -42744,8 +42749,20 @@ var Labels = function () {
     value: function all(accountIndex) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
+      return this._getAccount(accountIndex);
+    }
+
+    // Side-effect: adds empty array to this._accounts if needed
+
+  }, {
+    key: '_getAccount',
+    value: function _getAccount(accountIndex) {
       assert(Helpers.isPositiveInteger(accountIndex), 'specify accountIndex');
-      return this._accounts[accountIndex] || [];
+      if (!this._accounts[accountIndex]) {
+        assert(this._wallet.hdwallet.accounts[accountIndex], 'Wallet does not contain account', accountIndex);
+        this._accounts[accountIndex] = [];
+      }
+      return this._accounts[accountIndex];
     }
 
     // returns Int or null
@@ -42753,12 +42770,11 @@ var Labels = function () {
   }, {
     key: 'maxLabeledReceiveIndex',
     value: function maxLabeledReceiveIndex(accountIndex) {
-      if (!this._accounts[accountIndex]) return null;
-      var labeledAddresses = this._accounts[accountIndex].filter(function (a) {
+      var labeledAddresses = this._getAccount(accountIndex).filter(function (a) {
         return a && a.label;
       });
       if (labeledAddresses.length === 0) return null;
-      var indexOf = this._accounts[accountIndex].indexOf(labeledAddresses[labeledAddresses.length - 1]);
+      var indexOf = this._getAccount(accountIndex).indexOf(labeledAddresses[labeledAddresses.length - 1]);
       return indexOf > -1 ? indexOf : null;
     }
 
@@ -42767,20 +42783,12 @@ var Labels = function () {
   }, {
     key: 'getAddress',
     value: function getAddress(accountIndex, receiveIndex) {
-      if (!this._accounts[accountIndex]) {
-        if (this._wallet.hdwallet.accounts.length > accountIndex) {
-          this._accounts[accountIndex] = [];
-        } else {
-          return null;
-        }
-      }
-
-      var entry = this._accounts[accountIndex][receiveIndex];
+      var entry = this._getAccount(accountIndex)[receiveIndex];
 
       if (!entry) {
         entry = new AddressHD(null, this._wallet.hdwallet.accounts[accountIndex], receiveIndex);
         entry.used = null;
-        this._accounts[accountIndex][receiveIndex] = entry;
+        this._getAccount(accountIndex)[receiveIndex] = entry;
       }
 
       return entry;
@@ -42827,8 +42835,6 @@ var Labels = function () {
   }, {
     key: 'setLabel',
     value: function setLabel(accountIndex, address, label) {
-      assert(Helpers.isPositiveInteger(accountIndex), 'Account index required');
-      assert(this._accounts[accountIndex], '_accounts[' + accountIndex + '] should exist');
       assert(Helpers.isPositiveInteger(address) || address.constructor && address.constructor.name === 'AddressHD', 'address should be AddressHD instance or Int');
 
       if (this.readOnly) return Promise.reject('KV_LABELS_READ_ONLY');
@@ -42839,7 +42845,7 @@ var Labels = function () {
         receiveIndex = address;
         address = this.getAddress(accountIndex, receiveIndex);
       } else {
-        receiveIndex = this._accounts[accountIndex].indexOf(address);
+        receiveIndex = this._getAccount(accountIndex).indexOf(address);
         assert(Helpers.isPositiveInteger(receiveIndex), 'Address not found');
       }
 
@@ -42870,14 +42876,12 @@ var Labels = function () {
 
       assert(Helpers.isPositiveInteger(address) || address.constructor && address.constructor.name === 'AddressHD', 'address should be AddressHD instance or Int');
 
-      assert(this._accounts[accountIndex], '_accounts[' + accountIndex + '] should exist');
-
       var addressIndex = void 0;
       if (Helpers.isPositiveInteger(address)) {
         addressIndex = address;
-        address = this._accounts[accountIndex][address];
+        address = this._getAccount(accountIndex)[address];
       } else {
-        addressIndex = this._accounts[accountIndex].indexOf(address);
+        addressIndex = this._getAccount(accountIndex).indexOf(address);
         assert(Helpers.isPositiveInteger(addressIndex), 'Address not found');
       }
 

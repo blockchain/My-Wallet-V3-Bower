@@ -1,21 +1,27 @@
 __Blockchain Wallet V3__
 
-#   (2017-03-21)
+#   (2017-03-24)
 
 
 
 ---
 
-## Refactor
+## Bug Fixes
 
-- **labels:** move address labels to metadata service (#334)
-  ([a0779d27](https://github.com/blockchain/My-Wallet-V3/commit/a0779d27181b3690466d20191070502c7bc0402d))
+- **labels:** handle newly created account
+  ([02361171](https://github.com/blockchain/My-Wallet-V3/commit/0236117124e9e83aa41d8db5392a91e2483c50d4))
+
+
+## Features
+
+- **addresshd:** index getter
+  ([957b96ad](https://github.com/blockchain/My-Wallet-V3/commit/957b96add4e00fbe45b0b21da743d647096ebd89))
 
 
 ## Chore
 
-- **release:** v3.29.2
-  ([f70b9235](https://github.com/blockchain/My-Wallet-V3/commit/f70b9235bf70ce75198399ceb52422ed49d7a870))
+- **release:** v3.29.3
+  ([5bb75e99](https://github.com/blockchain/My-Wallet-V3/commit/5bb75e99ee0440f8b99ab6f119caaf289561c232))
 
 
 
