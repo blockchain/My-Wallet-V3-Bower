@@ -8,8 +8,8 @@ __Blockchain Wallet V3__
 
 ## Chore
 
-- **release:** use valid version
-  ([4ceff3f2](https://github.com/blockchain/My-Wallet-V3/commit/4ceff3f27a0682eb446082e91fbc4f5b31eab67d))
+- **release:** use sell version of coinify-client
+  ([16646ea5](https://github.com/blockchain/My-Wallet-V3/commit/16646ea59c6177cc495657783dde8fa790e331cb))
 
 
 
