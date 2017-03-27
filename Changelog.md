@@ -1,27 +1,15 @@
 __Blockchain Wallet V3__
 
-#   (2017-03-24)
+#   (2017-03-27)
 
 
 
 ---
 
-## Bug Fixes
-
-- **labels:** handle newly created account
-  ([02361171](https://github.com/blockchain/My-Wallet-V3/commit/0236117124e9e83aa41d8db5392a91e2483c50d4))
-
-
-## Features
-
-- **addresshd:** index getter
-  ([957b96ad](https://github.com/blockchain/My-Wallet-V3/commit/957b96add4e00fbe45b0b21da743d647096ebd89))
-
-
 ## Chore
 
-- **release:** v3.29.3
-  ([5bb75e99](https://github.com/blockchain/My-Wallet-V3/commit/5bb75e99ee0440f8b99ab6f119caaf289561c232))
+- **release:** use valid version
+  ([4ceff3f2](https://github.com/blockchain/My-Wallet-V3/commit/4ceff3f27a0682eb446082e91fbc4f5b31eab67d))
 
 
 

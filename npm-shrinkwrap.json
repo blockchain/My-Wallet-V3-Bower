@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.29.3",
+  "version": "3.30.0-sell.1",
   "dependencies": {
     "abbrev": {
       "version": "1.0.9",
@@ -586,9 +586,9 @@
       "resolved": "https://registry.npmjs.org/bip66/-/bip66-1.1.4.tgz"
     },
     "bitcoin-coinify-client": {
-      "version": "0.3.2",
-      "from": "bitcoin-coinify-client@>=0.3.2 <0.4.0",
-      "resolved": "https://registry.npmjs.org/bitcoin-coinify-client/-/bitcoin-coinify-client-0.3.2.tgz"
+      "version": "0.4.0-dev.0",
+      "from": "bitcoin-coinify-client@0.4.0-dev.0",
+      "resolved": "https://registry.npmjs.org/bitcoin-coinify-client/-/bitcoin-coinify-client-0.4.0-dev.0.tgz"
     },
     "bitcoin-exchange-client": {
       "version": "0.1.5",
@@ -2154,9 +2154,9 @@
       "dev": true
     },
     "globals": {
-      "version": "9.16.0",
+      "version": "9.17.0",
       "from": "globals@>=9.0.0 <10.0.0",
-      "resolved": "https://registry.npmjs.org/globals/-/globals-9.16.0.tgz"
+      "resolved": "https://registry.npmjs.org/globals/-/globals-9.17.0.tgz"
     },
     "globby": {
       "version": "5.0.0",
@@ -4580,9 +4580,9 @@
       "resolved": "https://registry.npmjs.org/typeforce/-/typeforce-1.10.6.tgz"
     },
     "uglify-js": {
-      "version": "2.8.15",
+      "version": "2.8.16",
       "from": "uglify-js@>=2.6.0 <3.0.0",
-      "resolved": "https://registry.npmjs.org/uglify-js/-/uglify-js-2.8.15.tgz",
+      "resolved": "https://registry.npmjs.org/uglify-js/-/uglify-js-2.8.16.tgz",
       "dev": true
     },
     "uglify-to-browserify": {
@@ -4641,9 +4641,9 @@
       "dev": true
     },
     "useragent": {
-      "version": "2.1.12",
+      "version": "2.1.13",
       "from": "useragent@>=2.1.6 <3.0.0",
-      "resolved": "https://registry.npmjs.org/useragent/-/useragent-2.1.12.tgz",
+      "resolved": "https://registry.npmjs.org/useragent/-/useragent-2.1.13.tgz",
       "dev": true
     },
     "util": {
@@ -4729,9 +4729,9 @@
       "dev": true,
       "dependencies": {
         "async": {
-          "version": "2.1.5",
+          "version": "2.2.0",
           "from": "async@>=2.1.2 <3.0.0",
-          "resolved": "https://registry.npmjs.org/async/-/async-2.1.5.tgz",
+          "resolved": "https://registry.npmjs.org/async/-/async-2.2.0.tgz",
           "dev": true
         }
       }
@@ -4743,9 +4743,9 @@
       "dev": true,
       "dependencies": {
         "async": {
-          "version": "2.1.5",
+          "version": "2.2.0",
           "from": "async@>=2.1.2 <3.0.0",
-          "resolved": "https://registry.npmjs.org/async/-/async-2.1.5.tgz",
+          "resolved": "https://registry.npmjs.org/async/-/async-2.2.0.tgz",
           "dev": true
         },
         "camelcase": {
