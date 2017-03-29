@@ -8,8 +8,12 @@ __Blockchain Wallet V3__
 
 ## Bug Fixes
 
+- **external:** remove broken function call from wipe
+  ([5f427cef](https://github.com/blockchain/My-Wallet-V3/commit/5f427cef925b06d94efe3b023b1fb826e8c64c7f))
 - **hdaccount:** set address_labels to empty array by default
   ([79b31c40](https://github.com/blockchain/My-Wallet-V3/commit/79b31c40e9c46e2513627d265bcd375b48ee1eb4))
+- **wallet:** fix login from json functionality
+  ([3c955e60](https://github.com/blockchain/My-Wallet-V3/commit/3c955e605fe8ac2ca76c728f35ab30e51cf6169a))
 
 
 ## Refactor
@@ -21,6 +25,8 @@ __Blockchain Wallet V3__
 ## Chore
 
 - **release:**
+  - latest coinify client version
+  ([05ce07f6](https://github.com/blockchain/My-Wallet-V3/commit/05ce07f671c2939d9ae0874248ae566e27358374))
   - bump version, coinify client dev version
   ([a1b70c6f](https://github.com/blockchain/My-Wallet-V3/commit/a1b70c6fd05462cb0fa55d699eba9fe294e20323))
   - v3.30.1

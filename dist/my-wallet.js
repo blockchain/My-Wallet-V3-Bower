@@ -7372,7 +7372,6 @@ MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHexExt
   var externalJSON = null;
 
   if (stringExternal) {
-    assert(magicHashHexExternal, 'Magic hash for external required');
     externalJSON = JSON.parse(stringExternal);
   }
 
@@ -7380,7 +7379,7 @@ MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHexExt
 
   MyWallet.wallet = new Wallet(walletJSON);
   WalletStore.unsafeSetPassword(password);
-  MyWallet.wallet.loadMetaData({
+  MyWallet.wallet.loadMetadata({
     external: externalJSON
   }, {
     external: magicHashHexExternal ? Buffer.from(magicHashHexExternal, 'hex') : null
@@ -16379,7 +16378,7 @@ External.fromJSON = function (wallet, json, magicHash) {
     return new External(metadata, wallet, payload);
   };
   var metadata = External.initMetadata(wallet);
-  return metadata.fromObject(JSON.parse(json), magicHash).then(success);
+  return metadata.fromObject(json, magicHash).then(success);
 };
 
 External.fetch = function (wallet) {
@@ -16410,7 +16409,7 @@ External.prototype.save = function () {
 };
 
 External.prototype.wipe = function () {
-  this._metadata.update({}).then(this.fetch.bind(this));
+  this._metadata.update({});
   this._coinify = undefined;
   this._sfox = undefined;
 };
@@ -27734,7 +27733,6 @@ Bank.prototype.create = function (bankObj) {
 };
 
 Bank.prototype.getAll = function () {
-  assert(this._delegate.isEmailVerified());
   return this._api.authGET('bank-accounts');
 };
 
@@ -28062,11 +28060,12 @@ var Coinify = function (_Exchange$Exchange) {
       assert(quote, 'Quote is required');
       assert(quote.expiresAt > new Date(), 'QUOTE_EXPIRED');
 
-      if (quote.quoteCurrency === 'BTC') {
-        assert(quote.baseCurrency === bank.account.currency, 'Quote and Bank currency must match');
-      } else {
-        assert(quote.quoteCurrency === bank.account.currency, 'Quote and Bank currency must match');
-      }
+      // NOTE commenting this out for now because this check may not be necessary. can add back in if Coinify says otherwise
+      // if (quote.quoteCurrency === 'BTC') {
+      //   assert(quote.baseCurrency === bank.account.currency, 'Quote and Bank currency must match');
+      // } else {
+      //   assert(quote.quoteCurrency === bank.account.currency, 'Quote and Bank currency must match');
+      // }
 
       var sellData = {
         priceQuoteId: quote.id,
