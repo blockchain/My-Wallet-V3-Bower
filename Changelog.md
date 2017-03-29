@@ -21,6 +21,8 @@ __Blockchain Wallet V3__
 ## Chore
 
 - **release:**
+  - bump version, coinify client dev version
+  ([a1b70c6f](https://github.com/blockchain/My-Wallet-V3/commit/a1b70c6fd05462cb0fa55d699eba9fe294e20323))
   - v3.30.1
   ([75e0f1fe](https://github.com/blockchain/My-Wallet-V3/commit/75e0f1fe8bc54ec3e0d3b6a54eb9b6657669d1b3))
   - use sell version of coinify-client
