@@ -6,6 +6,12 @@ __Blockchain Wallet V3__
 
 ---
 
+## Bug Fixes
+
+- **hdaccount:** set address_labels to empty array by default
+  ([79b31c40](https://github.com/blockchain/My-Wallet-V3/commit/79b31c40e9c46e2513627d265bcd375b48ee1eb4))
+
+
 ## Refactor
 
 - **labels:** do not use KV store
@@ -23,6 +29,8 @@ __Blockchain Wallet V3__
 
 ## Branchs merged
 
+- Merge branch 'no-labels-kv-store' into v3.30-release
+  ([c70eb130](https://github.com/blockchain/My-Wallet-V3/commit/c70eb130307f851be4466c748f3c6fb8a29c532a))
 - Merge branch 'no-labels-kv-store' into v3.30-release
   ([8e70c5b0](https://github.com/blockchain/My-Wallet-V3/commit/8e70c5b00237aec08e035fbeb0d867718975a72f))
 
