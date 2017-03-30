@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2017-03-29)
+#   (2017-03-30)
 
 
 
@@ -25,6 +25,10 @@ __Blockchain Wallet V3__
 ## Chore
 
 - **release:**
+  - correct package version
+  ([c691cf03](https://github.com/blockchain/My-Wallet-V3/commit/c691cf035bca74b3c8d1254f265c342a2193453a))
+  - increase coinify client version
+  ([2e4ecc7f](https://github.com/blockchain/My-Wallet-V3/commit/2e4ecc7f04d404996d6c60c8cbfc0a2cd2c82933))
   - latest coinify client version
   ([05ce07f6](https://github.com/blockchain/My-Wallet-V3/commit/05ce07f671c2939d9ae0874248ae566e27358374))
   - bump version, coinify client dev version
