@@ -27737,9 +27737,7 @@ Bank.prototype.getAll = function () {
 };
 
 Bank.prototype.getOne = function (id) {
-  return this._api.authGET('bank-accounts/' + id).then(function (result) {
-    return result;
-  });
+  return this._api.authGET('bank-accounts/' + id);
 };
 
 Bank.prototype.deleteOne = function (id) {
@@ -28059,13 +28057,6 @@ var Coinify = function (_Exchange$Exchange) {
     value: function sell(quote, bank) {
       assert(quote, 'Quote is required');
       assert(quote.expiresAt > new Date(), 'QUOTE_EXPIRED');
-
-      // NOTE commenting this out for now because this check may not be necessary. can add back in if Coinify says otherwise
-      // if (quote.quoteCurrency === 'BTC') {
-      //   assert(quote.baseCurrency === bank.account.currency, 'Quote and Bank currency must match');
-      // } else {
-      //   assert(quote.quoteCurrency === bank.account.currency, 'Quote and Bank currency must match');
-      // }
 
       var sellData = {
         priceQuoteId: quote.id,
@@ -28845,7 +28836,13 @@ var Exchange = function () {
   }, {
     key: 'getSellQuote',
     value: function getSellQuote(amount, baseCurrency, quoteCurrency) {
-      return this.getBuyQuote(-amount, baseCurrency, quoteCurrency);
+      assert(baseCurrency, 'Specify base currency');
+      assert(baseCurrency !== 'BTC' || quoteCurrency, 'Specify quote currency');
+
+      if (baseCurrency !== 'BTC') {
+        quoteCurrency = 'BTC';
+      }
+      return this._QuoteClass.getQuote(this._api, this._delegate, amount, baseCurrency, quoteCurrency, this._debug);
     }
   }, {
     key: 'updateList',
