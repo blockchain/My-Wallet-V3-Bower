@@ -6190,8 +6190,8 @@ Helpers.blockchainFee = function (amount, options) {
 };
 
 Helpers.guidToGroup = function (guid) {
-  var first = parseInt(guid.charAt(0), 16);
-  return first > 7 ? 'b' : 'a';
+  var hashed = WalletCrypo.sha256(new Buffer(guid.replace(/-/g, ''), 'hex'));
+  return hashed[0] & 1 ? 'b' : 'a';
 };
 
 module.exports = Helpers;
@@ -16398,7 +16398,8 @@ function Payment(wallet, payment) {
     maxSpendableAmounts: [0, 0, 0, 0, 0, 0], // max amount per each fee-per-kb
     confEstimation: 'unknown',
     txSize: 0, // transaciton size
-    blockchainFeeFlag: false
+    blockchainFee: 0,
+    blockchainAddress: null
   };
 
   var p = payment || initialState;
@@ -16575,16 +16576,7 @@ Payment.amount = function (amounts, absoluteFee, feeOptions) {
       console.log('No amounts set.');
   } // fi switch
   return function (payment) {
-    if (feeOptions) {
-      var total = formatAmo.reduce(Helpers.add, 0);
-      var bfee = Helpers.blockchainFee(total, feeOptions);
-      if (bfee > 0) {
-        formatAmo = formatAmo.concat(bfee);
-        payment.blockchainFeeFlag = true;
-      } else {
-        payment.blockchainFeeFlag = false;
-      }
-    }
+    payment.blockchainFee = feeOptions ? Helpers.blockchainFee(formatAmo.reduce(Helpers.add, 0), feeOptions) : 0;
     payment.amounts = formatAmo;
     return Promise.resolve(payment);
   };
@@ -16701,10 +16693,7 @@ Payment.prebuild = function (absoluteFee) {
 
     var usableCoins = Transaction.filterUsableCoins(payment.coins, payment.feePerKb);
     var max = Transaction.maxAvailableAmount(usableCoins, payment.feePerKb);
-    payment.sweepAmount = max.amount;
-    if (payment.blockchainFeeFlag) {
-      payment.sweepAmount -= payment.amounts[payment.amounts.length - 1];
-    }
+    payment.sweepAmount = max.amount - payment.blockchainFee;
     payment.sweepFee = max.fee;
     payment.balance = Transaction.sumOfCoins(payment.coins);
 
@@ -16722,16 +16711,12 @@ Payment.prebuild = function (absoluteFee) {
     // if amounts defined refresh computations
     if (Array.isArray(payment.amounts) && payment.amounts.length > 0) {
       // coin selection
-      var s;
-      if (Helpers.isPositiveNumber(absoluteFee)) {
-        s = Transaction.selectCoins(payment.coins, payment.amounts, absoluteFee, true);
-      } else {
-        s = Transaction.selectCoins(usableCoins, payment.amounts, payment.feePerKb, false);
-      }
+      var amounts = payment.blockchainFee > 0 ? payment.amounts.concat(payment.blockchainFee) : payment.amounts;
+      var s = Helpers.isPositiveNumber(absoluteFee) ? Transaction.selectCoins(payment.coins, amounts, absoluteFee, true) : Transaction.selectCoins(usableCoins, amounts, payment.feePerKb, false);
       payment.finalFee = s.fee;
       payment.selectedCoins = s.coins;
-      payment.txSize = Transaction.guessSize(payment.selectedCoins.length, payment.amounts.length + 1);
-      var c = Transaction.sumOfCoins(payment.selectedCoins) - payment.amounts.reduce(Helpers.add, 0) - payment.finalFee;
+      payment.txSize = Transaction.guessSize(payment.selectedCoins.length, amounts.length + 1);
+      var c = Transaction.sumOfCoins(payment.selectedCoins) - amounts.reduce(Helpers.add, 0) - payment.finalFee;
       payment.changeAmount = c > 0 ? c : 0;
 
       // change consumption
@@ -16745,7 +16730,7 @@ Payment.prebuild = function (absoluteFee) {
       // compute absolute fee bounds for 1,2,3,4,5,6 block confirmations
       var toAbsoluteFee = function toAbsoluteFee(e) {
         var c = Transaction.filterUsableCoins(payment.coins, e.fee);
-        var s = Transaction.selectCoins(c, payment.amounts, e.fee, false);
+        var s = Transaction.selectCoins(c, amounts, e.fee, false);
         return s.fee;
       };
       payment.absoluteFeeBounds = payment.fees.estimate.map(toAbsoluteFee);
@@ -16762,17 +16747,17 @@ Payment.build = function (feeToMiners) {
   // feeToMiners :: boolean (if true blockchain fee is given to the miners)
   return function (payment) {
     try {
-      if (payment.blockchainFeeFlag === true) {
+      if (payment.blockchainFee > 0) {
         if (feeToMiners === true) {
-          var bfee = payment.amounts.pop();
-          payment.finalFee += bfee;
-          payment.blockchainFeeFlag = false;
+          payment.finalFee += payment.blockchainFee;
         } else {
           return API.getBlockchainAddress().then(function (object) {
-            payment.to.push(object.address);
+            payment.blockchainAddress = object.address;
             payment.transaction = new Transaction(payment, this);
             return payment;
-          }.bind(this));
+          }.bind(this)).catch(function (e) {
+            return Promise.reject({ error: e, payment: payment });
+          });
         }
       }
       payment.transaction = new Transaction(payment, this);
@@ -16932,6 +16917,11 @@ var Transaction = function Transaction(payment, emitter) {
   assert(toAddresses && toAddresses.length, 'Missing destination address');
   assert(amounts && amounts.length, 'Missing amount to pay');
 
+  if (payment.blockchainFee && payment.blockchainAddress) {
+    amounts = amounts.concat(payment.blockchainFee);
+    toAddresses = toAddresses.concat(payment.blockchainAddress);
+  }
+
   this.emitter = emitter;
   this.amount = amounts.reduce(Helpers.add, 0);
   this.addressesOfInputs = [];
@@ -16939,7 +16929,7 @@ var Transaction = function Transaction(payment, emitter) {
   this.addressesOfNeededPrivateKeys = [];
   this.pathsOfNeededPrivateKeys = [];
 
-  assert(toAddresses.length === amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
+  assert(toAddresses.length === amounts.length, 'The number of destination addresses and destination amounts should be the same.');
   assert(this.amount >= BITCOIN_DUST, { error: 'BELOW_DUST_THRESHOLD', amount: this.amount, threshold: BITCOIN_DUST });
   assert(unspentOutputs && unspentOutputs.length > 0, { error: 'NO_UNSPENT_OUTPUTS' });
   var transaction = new Bitcoin.TransactionBuilder(constants.getNetwork());

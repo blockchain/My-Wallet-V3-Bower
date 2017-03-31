@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2017-03-30)
+#   (2017-03-31)
 
 
 
@@ -10,7 +10,12 @@ __Blockchain Wallet V3__
 
 - **api:** remove mock for charge_address request on testnet
   ([20f165ee](https://github.com/blockchain/My-Wallet-V3/commit/20f165eeafe337915da9e50c0ce3ee38537044a6))
-- **payment:** correctly access last elem of amounts
+- **helpers:** hash guid to create group instead of relying on first char
+  ([eaf79a77](https://github.com/blockchain/My-Wallet-V3/commit/eaf79a77b3c7cb7aff90ca7716e957c143b58cf9))
+- **payment:**
+  - prevent state issues caused by mutability
+  ([ea803054](https://github.com/blockchain/My-Wallet-V3/commit/ea80305437f1ef92da9641771877a94add2ce2f8))
+  - correctly access last elem of amounts
   ([21ebe788](https://github.com/blockchain/My-Wallet-V3/commit/21ebe78845d3049b9d31ca8ed5a2aeefe974d872))
 
 
@@ -24,6 +29,12 @@ __Blockchain Wallet V3__
   ([c47a4e3e](https://github.com/blockchain/My-Wallet-V3/commit/c47a4e3ed20c06357ad0b1a0b731fd1cf77f9362))
 
 
+## Refactor
+
+- **helpers:** less convoluted way of reading first bit
+  ([5721c39a](https://github.com/blockchain/My-Wallet-V3/commit/5721c39a9420f47aad753fbd4f4542761c6a6625))
+
+
 ## Chore
 
 - **helpers:** clean helpers file
@@ -32,6 +43,10 @@ __Blockchain Wallet V3__
 
 ## Pull requests merged
 
+- Merge pull request #351 from blockchain/state-cleanup
+  ([1643b4ad](https://github.com/blockchain/My-Wallet-V3/commit/1643b4ada40b35bf72dec7ceb5ebb89cef424874))
+- Merge pull request #350 from blockchain/hash-guid
+  ([c7cf2b48](https://github.com/blockchain/My-Wallet-V3/commit/c7cf2b4848d3e75aeb608758cbc7d8c68e84a112))
 - Merge pull request #348 from blockchain/fee2
   ([4df76dcf](https://github.com/blockchain/My-Wallet-V3/commit/4df76dcfe4f97411a78641af151e30922628e3e2))
 
