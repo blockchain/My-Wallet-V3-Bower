@@ -6186,7 +6186,22 @@ Helpers.isEmailInvited = function (email, fraction) {
 };
 
 Helpers.blockchainFee = function (amount, options) {
-  return amount < options.min_tx_amount ? 0 : Math.min(Math.floor(amount * options.percent), options.max_service_charge);
+  return amount <= options.min_tx_amount ? 0 : Math.min(Math.floor(amount * options.percent), options.max_service_charge);
+};
+
+Helpers.balanceMinusFee = function (balance, options) {
+  if (!options || options.max_service_charge === undefined || options.percent === undefined || options.min_tx_amount === undefined) {
+    return balance;
+  }
+  if (balance <= options.min_tx_amount) {
+    return balance;
+  }
+  var point = Math.floor(options.max_service_charge * (1 / options.percent + 1));
+  if (options.min_tx_amount < balance && balance <= point) {
+    var maxWithFee = Math.floor(balance / (1 + options.percent));
+    return Math.max(maxWithFee, options.min_tx_amount);
+  }
+  return point < balance ? balance - options.max_service_charge : balance;
 };
 
 Helpers.guidToGroup = function (guid) {
@@ -16399,7 +16414,8 @@ function Payment(wallet, payment) {
     confEstimation: 'unknown',
     txSize: 0, // transaciton size
     blockchainFee: 0,
-    blockchainAddress: null
+    blockchainAddress: null,
+    serviceChargeOptions: {}
   };
 
   var p = payment || initialState;
@@ -16576,6 +16592,7 @@ Payment.amount = function (amounts, absoluteFee, feeOptions) {
       console.log('No amounts set.');
   } // fi switch
   return function (payment) {
+    payment.serviceChargeOptions = feeOptions || {};
     payment.blockchainFee = feeOptions ? Helpers.blockchainFee(formatAmo.reduce(Helpers.add, 0), feeOptions) : 0;
     payment.amounts = formatAmo;
     return Promise.resolve(payment);
@@ -16693,7 +16710,7 @@ Payment.prebuild = function (absoluteFee) {
 
     var usableCoins = Transaction.filterUsableCoins(payment.coins, payment.feePerKb);
     var max = Transaction.maxAvailableAmount(usableCoins, payment.feePerKb);
-    payment.sweepAmount = max.amount - payment.blockchainFee;
+    payment.sweepAmount = Helpers.balanceMinusFee(max.amount, payment.serviceChargeOptions);
     payment.sweepFee = max.fee;
     payment.balance = Transaction.sumOfCoins(payment.coins);
 
@@ -17077,7 +17094,6 @@ Transaction.sumOfCoins = function (coins) {
 
 Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
   var amount = amounts.reduce(Helpers.add, 0);
-  var nouts = amounts.length;
   var sorted = usableCoins.sort(function (a, b) {
     return b.value - a.value;
   });
@@ -17099,7 +17115,7 @@ Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
     for (var ii = 0; ii < len; ii++) {
       var coin2 = sorted[ii];
       accAm = accAm + coin2.value;
-      accFee = Transaction.guessFee(ii + 1, nouts + 1, fee);
+      accFee = Transaction.guessFee(ii + 1, 2, fee);
       sel.push(coin2);
       if (accAm >= accFee + amount) {
         return { 'coins': sel, 'fee': accFee };

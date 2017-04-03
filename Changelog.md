@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2017-03-31)
+#   (2017-04-03)
 
 
 
@@ -8,6 +8,10 @@ __Blockchain Wallet V3__
 
 ## Bug Fixes
 
+- test and safer function
+  ([df589d58](https://github.com/blockchain/My-Wallet-V3/commit/df589d58546f1de499305dd9f93755dca5584fe9))
+- max available amount
+  ([494a661a](https://github.com/blockchain/My-Wallet-V3/commit/494a661a0be77e5d92ed7ffc738676a1d0ca484a))
 - **api:** remove mock for charge_address request on testnet
   ([20f165ee](https://github.com/blockchain/My-Wallet-V3/commit/20f165eeafe337915da9e50c0ce3ee38537044a6))
 - **helpers:** hash guid to create group instead of relying on first char
@@ -43,6 +47,8 @@ __Blockchain Wallet V3__
 
 ## Pull requests merged
 
+- Merge pull request #353 from blockchain/max-available
+  ([3fecba5a](https://github.com/blockchain/My-Wallet-V3/commit/3fecba5a5dbaa48abee0734574f2057f99010f96))
 - Merge pull request #351 from blockchain/state-cleanup
   ([1643b4ad](https://github.com/blockchain/My-Wallet-V3/commit/1643b4ada40b35bf72dec7ceb5ebb89cef424874))
 - Merge pull request #350 from blockchain/hash-guid
