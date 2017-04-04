@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.28.6",
+  "version": "3.30.7",
   "dependencies": {
     "abbrev": {
       "version": "1.0.9",
@@ -586,19 +586,26 @@
       "resolved": "https://registry.npmjs.org/bip66/-/bip66-1.1.4.tgz"
     },
     "bitcoin-coinify-client": {
-      "version": "0.3.2",
-      "from": "bitcoin-coinify-client@>=0.3.2 <0.4.0",
-      "resolved": "https://registry.npmjs.org/bitcoin-coinify-client/-/bitcoin-coinify-client-0.3.2.tgz"
+      "version": "0.4.0-dev.5",
+      "from": "bitcoin-coinify-client@0.4.0-dev.5",
+      "resolved": "https://registry.npmjs.org/bitcoin-coinify-client/-/bitcoin-coinify-client-0.4.0-dev.5.tgz"
     },
     "bitcoin-exchange-client": {
-      "version": "0.1.5",
-      "from": "bitcoin-exchange-client@>=0.1.0 <0.2.0",
-      "resolved": "https://registry.npmjs.org/bitcoin-exchange-client/-/bitcoin-exchange-client-0.1.5.tgz"
+      "version": "0.2.0-dev.1",
+      "from": "bitcoin-exchange-client@0.2.0-dev.1",
+      "resolved": "https://registry.npmjs.org/bitcoin-exchange-client/-/bitcoin-exchange-client-0.2.0-dev.1.tgz"
     },
     "bitcoin-sfox-client": {
       "version": "0.1.9",
       "from": "bitcoin-sfox-client@>=0.1.0 <0.2.0",
-      "resolved": "https://registry.npmjs.org/bitcoin-sfox-client/-/bitcoin-sfox-client-0.1.9.tgz"
+      "resolved": "https://registry.npmjs.org/bitcoin-sfox-client/-/bitcoin-sfox-client-0.1.9.tgz",
+      "dependencies": {
+        "bitcoin-exchange-client": {
+          "version": "0.1.5",
+          "from": "bitcoin-exchange-client@>=0.1.0 <0.2.0",
+          "resolved": "https://registry.npmjs.org/bitcoin-exchange-client/-/bitcoin-exchange-client-0.1.5.tgz"
+        }
+      }
     },
     "bitcoinjs-lib": {
       "version": "2.1.4",
@@ -4331,9 +4338,9 @@
       "dev": true
     },
     "stream-http": {
-      "version": "2.6.3",
+      "version": "2.7.0",
       "from": "stream-http@>=2.0.0 <3.0.0",
-      "resolved": "https://registry.npmjs.org/stream-http/-/stream-http-2.6.3.tgz",
+      "resolved": "https://registry.npmjs.org/stream-http/-/stream-http-2.7.0.tgz",
       "dev": true
     },
     "stream-splicer": {
