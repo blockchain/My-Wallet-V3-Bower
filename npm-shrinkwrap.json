@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.30.7",
+  "version": "3.30.9",
   "dependencies": {
     "abbrev": {
       "version": "1.0.9",
@@ -586,14 +586,14 @@
       "resolved": "https://registry.npmjs.org/bip66/-/bip66-1.1.4.tgz"
     },
     "bitcoin-coinify-client": {
-      "version": "0.4.0-dev.5",
-      "from": "bitcoin-coinify-client@0.4.0-dev.5",
-      "resolved": "https://registry.npmjs.org/bitcoin-coinify-client/-/bitcoin-coinify-client-0.4.0-dev.5.tgz"
+      "version": "0.4.1",
+      "from": "bitcoin-coinify-client@>=0.4.1 <0.5.0",
+      "resolved": "https://registry.npmjs.org/bitcoin-coinify-client/-/bitcoin-coinify-client-0.4.1.tgz"
     },
     "bitcoin-exchange-client": {
-      "version": "0.2.0-dev.1",
-      "from": "bitcoin-exchange-client@0.2.0-dev.1",
-      "resolved": "https://registry.npmjs.org/bitcoin-exchange-client/-/bitcoin-exchange-client-0.2.0-dev.1.tgz"
+      "version": "0.2.0",
+      "from": "bitcoin-exchange-client@0.2.0",
+      "resolved": "https://registry.npmjs.org/bitcoin-exchange-client/-/bitcoin-exchange-client-0.2.0.tgz"
     },
     "bitcoin-sfox-client": {
       "version": "0.1.9",
@@ -4722,15 +4722,21 @@
       "dev": true,
       "dependencies": {
         "browserify": {
-          "version": "14.1.0",
+          "version": "14.3.0",
           "from": "browserify@>=14.0.0 <15.0.0",
-          "resolved": "https://registry.npmjs.org/browserify/-/browserify-14.1.0.tgz",
+          "resolved": "https://registry.npmjs.org/browserify/-/browserify-14.3.0.tgz",
           "dev": true
         },
         "buffer": {
           "version": "5.0.5",
           "from": "buffer@>=5.0.2 <6.0.0",
           "resolved": "https://registry.npmjs.org/buffer/-/buffer-5.0.5.tgz",
+          "dev": true
+        },
+        "https-browserify": {
+          "version": "1.0.0",
+          "from": "https-browserify@>=1.0.0 <2.0.0",
+          "resolved": "https://registry.npmjs.org/https-browserify/-/https-browserify-1.0.0.tgz",
           "dev": true
         }
       }

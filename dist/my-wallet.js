@@ -2822,6 +2822,30 @@ Helpers.isEmailInvited = function (email, fraction) {
   return WalletCrypo.sha256(email)[0] / 256 >= 1 - fraction;
 };
 
+Helpers.blockchainFee = function (amount, options) {
+  return amount <= options.min_tx_amount ? 0 : Math.min(Math.floor(amount * options.percent), options.max_service_charge);
+};
+
+Helpers.balanceMinusFee = function (balance, options) {
+  if (!options || options.max_service_charge === undefined || options.percent === undefined || options.min_tx_amount === undefined) {
+    return balance;
+  }
+  if (balance <= options.min_tx_amount) {
+    return balance;
+  }
+  var point = Math.floor(options.max_service_charge * (1 / options.percent + 1));
+  if (options.min_tx_amount < balance && balance <= point) {
+    var maxWithFee = Math.floor(balance / (1 + options.percent));
+    return Math.max(maxWithFee, options.min_tx_amount);
+  }
+  return point < balance ? balance - options.max_service_charge : balance;
+};
+
+Helpers.guidToGroup = function (guid) {
+  var hashed = WalletCrypo.sha256(new Buffer(guid.replace(/-/g, ''), 'hex'));
+  return hashed[0] & 1 ? 'b' : 'a';
+};
+
 Helpers.deepClone = function (object) {
   return JSON.parse(JSON.stringify(object));
 };
@@ -6502,6 +6526,20 @@ API.prototype.exportHistory = function (active, currency, options) {
 API.prototype.incrementSecPassStats = function (activeBool) {
   var active = activeBool ? 1 : 0;
   return fetch(this.ROOT_URL + 'event?name=wallet_login_second_password_' + active);
+};
+
+API.prototype.confirmationScreenStats = function (guid) {
+  var group = Helpers.guidToGroup(guid);
+  return fetch(this.ROOT_URL + 'event?name=wallet_fee_experiment_' + group + '_confirmation_screen');
+};
+
+API.prototype.pushTxStats = function (guid, advanced) {
+  var group = Helpers.guidToGroup(guid);
+  return fetch(this.ROOT_URL + 'event?name=wallet_fee_experiment_' + group + '_pushed_tx' + (advanced ? '_advanced' : ''));
+};
+
+API.prototype.getBlockchainAddress = function () {
+  return this.request('GET', 'charge_address');
 };
 
 /***/ }),
@@ -10321,9 +10359,8 @@ var Trade = function (_Exchange$Trade) {
       // for sell trades - need bank info
       if (obj.transferIn) {
         if (obj.transferIn.medium === 'blockchain') {
-          var o = obj.transferOut.details.account.number;
           this._bankName = obj.transferOut.details.bank.name;
-          this._lastSixBankAccountDigits = o.substring(o.length, o.length - 6);
+          this._bankAccountNumber = obj.transferOut.details.account.number;
         }
       }
 
@@ -10405,12 +10442,6 @@ var Trade = function (_Exchange$Trade) {
       } else {
         return Promise.reject();
       }
-    }
-  }, {
-    key: 'sell',
-    value: function sell(quote, bank) {
-      assert(quote, 'Quote required');
-      assert(quote.expiresAt > new Date(), 'QUOTE_EXPIRED');
     }
 
     // QA tool:
@@ -16289,6 +16320,7 @@ var Coinify = __webpack_require__(173);
 var SFOX = __webpack_require__(192);
 var Metadata = __webpack_require__(71);
 var ExchangeDelegate = __webpack_require__(322);
+var Helpers = __webpack_require__(3);
 
 var METADATA_TYPE_EXTERNAL = 3;
 
@@ -16356,6 +16388,13 @@ External.prototype.canBuy = function (accountInfo, options) {
   var isUserInvited = accountInfo.invited && accountInfo.invited.sfox;
 
   return this.hasExchangeAccount || isCoinifyCountry || isUserInvited && isCountryWhitelisted;
+};
+
+External.prototype.shouldDisplaySellTab = function (email, options, partner) {
+  var re = /(@blockchain.com(?!.)|@coinify.com(?!.))/;
+  var isClearedEmail = re.test(email);
+  var fraction = options.partners[partner].showSellFraction;
+  return isClearedEmail || Helpers.isEmailInvited(email, fraction);
 };
 
 External.prototype.toJSON = function () {
@@ -16488,7 +16527,10 @@ function Payment(wallet, payment) {
     sweepFees: [0, 0, 0, 0, 0, 0], // sweep absolute fee per each fee per kb (1, 2, 3, 4, 5, 6)
     maxSpendableAmounts: [0, 0, 0, 0, 0, 0], // max amount per each fee-per-kb
     confEstimation: 'unknown',
-    txSize: 0 // transaciton size
+    txSize: 0, // transaciton size
+    blockchainFee: 0,
+    blockchainAddress: null,
+    serviceChargeOptions: {}
   };
 
   var p = payment || initialState;
@@ -16523,8 +16565,8 @@ Payment.prototype.fee = function (absoluteFee) {
   return this;
 };
 
-Payment.prototype.amount = function (amounts, absoluteFee) {
-  this.payment = this.payment.then(Payment.amount(amounts, absoluteFee));
+Payment.prototype.amount = function (amounts, absoluteFee, bFeeParams) {
+  this.payment = this.payment.then(Payment.amount(amounts, absoluteFee, bFeeParams));
   this.then(Payment.prebuild(absoluteFee));
   return this;
 };
@@ -16564,8 +16606,8 @@ Payment.prototype.prebuild = function (absoluteFee) {
   return this;
 };
 
-Payment.prototype.build = function () {
-  this.payment = this.payment.then(Payment.build.call(this));
+Payment.prototype.build = function (feeToMiners) {
+  this.payment = this.payment.then(Payment.build.call(this, feeToMiners));
   this.sideEffect(this.emit.bind(this, 'update'));
   return this;
 };
@@ -16650,7 +16692,7 @@ Payment.useAll = function (absoluteFee) {
   };
 };
 
-Payment.amount = function (amounts, absoluteFee) {
+Payment.amount = function (amounts, absoluteFee, feeOptions) {
   var formatAmo = null;
   switch (true) {
     // single output
@@ -16665,6 +16707,8 @@ Payment.amount = function (amounts, absoluteFee) {
       console.log('No amounts set.');
   } // fi switch
   return function (payment) {
+    payment.serviceChargeOptions = feeOptions || {};
+    payment.blockchainFee = feeOptions ? Helpers.blockchainFee(formatAmo.reduce(Helpers.add, 0), feeOptions) : 0;
     payment.amounts = formatAmo;
     return Promise.resolve(payment);
   };
@@ -16781,7 +16825,7 @@ Payment.prebuild = function (absoluteFee) {
 
     var usableCoins = Transaction.filterUsableCoins(payment.coins, payment.feePerKb);
     var max = Transaction.maxAvailableAmount(usableCoins, payment.feePerKb);
-    payment.sweepAmount = max.amount;
+    payment.sweepAmount = Helpers.balanceMinusFee(max.amount, payment.serviceChargeOptions);
     payment.sweepFee = max.fee;
     payment.balance = Transaction.sumOfCoins(payment.coins);
 
@@ -16799,16 +16843,12 @@ Payment.prebuild = function (absoluteFee) {
     // if amounts defined refresh computations
     if (Array.isArray(payment.amounts) && payment.amounts.length > 0) {
       // coin selection
-      var s;
-      if (Helpers.isPositiveNumber(absoluteFee)) {
-        s = Transaction.selectCoins(payment.coins, payment.amounts, absoluteFee, true);
-      } else {
-        s = Transaction.selectCoins(usableCoins, payment.amounts, payment.feePerKb, false);
-      }
+      var amounts = payment.blockchainFee > 0 ? payment.amounts.concat(payment.blockchainFee) : payment.amounts;
+      var s = Helpers.isPositiveNumber(absoluteFee) ? Transaction.selectCoins(payment.coins, amounts, absoluteFee, true) : Transaction.selectCoins(usableCoins, amounts, payment.feePerKb, false);
       payment.finalFee = s.fee;
       payment.selectedCoins = s.coins;
-      payment.txSize = Transaction.guessSize(payment.selectedCoins.length, payment.amounts.length + 1);
-      var c = Transaction.sumOfCoins(payment.selectedCoins) - payment.amounts.reduce(Helpers.add, 0) - payment.finalFee;
+      payment.txSize = Transaction.guessSize(payment.selectedCoins.length, amounts.length + 1);
+      var c = Transaction.sumOfCoins(payment.selectedCoins) - amounts.reduce(Helpers.add, 0) - payment.finalFee;
       payment.changeAmount = c > 0 ? c : 0;
 
       // change consumption
@@ -16822,7 +16862,7 @@ Payment.prebuild = function (absoluteFee) {
       // compute absolute fee bounds for 1,2,3,4,5,6 block confirmations
       var toAbsoluteFee = function toAbsoluteFee(e) {
         var c = Transaction.filterUsableCoins(payment.coins, e.fee);
-        var s = Transaction.selectCoins(c, payment.amounts, e.fee, false);
+        var s = Transaction.selectCoins(c, amounts, e.fee, false);
         return s.fee;
       };
       payment.absoluteFeeBounds = payment.fees.estimate.map(toAbsoluteFee);
@@ -16835,9 +16875,23 @@ Payment.prebuild = function (absoluteFee) {
   };
 };
 
-Payment.build = function () {
+Payment.build = function (feeToMiners) {
+  // feeToMiners :: boolean (if true blockchain fee is given to the miners)
   return function (payment) {
     try {
+      if (payment.blockchainFee > 0) {
+        if (feeToMiners === true) {
+          payment.finalFee += payment.blockchainFee;
+        } else {
+          return API.getBlockchainAddress().then(function (object) {
+            payment.blockchainAddress = object.address;
+            payment.transaction = new Transaction(payment, this);
+            return payment;
+          }.bind(this)).catch(function (e) {
+            return Promise.reject({ error: e, payment: payment });
+          });
+        }
+      }
       payment.transaction = new Transaction(payment, this);
       return Promise.resolve(payment);
     } catch (e) {
@@ -16995,6 +17049,11 @@ var Transaction = function Transaction(payment, emitter) {
   assert(toAddresses && toAddresses.length, 'Missing destination address');
   assert(amounts && amounts.length, 'Missing amount to pay');
 
+  if (payment.blockchainFee && payment.blockchainAddress) {
+    amounts = amounts.concat(payment.blockchainFee);
+    toAddresses = toAddresses.concat(payment.blockchainAddress);
+  }
+
   this.emitter = emitter;
   this.amount = amounts.reduce(Helpers.add, 0);
   this.addressesOfInputs = [];
@@ -17002,7 +17061,7 @@ var Transaction = function Transaction(payment, emitter) {
   this.addressesOfNeededPrivateKeys = [];
   this.pathsOfNeededPrivateKeys = [];
 
-  assert(toAddresses.length === amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
+  assert(toAddresses.length === amounts.length, 'The number of destination addresses and destination amounts should be the same.');
   assert(this.amount >= BITCOIN_DUST, { error: 'BELOW_DUST_THRESHOLD', amount: this.amount, threshold: BITCOIN_DUST });
   assert(unspentOutputs && unspentOutputs.length > 0, { error: 'NO_UNSPENT_OUTPUTS' });
   var transaction = new Bitcoin.TransactionBuilder(constants.getNetwork());
@@ -17150,7 +17209,6 @@ Transaction.sumOfCoins = function (coins) {
 
 Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
   var amount = amounts.reduce(Helpers.add, 0);
-  var nouts = amounts.length;
   var sorted = usableCoins.sort(function (a, b) {
     return b.value - a.value;
   });
@@ -17172,7 +17230,7 @@ Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
     for (var ii = 0; ii < len; ii++) {
       var coin2 = sorted[ii];
       accAm = accAm + coin2.value;
-      accFee = Transaction.guessFee(ii + 1, nouts + 1, fee);
+      accFee = Transaction.guessFee(ii + 1, 2, fee);
       sel.push(coin2);
       if (accAm >= accFee + amount) {
         return { 'coins': sel, 'fee': accFee };
@@ -42784,9 +42842,6 @@ ExchangeDelegate.prototype.deserializeExtraFields = function (obj, trade) {
 /* 323 */
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-
 module.exports = HDAccount;
 
 var Bitcoin = __webpack_require__(6);
@@ -43030,7 +43085,7 @@ HDAccount.prototype.toJSON = function () {
     archived: this._archived,
     xpriv: this._xpriv,
     xpub: this._xpub,
-    address_labels: this._address_labels,
+    address_labels: this._orderedAddressLabels(),
     cache: this._keyRing
   };
 
@@ -43072,6 +43127,58 @@ HDAccount.prototype.persist = function () {
   this._xpriv = this._temporal_xpriv;
   delete this._temporal_xpriv;
   return this;
+};
+
+// Address labels:
+
+HDAccount.prototype._orderedAddressLabels = function () {
+  return this._address_labels.sort(function (a, b) {
+    return a.index - b.index;
+  });
+};
+
+HDAccount.prototype.addLabel = function (receiveIndex, label) {
+  assert(Helpers.isPositiveInteger(receiveIndex));
+
+  var labels = this._address_labels;
+
+  var labelEntry = {
+    index: receiveIndex,
+    label: label
+  };
+
+  labels.push(labelEntry);
+};
+
+HDAccount.prototype.getLabels = function () {
+  return this._address_labels.sort(function (a, b) {
+    return a.index - b.index;
+  }).map(function (o) {
+    return { index: o.index, label: o.label };
+  });
+};
+
+HDAccount.prototype.setLabel = function (receiveIndex, label) {
+  var labels = this._address_labels;
+
+  var labelEntry = labels.find(function (label) {
+    return label.index === receiveIndex;
+  });
+
+  if (!labelEntry) {
+    labelEntry = { index: receiveIndex };
+    labels.push(labelEntry);
+  }
+
+  labelEntry.label = label;
+};
+
+HDAccount.prototype.removeLabel = function (receiveIndex) {
+  var labels = this._address_labels;
+  var labelEntry = labels.find(function (label) {
+    return label.index === receiveIndex;
+  });
+  labels.splice(labels.indexOf(labelEntry), 1);
 };
 
 /***/ }),
@@ -43478,7 +43585,9 @@ var Labels = function () {
     assert(syncWallet instanceof Function, 'syncWallet function required');
     this._wallet = wallet;
 
-    this._syncWallet = syncWallet;
+    this._syncWallet = function () {
+      return new Promise(syncWallet);
+    };
 
     this.init();
   }
@@ -43500,19 +43609,14 @@ var Labels = function () {
           var receiveIndex = hdAccount.receiveIndex;
           var addresses = [];
 
-          var maxLabeledReceiveIndex = -1;
-
           var _iteratorNormalCompletion2 = true;
           var _didIteratorError2 = false;
           var _iteratorError2 = undefined;
 
           try {
-            for (var _iterator2 = hdAccount._address_labels[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+            for (var _iterator2 = hdAccount.getLabels()[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
               var addressLabel = _step2.value;
 
-              if (addressLabel.index > maxLabeledReceiveIndex) {
-                maxLabeledReceiveIndex = addressLabel.index;
-              }
               addresses[addressLabel.index] = new AddressHD({
                 label: addressLabel.label
               }, hdAccount, addressLabel.index);
@@ -43534,7 +43638,7 @@ var Labels = function () {
             }
           }
 
-          for (var i = 0; i < Math.max(receiveIndex, maxLabeledReceiveIndex); i++) {
+          for (var i = 0; i < Math.max(receiveIndex + 1, addresses.length); i++) {
             if (!addresses[i]) {
               addresses[i] = new AddressHD(null, hdAccount, i);
             }
@@ -43557,24 +43661,10 @@ var Labels = function () {
       }
     }
   }, {
-    key: 'syncWallet',
-    value: function syncWallet() {
-      var _this = this;
+    key: 'toJSON',
 
-      var syncWallet = function syncWallet() {
-        _this._syncWallet(function () {
-          return Promise.resolve();
-        }, function (e) {
-          return Promise.reject(e);
-        });
-      };
-      return Promise.resolve().then(syncWallet);
-    }
 
     // For debugging only, not used to save.
-
-  }, {
-    key: 'toJSON',
     value: function toJSON() {
       return {
         version: this.version,
@@ -43600,11 +43690,9 @@ var Labels = function () {
     value: function checkIfUsed(accountIndex) {
       assert(Helpers.isPositiveInteger(accountIndex), 'specify accountIndex');
       var labeledAddresses = this.all(accountIndex).filter(function (a) {
-        return a !== null;
+        return a !== null && a.label !== null;
       });
-      var addresses = labeledAddresses.filter(function (a) {
-        return a.label !== null;
-      }).map(function (a) {
+      var addresses = labeledAddresses.map(function (a) {
         return a.address;
       });
       if (addresses.length === 0) return Promise.resolve();
@@ -43783,15 +43871,9 @@ var Labels = function () {
       addr.used = false;
 
       // Update wallet:
-      var labels = this._wallet.hdwallet.accounts[accountIndex]._address_labels;
+      this._wallet.hdwallet.accounts[accountIndex].addLabel(receiveIndex, label);
 
-      var labelEntry = {
-        index: receiveIndex,
-        label: label
-      };
-      labels.push(labelEntry);
-
-      return this.syncWallet().then(function () {
+      return this._syncWallet().then(function () {
         return addr;
       });
     }
@@ -43825,21 +43907,10 @@ var Labels = function () {
 
       address.label = label;
 
-      var labels = this._wallet.hdwallet.accounts[accountIndex]._address_labels;
-
       // Update in wallet:
-      var labelEntry = labels.find(function (label) {
-        return label.index === receiveIndex;
-      });
+      this._wallet.hdwallet.accounts[accountIndex].setLabel(receiveIndex, label);
 
-      if (!labelEntry) {
-        labelEntry = { index: receiveIndex };
-        labels.push(labelEntry);
-      }
-
-      labelEntry.label = label;
-
-      return this.syncWallet();
+      return this._syncWallet();
     }
   }, {
     key: 'removeLabel',
@@ -43860,13 +43931,9 @@ var Labels = function () {
       address.label = null;
 
       // Remove from wallet:
-      var labels = this._wallet.hdwallet.accounts[accountIndex]._address_labels;
-      var labelEntry = labels.find(function (label) {
-        return label.index === addressIndex;
-      });
-      labels.splice(labels.indexOf(labelEntry), 1);
+      this._wallet.hdwallet.accounts[accountIndex].removeLabel(addressIndex);
 
-      return this.syncWallet();
+      return this._syncWallet();
     }
 
     // options:
