@@ -28369,7 +28369,6 @@ var Coinify = function (_Exchange$Exchange) {
       assert(quote, 'Quote is required');
 
       var sellData = {
-        priceQuoteId: quote.id,
         transferIn: {
           medium: 'blockchain'
         },
@@ -28378,6 +28377,24 @@ var Coinify = function (_Exchange$Exchange) {
           mediumReceiveAccountId: bank.id
         }
       };
+
+      if (!quote.id) {
+        if (quote.baseCurrency === 'BTC') {
+          Object.assign(sellData, {
+            baseCurrency: 'BTC',
+            quoteCurrency: quote.quoteCurrency,
+            baseAmount: quote.baseAmount / 100000000
+          });
+        } else {
+          Object.assign(sellData, {
+            baseCurrency: quote.baseCurrency,
+            quoteCurrency: 'BTC',
+            baseAmount: quote.baseAmount / 100
+          });
+        }
+      } else {
+        Object.assign(sellData, { priceQuoteId: quote.id });
+      }
       return this._api.authPOST('trades', sellData);
     }
   }, {

@@ -1,21 +1,15 @@
 __Blockchain Wallet V3__
 
-#   (2017-04-10)
+#   (2017-04-20)
 
 
 
 ---
 
-## Bug Fixes
+## Chore
 
-- **wallet:** don't set .labels for v2
-  ([bda3c811](https://github.com/blockchain/My-Wallet-V3/commit/bda3c811a9920923a9faa2554a475a2f63dadce4))
-
-
-## Pull requests merged
-
-- Merge pull request #365 from blockchain/labels-v2
-  ([7e51e8bb](https://github.com/blockchain/My-Wallet-V3/commit/7e51e8bbd6592440358a4b738981021c94a16af0))
+- **release:** bump coinify client version
+  ([3faeec80](https://github.com/blockchain/My-Wallet-V3/commit/3faeec80066b86b97386a9a6041e53128ae19d9a))
 
 
 
