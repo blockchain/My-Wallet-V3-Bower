@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.30.13",
+  "version": "3.30.14",
   "dependencies": {
     "abbrev": {
       "version": "1.0.9",
@@ -586,26 +586,19 @@
       "resolved": "https://registry.npmjs.org/bip66/-/bip66-1.1.4.tgz"
     },
     "bitcoin-coinify-client": {
-      "version": "0.4.3",
+      "version": "0.4.4",
       "from": "bitcoin-coinify-client@>=0.4.3 <0.5.0",
-      "resolved": "https://registry.npmjs.org/bitcoin-coinify-client/-/bitcoin-coinify-client-0.4.3.tgz"
+      "resolved": "https://registry.npmjs.org/bitcoin-coinify-client/-/bitcoin-coinify-client-0.4.4.tgz"
     },
     "bitcoin-exchange-client": {
-      "version": "0.2.0",
-      "from": "bitcoin-exchange-client@0.2.0",
-      "resolved": "https://registry.npmjs.org/bitcoin-exchange-client/-/bitcoin-exchange-client-0.2.0.tgz"
+      "version": "0.2.1",
+      "from": "bitcoin-exchange-client@>=0.2.1 <0.3.0",
+      "resolved": "https://registry.npmjs.org/bitcoin-exchange-client/-/bitcoin-exchange-client-0.2.1.tgz"
     },
     "bitcoin-sfox-client": {
-      "version": "0.1.9",
+      "version": "0.1.10",
       "from": "bitcoin-sfox-client@>=0.1.0 <0.2.0",
-      "resolved": "https://registry.npmjs.org/bitcoin-sfox-client/-/bitcoin-sfox-client-0.1.9.tgz",
-      "dependencies": {
-        "bitcoin-exchange-client": {
-          "version": "0.1.5",
-          "from": "bitcoin-exchange-client@>=0.1.0 <0.2.0",
-          "resolved": "https://registry.npmjs.org/bitcoin-exchange-client/-/bitcoin-exchange-client-0.1.5.tgz"
-        }
-      }
+      "resolved": "https://registry.npmjs.org/bitcoin-sfox-client/-/bitcoin-sfox-client-0.1.10.tgz"
     },
     "bitcoinjs-lib": {
       "version": "2.1.4",
@@ -640,6 +633,12 @@
           "version": "2.6.1",
           "from": "debug@2.6.1",
           "resolved": "https://registry.npmjs.org/debug/-/debug-2.6.1.tgz",
+          "dev": true
+        },
+        "iconv-lite": {
+          "version": "0.4.15",
+          "from": "iconv-lite@0.4.15",
+          "resolved": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.4.15.tgz",
           "dev": true
         },
         "ms": {
@@ -1729,9 +1728,9 @@
       "dev": true
     },
     "espree": {
-      "version": "3.4.1",
+      "version": "3.4.2",
       "from": "espree@>=3.1.6 <4.0.0",
-      "resolved": "https://registry.npmjs.org/espree/-/espree-3.4.1.tgz",
+      "resolved": "https://registry.npmjs.org/espree/-/espree-3.4.2.tgz",
       "dev": true,
       "dependencies": {
         "acorn": {
@@ -2354,9 +2353,9 @@
       "dev": true
     },
     "iconv-lite": {
-      "version": "0.4.15",
+      "version": "0.4.16",
       "from": "iconv-lite@>=0.4.13 <0.5.0",
-      "resolved": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.4.15.tgz"
+      "resolved": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.4.16.tgz"
     },
     "ieee754": {
       "version": "1.1.8",
@@ -3176,9 +3175,9 @@
       "dev": true
     },
     "normalize-package-data": {
-      "version": "2.3.6",
+      "version": "2.3.8",
       "from": "normalize-package-data@>=2.3.4 <3.0.0",
-      "resolved": "https://registry.npmjs.org/normalize-package-data/-/normalize-package-data-2.3.6.tgz",
+      "resolved": "https://registry.npmjs.org/normalize-package-data/-/normalize-package-data-2.3.8.tgz",
       "dev": true
     },
     "normalize-path": {
@@ -3660,7 +3659,15 @@
       "version": "2.2.0",
       "from": "raw-body@>=2.2.0 <2.3.0",
       "resolved": "https://registry.npmjs.org/raw-body/-/raw-body-2.2.0.tgz",
-      "dev": true
+      "dev": true,
+      "dependencies": {
+        "iconv-lite": {
+          "version": "0.4.15",
+          "from": "iconv-lite@0.4.15",
+          "resolved": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.4.15.tgz",
+          "dev": true
+        }
+      }
     },
     "read-only-stream": {
       "version": "2.0.0",
