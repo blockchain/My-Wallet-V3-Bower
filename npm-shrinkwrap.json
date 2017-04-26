@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.30.14",
+  "version": "3.30.16",
   "dependencies": {
     "abbrev": {
       "version": "1.0.9",
@@ -586,19 +586,19 @@
       "resolved": "https://registry.npmjs.org/bip66/-/bip66-1.1.4.tgz"
     },
     "bitcoin-coinify-client": {
-      "version": "0.4.4",
+      "version": "0.4.5",
       "from": "bitcoin-coinify-client@>=0.4.3 <0.5.0",
-      "resolved": "https://registry.npmjs.org/bitcoin-coinify-client/-/bitcoin-coinify-client-0.4.4.tgz"
+      "resolved": "https://registry.npmjs.org/bitcoin-coinify-client/-/bitcoin-coinify-client-0.4.5.tgz"
     },
     "bitcoin-exchange-client": {
-      "version": "0.2.1",
+      "version": "0.2.2",
       "from": "bitcoin-exchange-client@>=0.2.1 <0.3.0",
-      "resolved": "https://registry.npmjs.org/bitcoin-exchange-client/-/bitcoin-exchange-client-0.2.1.tgz"
+      "resolved": "https://registry.npmjs.org/bitcoin-exchange-client/-/bitcoin-exchange-client-0.2.2.tgz"
     },
     "bitcoin-sfox-client": {
-      "version": "0.1.10",
+      "version": "0.1.11",
       "from": "bitcoin-sfox-client@>=0.1.0 <0.2.0",
-      "resolved": "https://registry.npmjs.org/bitcoin-sfox-client/-/bitcoin-sfox-client-0.1.10.tgz"
+      "resolved": "https://registry.npmjs.org/bitcoin-sfox-client/-/bitcoin-sfox-client-0.1.11.tgz"
     },
     "bitcoinjs-lib": {
       "version": "2.1.4",
@@ -2138,9 +2138,9 @@
       "dev": true
     },
     "getpass": {
-      "version": "0.1.6",
+      "version": "0.1.7",
       "from": "getpass@>=0.1.1 <0.2.0",
-      "resolved": "https://registry.npmjs.org/getpass/-/getpass-0.1.6.tgz",
+      "resolved": "https://registry.npmjs.org/getpass/-/getpass-0.1.7.tgz",
       "dev": true,
       "dependencies": {
         "assert-plus": {
@@ -2643,9 +2643,9 @@
       }
     },
     "jasmine-core": {
-      "version": "2.5.2",
+      "version": "2.6.0",
       "from": "jasmine-core@>=2.2.0 <3.0.0",
-      "resolved": "https://registry.npmjs.org/jasmine-core/-/jasmine-core-2.5.2.tgz",
+      "resolved": "https://registry.npmjs.org/jasmine-core/-/jasmine-core-2.6.0.tgz",
       "dev": true
     },
     "jasmine-es6-promise-matchers": {
@@ -2856,9 +2856,9 @@
       "dev": true
     },
     "kind-of": {
-      "version": "3.1.0",
+      "version": "3.2.0",
       "from": "kind-of@>=3.0.2 <4.0.0",
-      "resolved": "https://registry.npmjs.org/kind-of/-/kind-of-3.1.0.tgz",
+      "resolved": "https://registry.npmjs.org/kind-of/-/kind-of-3.2.0.tgz",
       "dev": true
     },
     "klaw": {
