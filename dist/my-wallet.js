@@ -7421,15 +7421,15 @@ MyWallet.checkForCompletedTrades = function (stringWallet, stringExternal, magic
       exchange.debug = true;
       var trades = exchange.trades;
       if (trades.length) {
-        var watchTrade = function watchTrade(t) {
+        var pendingTrades = trades.filter(function (t) {
+          return !t.bitcoinReceived;
+        });
+        pendingTrades.forEach(function (t) {
           return t.watchAddress().then(function () {
             return callback(t);
           });
-        };
-        trades.filter(function (t) {
-          return !t.bitcoinReceived;
-        }).forEach(watchTrade);
-        exchange._TradeClass._checkOnce(trades, exchange._delegate).then(function () {
+        });
+        exchange._TradeClass._checkOnce(pendingTrades, exchange._delegate).then(function () {
           external.save();
         });
       }
