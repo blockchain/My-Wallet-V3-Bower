@@ -6,16 +6,10 @@ __Blockchain Wallet V3__
 
 ---
 
-## Build process
-
-- **makefile:** temporarily disable tests
-  ([cafb6340](https://github.com/blockchain/My-Wallet-V3/commit/cafb63401510553ad229793f60d6f63e948bd6e1))
-
-
 ## Chore
 
-- **release:** v3.32.2
-  ([d49177a5](https://github.com/blockchain/My-Wallet-V3/commit/d49177a5b445722c7386bce5248fe6e4fb2248f0))
+- **dep:** latest bitcoin-exchange-client
+  ([15918ba9](https://github.com/blockchain/My-Wallet-V3/commit/15918ba964e027ccdfb96cfd4f1963efa0900060))
 
 
 
