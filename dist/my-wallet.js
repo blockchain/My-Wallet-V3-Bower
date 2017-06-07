@@ -6560,6 +6560,10 @@ API.prototype.pushTxStats = function (guid, advanced) {
   return fetch(this.ROOT_URL + 'event?name=wallet_fee_experiment_' + group + '_pushed_tx' + (advanced ? '_advanced' : ''));
 };
 
+API.prototype.incrementLoginViaQrStats = function () {
+  return fetch(this.ROOT_URL + 'event?name=wallet_web_login_via_qr');
+};
+
 API.prototype.getBlockchainAddress = function () {
   return this.request('GET', 'charge_address');
 };
@@ -7202,6 +7206,8 @@ module.exports = {
 /* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
 var MyWallet = module.exports = {};
 
 var assert = __webpack_require__(1);
@@ -7381,12 +7387,14 @@ MyWallet.decryptAndInitializeWallet = function (success, error, decryptSuccess, 
   }, error);
 };
 
-// used in the frontend
+var PAIRING_CODE_PBKDF2_ITERATIONS = 10;
+
+// Used in the frontend / ios
 MyWallet.makePairingCode = function (success, error) {
   try {
     API.securePostCallbacks('wallet', { method: 'pairing-encryption-password' }, function (encryptionPhrase) {
       var pwHex = new Buffer(WalletStore.getPassword()).toString('hex');
-      var encrypted = WalletCrypto.encrypt(MyWallet.wallet.sharedKey + '|' + pwHex, encryptionPhrase, 10);
+      var encrypted = WalletCrypto.encrypt(MyWallet.wallet.sharedKey + '|' + pwHex, encryptionPhrase, PAIRING_CODE_PBKDF2_ITERATIONS);
       success('1|' + MyWallet.wallet.guid + '|' + encrypted);
     }, function (e) {
       error(e);
@@ -7394,6 +7402,53 @@ MyWallet.makePairingCode = function (success, error) {
   } catch (e) {
     error(e);
   }
+};
+
+MyWallet.parsePairingCode = function (pairingCode) {
+  if (pairingCode == null || pairingCode.length === 0) {
+    return Promise.reject('Invalid Pairing QR Code');
+  }
+
+  var _pairingCode$split = pairingCode.split('|'),
+      _pairingCode$split2 = _slicedToArray(_pairingCode$split, 3),
+      version = _pairingCode$split2[0],
+      guid = _pairingCode$split2[1],
+      encrypted = _pairingCode$split2[2];
+
+  if (version !== '1') {
+    return Promise.reject('Invalid Pairing Version Code ' + version);
+  }
+
+  if (guid == null || guid.length !== 36) {
+    return Promise.reject('Invalid Pairing QR Code, GUID is invalid');
+  }
+
+  var data = {
+    guid: guid,
+    format: 'plain',
+    method: 'pairing-encryption-password'
+  };
+
+  var requestSuccess = function requestSuccess(encryptionPhrase) {
+    var decrypted = WalletCrypto.decrypt(encrypted, encryptionPhrase, PAIRING_CODE_PBKDF2_ITERATIONS);
+    if (decrypted != null && decrypted.length) {
+      var _decrypted$split = decrypted.split('|'),
+          _decrypted$split2 = _slicedToArray(_decrypted$split, 2),
+          sharedKey = _decrypted$split2[0],
+          passwordHex = _decrypted$split2[1];
+
+      var password = new Buffer(passwordHex, 'hex').toString('utf8');
+      return { version: version, guid: guid, sharedKey: sharedKey, password: password };
+    } else {
+      return Promise.reject('Decryption Error');
+    }
+  };
+
+  var requestError = function requestError(res) {
+    return Promise.reject('Pairing Code Server Error');
+  };
+
+  return API.request('POST', 'wallet', data).then(requestSuccess, requestError);
 };
 
 MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHexExternal, password) {
@@ -7510,9 +7565,7 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
       return;
     }
 
-    function _success() {
-      return;
-    }
+    function _success() {}
 
     function _error(e) {
       WalletStore.setRestoringWallet(false);
@@ -7541,8 +7594,8 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
   var loadMetadata = function loadMetadata() {
     return MyWallet.wallet.loadMetadata();
   };
-  p.then(incStats);
-  p.then(saveGUID);
+  p.then(incStats).catch(function () {/* ignore failure */});
+  p.then(saveGUID).catch(function () {/* ignore failure */});
   return p.then(loadMetadata);
 };
 
