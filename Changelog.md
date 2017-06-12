@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2017-06-08)
+#   (2017-06-12)
 
 
 
@@ -8,30 +8,24 @@ __Blockchain Wallet V3__
 
 ## Bug Fixes
 
-- **api:** update mobile login event name
-  ([1f62852e](https://github.com/blockchain/My-Wallet-V3/commit/1f62852e6c6574f31e59bacc410dbda524ffd5b2))
-- **wallet:** catch unhandled promise rejections (#390)
-  ([7713a973](https://github.com/blockchain/My-Wallet-V3/commit/7713a973ae001e9441bcb72ae29a2181e6361ba9))
-
-
-## Features
-
-- **api:** function to record web login via qr
-  ([5dab0bca](https://github.com/blockchain/My-Wallet-V3/commit/5dab0bca002bc35f328bad84e34fdde0ff36a6a0))
-- **wallet:** move pairing code parsing to my-wallet-v3
-  ([0aa79444](https://github.com/blockchain/My-Wallet-V3/commit/0aa79444f5efb54d55e584220e2168ef28e8725e))
+- **faster-sync:** adding less addresses to be notified if the numbers of accounts grow
+  ([181fc9dd](https://github.com/blockchain/My-Wallet-V3/commit/181fc9dde2a07fd5bc2dc6717cde7eb5b1e1c7fb))
 
 
 ## Chore
 
-- **release:** v3.32.4
-  ([5a0b303d](https://github.com/blockchain/My-Wallet-V3/commit/5a0b303dc8830a496857c1c4599472e77d443639))
+- **release:** v3.32.5
+  ([12193bcb](https://github.com/blockchain/My-Wallet-V3/commit/12193bcbddd6f2e52c42f0a9f2181795da62f05f))
 
 
 ## Pull requests merged
 
-- Merge pull request #391 from blockchain/parse-pairing
-  ([b2bdc965](https://github.com/blockchain/My-Wallet-V3/commit/b2bdc9651f2594ca6677de854b4c86241b025a30))
+- Merge pull request #397 from blockchain/v3.32.5
+  ([29842418](https://github.com/blockchain/My-Wallet-V3/commit/29842418ae92092b9f573ec6b19a1e59519eb7ae))
+- Merge pull request #394 from blockchain/faster-sync
+  ([6d069483](https://github.com/blockchain/My-Wallet-V3/commit/6d06948371816de37992d4510e201a7e767bea0f))
+- Merge pull request #387 from blockchain/v3.32-release
+  ([3da41ff8](https://github.com/blockchain/My-Wallet-V3/commit/3da41ff86fbd7ab0b8f2317eba83166cae3c4359))
 
 
 
