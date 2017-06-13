@@ -29249,7 +29249,7 @@ var Coinify = function (_Exchange$Exchange) {
   function Coinify(obj, delegate) {
     _classCallCheck(this, Coinify);
 
-    var api = new API();
+    var api = new API('https://app-api.coinify.com/');
 
     var _this = _possibleConstructorReturn(this, (Coinify.__proto__ || Object.getPrototypeOf(Coinify)).call(this, obj, delegate, api, Trade, Quote, PaymentMedium));
 
@@ -29259,7 +29259,7 @@ var Coinify = function (_Exchange$Exchange) {
     _this._auto_login = obj.auto_login;
     _this._offlineToken = obj.offline_token;
 
-    _this._api = new API('https://app-api.coinify.com/');
+    _this._api = api;
     _this._api._offlineToken = _this._offlineToken;
 
     _this._profile = new CoinifyProfile(_this._api);
@@ -29964,6 +29964,7 @@ var Quote = function (_Exchange$Quote) {
     var _this = _possibleConstructorReturn(this, (Quote.__proto__ || Object.getPrototypeOf(Quote)).call(this, api, delegate, Trade, PaymentMethod, debug));
 
     var expiresAt = new Date(obj.expiryTime);
+    var timeOfRequest = new Date(obj.issueTime);
 
     // Debug, make quote expire in 15 seconds:
     // expiresAt = new Date(new Date().getTime() + 15 * 1000);
@@ -29972,6 +29973,7 @@ var Quote = function (_Exchange$Quote) {
     _this._baseCurrency = obj.baseCurrency;
     _this._quoteCurrency = obj.quoteCurrency;
     _this._expiresAt = expiresAt;
+    _this._timeOfRequest = timeOfRequest;
 
     if (_this._baseCurrency === 'BTC') {
       _this._baseAmount = Math.round(obj.baseAmount * 100000000);
