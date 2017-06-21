@@ -20614,26 +20614,11 @@ var PaymentMedium = function (_ExchangePaymentMediu) {
     value: function getAll(inCurrency, outCurrency, api, quote) {
       // Bank is the only payment type. The Coinify API returns information about
       // trade limits along with their payment types. We mimick this behavior here
-      // by calling the validate_buy and profiledetails endpoints.
+      // by calling profiledetails endpoint.
 
       return Profile.fetch(api).then(function (profile) {
-        return api.authPOST('api/v1/trading/validate_buy', {
-          // Use genesis address as placeholder
-          destination: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
-          amount: quote.baseCurrency === 'INR' ? -quote.baseAmount : -quote.quoteAmount
-        }).then(function (res) {
-          switch (res.status_code) {
-            case 200:
-            case 760: // Less then the required minimum amount.
-            case 782:
-              // More than max ("Please enter minumum INR amount to deposit.")
-              // Return bank account as a type
-              return Promise.resolve({ bank: new PaymentMedium(undefined, api, quote, profile) });
-            default:
-              // TODO: wrap error message in PaymentMedium object?
-              return Promise.reject(res.message);
-          }
-        });
+        // Return bank account as a type
+        return Promise.resolve({ bank: new PaymentMedium(undefined, api, quote, profile) });
       });
     }
   }]);
@@ -20806,6 +20791,16 @@ var Profile = function () {
     key: 'photosComplete',
     get: function get() {
       return Boolean(this._photos.address && this._photos.pancard && this.photos.photo);
+    }
+  }, {
+    key: 'addressComplete',
+    get: function get() {
+      return this.level > 1 || Boolean(this.mobile && this.pancard && this.fullName && this.address.complete);
+    }
+  }, {
+    key: 'infoComplete',
+    get: function get() {
+      return this.level > 1 || Boolean(this.ifsc && this.bankAccountNumber);
     }
   }, {
     key: 'complete',
@@ -20992,12 +20987,11 @@ var Trade = function (_Exchange$Trade) {
             this._state = 'awaiting_reference_number';
           }
           break;
+        case 'Approved':
+          this._state = 'processing';
+          break;
         case 'Completed':
-          if (obj.transaction_hash) {
-            this._state = 'completed';
-          } else {
-            this._state = 'processing';
-          }
+          this._state = 'completed';
           break;
         default:
           this._state = 'awaiting_reference_number';
