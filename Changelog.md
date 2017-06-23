@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2017-06-21)
+#   (2017-06-23)
 
 
 
@@ -8,10 +8,11 @@ __Blockchain Wallet V3__
 
 ## Chore
 
-- **deps:** upgrade bitcoin-unocoin-client
-  ([22ca524d](https://github.com/blockchain/My-Wallet-V3/commit/22ca524d1ab4ecd3e58b50d90bb7ea612cbdde0e))
-- **release:** v3.33.1
-  ([de98f449](https://github.com/blockchain/My-Wallet-V3/commit/de98f44963c76433487df5fbd8f3c2d9189d0c91))
+- **release:**
+  - v3.33.2
+  ([8c88421f](https://github.com/blockchain/My-Wallet-V3/commit/8c88421f636adfcdec4fcd2b979c51ef2f6f90a1))
+  - upgrade bitcoin-unocoin-client version
+  ([29fb80f7](https://github.com/blockchain/My-Wallet-V3/commit/29fb80f73905fb14896923773979caeebad0309d))
 
 
 

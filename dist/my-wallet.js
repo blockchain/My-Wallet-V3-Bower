@@ -20945,7 +20945,6 @@ var Trade = function (_Exchange$Trade) {
 
       _this._delegate.deserializeExtraFields(obj, _this);
       _this._confirmed = obj.confirmed;
-      _this._txHash = obj.tx_hash;
 
       _this._is_buy = obj.is_buy;
     } else {
@@ -20968,6 +20967,7 @@ var Trade = function (_Exchange$Trade) {
         console.info('Trade ' + this.id + ' from Unocoin API');
       }
 
+      this._txHash = obj.transaction_hash;
       this._id = this._id || Trade.idFromAPI(obj);
 
       switch (obj.status) {
@@ -21011,13 +21011,18 @@ var Trade = function (_Exchange$Trade) {
       this._inAmount = obj.inr;
       this._sendAmount = this._inAmount;
 
-      if (this._delegate.ticker) {
-        // TODO: use (historic) price from API once available
-        this._outAmount = Math.round(this._inAmount / this._delegate.ticker.buy.price * 100000000);
-        this._outAmountExpected = this._outAmount;
-      } else {
-        this._outAmount = null;
-        this._outAmountExpected = null;
+      this._outAmount = null;
+      this._outAmountExpected = null;
+
+      if (obj.btc && obj.btc !== '' && obj.btc !== '0') {
+        if (this.state !== 'completed') {
+          this._outAmountExpected = parseFloat(obj.btc) * 100000000.0;
+        } else {
+          this._outAmount = parseFloat(obj.btc) * 100000000.0;
+          this._outAmountExpected = this._outAmount;
+        }
+      } else if (this._delegate.ticker) {
+        this._outAmountExpected = Math.round(this._inAmount / this._delegate.ticker.buy.price * 100000000);
       }
     }
   }, {
