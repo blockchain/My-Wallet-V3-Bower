@@ -20723,21 +20723,17 @@ var Profile = function () {
     key: 'addPhoto',
     value: function addPhoto(type, base64) {
       switch (type) {
-        case 'pancard':
-          this._photos.pancard = new Photo(base64.split(',')[1]);
-          break;
         case 'address':
-          this._photos.address = new Photo(base64.split(',')[1]);
+          this._photos.address = new Photo(base64);
           break;
-        case 'id':
-          this._photos.id = new Photo(base64.split(',')[1]);
+        case 'pancard':
+          this._photos.pancard = new Photo(base64);
           break;
         case 'photo':
-          this._photos.photo = new Photo(base64.split(',')[1]);
+          this._photos.photo = new Photo(base64);
           break;
         default:
-          assert(false, 'specify pancard, address, id or photo');
-          break;
+          assert(false, 'specify address, pancard or photo');
       }
       this._dirty = true;
     }
@@ -20750,7 +20746,7 @@ var Profile = function () {
       assert(this.complete, 'Missing info, always check "complete" first');
       assert(!this.readOnly, 'Profile is read-only');
 
-      return this._api.authPOST('api/v1/settings/uploaduserprofile', {
+      var payload = {
         name: this.fullName,
         mobile: this.mobile.replace(/\+91/g, '').replace(/ /g, ''),
         pannumber: this.pancard,
@@ -20760,10 +20756,12 @@ var Profile = function () {
         pincode: this.address.zipcode,
         bank_accnum: this.bankAccountNumber,
         ifsc: this.ifsc,
-        pancard_photo: this.photos.pancard.base64,
-        photo: this.photos.photo.base64,
-        address_proof: this.photos.address.base64
-      }).then(function (res) {
+        pancard_photo: this.photos.pancard.base64.split(',')[1],
+        photo: this.photos.photo.base64.split(',')[1],
+        address_proof: this.photos.address.base64.split(',')[1]
+      };
+
+      return this._api.authPOST('api/blockchain-v1/settings/uploaduserprofile', payload).then(function (res) {
         if (res.status_code === 200) {
           _this._dirty = false;
           _this._address.didSave();
@@ -20793,19 +20791,19 @@ var Profile = function () {
       return Boolean(this._photos.address && this._photos.pancard && this.photos.photo);
     }
   }, {
-    key: 'addressComplete',
+    key: 'identityComplete',
     get: function get() {
       return this.level > 1 || Boolean(this.mobile && this.pancard && this.fullName && this.address.complete);
     }
   }, {
-    key: 'infoComplete',
+    key: 'bankInfoComplete',
     get: function get() {
       return this.level > 1 || Boolean(this.ifsc && this.bankAccountNumber);
     }
   }, {
     key: 'complete',
     get: function get() {
-      return this.level > 1 || Boolean(this.photosComplete && this.address.complete && this.fullName && this.mobile && this.pancard && this.bankAccountNumber && this.ifsc);
+      return this.level > 1 || Boolean(this.photosComplete && this.identityComplete && this.bankInfoComplete);
     }
   }, {
     key: 'address',
@@ -20890,8 +20888,12 @@ var Profile = function () {
   }], [{
     key: 'fetch',
     value: function fetch(api) {
-      return api.authGET('api/v1/wallet/profiledetails').then(function (res) {
-        return new Profile(res, api);
+      return api.authGET('api/blockchain-v1/wallet/profiledetails').then(function (res) {
+        if (res.status_code === 200) {
+          return new Profile(res, api);
+        } else {
+          return Promise.reject(res.message);
+        }
       });
     }
   }]);
@@ -21049,17 +21051,6 @@ var Trade = function (_Exchange$Trade) {
       });
     }
   }, {
-    key: 'process',
-    value: function process() {
-      if (['rejected', 'cancelled', 'expired'].indexOf(this.state) > -1) {
-        /* istanbul ignore if */
-        if (this.debug) {
-          console.info('Check if address for ' + this.state + ' trade ' + this.id + ' can be released');
-        }
-        this._delegate.releaseReceiveAddress(this);
-      }
-    }
-  }, {
     key: 'addReferenceNumber',
     value: function addReferenceNumber(ref) {
       var _this2 = this;
@@ -21070,10 +21061,10 @@ var Trade = function (_Exchange$Trade) {
           return Promise.resolve();
         } else {
           console.error('Failed to set reference number', res.status_code, res.message);
-          return Promise.reject();
+          return Promise.reject(res.message);
         }
       };
-      return this._api.authPOST('api/v1/wallet/add_reference', {
+      return this._api.authPOST('api/blockchain-v1/wallet/add_reference', {
         inr_transaction_id: this._id,
         ref_num: ref
       }).then(processResult).then(this._delegate.save.bind(this._delegate)).then(this.self.bind(this));
@@ -21086,11 +21077,11 @@ var Trade = function (_Exchange$Trade) {
           return new BankAccount(res);
         } else {
           console.error('Failed to get bank account details', res.status_code, res.message);
-          return Promise.reject();
+          return Promise.reject(res.message);
         }
       };
 
-      return this._api.authPOST('/api/v1/general/inrdepositbankaccount').then(processResult);
+      return this._api.authPOST('/api/blockchain-v1/general/inrdepositbankaccount').then(processResult);
     }
   }, {
     key: 'toJSON',
@@ -21108,11 +21099,6 @@ var Trade = function (_Exchange$Trade) {
       return serialized;
     }
   }, {
-    key: 'updatedAt',
-    get: function get() {
-      return this._updatedAt;
-    }
-  }, {
     key: 'isBuy',
     get: function get() {
       return this._is_buy;
@@ -21121,7 +21107,7 @@ var Trade = function (_Exchange$Trade) {
     key: 'buy',
     value: function buy(quote, medium) {
       var request = function request(receiveAddress) {
-        return quote.api.authPOST('api/v1/trading/instant_buyingbtc', {
+        return quote.api.authPOST('api/blockchain-v1/trading/instant_buyingbtc', {
           destination: receiveAddress,
           amount: quote.baseCurrency === 'INR' ? -quote.baseAmount : quote.quoteAmount
         }).then(function (res) {
@@ -21137,7 +21123,7 @@ var Trade = function (_Exchange$Trade) {
   }, {
     key: 'fetchAll',
     value: function fetchAll(api) {
-      return api.authGET('api/v1/wallet/deposit_history').then(function (res) {
+      return api.authGET('api/blockchain-v1/wallet/deposit_history').then(function (res) {
         switch (res.status_code) {
           case 200:
             return res.transactions;
@@ -34223,7 +34209,7 @@ var Unocoin = function (_Exchange$Exchange) {
 
       var doSignup = function doSignup(emailToken) {
         assert(emailToken, 'email token missing');
-        return this._api.POST('api/v1/authentication/register', {
+        return this._api.POST('api/blockchain-v1/authentication/register', {
           email_id: self.delegate.email()
         }, {
           Authorization: 'Bearer ' + emailToken
@@ -34318,7 +34304,7 @@ var Unocoin = function (_Exchange$Exchange) {
       if (this.delegate.ticker && new Date() - this.delegate.ticker.updatedAt < 60 * 1000) {
         return Promise.resolve().then(price);
       } else {
-        return this._api.POST('trade?all').then(process).then(price);
+        return this._api.POST('api/blockchain-v1/general/rates').then(process).then(price);
       }
     }
   }, {
