@@ -16961,7 +16961,7 @@ module.exports = {
 
 var Coinify = __webpack_require__(202);
 var SFOX = __webpack_require__(221);
-var Unocoin = __webpack_require__(226);
+var Unocoin = __webpack_require__(229);
 var Metadata = __webpack_require__(74);
 var ExchangeDelegate = __webpack_require__(364);
 var Helpers = __webpack_require__(3);
@@ -20638,7 +20638,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Address = __webpack_require__(227);
+var Address = __webpack_require__(226);
 var Limits = __webpack_require__(231);
 var Photo = __webpack_require__(232);
 var assert = __webpack_require__(1);
@@ -20922,7 +20922,7 @@ var assert = __webpack_require__(1);
 var Exchange = __webpack_require__(5);
 var Helpers = Exchange.Helpers;
 
-var BankAccount = __webpack_require__(229);
+var BankAccount = __webpack_require__(228);
 
 var Trade = function (_Exchange$Trade) {
   _inherits(Trade, _Exchange$Trade);
@@ -33601,12 +33601,6 @@ module.exports = SFOX;
 /* 226 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(234);
-
-/***/ }),
-/* 227 */
-/***/ (function(module, exports, __webpack_require__) {
-
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -33728,7 +33722,7 @@ var Address = function () {
 module.exports = Address;
 
 /***/ }),
-/* 228 */
+/* 227 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -33773,7 +33767,7 @@ var API = function (_Exchange$API) {
     key: '_url',
     value: function _url(endpoint) {
       endpoint = endpoint || '';
-      return 'https://' + (this._production ? '' : 'sandbox.') + 'unocoin.co/' + endpoint;
+      return 'https://' + (this._production ? 'www.' : '') + (this._production ? '' : 'sandbox.') + 'unocoin.' + (this._production ? 'com' : 'co') + '/' + endpoint;
     }
   }, {
     key: '_request',
@@ -33870,7 +33864,7 @@ var API = function (_Exchange$API) {
 module.exports = API;
 
 /***/ }),
-/* 229 */
+/* 228 */
 /***/ (function(module, exports) {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -33925,6 +33919,12 @@ var BankAccount = function () {
 }();
 
 module.exports = BankAccount;
+
+/***/ }),
+/* 229 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(234);
 
 /***/ }),
 /* 230 */
@@ -34150,7 +34150,7 @@ var Profile = __webpack_require__(126);
 var Trade = __webpack_require__(127);
 var PaymentMedium = __webpack_require__(125);
 var Quote = __webpack_require__(233);
-var API = __webpack_require__(228);
+var API = __webpack_require__(227);
 
 var assert = __webpack_require__(1);
 

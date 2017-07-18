@@ -1,18 +1,25 @@
 __Blockchain Wallet V3__
 
-#   (2017-07-12)
+#   (2017-07-18)
 
 
 
 ---
 
+## Test
+
+- **make:** reenable tests
+  ([432faedb](https://github.com/blockchain/My-Wallet-V3/commit/432faedb9f2555060f366338bb7e7e67e98271ab))
+- **mock:** fix tests by mocking bitcoin-exchange-client
+  ([67cb5737](https://github.com/blockchain/My-Wallet-V3/commit/67cb5737d4c3d50cfee4a7d75e1a4da0b67d01a6))
+
+
 ## Chore
 
-- **release:**
-  - v3.33.3
-  ([bb974fa7](https://github.com/blockchain/My-Wallet-V3/commit/bb974fa7c105c6b8c70e1375919b8d4a9c90cf6d))
-  - upgrade unocoin
-  ([50a30fda](https://github.com/blockchain/My-Wallet-V3/commit/50a30fda672677ba4e3760f7f37c4ffe0bd6c9e0))
+- **package:** upgrade bitcoin-unocoin-client
+  ([6af9d8da](https://github.com/blockchain/My-Wallet-V3/commit/6af9d8da355e2920ffbe632ce50ceb351678d0a9))
+- **release:** v3.33.4
+  ([81d2a1f3](https://github.com/blockchain/My-Wallet-V3/commit/81d2a1f37ef250295aba4b219c5a8797a403863a))
 
 
 
