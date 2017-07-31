@@ -20728,6 +20728,8 @@ var Profile = function () {
         in: obj.user_buy_limit || 0
       }
     });
+
+    this._submittedBankInfo = false;
   }
 
   _createClass(Profile, [{
@@ -20809,7 +20811,7 @@ var Profile = function () {
   }, {
     key: 'bankInfoComplete',
     get: function get() {
-      return this.level > 1 || Boolean(this.ifsc && this.bankAccountNumber);
+      return this.level > 1 || Boolean(this.ifsc && this.bankAccountNumber && this._submittedBankInfo);
     }
   }, {
     key: 'complete',
@@ -20895,6 +20897,14 @@ var Profile = function () {
     key: 'currentLimits',
     get: function get() {
       return this._currentLimits;
+    }
+  }, {
+    key: 'submittedBankInfo',
+    get: function get() {
+      return this._submittedBankInfo;
+    },
+    set: function set(val) {
+      this._submittedBankInfo = val;
     }
   }], [{
     key: 'fetch',
@@ -33778,7 +33788,7 @@ var API = function (_Exchange$API) {
     key: '_url',
     value: function _url(endpoint) {
       endpoint = endpoint || '';
-      return 'https://' + (this._production ? 'www.' : '') + (this._production ? '' : 'sandbox.') + 'unocoin.' + (this._production ? 'com' : 'co') + '/' + endpoint;
+      return 'https://' + (this._production ? 'www' : 'sandbox') + '.unocoin.' + (this._production ? 'com' : 'co') + '/' + endpoint;
     }
   }, {
     key: '_request',
