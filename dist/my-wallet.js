@@ -6578,6 +6578,17 @@ API.prototype.exportHistory = function (active, currency, options) {
   return this.request('POST', 'v2/export-history', data);
 };
 
+// id :: 0 | 1 | 2
+API.prototype.createExperiment = function (id) {
+  var recordA = this.recordExperimentResult.bind(this, id, 'a');
+  var recordB = this.recordExperimentResult.bind(this, id, 'b');
+  return { recordA: recordA, recordB: recordB };
+};
+
+API.prototype.recordExperimentResult = function (experiment, ab) {
+  return fetch(this.ROOT_URL + 'event?name=wallet_experiment_' + experiment + '_' + ab);
+};
+
 API.prototype.incrementSecPassStats = function (activeBool) {
   var active = activeBool ? 1 : 0;
   return fetch(this.ROOT_URL + 'event?name=wallet_login_second_password_' + active);
