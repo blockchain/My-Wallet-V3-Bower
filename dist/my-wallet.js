@@ -21016,6 +21016,9 @@ var Trade = function (_Exchange$Trade) {
         case 'Completed':
           this._state = 'completed';
           break;
+        case 'Cancelled':
+          this._state = 'cancelled';
+          break;
         default:
           this._state = 'awaiting_reference_number';
       }
