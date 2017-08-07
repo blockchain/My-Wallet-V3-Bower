@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2017-08-04)
+#   (2017-08-07)
 
 
 
@@ -9,16 +9,16 @@ __Blockchain Wallet V3__
 ## Chore
 
 - **release:**
-  - v3.33.8
-  ([26c1189a](https://github.com/blockchain/My-Wallet-V3/commit/26c1189a6a9a973f1f84c992adaf6575737645cd))
-  - upgrade unocoin client
-  ([3bddeb44](https://github.com/blockchain/My-Wallet-V3/commit/3bddeb442759c86f34bf343b4f6b69c3dc489b2b))
+  - v3.33.9
+  ([668f1cfd](https://github.com/blockchain/My-Wallet-V3/commit/668f1cfd3e45bc78b30dbd5548d60c05d3c7aa83))
+  - upgrade unocoin-client
+  ([50c6e514](https://github.com/blockchain/My-Wallet-V3/commit/50c6e514fad16c12bdd936e451a852984e8b513d))
 
 
 ## Pull requests merged
 
-- Merge pull request #412 from blockchain/unocoin-version
-  ([d00dd095](https://github.com/blockchain/My-Wallet-V3/commit/d00dd095424ccf5666f2bf204f55ef8b97e8fa51))
+- Merge pull request #413 from blockchain/unocoin-release
+  ([e578728b](https://github.com/blockchain/My-Wallet-V3/commit/e578728b695c8eab10920d62e3f76ac6ca560b1c))
 
 
 
