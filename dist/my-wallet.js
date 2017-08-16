@@ -6615,7 +6615,7 @@ API.prototype.incrementLoginViaQrStats = function () {
 };
 
 API.prototype.incrementBtcEthUsageStats = function (btcBalance, ethBalance) {
-  var base = this.ROOT_URL + 'event?wallet_login_balance_';
+  var base = this.ROOT_URL + 'event?name=wallet_login_balance_';
   var makeEventUrl = function makeEventUrl(curr, cond) {
     return base + curr + '_' + (cond ? 1 : 0);
   };

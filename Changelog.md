@@ -6,16 +6,16 @@ __Blockchain Wallet V3__
 
 ---
 
-## Test
+## Bug Fixes
 
-- **conf:** increase browser timeout time
-  ([84b35793](https://github.com/blockchain/My-Wallet-V3/commit/84b35793341801f2b8490ba49c4117f07037073f))
+- **api:** correct event urls
+  ([fef01102](https://github.com/blockchain/My-Wallet-V3/commit/fef0110268bf29fb349119630790b7c3d39ee2b7))
 
 
 ## Chore
 
-- **release:** v3.34.1
-  ([f7e91338](https://github.com/blockchain/My-Wallet-V3/commit/f7e91338cad67ade5a362bb905314edee341cf6b))
+- **release:** v3.34.2
+  ([a772e652](https://github.com/blockchain/My-Wallet-V3/commit/a772e652f004f699ec9802bd2cd02d5e3c2831d8))
 
 
 
