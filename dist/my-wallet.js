@@ -6616,12 +6616,15 @@ API.prototype.incrementLoginViaQrStats = function () {
 
 API.prototype.incrementBtcEthUsageStats = function (btcBalance, ethBalance) {
   var base = this.ROOT_URL + 'event?name=wallet_login_balance_';
-  var makeEventUrl = function makeEventUrl(curr, cond) {
-    return base + curr + '_' + (cond ? 1 : 0);
+  var mapper = { 'btc': 'btc_0', 'eth': 'btc_1', 'btc_eth': 'eth_0', '0': 'eth_1' };
+  var makeEventUrl = function makeEventUrl(val) {
+    return base + mapper[val];
   };
-  fetch(makeEventUrl('btc', btcBalance > 0));
-  fetch(makeEventUrl('eth', ethBalance > 0));
-  fetch(makeEventUrl('btceth', btcBalance > 0 && ethBalance > 0));
+
+  var url = void 0;
+  if (btcBalance > 0 && ethBalance > 0) url = makeEventUrl('btc_eth');else if (btcBalance > 0) url = makeEventUrl('btc');else if (ethBalance > 0) url = makeEventUrl('eth');else url = makeEventUrl('0');
+
+  fetch(url);
 };
 
 API.prototype.getBlockchainAddress = function () {
