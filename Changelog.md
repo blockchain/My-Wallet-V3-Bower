@@ -1,24 +1,21 @@
 __Blockchain Wallet V3__
 
-#   (2017-08-07)
+#   (2017-08-16)
 
 
 
 ---
 
+## Test
+
+- **conf:** increase browser timeout time
+  ([84b35793](https://github.com/blockchain/My-Wallet-V3/commit/84b35793341801f2b8490ba49c4117f07037073f))
+
+
 ## Chore
 
-- **release:**
-  - v3.33.9
-  ([668f1cfd](https://github.com/blockchain/My-Wallet-V3/commit/668f1cfd3e45bc78b30dbd5548d60c05d3c7aa83))
-  - upgrade unocoin-client
-  ([50c6e514](https://github.com/blockchain/My-Wallet-V3/commit/50c6e514fad16c12bdd936e451a852984e8b513d))
-
-
-## Pull requests merged
-
-- Merge pull request #413 from blockchain/unocoin-release
-  ([e578728b](https://github.com/blockchain/My-Wallet-V3/commit/e578728b695c8eab10920d62e3f76ac6ca560b1c))
+- **release:** v3.34.1
+  ([f7e91338](https://github.com/blockchain/My-Wallet-V3/commit/f7e91338cad67ade5a362bb905314edee341cf6b))
 
 
 
