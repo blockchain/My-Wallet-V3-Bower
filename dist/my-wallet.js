@@ -64295,8 +64295,9 @@ var Api = function () {
     key: 'getQuote',
     value: function getQuote(pair, amount, withdrawal, returnAddress) {
       var apiKey = this._apiKey;
-      var depositAmount = amount.toString();
-      return this.request('/sendamount', 'POST', { pair: pair, depositAmount: depositAmount, withdrawal: withdrawal, returnAddress: returnAddress, apiKey: apiKey }).then(function (res) {
+      var depositAmount = amount > 0 ? amount.toString() : undefined;
+      var withdrawalAmount = amount < 0 ? -amount.toString() : undefined;
+      return this.request('/sendamount', 'POST', { pair: pair, withdrawalAmount: withdrawalAmount, depositAmount: depositAmount, withdrawal: withdrawal, returnAddress: returnAddress, apiKey: apiKey }).then(function (res) {
         return res.error != null ? Promise.reject(res.error) : res.success || res;
       });
     }
