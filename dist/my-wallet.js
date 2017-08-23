@@ -61688,6 +61688,7 @@ function AccountInfo(object) {
   this.mobile = object.sms_number;
 
   this._countryCodeGuess = object.country_code; // Country guess by the backend
+  this._stateCodeGuess = object.state; // State guess by the backend
   this._dialCode = object.dial_code; // Dialcode guess by the backend
 
   this._isEmailVerified = Boolean(object.email_verified);
@@ -61746,6 +61747,12 @@ Object.defineProperties(AccountInfo.prototype, {
     configurable: false,
     get: function get() {
       return this._countryCodeGuess;
+    }
+  },
+  'stateCodeGuess': {
+    configurable: false,
+    get: function get() {
+      return this._stateCodeGuess;
     }
   },
   'dialCode': {
@@ -62507,6 +62514,7 @@ var EthWallet = function () {
     this._accounts = [];
     this._txNotes = {};
     this._latestBlock = null;
+    this._lastTx = null;
   }
 
   _createClass(EthWallet, [{
@@ -62573,6 +62581,12 @@ var EthWallet = function () {
       this.sync();
     }
   }, {
+    key: 'setLastTx',
+    value: function setLastTx(tx) {
+      this._lastTx = tx;
+      this.sync();
+    }
+  }, {
     key: 'setHasSeen',
     value: function setHasSeen(hasSeen) {
       this._hasSeen = hasSeen;
@@ -62605,6 +62619,7 @@ var EthWallet = function () {
           _this._defaultAccountIdx = ethereum.default_account_idx;
           _this._accounts = ethereum.accounts.map(construct(EthAccount));
           _this._txNotes = ethereum.tx_notes || {};
+          _this._lastTx = ethereum.last_tx;
           _this.activeAccounts.forEach(function (a) {
             return _this._socket.subscribeToAccount(a);
           });
@@ -62624,7 +62639,8 @@ var EthWallet = function () {
         has_seen: this._hasSeen,
         default_account_idx: this._defaultAccountIdx,
         accounts: this._accounts,
-        tx_notes: this._txNotes
+        tx_notes: this._txNotes,
+        last_tx: this._lastTx
       };
     }
   }, {
@@ -62784,6 +62800,11 @@ var EthWallet = function () {
     key: 'latestBlock',
     get: function get() {
       return this._latestBlock;
+    }
+  }, {
+    key: 'lastTx',
+    get: function get() {
+      return this._lastTx;
     }
   }, {
     key: 'defaults',
@@ -64646,6 +64667,12 @@ var ShapeShift = function () {
       throw new Error('Currency \'' + currency + '\' is not supported');
     }
   }, {
+    key: 'setUSAState',
+    value: function setUSAState(state) {
+      this._USAState = state;
+      this.sync();
+    }
+  }, {
     key: 'isDepositTx',
     value: function isDepositTx(hash) {
       return this.trades.some(function (t) {
@@ -64668,6 +64695,7 @@ var ShapeShift = function () {
 
       return this._metadata.fetch().then(function (data) {
         if (data) {
+          _this6._USAState = data.USAState;
           _this6._trades = data.trades.map(Trade.fromMetadata);
         }
       });
@@ -64682,13 +64710,19 @@ var ShapeShift = function () {
     key: 'toJSON',
     value: function toJSON() {
       return {
-        trades: this._trades
+        trades: this._trades,
+        USAState: this._USAState
       };
     }
   }, {
     key: 'trades',
     get: function get() {
       return this._trades;
+    }
+  }, {
+    key: 'USAState',
+    get: function get() {
+      return this._USAState;
     }
   }], [{
     key: 'fromBlockchainWallet',

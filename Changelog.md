@@ -1,27 +1,21 @@
 __Blockchain Wallet V3__
 
-#   (2017-08-21)
+#   (2017-08-23)
 
 
 
 ---
 
-## Bug Fixes
+## Test
 
-- **shapeshift:** allow withdrawal amts
-  ([7723781b](https://github.com/blockchain/My-Wallet-V3/commit/7723781b5b2311bde3a2714a4b52a8d904eb4e5a))
+- **eth:** eth wallet last_tx
+  ([fd9b38b7](https://github.com/blockchain/My-Wallet-V3/commit/fd9b38b779c48fc003dd989af8c23f6947928e69))
 
 
 ## Chore
 
 - **release:** bump version
-  ([0b94bcd0](https://github.com/blockchain/My-Wallet-V3/commit/0b94bcd00921be7aba6886c998ae8466a84475de))
-
-
-## Pull requests merged
-
-- Merge pull request #422 from blockchain/allow-withdrawal-amts
-  ([05a85ac9](https://github.com/blockchain/My-Wallet-V3/commit/05a85ac96059721c2469351445fed2f6c48b0550))
+  ([32fa85ad](https://github.com/blockchain/My-Wallet-V3/commit/32fa85ad1dfed070ac0010cdb9f8a2d4139002f7))
 
 
 
