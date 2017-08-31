@@ -36342,9 +36342,11 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     var _this = this;
 
     this._eth = EthWallet.fromBlockchainWallet(this);
-    this._eth.connect(MyWallet.ws.wsUrl.replace('/inv', '/eth/inv'));
+    var wsUrl = MyWallet.ws.wsUrl.replace('/inv', '/eth/inv');
     return this._eth.fetch().then(function () {
       return _this._eth.transitionFromLegacy();
+    }).then(function () {
+      return _this._eth.connect(wsUrl);
     });
   };
 
@@ -36626,18 +36628,32 @@ var EthWalletTx = function () {
   }, {
     key: 'isToAccount',
     value: function isToAccount(account) {
-      return this._to.toLowerCase() === account.address.toLowerCase();
+      return account.isCorrectAddress(this.to);
     }
   }, {
     key: 'isFromAccount',
     value: function isFromAccount(account) {
-      return this._from.toLowerCase() === account.address.toLowerCase();
+      return account.isCorrectAddress(this.from);
     }
   }, {
     key: 'update',
     value: function update(ethWallet) {
       this._confirmations = Math.max(ethWallet.latestBlock - this._blockNumber + 1, 0);
       this._note = ethWallet.getTxNote(this.hash);
+    }
+  }, {
+    key: 'toJSON',
+    value: function toJSON() {
+      return {
+        amount: this.amount,
+        fee: this.fee,
+        to: this.to,
+        from: this.from,
+        hash: this.hash,
+        time: this.time,
+        confirmations: this.confirmations,
+        note: this.note
+      };
     }
   }, {
     key: 'amount',
@@ -62327,26 +62343,32 @@ var EthAccount = function () {
         return r.status === 200 ? r.json() : r.json().then(function (e) {
           return Promise.reject(e);
         });
-      }).then(EthWalletTx.fromJSON).then(function (tx) {
-        var txExists = _this3._txs.find(function (_ref3) {
-          var hash = _ref3.hash;
-          return hash === tx.hash;
-        }) != null;
-        if (!txExists) _this3._txs.unshift(tx);
+      }).then(function (tx) {
+        return _this3.appendTransaction(tx);
       });
     }
   }, {
     key: 'setData',
     value: function setData() {
-      var _ref4 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-          balance = _ref4.balance,
-          nonce = _ref4.nonce;
+      var _ref3 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+          balance = _ref3.balance,
+          nonce = _ref3.nonce;
 
       this._wei = toBigNumber(balance);
       this._balance = fromWei(this.wei, 'ether').toString();
       this._approximateBalance = fromWei(this.wei, 'ether').round(8).toString();
       this._nonce = nonce;
       return { balance: balance, nonce: nonce };
+    }
+  }, {
+    key: 'appendTransaction',
+    value: function appendTransaction(txJson) {
+      var tx = EthWalletTx.fromJSON(txJson);
+      var txExists = this._txs.find(function (_ref4) {
+        var hash = _ref4.hash;
+        return hash === tx.hash;
+      }) != null;
+      if (!txExists) this._txs.unshift(tx);
     }
   }, {
     key: 'setTransactions',
@@ -62373,6 +62395,11 @@ var EthAccount = function () {
         correct: this.isCorrect,
         addr: this.address
       };
+    }
+  }, {
+    key: 'isCorrectAddress',
+    value: function isCorrectAddress(address) {
+      return address.toLowerCase() === this.address.toLowerCase();
     }
   }, {
     key: 'isCorrectPrivateKey',
@@ -62490,9 +62517,9 @@ var EthSocket = function (_StableSocket) {
 
   _createClass(EthSocket, [{
     key: 'subscribeToAccount',
-    value: function subscribeToAccount(account) {
+    value: function subscribeToAccount(account, legacyAccount) {
       this.send(EthSocket.accountSub(account));
-      this.on('message', EthSocket.accountMessageHandler(account));
+      this.on('message', EthSocket.accountMessageHandler(account, legacyAccount));
     }
   }, {
     key: 'subscribeToBlocks',
@@ -62502,11 +62529,15 @@ var EthSocket = function (_StableSocket) {
     }
   }], [{
     key: 'accountMessageHandler',
-    value: function accountMessageHandler(account) {
+    value: function accountMessageHandler(account, legacyAccount) {
       return pipe(JSON.parse, function (data) {
         if (data.op === OP_ACCOUNT_SUB && data.account === account.address) {
           account.setData(data);
-          account.fetchTransaction(data.txHash);
+          account.appendTransaction(data.tx);
+          if (legacyAccount && legacyAccount.isCorrectAddress(data.tx.from)) {
+            legacyAccount.setData({ balance: '0' });
+            legacyAccount.appendTransaction(data.tx);
+          }
         }
       });
     }
@@ -62582,15 +62613,14 @@ var EthWallet = function () {
     key: 'getApproximateBalance',
     value: function getApproximateBalance() {
       if (!this.defaultAccount && !this.legacyAccount) return null;
+      var balance = 0;
       if (this.defaultAccount) {
-        var defaultBalance = this.defaultAccount.getApproximateBalance();
-        if (defaultBalance !== null) return defaultBalance;
+        balance += parseFloat(this.defaultAccount.getApproximateBalance());
       }
       if (this.legacyAccount) {
-        var legacyBalance = this.legacyAccount.getApproximateBalance();
-        if (legacyBalance !== null) return legacyBalance;
+        balance += parseFloat(this.legacyAccount.getApproximateBalance());
       }
-      return null;
+      return balance.toFixed(8);
     }
   }, {
     key: 'getAccount',
@@ -62629,7 +62659,7 @@ var EthWallet = function () {
       account.label = label || EthAccount.defaultLabel(this.accounts.length);
       account.markAsCorrect();
       this._accounts.push(account);
-      this._socket.subscribeToAccount(account);
+      this._socket.subscribeToAccount(account, this.legacyAccount);
       return this.sync();
     }
   }, {
@@ -62691,9 +62721,6 @@ var EthWallet = function () {
           _this._accounts = ethereum.accounts.map(constructAccount);
           _this._txNotes = ethereum.tx_notes || {};
           _this._lastTx = ethereum.last_tx;
-          _this.activeAccounts.forEach(function (a) {
-            return _this._socket.subscribeToAccount(a);
-          });
           if (ethereum.legacy_account) {
             _this._legacyAccount = constructAccount(ethereum.legacy_account);
           }
@@ -62733,6 +62760,7 @@ var EthWallet = function () {
     key: 'fetchBalance',
     value: function fetchBalance() {
       var accounts = this.activeAccountsWithLegacy;
+      if (!accounts.length) return Promise.resolve();
       var addresses = accounts.map(function (a) {
         return a.address;
       });
@@ -62750,6 +62778,7 @@ var EthWallet = function () {
     key: 'fetchTransactions',
     value: function fetchTransactions() {
       var accounts = this.activeAccountsWithLegacy;
+      if (!accounts.length) return Promise.resolve();
       var addresses = accounts.map(function (a) {
         return a.address;
       });
@@ -62806,22 +62835,28 @@ var EthWallet = function () {
 
       if (this._socket) return;
       this._socket = new EthSocket(wsUrl);
-      this._socket.subscribeToBlocks(this);
-
+      this.setSocketHandlers();
       this._socket.on('close', function () {
-        _this4._socket.subscribeToBlocks(_this4);
-        _this4.activeAccounts.forEach(function (a) {
-          return _this4._socket.subscribeToAccount(a);
-        });
+        return _this4.setSocketHandlers();
+      });
+    }
+  }, {
+    key: 'setSocketHandlers',
+    value: function setSocketHandlers() {
+      var _this5 = this;
+
+      this._socket.subscribeToBlocks(this);
+      this.activeAccounts.forEach(function (a) {
+        return _this5._socket.subscribeToAccount(a, _this5.legacyAccount);
       });
     }
   }, {
     key: 'updateTxs',
     value: function updateTxs() {
-      var _this5 = this;
+      var _this6 = this;
 
       this.activeAccountsWithLegacy.forEach(function (a) {
-        return a.updateTxs(_this5);
+        return a.updateTxs(_this6);
       });
     }
   }, {
@@ -62924,7 +62959,7 @@ var EthWallet = function () {
   }, {
     key: 'sweepLegacyAccount',
     value: function sweepLegacyAccount(secPass) {
-      var _this6 = this;
+      var _this7 = this;
 
       var _ref3 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
           _ref3$gasPrice = _ref3.gasPrice,
@@ -62937,20 +62972,20 @@ var EthWallet = function () {
       }
 
       var defaultAccountP = this.defaultAccount == null ? Promise.resolve().then(function () {
-        return _this6.createAccount(void 0, secPass);
+        return _this7.createAccount(void 0, secPass);
       }) : Promise.resolve();
 
       return defaultAccountP.then(function () {
-        return _this6.legacyAccount.getAvailableBalance();
+        return _this7.legacyAccount.getAvailableBalance();
       }).then(function (_ref4) {
         var amount = _ref4.amount;
 
         if (amount > 0) {
-          var payment = _this6.legacyAccount.createPayment();
-          var privateKey = _this6.getPrivateKeyForLegacyAccount(secPass);
+          var payment = _this7.legacyAccount.createPayment();
+          var privateKey = _this7.getPrivateKeyForLegacyAccount(secPass);
           payment.setGasPrice(gasPrice);
           payment.setGasLimit(gasLimit);
-          payment.setTo(_this6.defaultAccount.address);
+          payment.setTo(_this7.defaultAccount.address);
           payment.setSweep();
           payment.sign(privateKey);
           return payment.publish();
