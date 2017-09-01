@@ -2968,6 +2968,16 @@ Helpers.toBigNumber = function (x) {
   return Helpers.isBigNumber(x) ? x : new BigNumber((x || 0).toString());
 };
 
+Helpers.bnMax = function (a, b) {
+  return BigNumber.max(a, b);
+};
+
+Helpers.bnToBuffer = function (bn) {
+  var hex = bn.toString(16);
+  if (hex.length % 2 !== 0) hex = '0' + hex;
+  return Buffer.from(hex, 'hex');
+};
+
 Helpers.isEtherAddress = function (address) {
   return ethUtil.isValidChecksumAddress(address) || ethUtil.isValidAddress(address) && ethUtil.stripHexPrefix(address).toLowerCase() === ethUtil.stripHexPrefix(address) || ethUtil.isValidAddress(address) && ethUtil.stripHexPrefix(address).toUpperCase() === ethUtil.stripHexPrefix(address);
 };
@@ -36428,7 +36438,10 @@ var API = __webpack_require__(5);
 
 var _require = __webpack_require__(3),
     toWei = _require.toWei,
-    fromWei = _require.fromWei;
+    fromWei = _require.fromWei,
+    toBigNumber = _require.toBigNumber,
+    bnMax = _require.bnMax,
+    bnToBuffer = _require.bnToBuffer;
 
 var MAINNET = 1;
 
@@ -36454,14 +36467,14 @@ var EthTxBuilder = function () {
   }, {
     key: 'setValue',
     value: function setValue(amount) {
-      this._tx.value = parseInt(toWei(amount, 'ether'));
+      this._tx.value = bnToBuffer(toWei(toBigNumber(amount), 'ether'));
       this.update();
       return this;
     }
   }, {
     key: 'setGasPrice',
     value: function setGasPrice(gasPrice) {
-      this._tx.gasPrice = parseInt(toWei(gasPrice, 'gwei'));
+      this._tx.gasPrice = bnToBuffer(toWei(toBigNumber(gasPrice), 'gwei'));
       this.update();
       return this;
     }
@@ -36477,7 +36490,7 @@ var EthTxBuilder = function () {
     value: function setSweep() {
       this.setValue(0);
       var balance = this._account.wei;
-      var amount = Math.max(balance.sub(this._tx.getUpfrontCost()), 0);
+      var amount = bnMax(balance.sub(this._tx.getUpfrontCost()), 0);
       this.setValue(fromWei(amount, 'ether'));
       return this;
     }
