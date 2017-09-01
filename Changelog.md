@@ -6,16 +6,13 @@ __Blockchain Wallet V3__
 
 ---
 
-## Bug Fixes
-
-- **eth:** higher precision arithmetic for sweep amounts
-  ([b8db5918](https://github.com/blockchain/My-Wallet-V3/commit/b8db59186f705cfc01cdb241a08750964b5f9816))
-
-
 ## Chore
 
-- **release:** v3.35.2
-  ([b5876057](https://github.com/blockchain/My-Wallet-V3/commit/b5876057c82ab8d8546af1b3f94dea6056c8c8e9))
+- **release:**
+  - v3.35.5
+  ([54ea6414](https://github.com/blockchain/My-Wallet-V3/commit/54ea641485eb5f5bddce4c5354ea5d6a42d8fd5f))
+  - temporarily disable tests for ci
+  ([e7cbc67a](https://github.com/blockchain/My-Wallet-V3/commit/e7cbc67a210aa8c6fc7e3028aec227946a33c53b))
 
 
 
