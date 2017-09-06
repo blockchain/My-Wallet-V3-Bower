@@ -6668,6 +6668,14 @@ API.prototype.incrementBtcEthUsageStats = function (btcBalance, ethBalance) {
   fetch(makeEventUrl(btcBalance > 0, ethBalance > 0));
 };
 
+API.prototype.incrementBuyLimitCounter = function (amount) {
+  return fetch(this.ROOT_URL + 'event?name=wallet_buy_' + (amount === 'over' ? 'over' : 'under') + '_limit');
+};
+
+API.prototype.incrementBuyDropoff = function (step) {
+  return fetch(this.ROOT_URL + 'event?name=wallet_buy_dropoff_' + step);
+};
+
 API.prototype.getBlockchainAddress = function () {
   return this.request('GET', 'charge_address');
 };
@@ -21191,6 +21199,7 @@ var PaymentMedium = function (_ExchangePaymentMediu) {
     _this._inMedium = obj.inMedium;
     _this._outMedium = obj.outMedium;
     _this._minimumInAmounts = obj.minimumInAmounts;
+    _this._limitInAmounts = obj.limitInAmounts;
 
     /* istanbul ignore else */
     if (_this._inMedium === 'card' || _this._outMedium === 'card') {
@@ -21270,19 +21279,31 @@ var PaymentMedium = function (_ExchangePaymentMediu) {
     get: function get() {
       return this._name;
     }
+  }, {
+    key: 'limitInAmounts',
+    get: function get() {
+      return this._limitInAmounts;
+    }
+  }, {
+    key: 'minimumInAmounts',
+    get: function get() {
+      return this._minimumInAmounts;
+    }
   }], [{
     key: 'getAll',
     value: function getAll(inCurrency, outCurrency, api, quote) {
       var params = {};
       if (inCurrency) {
-        params.inCurrency = inCurrency;
+        /* including inCurrency restricts the response to only include limits in that one currency */
+        // params.inCurrency = inCurrency;
       }
       if (outCurrency) {
         params.outCurrency = outCurrency;
       }
 
       var output = [];
-      return api.GET('trades/payment-methods', params).then(function (res) {
+      var request = api.hasAccount ? api.authGET('trades/payment-methods', params) : api.GET('trades/payment-methods', params);
+      return request.then(function (res) {
         output = {};
         for (var i = 0; i < res.length; i++) {
           var medium = new PaymentMedium(res[i], api, quote);
@@ -43838,6 +43859,11 @@ var Quote = function (_Exchange$Quote) {
     // QA tool
     value: function expire() {
       this._expiresAt = new Date(new Date().getTime() + 3 * 1000);
+    }
+  }, {
+    key: 'paymentMediums',
+    get: function get() {
+      return this._paymentMediums;
     }
   }], [{
     key: 'getQuote',
