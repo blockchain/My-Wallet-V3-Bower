@@ -8,8 +8,20 @@ __Blockchain Wallet V3__
 
 ## Chore
 
-- **release:** v3.36.1
-  ([1f8ebf93](https://github.com/blockchain/My-Wallet-V3/commit/1f8ebf93a3b8f4802931093eb7af8158ed9af7ab))
+- **release:** v3.36.2
+  ([10064549](https://github.com/blockchain/My-Wallet-V3/commit/10064549892d96594167f0dace7bc4df9770e0da))
+
+
+## Branchs merged
+
+- Merge branch 'master' into v3.36-release
+  ([6bb68ab6](https://github.com/blockchain/My-Wallet-V3/commit/6bb68ab67b08f456312461be663af4e853963745))
+
+
+## Pull requests merged
+
+- Merge pull request #433 from blockchain/v3.35-release
+  ([989342ea](https://github.com/blockchain/My-Wallet-V3/commit/989342eab083fa4161c186035983c4a79e6915df))
 
 
 
