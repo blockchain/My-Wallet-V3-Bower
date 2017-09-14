@@ -6680,6 +6680,13 @@ API.prototype.incrementBuyDropoff = function (step) {
   return fetch(this.ROOT_URL + 'event?name=wallet_buy_dropoff_' + step);
 };
 
+API.prototype.incrementShapeshiftStat = function () {
+  var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+  var base = this.ROOT_URL + 'event?name=wallet_shapeshift_viewed';
+  return fetch(base + (options.maxLimitError ? '_max_limit_error' : ''));
+};
+
 API.prototype.getBlockchainAddress = function () {
   return this.request('GET', 'charge_address');
 };
