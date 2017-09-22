@@ -8183,13 +8183,13 @@ MyWallet.browserCheckFast = function () {
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = {
-  Exchange: __webpack_require__(213),
-  API: __webpack_require__(212),
-  PaymentAccount: __webpack_require__(214),
-  PaymentMedium: __webpack_require__(215),
-  Quote: __webpack_require__(216),
-  Trade: __webpack_require__(217),
-  Helpers: __webpack_require__(52)
+  Exchange: __webpack_require__(224),
+  API: __webpack_require__(223),
+  PaymentAccount: __webpack_require__(225),
+  PaymentMedium: __webpack_require__(226),
+  Quote: __webpack_require__(227),
+  Trade: __webpack_require__(228),
+  Helpers: __webpack_require__(53)
 };
 
 /***/ }),
@@ -10613,45 +10613,6 @@ RNG.prototype.getServerEntropy = function (nBytes) {
 
 /***/ }),
 /* 52 */
-/***/ (function(module, exports) {
-
-var Helpers = {};
-
-Helpers.isBoolean = function (value) {
-  return typeof value === 'boolean';
-};
-Helpers.isString = function (str) {
-  return typeof str === 'string';
-};
-Helpers.isNumber = function (num) {
-  return typeof num === 'number' && !isNaN(num);
-};
-Helpers.isInteger = function (num) {
-  return Helpers.isNumber(num) && num % 1 === 0;
-};
-Helpers.isPositiveNumber = function (num) {
-  return Helpers.isNumber(num) && num >= 0;
-};
-Helpers.isPositiveInteger = function (num) {
-  return Helpers.isPositiveNumber(num) && num % 1 === 0;
-};
-Helpers.toCents = function (fiat) {
-  return Math.round((parseFloat(fiat) || 0) * 100);
-};
-Helpers.toSatoshi = function (fiat) {
-  return Math.round((parseFloat(fiat) || 0) * 100000000);
-};
-Helpers.fromCents = function (cents) {
-  return parseFloat((cents / 100).toFixed(2));
-};
-Helpers.fromSatoshi = function (satoshi) {
-  return parseFloat((satoshi / 100000000).toFixed(8));
-};
-
-module.exports = Helpers;
-
-/***/ }),
-/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -10664,7 +10625,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var CoinifyBank = __webpack_require__(221);
+var CoinifyBank = __webpack_require__(215);
 var Helpers = __webpack_require__(15).Helpers;
 
 var Exchange = __webpack_require__(15);
@@ -10982,6 +10943,45 @@ var Trade = function (_Exchange$Trade) {
 }(Exchange.Trade);
 
 module.exports = Trade;
+
+/***/ }),
+/* 53 */
+/***/ (function(module, exports) {
+
+var Helpers = {};
+
+Helpers.isBoolean = function (value) {
+  return typeof value === 'boolean';
+};
+Helpers.isString = function (str) {
+  return typeof str === 'string';
+};
+Helpers.isNumber = function (num) {
+  return typeof num === 'number' && !isNaN(num);
+};
+Helpers.isInteger = function (num) {
+  return Helpers.isNumber(num) && num % 1 === 0;
+};
+Helpers.isPositiveNumber = function (num) {
+  return Helpers.isNumber(num) && num >= 0;
+};
+Helpers.isPositiveInteger = function (num) {
+  return Helpers.isPositiveNumber(num) && num % 1 === 0;
+};
+Helpers.toCents = function (fiat) {
+  return Math.round((parseFloat(fiat) || 0) * 100);
+};
+Helpers.toSatoshi = function (fiat) {
+  return Math.round((parseFloat(fiat) || 0) * 100000000);
+};
+Helpers.fromCents = function (cents) {
+  return parseFloat((cents / 100).toFixed(2));
+};
+Helpers.fromSatoshi = function (satoshi) {
+  return parseFloat((satoshi / 100000000).toFixed(8));
+};
+
+module.exports = Helpers;
 
 /***/ }),
 /* 54 */
@@ -18226,7 +18226,7 @@ module.exports = {
 /* 118 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var Coinify = __webpack_require__(224);
+var Coinify = __webpack_require__(218);
 var SFOX = __webpack_require__(237);
 var Unocoin = __webpack_require__(251);
 var Metadata = __webpack_require__(79);
@@ -21159,7 +21159,7 @@ CoinifyKYC.fetchAll = function (api) {
 "use strict";
 
 
-var Limit = __webpack_require__(226);
+var Limit = __webpack_require__(220);
 
 module.exports = Limits;
 
@@ -21198,7 +21198,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var ExchangePaymentAccount = __webpack_require__(15).PaymentAccount;
-var Trade = __webpack_require__(53);
+var Trade = __webpack_require__(52);
 
 var PaymentAccount = function (_ExchangePaymentAccou) {
   _inherits(PaymentAccount, _ExchangePaymentAccou);
@@ -21246,8 +21246,8 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var ExchangePaymentMedium = __webpack_require__(15).PaymentMedium;
 var PaymentAccount = __webpack_require__(127);
-var Trade = __webpack_require__(53);
-var BankAccount = __webpack_require__(220);
+var Trade = __webpack_require__(52);
+var BankAccount = __webpack_require__(214);
 
 var PaymentMedium = function (_ExchangePaymentMediu) {
   _inherits(PaymentMedium, _ExchangePaymentMediu);
@@ -42861,1168 +42861,6 @@ var __WEBPACK_AMD_DEFINE_RESULT__;var _typeof = typeof Symbol === "function" && 
 /* 212 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Helpers = __webpack_require__(52);
-var assert = __webpack_require__(1);
-
-var API = function () {
-  function API() {
-    _classCallCheck(this, API);
-
-    this._testnet = false;
-  }
-
-  _createClass(API, [{
-    key: '_request',
-    value: function _request(method, url, data, headers) {
-      headers = headers || {};
-
-      headers['Content-Type'] = 'application/json';
-
-      var options = {
-        headers: headers,
-        credentials: 'omit'
-      };
-
-      // encodeFormData :: Object -> url encoded params
-      var encodeFormData = function encodeFormData(data) {
-        var encoded = Object.keys(data).map(function (k) {
-          return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]);
-        }).join('&');
-        return encoded;
-      };
-
-      if (data && Object.keys(data).length !== 0) {
-        if (method === 'GET') {
-          url += '?' + encodeFormData(data);
-        } else {
-          options.body = JSON.stringify(data);
-        }
-      }
-
-      options.method = method;
-
-      var handleNetworkError = function handleNetworkError(e) {
-        return Promise.reject({ error: 'EXCHANGE_CONNECT_ERROR', message: e });
-      };
-
-      var checkStatus = function checkStatus(response) {
-        if (response.status === 204) {
-          return;
-        } else if (response.status >= 200 && response.status < 300) {
-          return response.json();
-        } else {
-          return response.text().then(Promise.reject.bind(Promise));
-        }
-      };
-
-      return fetch(url, options).catch(handleNetworkError).then(checkStatus);
-    }
-  }, {
-    key: 'testnet',
-    set: function set(value) {
-      assert(Helpers.isBoolean(value), 'Boolean expected');
-      this._testnet = value;
-    }
-  }, {
-    key: 'production',
-    set: function set(value) {
-      assert(Helpers.isBoolean(value), 'Boolean expected');
-      this._production = value;
-    }
-  }]);
-
-  return API;
-}();
-
-module.exports = API;
-
-/***/ }),
-/* 213 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var assert = __webpack_require__(1);
-var Helpers = __webpack_require__(52);
-
-// This is poor man's abstract class:
-// https://gist.github.com/Zodiase/af44115098b20d69c531
-
-var Exchange = function () {
-  function Exchange(obj, delegate, api, TradeClass, QuoteClass, PaymentMediumClass) {
-    _classCallCheck(this, Exchange);
-
-    assert(this.constructor !== Exchange, 'Abstract Class');
-    assert(delegate, 'ExchangeDelegate required');
-    assert(api, 'API class required');
-    assert(TradeClass, 'Trade class required');
-    assert(QuoteClass, 'Quote class required');
-    assert(QuoteClass, 'PaymentMethod class required');
-    assert(QuoteClass.getQuote, 'Quote.getQuote missing');
-    this._delegate = delegate;
-    this._api = api;
-    this._trades = [];
-    this._TradeClass = TradeClass;
-    this._QuoteClass = QuoteClass;
-    this._PaymentMediumClass = PaymentMediumClass;
-
-    this._trades = [];
-
-    if (obj.trades) {
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        for (var _iterator = obj.trades[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var tradeObj = _step.value;
-
-          var trade = new TradeClass(tradeObj, this._api, delegate);
-          trade._getQuote = QuoteClass.getQuote; // Prevents circular dependency
-          trade.debug = this._debug;
-          this._trades.push(trade);
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator.return) {
-            _iterator.return();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
-    }
-  }
-
-  _createClass(Exchange, [{
-    key: 'getBuyMethods',
-    value: function getBuyMethods() {
-      return this._PaymentMediumClass.getAll(undefined, 'BTC', this._api);
-    }
-  }, {
-    key: 'getSellMethods',
-    value: function getSellMethods() {
-      return this._PaymentMediumClass.getAll('BTC', undefined, this._api);
-    }
-  }, {
-    key: 'getBuyQuote',
-    value: function getBuyQuote(amount, baseCurrency, quoteCurrency) {
-      assert(baseCurrency, 'Specify base currency');
-      assert(baseCurrency !== 'BTC' || quoteCurrency, 'Specify quote currency');
-      // istanbul ignore else
-      if (baseCurrency !== 'BTC') {
-        quoteCurrency = 'BTC';
-      }
-      return this._QuoteClass.getQuote(this._api, this._delegate, -amount, baseCurrency, quoteCurrency, this._debug);
-    }
-  }, {
-    key: 'getSellQuote',
-    value: function getSellQuote(amount, baseCurrency, quoteCurrency) {
-      return this.getBuyQuote(-amount, baseCurrency, quoteCurrency);
-    }
-  }, {
-    key: 'getTrades',
-    value: function getTrades(QuoteClass) {
-      var _this = this;
-
-      assert(QuoteClass, 'QuoteClass required');
-      var save = function save() {
-        return _this.delegate.save.bind(_this.delegate)().then(function () {
-          return _this._trades;
-        });
-      };
-      var update = function update(tradeObjects) {
-        var _iteratorNormalCompletion2 = true;
-        var _didIteratorError2 = false;
-        var _iteratorError2 = undefined;
-
-        try {
-          var _loop = function _loop() {
-            var tradeObj = _step2.value;
-
-            var id = _this._TradeClass.idFromAPI(tradeObj);
-
-            var trade = _this._trades.find(function (trade) {
-              return String(trade.id).toLowerCase() === String(id).toLowerCase();
-            });
-
-            if (!trade) {
-              // We don't cache e.g. cancelled trades
-              trade = new _this._TradeClass(null, _this._api, _this.delegate);
-              trade._getQuote = QuoteClass.getQuote; // Prevents circular dependency
-              _this._trades.push(trade);
-            }
-
-            trade.setFromAPI(tradeObj);
-          };
-
-          for (var _iterator2 = tradeObjects[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-            _loop();
-          }
-        } catch (err) {
-          _didIteratorError2 = true;
-          _iteratorError2 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion2 && _iterator2.return) {
-              _iterator2.return();
-            }
-          } finally {
-            if (_didIteratorError2) {
-              throw _iteratorError2;
-            }
-          }
-        }
-      };
-      var process = function process() {
-        var _iteratorNormalCompletion3 = true;
-        var _didIteratorError3 = false;
-        var _iteratorError3 = undefined;
-
-        try {
-          for (var _iterator3 = _this._trades[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-            var _trade = _step3.value;
-
-            _trade.process(_this._trades);
-          }
-        } catch (err) {
-          _didIteratorError3 = true;
-          _iteratorError3 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion3 && _iterator3.return) {
-              _iterator3.return();
-            }
-          } finally {
-            if (_didIteratorError3) {
-              throw _iteratorError3;
-            }
-          }
-        }
-      };
-      return this._TradeClass.fetchAll(this._api).then(update).then(process).then(save);
-    }
-  }, {
-    key: 'monitorPayments',
-    value: function monitorPayments() {
-      this._TradeClass.monitorPayments(this._trades, this.delegate);
-    }
-  }, {
-    key: 'api',
-    get: function get() {
-      return this._api;
-    }
-  }, {
-    key: 'debug',
-    get: function get() {
-      return this._debug;
-    },
-    set: function set(value) {
-      this._debug = Boolean(value);
-      this._delegate.debug = Boolean(value);
-      var _iteratorNormalCompletion4 = true;
-      var _didIteratorError4 = false;
-      var _iteratorError4 = undefined;
-
-      try {
-        for (var _iterator4 = this.trades[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-          var _trade2 = _step4.value;
-
-          _trade2.debug = Boolean(value);
-        }
-      } catch (err) {
-        _didIteratorError4 = true;
-        _iteratorError4 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion4 && _iterator4.return) {
-            _iterator4.return();
-          }
-        } finally {
-          if (_didIteratorError4) {
-            throw _iteratorError4;
-          }
-        }
-      }
-    }
-  }, {
-    key: 'user',
-    get: function get() {
-      return this._user;
-    }
-  }, {
-    key: 'autoLogin',
-    get: function get() {
-      return this._auto_login;
-    },
-    set: function set(value) {
-      assert(Helpers.isBoolean(value), 'Boolean');
-      this._auto_login = value;
-      this.delegate.save.bind(this.delegate)();
-    }
-  }, {
-    key: 'trades',
-    get: function get() {
-      return this._trades;
-    }
-  }, {
-    key: 'delegate',
-    get: function get() {
-      return this._delegate;
-    }
-  }, {
-    key: 'profile',
-    get: function get() {
-      return this._profile;
-    }
-  }]);
-
-  return Exchange;
-}();
-
-module.exports = Exchange;
-
-/***/ }),
-/* 214 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var assert = __webpack_require__(1);
-
-var PaymentAccount = function () {
-  function PaymentAccount(api, fiatMedium, quote, TradeClass) {
-    _classCallCheck(this, PaymentAccount);
-
-    assert(api, 'API required');
-    assert(TradeClass, 'Trade class required');
-    this._api = api;
-    this._quote = quote;
-    this._TradeClass = TradeClass;
-    this._fiatMedium = fiatMedium;
-  }
-
-  _createClass(PaymentAccount, [{
-    key: 'buy',
-    value: function buy() {
-      var _this = this;
-
-      if (!this._quote) {
-        return Promise.reject('QUOTE_MISSING');
-      }
-      var delegate = this._quote.delegate;
-      var addTrade = function addTrade(trade) {
-        trade.debug = _this._quote.debug;
-        delegate.trades.push(trade);
-        return delegate.save.bind(delegate)().then(function () {
-          return trade;
-        });
-      };
-
-      return this._TradeClass.buy(this._quote, this.fiatMedium, this._id).then(addTrade);
-    }
-  }, {
-    key: 'sell',
-    value: function sell() {
-      var _this2 = this;
-
-      if (!this._quote) {
-        return Promise.reject('QUOTE_MISSING');
-      }
-      var delegate = this._quote.delegate;
-      var addTrade = function addTrade(trade) {
-        trade.debug = _this2._quote.debug;
-        delegate.trades.push(trade);
-        return delegate.save.bind(delegate)().then(function () {
-          return trade;
-        });
-      };
-
-      return this._TradeClass.sell(this._quote, this._id).then(addTrade);
-    }
-  }, {
-    key: 'id',
-    get: function get() {
-      return this._id;
-    }
-  }, {
-    key: 'fiatMedium',
-    get: function get() {
-      return this._fiatMedium;
-    }
-  }, {
-    key: 'name',
-    get: function get() {
-      return this._name;
-    }
-  }, {
-    key: 'account',
-    get: function get() {
-      return this._account;
-    }
-  }, {
-    key: 'accountNumber',
-    get: function get() {
-      return this._account._number;
-    }
-  }, {
-    key: 'quote',
-    get: function get() {
-      return this._quote;
-    }
-  }]);
-
-  return PaymentAccount;
-}();
-
-module.exports = PaymentAccount;
-
-/***/ }),
-/* 215 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var assert = __webpack_require__(1);
-
-var PaymentMedium = function () {
-  function PaymentMedium(api, quote) {
-    _classCallCheck(this, PaymentMedium);
-
-    assert(this.constructor !== PaymentMedium, 'Abstract Class');
-    assert(api, 'API required');
-    this._api = api;
-
-    if (quote) {
-      this._quote = quote;
-      this._TradeClass = quote._TradeClass;
-    }
-
-    this._accounts = [];
-  }
-
-  _createClass(PaymentMedium, [{
-    key: 'buy',
-
-
-    /* Depending on the exchange partner, buy() needs to be called either on
-       PaymentMedium or on PaymentAccount. Examples:
-       * when buying with Coinify using a bank transfer, you don't need to register
-         a specific bank account. Call buy() on the PaymentMedium instance.
-       * when buying with SFOX via ACH, you need to specify which bank account.
-         call buy on a PaymentAccount instance.
-       * when selling with Coinify, you need to register the destination bank
-         account first, so call sell() on a PaymentAccount instance.
-    */
-
-    value: function buy() {
-      var _this = this;
-
-      if (!this._quote) {
-        return Promise.reject('QUOTE_MISSING');
-      }
-      var delegate = this._quote.delegate;
-      var addTrade = function addTrade(trade) {
-        trade.debug = _this._quote.debug;
-        delegate.trades.push(trade);
-        return delegate.save.bind(delegate)().then(function () {
-          return trade;
-        });
-      };
-
-      return this._TradeClass.buy(this._quote, this.fiatMedium).then(addTrade);
-    }
-  }, {
-    key: 'accounts',
-    get: function get() {
-      return this._accounts;
-    }
-  }, {
-    key: 'inMedium',
-    get: function get() {
-      return this._inMedium;
-    }
-  }, {
-    key: 'outMedium',
-    get: function get() {
-      return this._outMedium;
-    }
-  }, {
-    key: 'fiatMedium',
-    get: function get() {
-      return this._fiatMedium;
-    }
-  }, {
-    key: 'inCurrencies',
-    get: function get() {
-      return this._inCurrencies;
-    }
-  }, {
-    key: 'outCurrencies',
-    get: function get() {
-      return this._outCurrencies;
-    }
-  }, {
-    key: 'inCurrency',
-    get: function get() {
-      return this._inCurrency;
-    }
-  }, {
-    key: 'outCurrency',
-    get: function get() {
-      return this._outCurrency;
-    }
-  }, {
-    key: 'inFixedFee',
-    get: function get() {
-      return this._inFixedFee || 0;
-    }
-  }, {
-    key: 'outFixedFee',
-    get: function get() {
-      return this._outFixedFee || 0;
-    }
-  }, {
-    key: 'inPercentageFee',
-    get: function get() {
-      return this._inPercentageFee || 0;
-    }
-  }, {
-    key: 'outPercentageFee',
-    get: function get() {
-      return this._outPercentageFee || 0;
-    }
-  }, {
-    key: 'minimumInAmounts',
-    get: function get() {
-      return this._minimumInAmounts || {};
-    }
-  }, {
-    key: 'fee',
-    get: function get() {
-      return this._fee;
-    }
-  }, {
-    key: 'total',
-    get: function get() {
-      return this._total;
-    }
-  }]);
-
-  return PaymentMedium;
-}();
-
-module.exports = PaymentMedium;
-
-/***/ }),
-/* 216 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Helpers = __webpack_require__(52);
-var assert = __webpack_require__(1);
-
-var Quote = function () {
-  function Quote(api, delegate, TradeClass, PaymentMediumClass) {
-    _classCallCheck(this, Quote);
-
-    assert(this.constructor !== Quote, 'Abstract Class');
-    assert(api, 'API required');
-    assert(delegate, 'ExchangeDelegate required');
-    assert(TradeClass, 'Trade class required');
-    assert(PaymentMediumClass, 'PaymentMedium class required');
-    assert(PaymentMediumClass.getAll, 'PaymentMedium.getAll missing');
-    assert(TradeClass.buy, 'Trade.buy() missing');
-
-    this._api = api;
-    this._delegate = delegate;
-    this._TradeClass = TradeClass;
-    this._PaymentMediumClass = PaymentMediumClass;
-    this._timeOfRequest = new Date().getTime();
-
-    this._paymentMediums = null;
-  }
-
-  _createClass(Quote, [{
-    key: 'getPaymentMediums',
-    value: function getPaymentMediums() {
-      var self = this;
-
-      var setPaymentMediums = function setPaymentMediums(paymentMediums) {
-        self._paymentMediums = paymentMediums;
-        return self.paymentMediums;
-      };
-
-      var inCurrency = this.baseCurrency;
-      var outCurrency = this.quoteCurrency;
-      if (this.baseCurrency === 'BTC' && this.baseAmount > 0) {
-        inCurrency = this.quoteCurrency;
-        outCurrency = this.baseCurrency;
-      }
-      if (this.paymentMediums) {
-        return Promise.resolve(this.paymentMediums);
-      } else {
-        return this._PaymentMediumClass.getAll(inCurrency, outCurrency, this._api, this).then(setPaymentMediums);
-      }
-    }
-  }, {
-    key: 'getPayoutMediums',
-    value: function getPayoutMediums() {
-      var self = this;
-      var outCurrency = void 0;
-      if (this.baseCurrency === 'BTC') {
-        outCurrency = this.quoteCurrency;
-      } else {
-        outCurrency = this.baseCurrency;
-      }
-      var setPaymentMediums = function setPaymentMediums(paymentMediums) {
-        self._paymentMediums = paymentMediums;
-        return self.paymentMediums;
-      };
-      return this._PaymentMediumClass.getAll('BTC', outCurrency, this._api, this).then(setPaymentMediums);
-    }
-  }, {
-    key: 'id',
-    get: function get() {
-      return this._id;
-    }
-  }, {
-    key: 'debug',
-    get: function get() {
-      return this._debug;
-    },
-    set: function set(value) {
-      this._debug = Boolean(value);
-    }
-  }, {
-    key: 'api',
-    get: function get() {
-      return this._api;
-    }
-  }, {
-    key: 'delegate',
-    get: function get() {
-      return this._delegate;
-    }
-  }, {
-    key: 'baseCurrency',
-    get: function get() {
-      return this._baseCurrency;
-    }
-  }, {
-    key: 'quoteCurrency',
-    get: function get() {
-      return this._quoteCurrency;
-    }
-  }, {
-    key: 'feeCurrency',
-    get: function get() {
-      return this._feeCurrency;
-    }
-  }, {
-    key: 'baseAmount',
-    get: function get() {
-      return this._baseAmount;
-    }
-  }, {
-    key: 'quoteAmount',
-    get: function get() {
-      return this._quoteAmount;
-    }
-  }, {
-    key: 'feeAmount',
-    get: function get() {
-      return this._feeAmount;
-    }
-  }, {
-    key: 'expiresAt',
-    get: function get() {
-      return this._expiresAt;
-    }
-  }, {
-    key: 'timeOfRequest',
-    get: function get() {
-      return this._timeOfRequest;
-    }
-  }, {
-    key: 'timeToExpiration',
-    get: function get() {
-      return this._expiresAt - this._timeOfRequest - 1000;
-    }
-  }, {
-    key: 'paymentMediums',
-    get: function get() {
-      return this._paymentMediums;
-    }
-  }], [{
-    key: 'getQuote',
-    value: function getQuote(amount, baseCurrency, quoteCurrency, supportedCurrencies, debug) {
-      assert(Helpers.isInteger(amount), 'amount must be in cents or satoshi');
-
-      if (supportedCurrencies.indexOf(baseCurrency) === -1) {
-        return Promise.reject('base_currency_not_supported');
-      }
-
-      if (supportedCurrencies.indexOf(quoteCurrency) === -1) {
-        return Promise.reject('quote_currency_not_supported');
-      }
-
-      // istanbul ignore if
-      if (baseCurrency === 'CNY' || quoteCurrency === 'CNY') {
-        console.warn('CNY has only 1 decimal place');
-      }
-
-      var baseAmount;
-      if (baseCurrency === 'BTC') {
-        baseAmount = (amount / 100000000).toFixed(8);
-      } else {
-        baseAmount = (amount / 100).toFixed(2);
-      }
-      return Promise.resolve(baseAmount);
-    }
-  }]);
-
-  return Quote;
-}();
-
-module.exports = Quote;
-
-/***/ }),
-/* 217 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var assert = __webpack_require__(1);
-
-var Trade = function () {
-  function Trade(obj, api, delegate) {
-    _classCallCheck(this, Trade);
-
-    assert(this.constructor !== Trade, 'Abstract Class');
-    assert(this.refresh, 'Subclass must implement refresh()');
-    assert(api, 'API missing');
-    assert(delegate, 'delegate missing');
-    assert(typeof delegate.getReceiveAddress === 'function', 'delegate requires getReceiveAddress()');
-    this._expiresAt = null;
-    this._delegate = delegate;
-    this._api = api;
-    this._fromApi = false;
-
-    if (obj !== null) {
-      this._id = obj.id;
-    }
-  }
-
-  _createClass(Trade, [{
-    key: 'setFromAPI',
-    value: function setFromAPI() {
-      this._fromApi = true;
-    }
-  }, {
-    key: 'self',
-    value: function self() {
-      return this;
-    }
-  }, {
-    key: 'process',
-    value: function process() {
-      if (['rejected', 'cancelled', 'expired', 'failed'].indexOf(this.state) > -1) {
-        /* istanbul ignore if */
-        if (this.debug) {
-          console.info('Check if address for ' + this.state + ' trade ' + this.id + ' can be released');
-        }
-        this._delegate.releaseReceiveAddress(this);
-      }
-    }
-
-    // Checks the balance for the receive address and monitors the websocket if needed:
-    // Call this method long before the user completes the purchase:
-    // trade.watchAddress.then(() => ...);
-
-  }, {
-    key: 'watchAddress',
-    value: function watchAddress() {
-      /* istanbul ignore if */
-      if (this.debug) {
-        console.info('Watch ' + this.receiveAddress + ' for ' + this.state + ' trade ' + this.id);
-      }
-      // Check if this transaction is already marked as paid:
-      if (this._txHash) {
-        /* istanbul ignore if */
-        if (this.debug) {
-          console.info("Already paid, resolve immedidately and don't watch.");
-        }
-        return Promise.resolve();
-      }
-      var self = this;
-      var promise = new Promise(function (resolve, reject) {
-        self._watchAddressResolve = resolve;
-      });
-      return promise;
-    }
-  }, {
-    key: '_monitorAddress',
-    value: function _monitorAddress() {
-      var _this = this;
-
-      var save = function save() {
-        return _this._delegate.save.bind(_this._delegate)();
-      };
-
-      var self = this;
-
-      this._delegate.monitorAddress(this.receiveAddress, function (hash, amount) {
-        var checkAddress = function checkAddress() {
-          return self._setTransactionHash({ hash: hash }, amount, self._delegate);
-        };
-        if (self.state === 'completed' || self.state === 'processing' || self.state === 'completed_test') {
-          return Promise.resolve().then(checkAddress).then(save);
-        } else {
-          return self.refresh().then(checkAddress).then(save);
-        }
-      });
-    }
-  }, {
-    key: '_setTransactionHash',
-
-
-    //
-    value: function _setTransactionHash(tx, amount, delegate) {
-      var self = this;
-      var setConfirmations = function setConfirmations(tx) {
-        self._confirmations = tx.confirmations;
-        // TODO: refactor
-        if (self.confirmed) {
-          self._confirmed = true;
-        }
-      };
-
-      /* istanbul ignore if */
-      if (self.debug) {
-        console.info('Transaction ' + tx.hash + ' detected, considering ' + self.state + ' trade ' + self.id);
-      }
-      if (self.state === 'completed_test') {
-        if (!self.confirmations && !self._txHash) {
-          // For test trades, there is no real transaction, so trade._txHash is not
-          // set. Instead use the hash for the incoming transaction. This will not
-          // work correctly with address reuse.
-          /* istanbul ignore if */
-          if (self.debug) {
-            console.info('Test trade, not matched before, unconfirmed transaction, assuming match');
-          }
-          self._txHash = tx.hash;
-          setConfirmations(tx);
-          self._watchAddressResolve && self._watchAddressResolve();
-        } else {
-          /* istanbul ignore if */
-          if (self.debug) {
-            console.info('Trade already matched, not calling _watchAddressResolve()');
-          }
-          if (self._txHash === tx.hash) {
-            setConfirmations(tx);
-          }
-        }
-        /* istanbul ignore else */
-      } else if (self.state === 'completed' || self.state === 'processing') {
-        if (self._txHash) {
-          // Multiple trades may reuse the same address if e.g. one is
-          // cancelled of if we reach the gap limit.
-          /* istanbul ignore if */
-          if (self.debug) {
-            console.info('Trade already matched, not calling _watchAddressResolve()');
-          }
-          if (self._txHash === tx.hash) {
-            setConfirmations(tx);
-          } else {
-            // Different trade, ignore
-          }
-        } else {
-          // transferOut.details.transaction is not implemented and might be
-          // missing if in the processing state.
-          /* istanbul ignore if */
-          if (self.debug) {
-            console.info('Trade not matched yet, assuming match');
-          }
-          self._txHash = tx.hash;
-          setConfirmations(tx);
-        }
-        self._watchAddressResolve && self._watchAddressResolve();
-      } else {
-        /* istanbul ignore if */
-        if (self.debug) {
-          console.info('Not calling _watchAddressResolve()');
-        }
-      }
-    }
-  }, {
-    key: 'debug',
-    get: function get() {
-      return this._debug;
-    },
-    set: function set(value) {
-      this._debug = Boolean(value);
-    }
-  }, {
-    key: 'id',
-    get: function get() {
-      return this._id;
-    }
-  }, {
-    key: 'createdAt',
-    get: function get() {
-      return this._createdAt;
-    }
-  }, {
-    key: 'expiresAt',
-    get: function get() {
-      return this._expiresAt;
-    }
-  }, {
-    key: 'inCurrency',
-    get: function get() {
-      return this._inCurrency;
-    }
-  }, {
-    key: 'outCurrency',
-    get: function get() {
-      return this._outCurrency;
-    }
-  }, {
-    key: 'inAmount',
-    get: function get() {
-      return this._inAmount;
-    }
-  }, {
-    key: 'medium',
-    get: function get() {
-      return this._medium;
-    }
-  }, {
-    key: 'state',
-    get: function get() {
-      return this._state;
-    }
-  }, {
-    key: 'sendAmount',
-    get: function get() {
-      return this._sendAmount;
-    }
-  }, {
-    key: 'outAmount',
-    get: function get() {
-      return this._outAmount;
-    }
-  }, {
-    key: 'outAmountExpected',
-    get: function get() {
-      return this._outAmountExpected;
-    }
-  }, {
-    key: 'receiveAddress',
-    get: function get() {
-      return this._receiveAddress;
-    }
-  }, {
-    key: 'accountIndex',
-    get: function get() {
-      return this._account_index;
-    }
-  }, {
-    key: 'bitcoinReceived',
-    get: function get() {
-      return Boolean(this._txHash);
-    }
-  }, {
-    key: 'bankAccountNumber',
-    get: function get() {
-      return this._bankAccountNumber;
-    }
-  }, {
-    key: 'transferIn',
-    get: function get() {
-      return this._transferIn;
-    }
-  }, {
-    key: 'iSignThisID',
-    get: function get() {
-      return this._iSignThisID;
-    }
-  }, {
-    key: 'confirmed',
-    get: function get() {
-      return this._confirmed || this._confirmations >= 3;
-    }
-  }, {
-    key: 'txHash',
-    get: function get() {
-      return this._txHash || null;
-    }
-  }], [{
-    key: '_checkOnce',
-    value: function _checkOnce(trades, delegate) {
-      assert(delegate, '_checkOnce needs delegate');
-
-      if (trades.length === 0) {
-        return Promise.resolve();
-      }
-
-      /* istanbul ignore if */
-      if (delegate.debug) {
-        console.info('_checkOnce', trades.map(function (trade) {
-          return trade.id;
-        }).join(', '));
-      }
-
-      var promises = trades.map(function (trade) {
-        return delegate.checkAddress(trade.receiveAddress).then(function (tx, amount) {
-          if (!tx) return;
-
-          /* istanbul ignore if */
-          if (delegate.debug) {
-            console.info('checkAddress', trade.receiveAddress, 'found transaction');
-          }
-
-          var setTransactionHash = function setTransactionHash() {
-            return trade._setTransactionHash(tx, amount, delegate);
-          };
-
-          if (trade.state === 'completed' || trade.state === 'processing' || trade.state === 'completed_test') {
-            return setTransactionHash();
-          } else {
-            return trade.refresh().then(setTransactionHash);
-          }
-        });
-      });
-
-      return Promise.all(promises).then(delegate.save.bind(delegate));
-    }
-  }, {
-    key: 'buy',
-    value: function buy(quote, medium, request) {
-      assert(quote, 'Quote required');
-      assert(quote.expiresAt > new Date(), 'QUOTE_EXPIRED');
-
-      /* istanbul ignore if */
-      if (quote.debug) {
-        console.info('Reserve receive address for new trade');
-      }
-      var reservation = quote.delegate.reserveReceiveAddress();
-
-      var processTrade = function processTrade(res) {
-        var trade = new quote._TradeClass(null, quote.api, quote.delegate);
-        trade.setFromAPI(res);
-        trade.debug = quote.debug;
-
-        /* istanbul ignore if */
-        if (quote.debug) {
-          console.info('Commit receive address for new trade');
-        }
-        reservation.commit(trade);
-
-        /* istanbul ignore if */
-        if (quote.debug) {
-          console.info('Monitor trade', trade.receiveAddress);
-        }
-        trade._monitorAddress.bind(trade)();
-        return trade;
-      };
-
-      var error = function error(e) {
-        console.error(e);
-        return Promise.reject(e);
-      };
-
-      return request(reservation.receiveAddress).then(processTrade).catch(error);
-    }
-  }, {
-    key: 'sell',
-    value: function sell(quote, bankId, request) {
-      var error = function error(e) {
-        console.error(e);
-        return Promise.reject(e);
-      };
-      return request(bankId).then(function (res) {
-        var trade = new quote._TradeClass(null, quote.api, quote.delegate);
-        trade.setFromAPI(res);
-        trade.debug = quote.debug;
-        return trade;
-      }).catch(error);
-    }
-  }, {
-    key: '_monitorWebSockets',
-    value: function _monitorWebSockets(trades) {
-      for (var i = 0; i < trades.length; i++) {
-        var trade = trades[i];
-        trade._monitorAddress.bind(trade)();
-      }
-    }
-
-    // Monitor the receive addresses for pending and completed trades.
-
-  }, {
-    key: 'monitorPayments',
-    value: function monitorPayments(trades, delegate) {
-      /* istanbul ignore if */
-      if (delegate.debug) {
-        console.info('monitorPayments');
-      }
-
-      assert(delegate, '_monitorPayments needs delegate');
-
-      var tradeFilter = function tradeFilter(trade) {
-        return ['awaiting_reference_number', 'awaiting_transfer_in', 'reviewing', 'processing', 'completed', 'completed_test'].indexOf(trade.state) > -1 && !trade.confirmed;
-      };
-
-      var filteredTrades = trades.filter(tradeFilter);
-
-      Trade._checkOnce(filteredTrades, delegate).then(function () {
-        Trade._monitorWebSockets(filteredTrades);
-      });
-    }
-  }, {
-    key: 'filteredTrades',
-    value: function filteredTrades(trades) {
-      return trades.filter(function (trade) {
-        // Only consider transactions that are complete or that we're still
-        // expecting payment for:
-        return ['awaiting_reference_number', 'awaiting_transfer_in', 'processing', 'reviewing', 'completed', 'completed_test'].indexOf(trade.state) > -1;
-      });
-    }
-  }]);
-
-  return Trade;
-}();
-
-module.exports = Trade;
-
-/***/ }),
-/* 218 */
-/***/ (function(module, exports, __webpack_require__) {
-
 "use strict";
 
 
@@ -44070,7 +42908,7 @@ Object.defineProperties(Address.prototype, {
 });
 
 /***/ }),
-/* 219 */
+/* 213 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -44216,7 +43054,7 @@ var API = function (_Exchange$API) {
 module.exports = API;
 
 /***/ }),
-/* 220 */
+/* 214 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -44361,13 +43199,13 @@ var BankAccount = function (_PaymentAccount) {
 module.exports = BankAccount;
 
 /***/ }),
-/* 221 */
+/* 215 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Address = __webpack_require__(218);
+var Address = __webpack_require__(212);
 
 module.exports = CoinifyBank;
 
@@ -44463,7 +43301,7 @@ Object.defineProperties(CoinifyBank.prototype, {
 });
 
 /***/ }),
-/* 222 */
+/* 216 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
@@ -44479,13 +43317,13 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var Exchange = __webpack_require__(15);
-var CoinifyProfile = __webpack_require__(227);
-var Trade = __webpack_require__(53);
+var CoinifyProfile = __webpack_require__(221);
+var Trade = __webpack_require__(52);
 var CoinifyKYC = __webpack_require__(125);
 var PaymentMedium = __webpack_require__(128);
-var ExchangeRate = __webpack_require__(223);
-var Quote = __webpack_require__(228);
-var API = __webpack_require__(219);
+var ExchangeRate = __webpack_require__(217);
+var Quote = __webpack_require__(222);
+var API = __webpack_require__(213);
 var KYC = __webpack_require__(125);
 var Helpers = __webpack_require__(15).Helpers;
 
@@ -44825,7 +43663,7 @@ var Coinify = function (_Exchange$Exchange) {
 module.exports = Coinify;
 
 /***/ }),
-/* 223 */
+/* 217 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -44858,13 +43696,13 @@ ExchangeRate.prototype.get = function (baseCurrency, quoteCurrency) {
 };
 
 /***/ }),
-/* 224 */
+/* 218 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(222);
+module.exports = __webpack_require__(216);
 
 /***/ }),
-/* 225 */
+/* 219 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -44915,7 +43753,7 @@ Object.defineProperties(Level.prototype, {
 });
 
 /***/ }),
-/* 226 */
+/* 220 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -44975,7 +43813,7 @@ Object.defineProperties(Limit.prototype, {
 });
 
 /***/ }),
-/* 227 */
+/* 221 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -44983,7 +43821,7 @@ Object.defineProperties(Limit.prototype, {
 
 var assert = __webpack_require__(1);
 var Limits = __webpack_require__(126);
-var Level = __webpack_require__(225);
+var Level = __webpack_require__(219);
 
 module.exports = CoinifyProfile;
 
@@ -45186,7 +44024,7 @@ CoinifyProfile.prototype.update = function (values) {
 };
 
 /***/ }),
-/* 228 */
+/* 222 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -45201,7 +44039,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var PaymentMethod = __webpack_require__(128);
 var Exchange = __webpack_require__(15);
-var Trade = __webpack_require__(53);
+var Trade = __webpack_require__(52);
 
 var Quote = function (_Exchange$Quote) {
   _inherits(Quote, _Exchange$Quote);
@@ -45287,6 +44125,1173 @@ var Quote = function (_Exchange$Quote) {
 }(Exchange.Quote);
 
 module.exports = Quote;
+
+/***/ }),
+/* 223 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Helpers = __webpack_require__(53);
+var assert = __webpack_require__(1);
+
+var API = function () {
+  function API() {
+    _classCallCheck(this, API);
+
+    this._sandbox = false;
+  }
+
+  _createClass(API, [{
+    key: '_request',
+    value: function _request(method, url, data, headers) {
+      headers = headers || {};
+
+      headers['Content-Type'] = 'application/json';
+
+      var options = {
+        headers: headers,
+        credentials: 'omit'
+      };
+
+      // encodeFormData :: Object -> url encoded params
+      var encodeFormData = function encodeFormData(data) {
+        var encoded = Object.keys(data).map(function (k) {
+          return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]);
+        }).join('&');
+        return encoded;
+      };
+
+      if (data && Object.keys(data).length !== 0) {
+        if (method === 'GET') {
+          url += '?' + encodeFormData(data);
+        } else {
+          options.body = JSON.stringify(data);
+        }
+      }
+
+      options.method = method;
+
+      var handleNetworkError = function handleNetworkError(e) {
+        return Promise.reject({ error: 'EXCHANGE_CONNECT_ERROR', message: e });
+      };
+
+      var checkStatus = function checkStatus(response) {
+        if (response.status === 204) {
+          return;
+        } else if (response.status >= 200 && response.status < 300) {
+          return response.json();
+        } else {
+          return response.text().then(Promise.reject.bind(Promise));
+        }
+      };
+
+      return fetch(url, options).catch(handleNetworkError).then(checkStatus);
+    }
+  }, {
+    key: 'sandbox',
+    set: function set(value) {
+      assert(Helpers.isBoolean(value), 'Boolean expected');
+      this._sandbox = value;
+    }
+  }, {
+    key: 'production',
+    set: function set(value) {
+      assert(Helpers.isBoolean(value), 'Boolean expected');
+      this._production = value;
+    }
+  }]);
+
+  return API;
+}();
+
+module.exports = API;
+
+/***/ }),
+/* 224 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var assert = __webpack_require__(1);
+var Helpers = __webpack_require__(53);
+
+// This is poor man's abstract class:
+// https://gist.github.com/Zodiase/af44115098b20d69c531
+
+var Exchange = function () {
+  function Exchange(obj, delegate, api, TradeClass, QuoteClass, PaymentMediumClass) {
+    _classCallCheck(this, Exchange);
+
+    assert(this.constructor !== Exchange, 'Abstract Class');
+    assert(delegate, 'ExchangeDelegate required');
+    assert(api, 'API class required');
+    assert(TradeClass, 'Trade class required');
+    assert(QuoteClass, 'Quote class required');
+    assert(PaymentMediumClass, 'PaymentMedium class required');
+    assert(QuoteClass.getQuote, 'Quote.getQuote missing');
+    this._delegate = delegate;
+    this._api = api;
+    this._trades = [];
+    this._TradeClass = TradeClass;
+    this._QuoteClass = QuoteClass;
+    this._PaymentMediumClass = PaymentMediumClass;
+
+    this._trades = [];
+
+    if (obj.trades) {
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = obj.trades[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var tradeObj = _step.value;
+
+          var trade = new TradeClass(tradeObj, this._api, delegate);
+          trade._getQuote = QuoteClass.getQuote; // Prevents circular dependency
+          trade.debug = this._debug;
+          this._trades.push(trade);
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+    }
+  }
+
+  _createClass(Exchange, [{
+    key: 'getBuyMethods',
+    value: function getBuyMethods() {
+      return this._PaymentMediumClass.getAll(undefined, 'BTC', this._api);
+    }
+  }, {
+    key: 'getSellMethods',
+    value: function getSellMethods() {
+      return this._PaymentMediumClass.getAll('BTC', undefined, this._api);
+    }
+  }, {
+    key: 'getBuyQuote',
+    value: function getBuyQuote(amount, baseCurrency, quoteCurrency) {
+      assert(baseCurrency, 'Specify base currency');
+      assert(baseCurrency !== 'BTC' || quoteCurrency, 'Specify quote currency');
+      // istanbul ignore else
+      if (baseCurrency !== 'BTC') {
+        quoteCurrency = 'BTC';
+      }
+      return this._QuoteClass.getQuote(this._api, this._delegate, -amount, baseCurrency, quoteCurrency, this._debug);
+    }
+  }, {
+    key: 'getSellQuote',
+    value: function getSellQuote(amount, baseCurrency, quoteCurrency) {
+      return this.getBuyQuote(-amount, baseCurrency, quoteCurrency);
+    }
+  }, {
+    key: 'getTrades',
+    value: function getTrades(QuoteClass) {
+      var _this = this;
+
+      assert(QuoteClass, 'QuoteClass required');
+      var save = function save() {
+        return _this.delegate.save.bind(_this.delegate)().then(function () {
+          return _this._trades;
+        });
+      };
+      var update = function update(tradeObjects) {
+        var _iteratorNormalCompletion2 = true;
+        var _didIteratorError2 = false;
+        var _iteratorError2 = undefined;
+
+        try {
+          var _loop = function _loop() {
+            var tradeObj = _step2.value;
+
+            var id = _this._TradeClass.idFromAPI(tradeObj);
+
+            var trade = _this._trades.find(function (trade) {
+              return String(trade.id).toLowerCase() === String(id).toLowerCase();
+            });
+
+            if (!trade) {
+              // We don't cache e.g. cancelled trades
+              trade = new _this._TradeClass(null, _this._api, _this.delegate);
+              trade._getQuote = QuoteClass.getQuote; // Prevents circular dependency
+              _this._trades.push(trade);
+            }
+
+            trade.setFromAPI(tradeObj);
+          };
+
+          for (var _iterator2 = tradeObjects[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+            _loop();
+          }
+        } catch (err) {
+          _didIteratorError2 = true;
+          _iteratorError2 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion2 && _iterator2.return) {
+              _iterator2.return();
+            }
+          } finally {
+            if (_didIteratorError2) {
+              throw _iteratorError2;
+            }
+          }
+        }
+      };
+      var process = function process() {
+        var _iteratorNormalCompletion3 = true;
+        var _didIteratorError3 = false;
+        var _iteratorError3 = undefined;
+
+        try {
+          for (var _iterator3 = _this._trades[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+            var _trade = _step3.value;
+
+            _trade.process(_this._trades);
+          }
+        } catch (err) {
+          _didIteratorError3 = true;
+          _iteratorError3 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion3 && _iterator3.return) {
+              _iterator3.return();
+            }
+          } finally {
+            if (_didIteratorError3) {
+              throw _iteratorError3;
+            }
+          }
+        }
+      };
+      return this._TradeClass.fetchAll(this._api).then(update).then(process).then(save);
+    }
+  }, {
+    key: 'monitorPayments',
+    value: function monitorPayments() {
+      this._TradeClass.monitorPayments(this._trades, this.delegate);
+    }
+  }, {
+    key: 'api',
+    get: function get() {
+      return this._api;
+    }
+  }, {
+    key: 'debug',
+    get: function get() {
+      return this._debug;
+    },
+    set: function set(value) {
+      this._debug = Boolean(value);
+      this._delegate.debug = Boolean(value);
+      var _iteratorNormalCompletion4 = true;
+      var _didIteratorError4 = false;
+      var _iteratorError4 = undefined;
+
+      try {
+        for (var _iterator4 = this.trades[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+          var _trade2 = _step4.value;
+
+          _trade2.debug = Boolean(value);
+        }
+      } catch (err) {
+        _didIteratorError4 = true;
+        _iteratorError4 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion4 && _iterator4.return) {
+            _iterator4.return();
+          }
+        } finally {
+          if (_didIteratorError4) {
+            throw _iteratorError4;
+          }
+        }
+      }
+    }
+  }, {
+    key: 'user',
+    get: function get() {
+      return this._user;
+    }
+  }, {
+    key: 'autoLogin',
+    get: function get() {
+      return this._auto_login;
+    },
+    set: function set(value) {
+      assert(Helpers.isBoolean(value), 'Boolean');
+      this._auto_login = value;
+      this.delegate.save.bind(this.delegate)();
+    }
+  }, {
+    key: 'trades',
+    get: function get() {
+      return this._trades;
+    }
+  }, {
+    key: 'delegate',
+    get: function get() {
+      return this._delegate;
+    }
+  }, {
+    key: 'profile',
+    get: function get() {
+      return this._profile;
+    }
+  }]);
+
+  return Exchange;
+}();
+
+module.exports = Exchange;
+
+/***/ }),
+/* 225 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var assert = __webpack_require__(1);
+
+var PaymentAccount = function () {
+  function PaymentAccount(api, fiatMedium, quote, TradeClass) {
+    _classCallCheck(this, PaymentAccount);
+
+    assert(api, 'API required');
+    assert(TradeClass, 'Trade class required');
+    this._api = api;
+    this._quote = quote;
+    this._TradeClass = TradeClass;
+    this._fiatMedium = fiatMedium;
+  }
+
+  _createClass(PaymentAccount, [{
+    key: 'buy',
+    value: function buy() {
+      var _this = this;
+
+      if (!this._quote) {
+        return Promise.reject('QUOTE_MISSING');
+      }
+      var delegate = this._quote.delegate;
+      var addTrade = function addTrade(trade) {
+        trade.debug = _this._quote.debug;
+        delegate.trades.push(trade);
+        return delegate.save.bind(delegate)().then(function () {
+          return trade;
+        });
+      };
+
+      return this._TradeClass.buy(this._quote, this.fiatMedium, this._id).then(addTrade);
+    }
+  }, {
+    key: 'sell',
+    value: function sell() {
+      var _this2 = this;
+
+      if (!this._quote) {
+        return Promise.reject('QUOTE_MISSING');
+      }
+      var delegate = this._quote.delegate;
+      var addTrade = function addTrade(trade) {
+        trade.debug = _this2._quote.debug;
+        delegate.trades.push(trade);
+        return delegate.save.bind(delegate)().then(function () {
+          return trade;
+        });
+      };
+
+      return this._TradeClass.sell(this._quote, this._id).then(addTrade);
+    }
+  }, {
+    key: 'id',
+    get: function get() {
+      return this._id;
+    }
+  }, {
+    key: 'fiatMedium',
+    get: function get() {
+      return this._fiatMedium;
+    }
+  }, {
+    key: 'name',
+    get: function get() {
+      return this._name;
+    }
+  }, {
+    key: 'account',
+    get: function get() {
+      return this._account;
+    }
+  }, {
+    key: 'accountNumber',
+    get: function get() {
+      return this._account._number;
+    }
+  }, {
+    key: 'quote',
+    get: function get() {
+      return this._quote;
+    }
+  }]);
+
+  return PaymentAccount;
+}();
+
+module.exports = PaymentAccount;
+
+/***/ }),
+/* 226 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var assert = __webpack_require__(1);
+
+var PaymentMedium = function () {
+  function PaymentMedium(api, quote) {
+    _classCallCheck(this, PaymentMedium);
+
+    assert(this.constructor !== PaymentMedium, 'Abstract Class');
+    assert(api, 'API required');
+    this._api = api;
+
+    if (quote) {
+      this._quote = quote;
+      this._TradeClass = quote._TradeClass;
+    }
+
+    this._accounts = [];
+  }
+
+  _createClass(PaymentMedium, [{
+    key: 'buy',
+
+
+    /* Depending on the exchange partner, buy() needs to be called either on
+       PaymentMedium or on PaymentAccount. Examples:
+       * when buying with Coinify using a bank transfer, you don't need to register
+         a specific bank account. Call buy() on the PaymentMedium instance.
+       * when buying with SFOX via ACH, you need to specify which bank account.
+         call buy on a PaymentAccount instance.
+       * when selling with Coinify, you need to register the destination bank
+         account first, so call sell() on a PaymentAccount instance.
+    */
+
+    value: function buy() {
+      var _this = this;
+
+      if (!this._quote) {
+        return Promise.reject('QUOTE_MISSING');
+      }
+      var delegate = this._quote.delegate;
+      var addTrade = function addTrade(trade) {
+        trade.debug = _this._quote.debug;
+        delegate.trades.push(trade);
+        return delegate.save.bind(delegate)().then(function () {
+          return trade;
+        });
+      };
+
+      return this._TradeClass.buy(this._quote, this.fiatMedium).then(addTrade);
+    }
+  }, {
+    key: 'accounts',
+    get: function get() {
+      return this._accounts;
+    }
+  }, {
+    key: 'inMedium',
+    get: function get() {
+      return this._inMedium;
+    }
+  }, {
+    key: 'outMedium',
+    get: function get() {
+      return this._outMedium;
+    }
+  }, {
+    key: 'fiatMedium',
+    get: function get() {
+      return this._fiatMedium;
+    }
+  }, {
+    key: 'inCurrencies',
+    get: function get() {
+      return this._inCurrencies;
+    }
+  }, {
+    key: 'outCurrencies',
+    get: function get() {
+      return this._outCurrencies;
+    }
+  }, {
+    key: 'inCurrency',
+    get: function get() {
+      return this._inCurrency;
+    }
+  }, {
+    key: 'outCurrency',
+    get: function get() {
+      return this._outCurrency;
+    }
+  }, {
+    key: 'inFixedFee',
+    get: function get() {
+      return this._inFixedFee || 0;
+    }
+  }, {
+    key: 'outFixedFee',
+    get: function get() {
+      return this._outFixedFee || 0;
+    }
+  }, {
+    key: 'inPercentageFee',
+    get: function get() {
+      return this._inPercentageFee || 0;
+    }
+  }, {
+    key: 'outPercentageFee',
+    get: function get() {
+      return this._outPercentageFee || 0;
+    }
+  }, {
+    key: 'minimumInAmounts',
+    get: function get() {
+      return this._minimumInAmounts || {};
+    }
+  }, {
+    key: 'fee',
+    get: function get() {
+      return this._fee;
+    }
+  }, {
+    key: 'total',
+    get: function get() {
+      return this._total;
+    }
+  }]);
+
+  return PaymentMedium;
+}();
+
+module.exports = PaymentMedium;
+
+/***/ }),
+/* 227 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Helpers = __webpack_require__(53);
+var assert = __webpack_require__(1);
+
+var Quote = function () {
+  function Quote(api, delegate, TradeClass, PaymentMediumClass) {
+    _classCallCheck(this, Quote);
+
+    assert(this.constructor !== Quote, 'Abstract Class');
+    assert(api, 'API required');
+    assert(delegate, 'ExchangeDelegate required');
+    assert(TradeClass, 'Trade class required');
+    assert(PaymentMediumClass, 'PaymentMedium class required');
+    assert(PaymentMediumClass.getAll, 'PaymentMedium.getAll missing');
+    assert(TradeClass.buy, 'Trade.buy() missing');
+
+    this._api = api;
+    this._delegate = delegate;
+    this._TradeClass = TradeClass;
+    this._PaymentMediumClass = PaymentMediumClass;
+    this._timeOfRequest = new Date().getTime();
+
+    this._paymentMediums = null;
+  }
+
+  _createClass(Quote, [{
+    key: 'getPaymentMediums',
+    value: function getPaymentMediums() {
+      var self = this;
+
+      var setPaymentMediums = function setPaymentMediums(paymentMediums) {
+        self._paymentMediums = paymentMediums;
+        return self.paymentMediums;
+      };
+
+      var inCurrency = this.baseCurrency;
+      var outCurrency = this.quoteCurrency;
+      if (this.baseCurrency === 'BTC' && this.baseAmount > 0) {
+        inCurrency = this.quoteCurrency;
+        outCurrency = this.baseCurrency;
+      }
+      if (this.paymentMediums) {
+        return Promise.resolve(this.paymentMediums);
+      } else {
+        return this._PaymentMediumClass.getAll(inCurrency, outCurrency, this._api, this).then(setPaymentMediums);
+      }
+    }
+  }, {
+    key: 'getPayoutMediums',
+    value: function getPayoutMediums() {
+      var self = this;
+      var outCurrency = void 0;
+      if (this.baseCurrency === 'BTC') {
+        outCurrency = this.quoteCurrency;
+      } else {
+        outCurrency = this.baseCurrency;
+      }
+      var setPaymentMediums = function setPaymentMediums(paymentMediums) {
+        self._paymentMediums = paymentMediums;
+        return self.paymentMediums;
+      };
+      return this._PaymentMediumClass.getAll('BTC', outCurrency, this._api, this).then(setPaymentMediums);
+    }
+  }, {
+    key: 'id',
+    get: function get() {
+      return this._id;
+    }
+  }, {
+    key: 'debug',
+    get: function get() {
+      return this._debug;
+    },
+    set: function set(value) {
+      this._debug = Boolean(value);
+    }
+  }, {
+    key: 'api',
+    get: function get() {
+      return this._api;
+    }
+  }, {
+    key: 'delegate',
+    get: function get() {
+      return this._delegate;
+    }
+  }, {
+    key: 'baseCurrency',
+    get: function get() {
+      return this._baseCurrency;
+    }
+  }, {
+    key: 'quoteCurrency',
+    get: function get() {
+      return this._quoteCurrency;
+    }
+  }, {
+    key: 'feeCurrency',
+    get: function get() {
+      return this._feeCurrency;
+    }
+  }, {
+    key: 'baseAmount',
+    get: function get() {
+      return this._baseAmount;
+    }
+  }, {
+    key: 'quoteAmount',
+    get: function get() {
+      return this._quoteAmount;
+    }
+  }, {
+    key: 'feeAmount',
+    get: function get() {
+      return this._feeAmount;
+    }
+  }, {
+    key: 'expiresAt',
+    get: function get() {
+      return this._expiresAt;
+    }
+  }, {
+    key: 'timeOfRequest',
+    get: function get() {
+      return this._timeOfRequest;
+    }
+  }, {
+    key: 'timeToExpiration',
+    get: function get() {
+      return this._expiresAt - this._timeOfRequest - 1000;
+    }
+  }, {
+    key: 'paymentMediums',
+    get: function get() {
+      return this._paymentMediums;
+    }
+  }], [{
+    key: 'getQuote',
+    value: function getQuote(amount, baseCurrency, quoteCurrency, supportedCurrencies, debug) {
+      assert(Helpers.isInteger(amount), 'amount must be in cents or satoshi');
+
+      if (supportedCurrencies.indexOf(baseCurrency) === -1) {
+        return Promise.reject('base_currency_not_supported');
+      }
+
+      if (supportedCurrencies.indexOf(quoteCurrency) === -1) {
+        return Promise.reject('quote_currency_not_supported');
+      }
+
+      // istanbul ignore if
+      if (baseCurrency === 'CNY' || quoteCurrency === 'CNY') {
+        console.warn('CNY has only 1 decimal place');
+      }
+
+      var baseAmount;
+      if (baseCurrency === 'BTC') {
+        baseAmount = (amount / 100000000).toFixed(8);
+      } else {
+        baseAmount = (amount / 100).toFixed(2);
+      }
+      return Promise.resolve(baseAmount);
+    }
+  }]);
+
+  return Quote;
+}();
+
+module.exports = Quote;
+
+/***/ }),
+/* 228 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var assert = __webpack_require__(1);
+
+var Trade = function () {
+  function Trade(obj, api, delegate) {
+    _classCallCheck(this, Trade);
+
+    assert(this.constructor !== Trade, 'Abstract Class');
+    assert(this.refresh, 'Subclass must implement refresh()');
+    assert(api, 'API missing');
+    assert(delegate, 'delegate missing');
+    assert(typeof delegate.getReceiveAddress === 'function', 'delegate requires getReceiveAddress()');
+    this._expiresAt = null;
+    this._delegate = delegate;
+    this._api = api;
+    this._fromApi = false;
+
+    if (obj !== null) {
+      this._id = obj.id;
+    }
+  }
+
+  _createClass(Trade, [{
+    key: 'setFromAPI',
+    value: function setFromAPI() {
+      this._fromApi = true;
+    }
+  }, {
+    key: 'self',
+    value: function self() {
+      return this;
+    }
+  }, {
+    key: 'process',
+    value: function process() {
+      if (['rejected', 'cancelled', 'expired', 'failed'].indexOf(this.state) > -1) {
+        /* istanbul ignore if */
+        if (this.debug) {
+          console.info('Check if address for ' + this.state + ' trade ' + this.id + ' can be released');
+        }
+        this._delegate.releaseReceiveAddress(this);
+      }
+    }
+
+    // Checks the balance for the receive address and monitors the websocket if needed:
+    // Call this method long before the user completes the purchase:
+    // trade.watchAddress.then(() => ...);
+
+  }, {
+    key: 'watchAddress',
+    value: function watchAddress() {
+      /* istanbul ignore if */
+      if (this.debug) {
+        console.info('Watch ' + this.receiveAddress + ' for ' + this.state + ' trade ' + this.id);
+      }
+      // Check if this transaction is already marked as paid:
+      if (this._txHash) {
+        /* istanbul ignore if */
+        if (this.debug) {
+          console.info("Already paid, resolve immedidately and don't watch.");
+        }
+        return Promise.resolve();
+      }
+      var self = this;
+      var promise = new Promise(function (resolve, reject) {
+        self._watchAddressResolve = resolve;
+      });
+      return promise;
+    }
+  }, {
+    key: '_monitorAddress',
+    value: function _monitorAddress() {
+      var _this = this;
+
+      var save = function save() {
+        return _this._delegate.save.bind(_this._delegate)();
+      };
+
+      var self = this;
+
+      this._delegate.monitorAddress(this.receiveAddress, function (hash, amount) {
+        var checkAddress = function checkAddress() {
+          return self._setTransactionHash({ hash: hash }, amount, self._delegate);
+        };
+        if (self.state === 'completed' || self.state === 'processing' || self.state === 'completed_test') {
+          return Promise.resolve().then(checkAddress).then(save);
+        } else {
+          return self.refresh().then(checkAddress).then(save);
+        }
+      });
+    }
+  }, {
+    key: '_setTransactionHash',
+
+
+    //
+    value: function _setTransactionHash(tx, amount, delegate) {
+      var self = this;
+      var setConfirmations = function setConfirmations(tx) {
+        self._confirmations = tx.confirmations;
+        // TODO: refactor
+        if (self.confirmed) {
+          self._confirmed = true;
+        }
+      };
+
+      /* istanbul ignore if */
+      if (self.debug) {
+        console.info('Transaction ' + tx.hash + ' detected, considering ' + self.state + ' trade ' + self.id);
+      }
+      if (self.state === 'completed_test') {
+        if (!self.confirmations && !self._txHash) {
+          // For test trades, there is no real transaction, so trade._txHash is not
+          // set. Instead use the hash for the incoming transaction. This will not
+          // work correctly with address reuse.
+          /* istanbul ignore if */
+          if (self.debug) {
+            console.info('Test trade, not matched before, unconfirmed transaction, assuming match');
+          }
+          self._txHash = tx.hash;
+          setConfirmations(tx);
+          self._watchAddressResolve && self._watchAddressResolve();
+        } else {
+          /* istanbul ignore if */
+          if (self.debug) {
+            console.info('Trade already matched, not calling _watchAddressResolve()');
+          }
+          if (self._txHash === tx.hash) {
+            setConfirmations(tx);
+          }
+        }
+        /* istanbul ignore else */
+      } else if (self.state === 'completed' || self.state === 'processing') {
+        if (self._txHash) {
+          // Multiple trades may reuse the same address if e.g. one is
+          // cancelled of if we reach the gap limit.
+          /* istanbul ignore if */
+          if (self.debug) {
+            console.info('Trade already matched, not calling _watchAddressResolve()');
+          }
+          if (self._txHash === tx.hash) {
+            setConfirmations(tx);
+          } else {
+            // Different trade, ignore
+          }
+        } else {
+          // transferOut.details.transaction is not implemented and might be
+          // missing if in the processing state.
+          /* istanbul ignore if */
+          if (self.debug) {
+            console.info('Trade not matched yet, assuming match');
+          }
+          self._txHash = tx.hash;
+          setConfirmations(tx);
+        }
+        self._watchAddressResolve && self._watchAddressResolve();
+      } else {
+        /* istanbul ignore if */
+        if (self.debug) {
+          console.info('Not calling _watchAddressResolve()');
+        }
+      }
+    }
+  }, {
+    key: 'debug',
+    get: function get() {
+      return this._debug;
+    },
+    set: function set(value) {
+      this._debug = Boolean(value);
+    }
+  }, {
+    key: 'id',
+    get: function get() {
+      return this._id;
+    }
+  }, {
+    key: 'createdAt',
+    get: function get() {
+      return this._createdAt;
+    }
+  }, {
+    key: 'expiresAt',
+    get: function get() {
+      return this._expiresAt;
+    }
+  }, {
+    key: 'inCurrency',
+    get: function get() {
+      return this._inCurrency;
+    }
+  }, {
+    key: 'outCurrency',
+    get: function get() {
+      return this._outCurrency;
+    }
+  }, {
+    key: 'inAmount',
+    get: function get() {
+      return this._inAmount;
+    }
+  }, {
+    key: 'medium',
+    get: function get() {
+      return this._medium;
+    }
+  }, {
+    key: 'state',
+    get: function get() {
+      return this._state;
+    }
+  }, {
+    key: 'sendAmount',
+    get: function get() {
+      return this._sendAmount;
+    }
+  }, {
+    key: 'outAmount',
+    get: function get() {
+      return this._outAmount;
+    }
+  }, {
+    key: 'outAmountExpected',
+    get: function get() {
+      return this._outAmountExpected;
+    }
+  }, {
+    key: 'receiveAddress',
+    get: function get() {
+      return this._receiveAddress;
+    }
+  }, {
+    key: 'accountIndex',
+    get: function get() {
+      return this._account_index;
+    }
+  }, {
+    key: 'bitcoinReceived',
+    get: function get() {
+      return Boolean(this._txHash);
+    }
+  }, {
+    key: 'bankAccountNumber',
+    get: function get() {
+      return this._bankAccountNumber;
+    }
+  }, {
+    key: 'transferIn',
+    get: function get() {
+      return this._transferIn;
+    }
+  }, {
+    key: 'transferOut',
+    get: function get() {
+      return this._transferOut;
+    }
+  }, {
+    key: 'iSignThisID',
+    get: function get() {
+      return this._iSignThisID;
+    }
+  }, {
+    key: 'confirmed',
+    get: function get() {
+      return this._confirmed || this._confirmations >= 3;
+    }
+  }, {
+    key: 'txHash',
+    get: function get() {
+      return this._txHash || null;
+    }
+  }], [{
+    key: '_checkOnce',
+    value: function _checkOnce(trades, delegate) {
+      assert(delegate, '_checkOnce needs delegate');
+
+      if (trades.length === 0) {
+        return Promise.resolve();
+      }
+
+      /* istanbul ignore if */
+      if (delegate.debug) {
+        console.info('_checkOnce', trades.map(function (trade) {
+          return trade.id;
+        }).join(', '));
+      }
+
+      var promises = trades.map(function (trade) {
+        return delegate.checkAddress(trade.receiveAddress).then(function (tx, amount) {
+          if (!tx) return;
+
+          /* istanbul ignore if */
+          if (delegate.debug) {
+            console.info('checkAddress', trade.receiveAddress, 'found transaction');
+          }
+
+          var setTransactionHash = function setTransactionHash() {
+            return trade._setTransactionHash(tx, amount, delegate);
+          };
+
+          if (trade.state === 'completed' || trade.state === 'processing' || trade.state === 'completed_test') {
+            return setTransactionHash();
+          } else {
+            return trade.refresh().then(setTransactionHash);
+          }
+        });
+      });
+
+      return Promise.all(promises).then(delegate.save.bind(delegate));
+    }
+  }, {
+    key: 'buy',
+    value: function buy(quote, medium, request) {
+      assert(quote, 'Quote required');
+      assert(quote.expiresAt > new Date(), 'QUOTE_EXPIRED');
+
+      /* istanbul ignore if */
+      if (quote.debug) {
+        console.info('Reserve receive address for new trade');
+      }
+      var reservation = quote.delegate.reserveReceiveAddress();
+
+      var processTrade = function processTrade(res) {
+        var trade = new quote._TradeClass(null, quote.api, quote.delegate);
+        trade.setFromAPI(res);
+        trade.debug = quote.debug;
+
+        /* istanbul ignore if */
+        if (quote.debug) {
+          console.info('Commit receive address for new trade');
+        }
+        reservation.commit(trade);
+
+        /* istanbul ignore if */
+        if (quote.debug) {
+          console.info('Monitor trade', trade.receiveAddress);
+        }
+        trade._monitorAddress.bind(trade)();
+        return trade;
+      };
+
+      var error = function error(e) {
+        console.error(e);
+        return Promise.reject(e);
+      };
+
+      return request(reservation.receiveAddress).then(processTrade).catch(error);
+    }
+  }, {
+    key: 'sell',
+    value: function sell(quote, bankId, request) {
+      var error = function error(e) {
+        console.error(e);
+        return Promise.reject(e);
+      };
+      return request(bankId).then(function (res) {
+        var trade = new quote._TradeClass(null, quote.api, quote.delegate);
+        trade.setFromAPI(res);
+        trade.debug = quote.debug;
+        return trade;
+      }).catch(error);
+    }
+  }, {
+    key: '_monitorWebSockets',
+    value: function _monitorWebSockets(trades) {
+      for (var i = 0; i < trades.length; i++) {
+        var trade = trades[i];
+        trade._monitorAddress.bind(trade)();
+      }
+    }
+
+    // Monitor the receive addresses for pending and completed trades.
+
+  }, {
+    key: 'monitorPayments',
+    value: function monitorPayments(trades, delegate) {
+      /* istanbul ignore if */
+      if (delegate.debug) {
+        console.info('monitorPayments');
+      }
+
+      assert(delegate, '_monitorPayments needs delegate');
+
+      var tradeFilter = function tradeFilter(trade) {
+        return ['awaiting_reference_number', 'awaiting_transfer_in', 'reviewing', 'processing', 'completed', 'completed_test'].indexOf(trade.state) > -1 && !trade.confirmed;
+      };
+
+      var filteredTrades = trades.filter(tradeFilter);
+
+      Trade._checkOnce(filteredTrades, delegate).then(function () {
+        Trade._monitorWebSockets(filteredTrades);
+      });
+    }
+  }, {
+    key: 'filteredTrades',
+    value: function filteredTrades(trades) {
+      return trades.filter(function (trade) {
+        // Only consider transactions that are complete or that we're still
+        // expecting payment for:
+        return ['awaiting_reference_number', 'awaiting_transfer_in', 'processing', 'reviewing', 'completed', 'completed_test'].indexOf(trade.state) > -1;
+      });
+    }
+  }]);
+
+  return Trade;
+}();
+
+module.exports = Trade;
 
 /***/ }),
 /* 229 */
