@@ -1,27 +1,24 @@
 __Blockchain Wallet V3__
 
-#   (2017-09-15)
+#   (2017-09-22)
 
 
 
 ---
 
-## Features
-
-- **api:** change endpoint name
-  ([1b0d32e9](https://github.com/blockchain/My-Wallet-V3/commit/1b0d32e90f1aebf7075c60cdf543dd033f87ae36))
-
-
 ## Chore
 
-- **release:** bump version
-  ([e82339c6](https://github.com/blockchain/My-Wallet-V3/commit/e82339c6bf191e70a0bdd32501427d0b0fce49db))
+- **release:**
+  - upgrade exchange, coinify
+  ([91fb702f](https://github.com/blockchain/My-Wallet-V3/commit/91fb702fbff05e95ae7f0578c705e3af40b387af))
+  - bump version
+  ([4b8b3c22](https://github.com/blockchain/My-Wallet-V3/commit/4b8b3c225f13c1908017018c34e628114d94d68e))
 
 
 ## Pull requests merged
 
-- Merge pull request #441 from blockchain/chart-endpoint-change
-  ([f88f0097](https://github.com/blockchain/My-Wallet-V3/commit/f88f00974207e6ad48b4ba600f41b12a6f13af0d))
+- Merge pull request #437 from blockchain/v3.36-release
+  ([5fb6d46d](https://github.com/blockchain/My-Wallet-V3/commit/5fb6d46d5c4b03979ee524559094cef50f7cbe9f))
 
 
 
