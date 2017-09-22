@@ -10928,7 +10928,7 @@ var Trade = function (_Exchange$Trade) {
           transferOut: {
             medium: 'blockchain',
             details: {
-              account: receiveAddress
+              account: quote.api._sandbox ? 'mr1XzK8Y6uLesyHYDm3bHGXrTDRJ6y7L4U' : receiveAddress
             }
           }
         });
@@ -21296,7 +21296,8 @@ var PaymentMedium = function (_ExchangePaymentMediu) {
 
     if (quote) {
       var amt = quote.baseCurrency === 'BTC' ? quote.quoteAmount : quote.baseAmount;
-      _this._fee = Math.round(_this.inFixedFee + -amt * (_this.inPercentageFee / 100));
+      var percentageFee = amt < 0 ? _this.inPercentageFee : -_this.outPercentageFee;
+      _this._fee = Math.round(_this.inFixedFee + -amt * (percentageFee / 100));
       _this._total = -amt + _this._fee;
     }
     return _this;
@@ -44127,7 +44128,7 @@ var API = function (_Exchange$API) {
     key: '_url',
     value: function _url(endpoint) {
       endpoint = endpoint || '';
-      return 'https://app-api' + (this._testnet ? '.sandbox' : '') + '.coinify.com/' + endpoint;
+      return 'https://app-api' + (this._sandbox ? '.sandbox' : '') + '.coinify.com/' + endpoint;
     }
   }, {
     key: '_request',
