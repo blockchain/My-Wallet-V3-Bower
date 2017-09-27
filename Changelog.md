@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2017-09-22)
+#   (2017-09-27)
 
 
 
@@ -8,8 +8,11 @@ __Blockchain Wallet V3__
 
 ## Chore
 
-- **release:** v3.37.2
-  ([67e19008](https://github.com/blockchain/My-Wallet-V3/commit/67e19008956ee1253dbd7f2c885446b765a1474c))
+- **release:**
+  - v3.37.3
+  ([6fd615a8](https://github.com/blockchain/My-Wallet-V3/commit/6fd615a8941aba589e4a7208c822b09565acc00c))
+  - upgrade client
+  ([1213fbec](https://github.com/blockchain/My-Wallet-V3/commit/1213fbec50a5b89f8aba4df7ce716a041e701f64))
 
 
 
