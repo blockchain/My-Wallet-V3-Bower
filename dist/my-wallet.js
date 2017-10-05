@@ -68947,6 +68947,8 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 /* eslint-disable semi */
 var BchSpendable = __webpack_require__(222);
 
+var ACCOUNT_LABEL_PREFIX = 'Bitcoin Cash - ';
+
 var BchAccount = function (_BchSpendable) {
   _inherits(BchAccount, _BchSpendable);
 
@@ -68980,10 +68982,14 @@ var BchAccount = function (_BchSpendable) {
       return this._btcAccount.extendedPublicKey;
     }
   }, {
+    key: 'archived',
+    get: function get() {
+      return this._btcAccount.archived;
+    }
+  }, {
     key: 'label',
     get: function get() {
-      var walletIndex = this.index > 0 ? ' ' + (this.index + 1) : '';
-      return 'My Bitcoin Cash Wallet' + walletIndex;
+      return ACCOUNT_LABEL_PREFIX + this._btcAccount.label;
     }
   }, {
     key: 'balance',
@@ -69062,7 +69068,7 @@ var BchImported = function (_BchSpendable) {
   }, {
     key: 'addresses',
     get: function get() {
-      return this._wallet.addresses;
+      return this._wallet.spendableActiveAddresses;
     }
   }, {
     key: 'label',
@@ -69335,7 +69341,8 @@ var BitcoinCashWallet = function () {
     this._addressInfo = {};
     this._txs = [];
 
-    this.importedAddresses = this._wallet.keys.length > 0 ? new BchImported(this, this._wallet) : null;
+    var imported = new BchImported(this, this._wallet);
+    this.importedAddresses = imported.addresses.length > 0 ? imported : null;
 
     this.accounts = wallet.hdwallet.accounts.map(function (account) {
       return new BchAccount(_this, _this._wallet, account);
@@ -69361,8 +69368,10 @@ var BitcoinCashWallet = function () {
     value: function getHistory() {
       var _this2 = this;
 
-      var addrs = this._wallet.addresses;
-      var xpubs = this._wallet.hdwallet.xpubs;
+      var addrs = this.importedAddresses == null ? [] : this.importedAddresses.addresses;
+      var xpubs = this.accounts.map(function (a) {
+        return a.xpub;
+      });
       return BchApi.multiaddr(addrs.concat(xpubs), 50).then(function (result) {
         var wallet = result.wallet,
             addresses = result.addresses,
