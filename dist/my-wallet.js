@@ -2324,7 +2324,7 @@ if (typeof Object.create === 'function') {
 "use strict";
 
 
-var Bitcoin = __webpack_require__(16);
+var Bitcoin = __webpack_require__(14);
 var BigInteger = __webpack_require__(10);
 var Buffer = __webpack_require__(0).Buffer;
 var Base58 = __webpack_require__(75);
@@ -2332,7 +2332,7 @@ var BIP39 = __webpack_require__(51);
 var BigNumber = __webpack_require__(250);
 var ethUtil = __webpack_require__(84);
 var ImportExport = __webpack_require__(94);
-var constants = __webpack_require__(14);
+var constants = __webpack_require__(15);
 var WalletCrypo = __webpack_require__(17);
 var has = __webpack_require__(463);
 var allPass = __webpack_require__(458);
@@ -6836,15 +6836,6 @@ API.prototype.getUnspent = function (fromAddresses, confirmations) {
   return this.retry(this.request.bind(this, 'POST', 'unspent', data));
 };
 
-API.prototype.getUnspentBCH = function (fromAddresses, confirmations) {
-  var data = {
-    active: fromAddresses.join('|'),
-    confirmations: Helpers.isPositiveNumber(confirmations) ? confirmations : -1,
-    format: 'json'
-  };
-  return this.retry(this.request.bind(this, 'POST', 'bch/unspent', data));
-};
-
 API.prototype.getHistory = function (addresses, txFilter, offset, n, syncBool) {
   var clientTime = new Date().getTime();
   offset = offset || 0;
@@ -7404,9 +7395,28 @@ module.exports = {
 /* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
+module.exports = {
+  Block: __webpack_require__(317),
+  ECPair: __webpack_require__(69),
+  ECSignature: __webpack_require__(70),
+  HDNode: __webpack_require__(502),
+  Transaction: __webpack_require__(104),
+  TransactionBuilder: __webpack_require__(319),
 
-var Bitcoin = __webpack_require__(16);
-// var BitcoinCash = require('bitcoincashjs-lib');
+  address: __webpack_require__(163),
+  bufferutils: __webpack_require__(56),
+  crypto: __webpack_require__(33),
+  message: __webpack_require__(318),
+  networks: __webpack_require__(31),
+  opcodes: __webpack_require__(63),
+  script: __webpack_require__(71)
+};
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var Bitcoin = __webpack_require__(14);
 
 module.exports = {
   NETWORK: 'bitcoin',
@@ -7431,7 +7441,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7489,27 +7499,6 @@ module.exports = function createHash(alg) {
   return new Hash(sha(alg));
 };
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0).Buffer))
-
-/***/ }),
-/* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = {
-  Block: __webpack_require__(317),
-  ECPair: __webpack_require__(69),
-  ECSignature: __webpack_require__(70),
-  HDNode: __webpack_require__(502),
-  Transaction: __webpack_require__(104),
-  TransactionBuilder: __webpack_require__(319),
-
-  address: __webpack_require__(163),
-  bufferutils: __webpack_require__(56),
-  crypto: __webpack_require__(33),
-  message: __webpack_require__(318),
-  networks: __webpack_require__(31),
-  opcodes: __webpack_require__(63),
-  script: __webpack_require__(71)
-};
 
 /***/ }),
 /* 17 */
@@ -8250,9 +8239,9 @@ var Helpers = __webpack_require__(3);
 var BlockchainSocket = __webpack_require__(519);
 var RNG = __webpack_require__(64);
 var BIP39 = __webpack_require__(51);
-var Bitcoin = __webpack_require__(16);
+var Bitcoin = __webpack_require__(14);
 var pbkdf2 = __webpack_require__(48);
-var constants = __webpack_require__(14);
+var constants = __webpack_require__(15);
 var range = __webpack_require__(479);
 
 var isInitialized = false;
@@ -18354,7 +18343,7 @@ module.exports = WalletStore;
 /* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var createHash = __webpack_require__(15);
+var createHash = __webpack_require__(16);
 
 function hash160(buffer) {
   return ripemd160(sha256(buffer));
@@ -18631,7 +18620,7 @@ module.exports = {
 /* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var createHash = __webpack_require__(15);
+var createHash = __webpack_require__(16);
 
 function ripemd160(buffer) {
   return createHash('rmd160').update(buffer).digest();
@@ -19202,7 +19191,7 @@ module.exports = Hash;
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var assert = __webpack_require__(1);
-var createHash = __webpack_require__(15);
+var createHash = __webpack_require__(16);
 var pbkdf2 = __webpack_require__(48).pbkdf2Sync;
 var randomBytes = __webpack_require__(26);
 var unorm = __webpack_require__(219);
@@ -19703,7 +19692,7 @@ module.exports = {
 /* WEBPACK VAR INJECTION */(function(Buffer) {
 
 var base58 = __webpack_require__(331);
-var createHash = __webpack_require__(15);
+var createHash = __webpack_require__(16);
 
 // SHA256(SHA256(buffer))
 function sha256x2(buffer) {
@@ -22413,7 +22402,7 @@ var secp256k1 = __webpack_require__(133);
 var assert = __webpack_require__(1);
 var rlp = __webpack_require__(215);
 var BN = __webpack_require__(5);
-var createHash = __webpack_require__(15);
+var createHash = __webpack_require__(16);
 Object.assign(exports, __webpack_require__(387));
 
 /**
@@ -23414,12 +23403,13 @@ module.exports = function _isPlaceholder(a) {
 module.exports = KeyRing;
 
 var assert = __webpack_require__(1);
+var Bitcoin = __webpack_require__(14);
 var KeyChain = __webpack_require__(527);
 
 // keyring: A collection of keychains
 
 function KeyRing(extendedKey, cache, bitcoinjs) {
-  this._bitcoinjs = bitcoinjs;
+  this._bitcoinjs = bitcoinjs || Bitcoin;
   this._receiveChain = null;
   this._changeChain = null;
   this.init(extendedKey, cache);
@@ -23703,13 +23693,13 @@ module.exports = {
 "use strict";
 
 
-var Bitcoin = __webpack_require__(16);
+var Bitcoin = __webpack_require__(14);
 var BigInteger = __webpack_require__(10);
 var Base58 = __webpack_require__(75);
 var Unorm = __webpack_require__(219);
 var WalletCrypto = __webpack_require__(17);
 var Buffer = __webpack_require__(0).Buffer;
-var constants = __webpack_require__(14);
+var constants = __webpack_require__(15);
 
 var hash256 = Bitcoin.crypto.hash256;
 
@@ -23869,10 +23859,10 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var WalletCrypto = __webpack_require__(17);
-var Bitcoin = __webpack_require__(16);
+var Bitcoin = __webpack_require__(14);
 var API = __webpack_require__(7);
 var Helpers = __webpack_require__(3);
-var constants = __webpack_require__(14);
+var constants = __webpack_require__(15);
 
 // individual imports to reduce bundle size
 var assoc = __webpack_require__(459);
@@ -24136,10 +24126,10 @@ module.exports = Metadata;
 
 
 var assert = __webpack_require__(1);
-var Bitcoin = __webpack_require__(16);
+var Bitcoin = __webpack_require__(14);
 var Helpers = __webpack_require__(3);
 var Buffer = __webpack_require__(0).Buffer;
-var constants = __webpack_require__(14);
+var constants = __webpack_require__(15);
 
 // Error messages that can be seen by the user should take the form of:
 // {error: "NOT_GOOD", some_param: 1}
@@ -24971,7 +24961,7 @@ module.exports = Trade;
 /* WEBPACK VAR INJECTION */(function(Buffer) {
 
 var base58 = __webpack_require__(292);
-var createHash = __webpack_require__(15);
+var createHash = __webpack_require__(16);
 
 // SHA256(SHA256(buffer))
 function sha256x2(buffer) {
@@ -26424,7 +26414,7 @@ module.exports = function (it, S) {
 
 
 exports.randomBytes = exports.rng = exports.pseudoRandomBytes = exports.prng = __webpack_require__(26);
-exports.createHash = exports.Hash = __webpack_require__(15);
+exports.createHash = exports.Hash = __webpack_require__(16);
 exports.createHmac = exports.Hmac = __webpack_require__(45);
 
 var hashes = ['sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'md5', 'rmd160'].concat(Object.keys(__webpack_require__(327)));
@@ -28217,7 +28207,7 @@ var _require2 = __webpack_require__(198),
 var API = __webpack_require__(7);
 var Coin = __webpack_require__(139);
 var Bitcoin = __webpack_require__(159);
-var constants = __webpack_require__(14);
+var constants = __webpack_require__(15);
 var Helpers = __webpack_require__(3);
 
 var scriptToAddress = function scriptToAddress(coin) {
@@ -28463,12 +28453,12 @@ module.exports = Address;
 var Base58 = __webpack_require__(75);
 var RNG = __webpack_require__(64);
 var API = __webpack_require__(7);
-var Bitcoin = __webpack_require__(16);
+var Bitcoin = __webpack_require__(14);
 var Helpers = __webpack_require__(3);
 var MyWallet = __webpack_require__(22); // This cyclic import should be avoided once the refactor is complete
 var ImportExport = __webpack_require__(94);
 var WalletCrypto = __webpack_require__(17);
-var constants = __webpack_require__(14);
+var constants = __webpack_require__(15);
 
 // Address class
 function Address(object) {
@@ -29315,7 +29305,7 @@ External.prototype.wipe = function () {
 "use strict";
 /* WEBPACK VAR INJECTION */(function(Buffer) {
 
-var Bitcoin = __webpack_require__(16);
+var Bitcoin = __webpack_require__(14);
 var WalletCrypto = __webpack_require__(17);
 var Transaction = __webpack_require__(96);
 var API = __webpack_require__(7);
@@ -29323,7 +29313,7 @@ var Helpers = __webpack_require__(3);
 var KeyRing = __webpack_require__(92);
 var EventEmitter = __webpack_require__(47);
 var util = __webpack_require__(220);
-var constants = __webpack_require__(14);
+var constants = __webpack_require__(15);
 var mapObjIndexed = __webpack_require__(475);
 
 // Payment Class
@@ -34714,7 +34704,7 @@ module.exports = function (password, salt, iterations, keylen, digest) {
 /* 194 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(15);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(16);
 module.exports = function (seed, len) {
   var t = new Buffer('');
   var i = 0,
@@ -38433,12 +38423,12 @@ var Block = __webpack_require__(518);
 var External = __webpack_require__(143);
 var AccountInfo = __webpack_require__(511);
 var Metadata = __webpack_require__(95);
-var constants = __webpack_require__(14);
+var constants = __webpack_require__(15);
 var Payment = __webpack_require__(144);
 var Labels = __webpack_require__(528);
 var EthWallet = __webpack_require__(522);
 var ShapeShift = __webpack_require__(533);
-var Bitcoin = __webpack_require__(16);
+var Bitcoin = __webpack_require__(14);
 var BitcoinCash = __webpack_require__(516);
 
 // Wallet
@@ -53838,7 +53828,7 @@ module.exports = __webpack_require__(230);
 /* 328 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(15);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(16);
 var stream = __webpack_require__(62);
 var inherits = __webpack_require__(2);
 var sign = __webpack_require__(329);
@@ -54208,7 +54198,7 @@ module.exports = Array.isArray || function (arr) {
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var base58 = __webpack_require__(75);
-var createHash = __webpack_require__(15);
+var createHash = __webpack_require__(16);
 
 function encode(payload, version) {
   if (Array.isArray(payload) || payload instanceof Uint8Array) {
@@ -59388,7 +59378,7 @@ var secp256k1 = __webpack_require__(133);
 var assert = __webpack_require__(1);
 var rlp = __webpack_require__(215);
 var BN = __webpack_require__(5);
-var createHash = __webpack_require__(15);
+var createHash = __webpack_require__(16);
 
 /**
  * the max integer that this VM can handle (a ```BN```)
@@ -63292,7 +63282,7 @@ var mgf = __webpack_require__(194);
 var xor = __webpack_require__(196);
 var bn = __webpack_require__(5);
 var crt = __webpack_require__(106);
-var createHash = __webpack_require__(15);
+var createHash = __webpack_require__(16);
 var withPublic = __webpack_require__(195);
 module.exports = function privateDecrypt(private_key, enc, reverse) {
   var padding;
@@ -63403,7 +63393,7 @@ function compare(a, b) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var parseKeys = __webpack_require__(86);
 var randomBytes = __webpack_require__(26);
-var createHash = __webpack_require__(15);
+var createHash = __webpack_require__(16);
 var mgf = __webpack_require__(194);
 var xor = __webpack_require__(196);
 var bn = __webpack_require__(5);
@@ -66236,7 +66226,7 @@ exports.signatureImportLax = function (sig) {
 "use strict";
 /* WEBPACK VAR INJECTION */(function(Buffer) {
 
-var createHash = __webpack_require__(15);
+var createHash = __webpack_require__(16);
 var BN = __webpack_require__(5);
 var EC = __webpack_require__(12).ec;
 
@@ -69012,6 +69002,11 @@ var BchAccount = function (_BchSpendable) {
 
       return this._btcAccount.changeAddressAtIndex(change);
     }
+  }, {
+    key: 'coinCode',
+    get: function get() {
+      return 'bch';
+    }
   }]);
 
   return BchAccount;
@@ -69445,7 +69440,7 @@ var _require2 = __webpack_require__(198),
     mapped = _require2.mapped;
 
 var Bitcoin = __webpack_require__(159);
-var constants = __webpack_require__(14);
+var constants = __webpack_require__(15);
 var WalletCrypto = __webpack_require__(17);
 var Helpers = __webpack_require__(3);
 var KeyRing = __webpack_require__(92);
@@ -69889,6 +69884,11 @@ var EthAccount = function () {
     key: 'nonce',
     get: function get() {
       return this._nonce;
+    }
+  }, {
+    key: 'coinCode',
+    get: function get() {
+      return 'eth';
     }
   }], [{
     key: 'privateKeyToAddress',
@@ -70748,14 +70748,14 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
 module.exports = HDAccount;
 
-var Bitcoin = __webpack_require__(16);
+var Bitcoin = __webpack_require__(14);
 var assert = __webpack_require__(1);
 var Helpers = __webpack_require__(3);
 var KeyRing = __webpack_require__(92);
 var MyWallet = __webpack_require__(22); // This cyclic import should be avoided once the refactor is complete
 var API = __webpack_require__(7);
 var Transaction = __webpack_require__(96);
-var constants = __webpack_require__(14);
+var constants = __webpack_require__(15);
 
 // HDAccount Class
 
@@ -70929,6 +70929,12 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function get() {
       return this._index;
+    }
+  },
+  'coinCode': {
+    configurable: false,
+    get: function get() {
+      return 'btc';
     }
   }
 });
@@ -71118,13 +71124,13 @@ HDAccount.prototype.getAvailableBalance = function (feeType) {
 
 module.exports = HDWallet;
 
-var Bitcoin = __webpack_require__(16);
+var Bitcoin = __webpack_require__(14);
 var assert = __webpack_require__(1);
 var Helpers = __webpack_require__(3);
 var HDAccount = __webpack_require__(524);
 var BIP39 = __webpack_require__(51);
 var MyWallet = __webpack_require__(22); // This cyclic import should be avoided once the refactor is complete
-var constants = __webpack_require__(14);
+var constants = __webpack_require__(15);
 
 function HDWallet(object) {
   function addAccount(o, index) {
@@ -71469,10 +71475,10 @@ module.exports = {
   Transaction: __webpack_require__(96),
   Address: __webpack_require__(141),
   Metadata: __webpack_require__(95),
-  Bitcoin: __webpack_require__(16),
+  Bitcoin: __webpack_require__(14),
   External: __webpack_require__(143),
   BuySell: __webpack_require__(237),
-  constants: __webpack_require__(14),
+  constants: __webpack_require__(15),
   BigInteger: __webpack_require__(10),
   BIP39: __webpack_require__(51),
   Networks: __webpack_require__(31),
@@ -71488,10 +71494,10 @@ module.exports = {
 
 module.exports = KeyChain;
 
-var Bitcoin = __webpack_require__(16);
+var Bitcoin = __webpack_require__(14);
 var assert = __webpack_require__(1);
 var Helpers = __webpack_require__(3);
-var constants = __webpack_require__(14);
+var constants = __webpack_require__(15);
 
 // keychain
 function KeyChain(extendedKey, index, cache, bitcoinjs) {
@@ -72334,6 +72340,9 @@ var ShapeShift = function () {
       var payment = void 0;
       if (quote.depositAddress == null) {
         throw new Error('Quote is missing deposit address');
+      }
+      if (fromAccount != null && fromAccount.coinCode !== quote.fromCurrency) {
+        throw new Error('Sending account currency does not match quote deposit currency');
       }
       if (quote.fromCurrency === 'btc') {
         var account = fromAccount || this._wallet.hdwallet.defaultAccount;
