@@ -39445,7 +39445,6 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
 
   var loadBch = function loadBch() {
     this._bch = BitcoinCash.fromBlockchainWallet(this);
-    window.bch = this._bch;
   };
 
   var promises = [];
@@ -70302,6 +70301,11 @@ var BchImported = function (_BchSpendable) {
       return balances.every(function (x) {
         return x == null;
       }) ? null : sumNonNull(balances);
+    }
+  }, {
+    key: 'coinCode',
+    get: function get() {
+      return 'bch';
     }
   }]);
 
