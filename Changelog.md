@@ -1,23 +1,24 @@
 __Blockchain Wallet V3__
 
-#   (2017-10-10)
+#   (2017-10-15)
 
 
 
 ---
 
-## Bug Fixes
-
-- **cash:** mark bch.imported as having bch coinCode
-  ([cebbf929](https://github.com/blockchain/My-Wallet-V3/commit/cebbf929113e2905db6e78929b64ea1eeb473a4e))
-
-
 ## Chore
 
-- **cash:** remove bch window access
-  ([3d881eea](https://github.com/blockchain/My-Wallet-V3/commit/3d881eea5a1fd4a5d0e35ab7fd477612292da571))
-- **release:** v3.38.5
-  ([6653c7e9](https://github.com/blockchain/My-Wallet-V3/commit/6653c7e982ee6882772796dec2f98f18396a7b40))
+- **release:**
+  - v3.39.0
+  ([4242c231](https://github.com/blockchain/My-Wallet-V3/commit/4242c2316704209f8d0a7f49e69083e33a82d868))
+  - upgrade bitcoin-coinify-client
+  ([5c3fec80](https://github.com/blockchain/My-Wallet-V3/commit/5c3fec808665e15968d9e06f23b8fb9ab7438b5f))
+
+
+## Pull requests merged
+
+- Merge pull request #446 from blockchain/v3.38-release
+  ([eda12577](https://github.com/blockchain/My-Wallet-V3/commit/eda12577759c3f1d1374d4b763c6e56ec279756e))
 
 
 
