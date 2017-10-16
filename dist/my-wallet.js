@@ -7018,7 +7018,7 @@ var types = __webpack_require__(6);
 var scriptNumber = __webpack_require__(161);
 
 var OPS = __webpack_require__(12);
-var REVERSE_OPS = __webpack_require__(270);
+var REVERSE_OPS = __webpack_require__(276);
 var OP_INT_BASE = OPS.OP_RESERVED; // OP_1 - 1
 
 function isOPInt(value) {
@@ -17932,13 +17932,13 @@ function randomBytes(size, cb) {
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = {
-  Exchange: __webpack_require__(265),
-  API: __webpack_require__(264),
-  PaymentAccount: __webpack_require__(266),
-  PaymentMedium: __webpack_require__(267),
-  Quote: __webpack_require__(268),
-  Trade: __webpack_require__(269),
-  Helpers: __webpack_require__(68)
+  Exchange: __webpack_require__(253),
+  API: __webpack_require__(252),
+  PaymentAccount: __webpack_require__(254),
+  PaymentMedium: __webpack_require__(255),
+  Quote: __webpack_require__(256),
+  Trade: __webpack_require__(257),
+  Helpers: __webpack_require__(67)
 };
 
 /***/ }),
@@ -18607,12 +18607,12 @@ function forEach(xs, f) {
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = {
-  Exchange: __webpack_require__(272),
-  API: __webpack_require__(271),
-  PaymentAccount: __webpack_require__(273),
-  PaymentMedium: __webpack_require__(274),
-  Quote: __webpack_require__(275),
-  Trade: __webpack_require__(276),
+  Exchange: __webpack_require__(271),
+  API: __webpack_require__(270),
+  PaymentAccount: __webpack_require__(272),
+  PaymentMedium: __webpack_require__(273),
+  Quote: __webpack_require__(274),
+  Trade: __webpack_require__(275),
   Helpers: __webpack_require__(69)
 };
 
@@ -20632,6 +20632,45 @@ Tx.setConfirmations = function (txBlockHeight, lastBlock) {
 
 /***/ }),
 /* 67 */
+/***/ (function(module, exports) {
+
+var Helpers = {};
+
+Helpers.isBoolean = function (value) {
+  return typeof value === 'boolean';
+};
+Helpers.isString = function (str) {
+  return typeof str === 'string';
+};
+Helpers.isNumber = function (num) {
+  return typeof num === 'number' && !isNaN(num);
+};
+Helpers.isInteger = function (num) {
+  return Helpers.isNumber(num) && num % 1 === 0;
+};
+Helpers.isPositiveNumber = function (num) {
+  return Helpers.isNumber(num) && num >= 0;
+};
+Helpers.isPositiveInteger = function (num) {
+  return Helpers.isPositiveNumber(num) && num % 1 === 0;
+};
+Helpers.toCents = function (fiat) {
+  return Math.round((parseFloat(fiat) || 0) * 100);
+};
+Helpers.toSatoshi = function (fiat) {
+  return Math.round((parseFloat(fiat) || 0) * 100000000);
+};
+Helpers.fromCents = function (cents) {
+  return parseFloat((cents / 100).toFixed(2));
+};
+Helpers.fromSatoshi = function (satoshi) {
+  return parseFloat((satoshi / 100000000).toFixed(8));
+};
+
+module.exports = Helpers;
+
+/***/ }),
+/* 68 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -20644,7 +20683,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var CoinifyBank = __webpack_require__(255);
+var CoinifyBank = __webpack_require__(261);
 var Helpers = __webpack_require__(26).Helpers;
 
 var Exchange = __webpack_require__(26);
@@ -20962,45 +21001,6 @@ var Trade = function (_Exchange$Trade) {
 }(Exchange.Trade);
 
 module.exports = Trade;
-
-/***/ }),
-/* 68 */
-/***/ (function(module, exports) {
-
-var Helpers = {};
-
-Helpers.isBoolean = function (value) {
-  return typeof value === 'boolean';
-};
-Helpers.isString = function (str) {
-  return typeof str === 'string';
-};
-Helpers.isNumber = function (num) {
-  return typeof num === 'number' && !isNaN(num);
-};
-Helpers.isInteger = function (num) {
-  return Helpers.isNumber(num) && num % 1 === 0;
-};
-Helpers.isPositiveNumber = function (num) {
-  return Helpers.isNumber(num) && num >= 0;
-};
-Helpers.isPositiveInteger = function (num) {
-  return Helpers.isPositiveNumber(num) && num % 1 === 0;
-};
-Helpers.toCents = function (fiat) {
-  return Math.round((parseFloat(fiat) || 0) * 100);
-};
-Helpers.toSatoshi = function (fiat) {
-  return Math.round((parseFloat(fiat) || 0) * 100000000);
-};
-Helpers.fromCents = function (cents) {
-  return parseFloat((cents / 100).toFixed(2));
-};
-Helpers.fromSatoshi = function (satoshi) {
-  return parseFloat((satoshi / 100000000).toFixed(8));
-};
-
-module.exports = Helpers;
 
 /***/ }),
 /* 69 */
@@ -29194,7 +29194,7 @@ module.exports = {
 /* 145 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var Coinify = __webpack_require__(258);
+var Coinify = __webpack_require__(264);
 var SFOX = __webpack_require__(279);
 var Unocoin = __webpack_require__(293);
 var Metadata = __webpack_require__(97);
@@ -32135,7 +32135,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var ExchangePaymentAccount = __webpack_require__(26).PaymentAccount;
-var Trade = __webpack_require__(67);
+var Trade = __webpack_require__(68);
 
 var PaymentAccount = function (_ExchangePaymentAccou) {
   _inherits(PaymentAccount, _ExchangePaymentAccou);
@@ -32183,8 +32183,8 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var ExchangePaymentMedium = __webpack_require__(26).PaymentMedium;
 var PaymentAccount = __webpack_require__(153);
-var Trade = __webpack_require__(67);
-var BankAccount = __webpack_require__(254);
+var Trade = __webpack_require__(68);
+var BankAccount = __webpack_require__(260);
 
 var PaymentMedium = function (_ExchangePaymentMediu) {
   _inherits(PaymentMedium, _ExchangePaymentMediu);
@@ -45794,1311 +45794,11 @@ var __WEBPACK_AMD_DEFINE_RESULT__;var _typeof = typeof Symbol === "function" && 
 /* 252 */
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-
-module.exports = Address;
-
-function Address(obj) {
-  this._street = obj.street;
-  this._city = obj.city;
-  this._state = obj.state;
-  this._zipcode = obj.zipcode;
-  this._country = obj.country;
-}
-
-Object.defineProperties(Address.prototype, {
-  'city': {
-    configurable: false,
-    get: function get() {
-      return this._city;
-    }
-  },
-  'country': {
-    configurable: false,
-    get: function get() {
-      return this._country;
-    }
-  },
-  'state': { // ISO 3166-2, the part after the dash
-    configurable: false,
-    get: function get() {
-      return this._state;
-    }
-  },
-  'street': {
-    configurable: false,
-    get: function get() {
-      return this._street;
-    }
-  },
-  'zipcode': {
-    configurable: false,
-    get: function get() {
-      return this._zipcode;
-    }
-  }
-});
-
-/***/ }),
-/* 253 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var assert = __webpack_require__(1);
-var Exchange = __webpack_require__(26);
-
-var API = function (_Exchange$API) {
-  _inherits(API, _Exchange$API);
-
-  function API() {
-    _classCallCheck(this, API);
-
-    var _this = _possibleConstructorReturn(this, (API.__proto__ || Object.getPrototypeOf(API)).call(this));
-
-    _this._offlineToken = null;
-    _this._loginExpiresAt = null;
-    return _this;
-  }
-
-  _createClass(API, [{
-    key: 'login',
-    value: function login() {
-      var self = this;
-
-      var promise = new Promise(function (resolve, reject) {
-        assert(self._offlineToken, 'Offline token required');
-
-        var loginSuccess = function loginSuccess(res) {
-          self._access_token = res.access_token;
-          self._loginExpiresAt = new Date(new Date().getTime() + res.expires_in * 1000);
-          resolve();
-        };
-
-        var loginFailed = function loginFailed(e) {
-          reject(e);
-        };
-        self.POST('auth', {
-          grant_type: 'offline_token',
-          offline_token: self._offlineToken
-        }).then(loginSuccess).catch(loginFailed);
-      });
-
-      return promise;
-    }
-  }, {
-    key: '_url',
-    value: function _url(endpoint) {
-      endpoint = endpoint || '';
-      return 'https://app-api' + (this._sandbox ? '.sandbox' : '') + '.coinify.com/' + endpoint;
-    }
-  }, {
-    key: '_request',
-    value: function _request(method, endpoint, data, authorized) {
-      assert(!authorized || this.isLoggedIn, "Can't make authorized request if not logged in");
-
-      var headers = {};
-
-      if (authorized) {
-        headers['Authorization'] = 'Bearer ' + this._access_token;
-      }
-
-      return _get(API.prototype.__proto__ || Object.getPrototypeOf(API.prototype), '_request', this).call(this, method, this._url(endpoint), data, headers);
-    }
-  }, {
-    key: '_authRequest',
-    value: function _authRequest(method, endpoint, data) {
-      var doRequest = function doRequest() {
-        return this._request(method, endpoint, data, true);
-      };
-
-      if (this.isLoggedIn) {
-        return doRequest.bind(this)();
-      } else {
-        return this.login().then(doRequest.bind(this));
-      }
-    }
-  }, {
-    key: 'GET',
-    value: function GET(endpoint, data) {
-      return this._request('GET', endpoint, data);
-    }
-  }, {
-    key: 'authGET',
-    value: function authGET(endpoint, data) {
-      return this._authRequest('GET', endpoint, data);
-    }
-  }, {
-    key: 'POST',
-    value: function POST(endpoint, data) {
-      return this._request('POST', endpoint, data);
-    }
-  }, {
-    key: 'authPOST',
-    value: function authPOST(endpoint, data) {
-      return this._authRequest('POST', endpoint, data);
-    }
-  }, {
-    key: 'PATCH',
-    value: function PATCH(endpoint, data) {
-      return this._request('PATCH', endpoint, data);
-    }
-  }, {
-    key: 'authPATCH',
-    value: function authPATCH(endpoint, data) {
-      return this._authRequest('PATCH', endpoint, data);
-    }
-  }, {
-    key: 'DELETE',
-    value: function DELETE(endpoint, data) {
-      return this._authRequest('DELETE', endpoint, data);
-    }
-  }, {
-    key: 'isLoggedIn',
-    get: function get() {
-      // Debug: + 60 * 19 * 1000 expires the login after 1 minute
-      var tenSecondsFromNow = new Date(new Date().getTime() + 10000);
-      return Boolean(this._access_token) && this._loginExpiresAt > tenSecondsFromNow;
-    }
-  }, {
-    key: 'offlineToken',
-    get: function get() {
-      return this._offlineToken;
-    }
-  }, {
-    key: 'hasAccount',
-    get: function get() {
-      return Boolean(this.offlineToken);
-    }
-  }]);
-
-  return API;
-}(Exchange.API);
-
-module.exports = API;
-
-/***/ }),
-/* 254 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var PaymentAccount = __webpack_require__(153);
-var assert = __webpack_require__(1);
-
-var BankAccount = function (_PaymentAccount) {
-  _inherits(BankAccount, _PaymentAccount);
-
-  function BankAccount(account, api, quote) {
-    _classCallCheck(this, BankAccount);
-
-    var _this = _possibleConstructorReturn(this, (BankAccount.__proto__ || Object.getPrototypeOf(BankAccount)).call(this, api, quote));
-
-    _this._quote = quote;
-    _this._id = account.id;
-    _this._trader_id = account.trader_id;
-    _this._account = {
-      _bic: account.account.bic,
-      _currency: account.account.currency,
-      _number: account.account.number,
-      _type: account.account.type
-    };
-    _this._bank = {
-      _address: {
-        _country: account.bank.address.country
-      }
-    };
-    _this._holder = {
-      _name: account.holder.name,
-      _address: {
-        _city: account.holder.address.city,
-        _country: account.holder.address.country,
-        _street: account.holder.address.street,
-        _zipcode: account.holder.address.zipcode
-      }
-    };
-    return _this;
-  }
-
-  _createClass(BankAccount, [{
-    key: 'delete',
-    value: function _delete() {
-      var ID = this._id;
-      return this._api.DELETE('bank-accounts/' + ID).then(function (res) {
-        return console.log('delete should return undefined:', res);
-      });
-    }
-  }, {
-    key: 'sell',
-    value: function sell() {
-      return _get(BankAccount.prototype.__proto__ || Object.getPrototypeOf(BankAccount.prototype), 'sell', this).call(this).then(function (trade) {
-        console.log('*** SELL TRADE CREATED ***', trade);
-        return trade;
-      });
-    }
-  }, {
-    key: 'updateQuote',
-    value: function updateQuote(quote) {
-      this._quote = quote;
-    }
-  }], [{
-    key: 'add',
-    value: function add(obj, api, quote) {
-      assert(obj, 'bank obj is required');
-
-      var b = {
-        account: {
-          currency: obj.account.currency,
-          bic: obj.account.bic,
-          number: obj.account.number
-        },
-        holder: {
-          name: obj.holder.name,
-          address: {
-            street: obj.holder.address.street,
-            city: obj.holder.address.city,
-            zipcode: obj.holder.address.zipcode,
-            country: obj.holder.address.country
-          }
-        },
-        bank: {
-          address: {
-            country: obj.bank.address.country,
-            street: obj.bank.address.street || null,
-            zipcode: obj.bank.address._ipcode || null,
-            city: obj.bank.address.city || null
-          }
-        }
-      };
-      return api.authPOST('bank-accounts', b).then(function (bankObj) {
-        return new BankAccount(bankObj, api, quote);
-      });
-    }
-  }, {
-    key: 'getAll',
-    value: function getAll(api, quote) {
-      return api.authGET('bank-accounts').then(function (accountObjs) {
-        var accounts = [];
-        var _iteratorNormalCompletion = true;
-        var _didIteratorError = false;
-        var _iteratorError = undefined;
-
-        try {
-          for (var _iterator = accountObjs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            var accountObj = _step.value;
-
-            accounts.push(new BankAccount(accountObj, api, quote));
-          }
-        } catch (err) {
-          _didIteratorError = true;
-          _iteratorError = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion && _iterator.return) {
-              _iterator.return();
-            }
-          } finally {
-            if (_didIteratorError) {
-              throw _iteratorError;
-            }
-          }
-        }
-
-        return accounts;
-      });
-    }
-  }]);
-
-  return BankAccount;
-}(PaymentAccount);
-
-module.exports = BankAccount;
-
-/***/ }),
-/* 255 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var Address = __webpack_require__(252);
-
-module.exports = CoinifyBank;
-
-function CoinifyBank(obj, api) {
-  this._api = api;
-
-  this._id = obj.id; // Not used in buy
-  this._type = obj.account.type; // Missing in API
-  this._currency = obj.account.currency; // Missing in API
-  this._bic = obj.account.bic;
-  this._number = obj.account.number;
-  this._bank_address = new Address(obj.bank.address);
-  this._holder_name = obj.holder.name;
-  this._holder_address = new Address(obj.holder.address);
-  this._referenceText = obj.referenceText;
-  this._updated_at = obj.updateTime; // Not used in buy
-  this._created_at = obj.createTime; // Not used in buy
-}
-
-Object.defineProperties(CoinifyBank.prototype, {
-  // 'id': {
-  //   configurable: false,
-  //   get: function () {
-  //     return this._id;
-  //   }
-  // },
-  'type': {
-    configurable: false,
-    get: function get() {
-      return this._type;
-    }
-  },
-  'currency': {
-    configurable: false,
-    get: function get() {
-      return this._currency;
-    }
-  },
-  'bic': {
-    configurable: false,
-    get: function get() {
-      return this._bic;
-    }
-  },
-  'number': {
-    configurable: false,
-    get: function get() {
-      return this._number;
-    }
-  },
-  'bankName': {
-    configurable: false,
-    get: function get() {
-      return this._bank_name;
-    }
-  },
-  'bankAddress': {
-    configurable: false,
-    get: function get() {
-      return this._bank_address;
-    }
-  },
-  'holderName': {
-    configurable: false,
-    get: function get() {
-      return this._holder_name;
-    }
-  },
-  'holderAddress': {
-    configurable: false,
-    get: function get() {
-      return this._holder_address;
-    }
-  },
-  'referenceText': {
-    configurable: false,
-    get: function get() {
-      return this._referenceText;
-    }
-  }
-  // 'createdAt': {
-  //   configurable: false,
-  //   get: function () {
-  //     return this._created_at;
-  //   }
-  // },
-  // 'updatedAt': {
-  //   configurable: false,
-  //   get: function () {
-  //     return this._updated_at;
-  //   }
-  // }
-});
-
-/***/ }),
-/* 256 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var Exchange = __webpack_require__(26);
-var CoinifyProfile = __webpack_require__(262);
-var Trade = __webpack_require__(67);
-var CoinifyKYC = __webpack_require__(152);
-var PaymentMedium = __webpack_require__(154);
-var ExchangeRate = __webpack_require__(257);
-var Quote = __webpack_require__(263);
-var API = __webpack_require__(253);
-var KYC = __webpack_require__(152);
-var Helpers = __webpack_require__(26).Helpers;
-
-var assert = __webpack_require__(1);
-
-var Coinify = function (_Exchange$Exchange) {
-  _inherits(Coinify, _Exchange$Exchange);
-
-  function Coinify(obj, delegate) {
-    _classCallCheck(this, Coinify);
-
-    var api = new API('https://app-api.coinify.com/');
-
-    var _this = _possibleConstructorReturn(this, (Coinify.__proto__ || Object.getPrototypeOf(Coinify)).call(this, obj, delegate, api, Trade, Quote, PaymentMedium));
-
-    assert(delegate.getToken, 'delegate.getToken() required');
-    _this._partner_id = null;
-    _this._user = obj.user;
-    _this._auto_login = obj.auto_login;
-    _this._offlineToken = obj.offline_token;
-
-    _this._api = api;
-    _this._api._offlineToken = _this._offlineToken;
-
-    _this._profile = new CoinifyProfile(_this._api);
-
-    _this._buyCurrencies = null;
-    _this._sellCurrencies = null;
-
-    _this._kycs = [];
-
-    _this.exchangeRate = new ExchangeRate(_this._api);
-    return _this;
-  }
-
-  _createClass(Coinify, [{
-    key: 'getTrades',
-    value: function getTrades() {
-      return _get(Coinify.prototype.__proto__ || Object.getPrototypeOf(Coinify.prototype), 'getTrades', this).call(this, Quote);
-    }
-  }, {
-    key: 'toJSON',
-    value: function toJSON() {
-      var coinify = {
-        user: this._user,
-        offline_token: this._offlineToken,
-        auto_login: this._auto_login,
-        trades: Trade.filteredTrades(this._trades)
-      };
-
-      return coinify;
-    }
-
-    // Country and default currency must be set
-    // Email must be set and verified
-
-  }, {
-    key: 'signup',
-    value: function signup(countryCode, currencyCode) {
-      var self = this;
-      var runChecks = function runChecks() {
-        assert(!self.user, 'Already signed up');
-
-        assert(self.delegate, 'ExchangeDelegate required');
-
-        assert(countryCode && Exchange.Helpers.isString(countryCode) && countryCode.length === 2 && countryCode.match(/[a-zA-Z]{2}/), 'ISO 3166-1 alpha-2');
-
-        assert(currencyCode, 'currency required');
-
-        assert(self.delegate.email(), 'email required');
-        assert(self.delegate.isEmailVerified(), 'email must be verified');
-      };
-
-      var doSignup = function doSignup(emailToken) {
-        assert(emailToken, 'email token missing');
-        return this._api.POST('signup/trader', {
-          email: self.delegate.email(),
-          partnerId: self.partnerId,
-          defaultCurrency: currencyCode, // ISO 4217
-          profile: {
-            address: {
-              country: countryCode.toUpperCase()
-            }
-          },
-          trustedEmailValidationToken: emailToken,
-          generateOfflineToken: true
-        });
-      };
-
-      var saveMetadata = function saveMetadata(res) {
-        this._user = res.trader.id;
-        this._offlineToken = res.offlineToken;
-        this._api._offlineToken = this._offlineToken;
-        return this._delegate.save.bind(this._delegate)().then(function () {
-          return res;
-        });
-      };
-
-      var getToken = function getToken() {
-        return this.delegate.getToken.bind(this.delegate)('coinify', { walletAge: true });
-      };
-
-      return Promise.resolve().then(runChecks.bind(this)).then(getToken.bind(this)).then(doSignup.bind(this)).then(saveMetadata.bind(this));
-    }
-  }, {
-    key: 'fetchProfile',
-    value: function fetchProfile() {
-      return this._profile.fetch();
-    }
-  }, {
-    key: 'triggerKYC',
-    value: function triggerKYC() {
-      var _this2 = this;
-
-      var addKYC = function addKYC(kyc) {
-        _this2._kycs.push(kyc);
-        return kyc;
-      };
-
-      return CoinifyKYC.trigger(this._api).then(addKYC);
-    }
-  }, {
-    key: 'updateKYCs',
-    value: function updateKYCs(list, items) {
-      var item;
-      for (var i = 0; i < items.length; i++) {
-        item = undefined;
-        for (var k = 0; k < list.length; k++) {
-          var itemId = Helpers.isNumber(items[i].id) ? items[i].id : items[i].id.toLowerCase();
-          if (list[k]._id === itemId) {
-            item = list[k];
-            item.debug = this.debug;
-            item.set.bind(item)(items[i]);
-          }
-        }
-        if (item === undefined) {
-          item = new KYC(items[i], this._api, this.delegate, this);
-          item.debug = this.debug;
-          list.push(item);
-        }
-      }
-    }
-  }, {
-    key: 'getKYCs',
-    value: function getKYCs() {
-      var _this3 = this;
-
-      var save = function save() {
-        return _this3.delegate.save.bind(_this3.delegate)().then(function () {
-          return _this3._kycs;
-        });
-      };
-      var update = function update(kycs) {
-        _this3.updateKYCs(_this3._kycs, kycs, CoinifyKYC);
-      };
-      return CoinifyKYC.fetchAll(this._api, this).then(update).then(save);
-    }
-  }, {
-    key: 'getBuyCurrencies',
-    value: function getBuyCurrencies() {
-      var getCurrencies = function getCurrencies(paymentMethods) {
-        var currencies = [];
-        var _iteratorNormalCompletion = true;
-        var _didIteratorError = false;
-        var _iteratorError = undefined;
-
-        try {
-          for (var _iterator = Object.entries(paymentMethods)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            var _step$value = _slicedToArray(_step.value, 2),
-                paymentMethod = _step$value[1];
-
-            var _iteratorNormalCompletion2 = true;
-            var _didIteratorError2 = false;
-            var _iteratorError2 = undefined;
-
-            try {
-              for (var _iterator2 = paymentMethod.inCurrencies[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-                var inCurrency = _step2.value;
-
-                if (currencies.indexOf(inCurrency) === -1) {
-                  currencies.push(inCurrency);
-                }
-              }
-            } catch (err) {
-              _didIteratorError2 = true;
-              _iteratorError2 = err;
-            } finally {
-              try {
-                if (!_iteratorNormalCompletion2 && _iterator2.return) {
-                  _iterator2.return();
-                }
-              } finally {
-                if (_didIteratorError2) {
-                  throw _iteratorError2;
-                }
-              }
-            }
-          }
-        } catch (err) {
-          _didIteratorError = true;
-          _iteratorError = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion && _iterator.return) {
-              _iterator.return();
-            }
-          } finally {
-            if (_didIteratorError) {
-              throw _iteratorError;
-            }
-          }
-        }
-
-        this._buyCurrencies = JSON.parse(JSON.stringify(currencies));
-        return currencies;
-      };
-      return this.getBuyMethods().then(getCurrencies.bind(this));
-    }
-  }, {
-    key: 'getSellCurrencies',
-    value: function getSellCurrencies() {
-      var getCurrencies = function getCurrencies(paymentMethods) {
-        var currencies = [];
-        var _iteratorNormalCompletion3 = true;
-        var _didIteratorError3 = false;
-        var _iteratorError3 = undefined;
-
-        try {
-          for (var _iterator3 = Object.entries(paymentMethods)[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-            var _step3$value = _slicedToArray(_step3.value, 2),
-                paymentMethod = _step3$value[1];
-
-            var _iteratorNormalCompletion4 = true;
-            var _didIteratorError4 = false;
-            var _iteratorError4 = undefined;
-
-            try {
-              for (var _iterator4 = paymentMethod.outCurrencies[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-                var outCurrency = _step4.value;
-
-                if (currencies.indexOf(outCurrency) === -1) {
-                  currencies.push(outCurrency);
-                }
-              }
-            } catch (err) {
-              _didIteratorError4 = true;
-              _iteratorError4 = err;
-            } finally {
-              try {
-                if (!_iteratorNormalCompletion4 && _iterator4.return) {
-                  _iterator4.return();
-                }
-              } finally {
-                if (_didIteratorError4) {
-                  throw _iteratorError4;
-                }
-              }
-            }
-          }
-        } catch (err) {
-          _didIteratorError3 = true;
-          _iteratorError3 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion3 && _iterator3.return) {
-              _iterator3.return();
-            }
-          } finally {
-            if (_didIteratorError3) {
-              throw _iteratorError3;
-            }
-          }
-        }
-
-        this._sellCurrencies = JSON.parse(JSON.stringify(currencies));
-        return currencies;
-      };
-      return this.getSellMethods().then(getCurrencies.bind(this));
-    }
-  }, {
-    key: 'profile',
-    get: function get() {
-      return this._profile;
-    }
-  }, {
-    key: 'kycs',
-    get: function get() {
-      return this._kycs;
-    }
-  }, {
-    key: 'hasAccount',
-    get: function get() {
-      return Boolean(this._offlineToken);
-    }
-  }, {
-    key: 'partnerId',
-    get: function get() {
-      return this._partner_id;
-    },
-    set: function set(value) {
-      this._partner_id = value;
-    }
-  }, {
-    key: 'buyCurrencies',
-    get: function get() {
-      return this._buyCurrencies;
-    }
-  }, {
-    key: 'sellCurrencies',
-    get: function get() {
-      return this._sellCurrencies;
-    }
-  }, {
-    key: 'bank',
-    get: function get() {
-      return this._bank;
-    }
-  }], [{
-    key: 'new',
-    value: function _new(delegate) {
-      assert(delegate, 'Coinify.new requires delegate');
-      var object = {
-        auto_login: true
-      };
-      var coinify = new Coinify(object, delegate);
-      return coinify;
-    }
-  }]);
-
-  return Coinify;
-}(Exchange.Exchange);
-
-module.exports = Coinify;
-
-/***/ }),
-/* 257 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var assert = __webpack_require__(1);
-
-module.exports = ExchangeRate;
-
-function ExchangeRate(coinify) {
-  this._coinify = coinify;
-}
-
-ExchangeRate.prototype.get = function (baseCurrency, quoteCurrency) {
-  var self = this;
-  var performChecks = function performChecks() {
-    assert(baseCurrency, 'Base currency required');
-    assert(quoteCurrency, 'Quote currency required');
-  };
-  var getRate = function getRate() {
-    return self._coinify.GET('rates/approximate', {
-      baseCurrency: baseCurrency,
-      quoteCurrency: quoteCurrency
-    });
-  };
-  var processRate = function processRate(res) {
-    return res.rate;
-  };
-  return Promise.resolve().then(performChecks).then(getRate).then(processRate);
-};
-
-/***/ }),
-/* 258 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(256);
-
-/***/ }),
-/* 259 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = Level;
-
-function Level(obj) {
-  this._currency = obj.currency;
-  this._feePercentage = obj.feePercentage;
-  this._requirements = obj.requirements;
-  this._name = obj.name;
-}
-
-Object.defineProperties(Level.prototype, {
-  'currency': {
-    configurable: false,
-    get: function get() {
-      return this._currency;
-    }
-  },
-  'feePercentage': {
-    configurable: false,
-    get: function get() {
-      return this._feePercentage;
-    }
-  },
-  'limits': {
-    configurable: false,
-    get: function get() {
-      return this._limits;
-    }
-  },
-  'name': {
-    configurable: false,
-    get: function get() {
-      return this._name;
-    }
-  },
-  'requirements': {
-    configurable: false,
-    get: function get() {
-      return this._requirements;
-    }
-  }
-});
-
-/***/ }),
-/* 260 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = Limit;
-
-var fallbackLimits = { DKK: Infinity, EUR: Infinity, USD: Infinity, GBP: Infinity, BTC: Infinity };
-
-function Limit(method) {
-  this._inRemaining = method.limitInAmounts || fallbackLimits;
-  this._minimumInAmounts = method.minimumInAmounts;
-}
-
-Object.defineProperties(Limit.prototype, {
-  'inRemaining': {
-    configurable: false,
-    get: function get() {
-      return this._inRemaining;
-    }
-  },
-  'minimumInAmounts': {
-    configurable: false,
-    get: function get() {
-      return this._minimumInAmounts;
-    }
-  }
-});
-
-/***/ }),
-/* 261 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var Limit = __webpack_require__(260);
-
-module.exports = Limits;
-
-function Limits(methods) {
-  this._card = new Limit(methods.find(function (method) {
-    return method.inMedium === 'card';
-  }));
-  this._bank = new Limit(methods.find(function (method) {
-    return method.inMedium === 'bank';
-  }));
-  this._blockchain = new Limit(methods.find(function (method) {
-    return method.inMedium === 'blockchain';
-  }));
-}
-
-Object.defineProperties(Limits.prototype, {
-  'card': {
-    configurable: false,
-    get: function get() {
-      return this._card;
-    }
-  },
-  'bank': {
-    configurable: false,
-    get: function get() {
-      return this._bank;
-    }
-  },
-  'blockchain': {
-    configurable: false,
-    get: function get() {
-      return this._blockchain;
-    }
-  }
-});
-
-/***/ }),
-/* 262 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var assert = __webpack_require__(1);
-var Limits = __webpack_require__(261);
-var Level = __webpack_require__(259);
-
-module.exports = CoinifyProfile;
-
-function CoinifyProfile(api) {
-  this._api = api;
-  this._did_fetch;
-}
-
-Object.defineProperties(CoinifyProfile.prototype, {
-  'fullName': {
-    configurable: false,
-    get: function get() {
-      return this._full_name;
-    }
-  },
-  'defaultCurrency': { // read-only
-    configurable: false,
-    get: function get() {
-      return this._default_currency;
-    }
-  },
-  'email': { // ready-only
-    configurable: false,
-    get: function get() {
-      return this._email;
-    }
-  },
-  'gender': {
-    configurable: false,
-    get: function get() {
-      return this._gender;
-    }
-  },
-  'mobile': { // setter not implemented yet
-    configurable: false,
-    get: function get() {
-      return this._mobile;
-    }
-  },
-  'city': {
-    configurable: false,
-    get: function get() {
-      return this._city;
-    }
-  },
-  'country': {
-    configurable: false,
-    get: function get() {
-      return this._country;
-    }
-  },
-  'state': { // ISO 3166-2, the part after the dash
-    configurable: false,
-    get: function get() {
-      return this._state;
-    }
-  },
-  'street': {
-    configurable: false,
-    get: function get() {
-      return this._street;
-    }
-  },
-  'zipcode': {
-    configurable: false,
-    get: function get() {
-      return this._zipcode;
-    }
-  },
-  'level': {
-    configurable: false,
-    get: function get() {
-      return this._level;
-    }
-  },
-  'nextLevel': {
-    configurable: false,
-    get: function get() {
-      return this._nextLevel;
-    }
-  },
-  'currentLimits': {
-    configurable: false,
-    get: function get() {
-      return this._currentLimits;
-    }
-  },
-  'limits': {
-    configurable: false,
-    get: function get() {
-      return this._limits;
-    }
-  },
-  'canTrade': {
-    configurable: false,
-    get: function get() {
-      return this._canTrade;
-    }
-  },
-  'canTradeAfter': {
-    configurable: false,
-    get: function get() {
-      return this._canTradeAfter;
-    }
-  },
-  'cannotTradeReason': {
-    configurable: false,
-    get: function get() {
-      return this._cannotTradeReason;
-    }
-  }
-});
-
-CoinifyProfile.prototype.fetch = function () {
-  var parentThis = this;
-
-  var processProfile = function processProfile(res) {
-    parentThis._full_name = res.profile.name;
-    parentThis._gender = res.profile.gender;
-
-    parentThis._email = res.email;
-
-    if (res.profile.mobile.countryCode) {
-      parentThis._mobile = '+' + res.profile.mobile.countryCode + res.profile.mobile.number.replace('-', '');
-    }
-
-    parentThis._default_currency = res.defaultCurrency;
-
-    // TODO: use new Address(res.profile.address);
-    parentThis._street = res.profile.address.street;
-    parentThis._city = res.profile.address.city;
-    parentThis._state = res.profile.address.state;
-    parentThis._zipcode = res.profile.address.zipcode;
-    parentThis._country = res.profile.address.country;
-
-    parentThis._level = new Level(res.level);
-    parentThis._limits = parentThis.limits || {};
-    parentThis._currentLimits = res.currentLimits;
-
-    parentThis._canTrade = res.canTrade == null ? true : Boolean(res.canTrade);
-    parentThis._canTradeAfter = new Date(res.canTradeAfter);
-    parentThis._cannotTradeReason = res.cannotTradeReason;
-
-    parentThis._did_fetch = true;
-
-    return parentThis;
-  };
-
-  var getLimits = function getLimits() {
-    return parentThis._api.hasAccount ? parentThis._api.authGET('trades/payment-methods') : parentThis._api.GET('trades/payment-methods');
-  };
-
-  var setLimits = function setLimits(methods) {
-    parentThis._limits = new Limits(methods);
-  };
-
-  if (this._api.hasAccount) {
-    return this._api.authGET('traders/me').then(processProfile).then(getLimits).then(setLimits);
-  } else {
-    return getLimits().then(setLimits);
-  }
-};
-
-CoinifyProfile.prototype.setFullName = function (value) {
-  var parentThis = this;
-
-  return this.update({ profile: { name: value } }).then(function (res) {
-    parentThis._full_name = res.profile.name;
-  });
-};
-
-CoinifyProfile.prototype.setGender = function (value) {
-  assert(value === null || value === 'male' || value === 'female', 'invalid gender');
-  var parentThis = this;
-
-  return this.update({ profile: { gender: value } }).then(function (res) {
-    parentThis._gender = res.profile.gender;
-  });
-};
-
-CoinifyProfile.prototype.setCity = function (value) {
-  var parentThis = this;
-
-  return this.update({ profile: { address: { city: value } } }).then(function (res) {
-    parentThis._city = res.profile.address.city;
-  });
-};
-
-CoinifyProfile.prototype.setCountry = function (value) {
-  var parentThis = this;
-
-  return this.update({ profile: { address: { country: value } } }).then(function (res) {
-    parentThis._country = res.profile.address.country;
-  });
-};
-
-CoinifyProfile.prototype.setState = function (value) {
-  var parentThis = this;
-
-  return this.update({ profile: { address: { state: value } } }).then(function (res) {
-    parentThis._state = res.profile.address.state;
-  });
-};
-
-CoinifyProfile.prototype.setStreet = function (value) {
-  var parentThis = this;
-
-  return this.update({ profile: { address: { street: value } } }).then(function (res) {
-    parentThis._street = res.profile.address.street;
-  });
-};
-
-CoinifyProfile.prototype.setZipcode = function (value) {
-  var parentThis = this;
-  return this.update({ profile: { address: { zipcode: value } } }).then(function (res) {
-    parentThis._zipcode = res.profile.address.zipcode;
-  });
-};
-
-CoinifyProfile.prototype.update = function (values) {
-  return this._api.authPATCH('traders/me', values);
-};
-
-/***/ }),
-/* 263 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var PaymentMethod = __webpack_require__(154);
-var Exchange = __webpack_require__(26);
-var Trade = __webpack_require__(67);
-
-var Quote = function (_Exchange$Quote) {
-  _inherits(Quote, _Exchange$Quote);
-
-  function Quote(obj, api, delegate, debug) {
-    _classCallCheck(this, Quote);
-
-    var _this = _possibleConstructorReturn(this, (Quote.__proto__ || Object.getPrototypeOf(Quote)).call(this, api, delegate, Trade, PaymentMethod, debug));
-
-    var expiresAt = new Date(obj.expiryTime);
-    var timeOfRequest = new Date(obj.issueTime);
-
-    // Debug, make quote expire in 15 seconds:
-    // expiresAt = new Date(new Date().getTime() + 15 * 1000);
-
-    _this._id = obj.id;
-    _this._baseCurrency = obj.baseCurrency;
-    _this._quoteCurrency = obj.quoteCurrency;
-    _this._timeOfRequest = timeOfRequest;
-    _this._expiresAt = obj.id ? expiresAt : new Date(expiresAt.getTime() + 10 * 60 * 1000);
-
-    if (_this._baseCurrency === 'BTC') {
-      _this._baseAmount = Math.round(obj.baseAmount * 100000000);
-      _this._quoteAmount = obj.quoteAmount;
-    } else {
-      _this._baseAmount = obj.baseAmount;
-      _this._quoteAmount = Math.round(obj.quoteAmount * 100000000);
-    }
-
-    obj.baseAmount;
-    return _this;
-  }
-
-  _createClass(Quote, [{
-    key: 'expire',
-
-
-    // QA tool
-    value: function expire() {
-      this._expiresAt = new Date(new Date().getTime() + 3 * 1000);
-    }
-  }, {
-    key: 'paymentMediums',
-    get: function get() {
-      return this._paymentMediums;
-    }
-  }], [{
-    key: 'getQuote',
-    value: function getQuote(api, delegate, amount, baseCurrency, quoteCurrency, debug) {
-      var processQuote = function processQuote(quote) {
-        return new Quote(quote, api, delegate);
-      };
-
-      var getQuote = function getQuote(_baseAmount) {
-        var getAnonymousQuote = function getAnonymousQuote() {
-          return api.POST('trades/quote', {
-            baseCurrency: baseCurrency,
-            quoteCurrency: quoteCurrency,
-            baseAmount: parseFloat(_baseAmount)
-          });
-        };
-
-        var getQuote = function getQuote() {
-          return api.authPOST('trades/quote', {
-            baseCurrency: baseCurrency,
-            quoteCurrency: quoteCurrency,
-            baseAmount: parseFloat(_baseAmount)
-          });
-        };
-
-        if (!api.hasAccount) {
-          return getAnonymousQuote().then(processQuote);
-        } else {
-          return getQuote().then(processQuote);
-        }
-      };
-
-      return _get(Quote.__proto__ || Object.getPrototypeOf(Quote), 'getQuote', this).call(this, amount, baseCurrency, quoteCurrency, ['BTC', 'EUR', 'GBP', 'USD', 'DKK'], debug).then(getQuote);
-    }
-  }]);
-
-  return Quote;
-}(Exchange.Quote);
-
-module.exports = Quote;
-
-/***/ }),
-/* 264 */
-/***/ (function(module, exports, __webpack_require__) {
-
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Helpers = __webpack_require__(68);
+var Helpers = __webpack_require__(67);
 var assert = __webpack_require__(1);
 
 var API = function () {
@@ -47174,7 +45874,7 @@ var API = function () {
 module.exports = API;
 
 /***/ }),
-/* 265 */
+/* 253 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -47182,7 +45882,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var assert = __webpack_require__(1);
-var Helpers = __webpack_require__(68);
+var Helpers = __webpack_require__(67);
 
 // This is poor man's abstract class:
 // https://gist.github.com/Zodiase/af44115098b20d69c531
@@ -47427,7 +46127,7 @@ var Exchange = function () {
 module.exports = Exchange;
 
 /***/ }),
-/* 266 */
+/* 254 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -47524,7 +46224,7 @@ var PaymentAccount = function () {
 module.exports = PaymentAccount;
 
 /***/ }),
-/* 267 */
+/* 255 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -47663,14 +46363,14 @@ var PaymentMedium = function () {
 module.exports = PaymentMedium;
 
 /***/ }),
-/* 268 */
+/* 256 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Helpers = __webpack_require__(68);
+var Helpers = __webpack_require__(67);
 var assert = __webpack_require__(1);
 
 var Quote = function () {
@@ -47839,7 +46539,7 @@ var Quote = function () {
 module.exports = Quote;
 
 /***/ }),
-/* 269 */
+/* 257 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -48258,21 +46958,1307 @@ var Trade = function () {
 module.exports = Trade;
 
 /***/ }),
-/* 270 */
+/* 258 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var OPS = __webpack_require__(12);
+"use strict";
 
-var map = {};
-for (var op in OPS) {
-  var code = OPS[op];
-  map[code] = op;
+
+module.exports = Address;
+
+function Address(obj) {
+  this._street = obj.street;
+  this._city = obj.city;
+  this._state = obj.state;
+  this._zipcode = obj.zipcode;
+  this._country = obj.country;
 }
 
-module.exports = map;
+Object.defineProperties(Address.prototype, {
+  'city': {
+    configurable: false,
+    get: function get() {
+      return this._city;
+    }
+  },
+  'country': {
+    configurable: false,
+    get: function get() {
+      return this._country;
+    }
+  },
+  'state': { // ISO 3166-2, the part after the dash
+    configurable: false,
+    get: function get() {
+      return this._state;
+    }
+  },
+  'street': {
+    configurable: false,
+    get: function get() {
+      return this._street;
+    }
+  },
+  'zipcode': {
+    configurable: false,
+    get: function get() {
+      return this._zipcode;
+    }
+  }
+});
 
 /***/ }),
-/* 271 */
+/* 259 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var assert = __webpack_require__(1);
+var Exchange = __webpack_require__(26);
+
+var API = function (_Exchange$API) {
+  _inherits(API, _Exchange$API);
+
+  function API() {
+    _classCallCheck(this, API);
+
+    var _this = _possibleConstructorReturn(this, (API.__proto__ || Object.getPrototypeOf(API)).call(this));
+
+    _this._offlineToken = null;
+    _this._loginExpiresAt = null;
+    return _this;
+  }
+
+  _createClass(API, [{
+    key: 'login',
+    value: function login() {
+      var self = this;
+
+      var promise = new Promise(function (resolve, reject) {
+        assert(self._offlineToken, 'Offline token required');
+
+        var loginSuccess = function loginSuccess(res) {
+          self._access_token = res.access_token;
+          self._loginExpiresAt = new Date(new Date().getTime() + res.expires_in * 1000);
+          resolve();
+        };
+
+        var loginFailed = function loginFailed(e) {
+          reject(e);
+        };
+        self.POST('auth', {
+          grant_type: 'offline_token',
+          offline_token: self._offlineToken
+        }).then(loginSuccess).catch(loginFailed);
+      });
+
+      return promise;
+    }
+  }, {
+    key: '_url',
+    value: function _url(endpoint) {
+      endpoint = endpoint || '';
+      return 'https://app-api' + (this._sandbox ? '.sandbox' : '') + '.coinify.com/' + endpoint;
+    }
+  }, {
+    key: '_request',
+    value: function _request(method, endpoint, data, authorized) {
+      assert(!authorized || this.isLoggedIn, "Can't make authorized request if not logged in");
+
+      var headers = {};
+
+      if (authorized) {
+        headers['Authorization'] = 'Bearer ' + this._access_token;
+      }
+
+      return _get(API.prototype.__proto__ || Object.getPrototypeOf(API.prototype), '_request', this).call(this, method, this._url(endpoint), data, headers);
+    }
+  }, {
+    key: '_authRequest',
+    value: function _authRequest(method, endpoint, data) {
+      var doRequest = function doRequest() {
+        return this._request(method, endpoint, data, true);
+      };
+
+      if (this.isLoggedIn) {
+        return doRequest.bind(this)();
+      } else {
+        return this.login().then(doRequest.bind(this));
+      }
+    }
+  }, {
+    key: 'GET',
+    value: function GET(endpoint, data) {
+      return this._request('GET', endpoint, data);
+    }
+  }, {
+    key: 'authGET',
+    value: function authGET(endpoint, data) {
+      return this._authRequest('GET', endpoint, data);
+    }
+  }, {
+    key: 'POST',
+    value: function POST(endpoint, data) {
+      return this._request('POST', endpoint, data);
+    }
+  }, {
+    key: 'authPOST',
+    value: function authPOST(endpoint, data) {
+      return this._authRequest('POST', endpoint, data);
+    }
+  }, {
+    key: 'PATCH',
+    value: function PATCH(endpoint, data) {
+      return this._request('PATCH', endpoint, data);
+    }
+  }, {
+    key: 'authPATCH',
+    value: function authPATCH(endpoint, data) {
+      return this._authRequest('PATCH', endpoint, data);
+    }
+  }, {
+    key: 'DELETE',
+    value: function DELETE(endpoint, data) {
+      return this._authRequest('DELETE', endpoint, data);
+    }
+  }, {
+    key: 'isLoggedIn',
+    get: function get() {
+      // Debug: + 60 * 19 * 1000 expires the login after 1 minute
+      var tenSecondsFromNow = new Date(new Date().getTime() + 10000);
+      return Boolean(this._access_token) && this._loginExpiresAt > tenSecondsFromNow;
+    }
+  }, {
+    key: 'offlineToken',
+    get: function get() {
+      return this._offlineToken;
+    }
+  }, {
+    key: 'hasAccount',
+    get: function get() {
+      return Boolean(this.offlineToken);
+    }
+  }]);
+
+  return API;
+}(Exchange.API);
+
+module.exports = API;
+
+/***/ }),
+/* 260 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var PaymentAccount = __webpack_require__(153);
+var assert = __webpack_require__(1);
+
+var BankAccount = function (_PaymentAccount) {
+  _inherits(BankAccount, _PaymentAccount);
+
+  function BankAccount(account, api, quote) {
+    _classCallCheck(this, BankAccount);
+
+    var _this = _possibleConstructorReturn(this, (BankAccount.__proto__ || Object.getPrototypeOf(BankAccount)).call(this, api, quote));
+
+    _this._quote = quote;
+    _this._id = account.id;
+    _this._trader_id = account.trader_id;
+    _this._account = {
+      _bic: account.account.bic,
+      _currency: account.account.currency,
+      _number: account.account.number,
+      _type: account.account.type
+    };
+    _this._bank = {
+      _address: {
+        _country: account.bank.address.country
+      }
+    };
+    _this._holder = {
+      _name: account.holder.name,
+      _address: {
+        _city: account.holder.address.city,
+        _country: account.holder.address.country,
+        _street: account.holder.address.street,
+        _zipcode: account.holder.address.zipcode
+      }
+    };
+    return _this;
+  }
+
+  _createClass(BankAccount, [{
+    key: 'delete',
+    value: function _delete() {
+      var ID = this._id;
+      return this._api.DELETE('bank-accounts/' + ID).then(function (res) {
+        return console.log('delete should return undefined:', res);
+      });
+    }
+  }, {
+    key: 'sell',
+    value: function sell() {
+      return _get(BankAccount.prototype.__proto__ || Object.getPrototypeOf(BankAccount.prototype), 'sell', this).call(this).then(function (trade) {
+        console.log('*** SELL TRADE CREATED ***', trade);
+        return trade;
+      });
+    }
+  }, {
+    key: 'updateQuote',
+    value: function updateQuote(quote) {
+      this._quote = quote;
+    }
+  }], [{
+    key: 'add',
+    value: function add(obj, api, quote) {
+      assert(obj, 'bank obj is required');
+
+      var b = {
+        account: {
+          currency: obj.account.currency,
+          bic: obj.account.bic,
+          number: obj.account.number
+        },
+        holder: {
+          name: obj.holder.name,
+          address: {
+            street: obj.holder.address.street,
+            city: obj.holder.address.city,
+            zipcode: obj.holder.address.zipcode,
+            country: obj.holder.address.country
+          }
+        },
+        bank: {
+          address: {
+            country: obj.bank.address.country,
+            street: obj.bank.address.street || null,
+            zipcode: obj.bank.address._ipcode || null,
+            city: obj.bank.address.city || null
+          }
+        }
+      };
+      return api.authPOST('bank-accounts', b).then(function (bankObj) {
+        return new BankAccount(bankObj, api, quote);
+      });
+    }
+  }, {
+    key: 'getAll',
+    value: function getAll(api, quote) {
+      return api.authGET('bank-accounts').then(function (accountObjs) {
+        var accounts = [];
+        var _iteratorNormalCompletion = true;
+        var _didIteratorError = false;
+        var _iteratorError = undefined;
+
+        try {
+          for (var _iterator = accountObjs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+            var accountObj = _step.value;
+
+            accounts.push(new BankAccount(accountObj, api, quote));
+          }
+        } catch (err) {
+          _didIteratorError = true;
+          _iteratorError = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion && _iterator.return) {
+              _iterator.return();
+            }
+          } finally {
+            if (_didIteratorError) {
+              throw _iteratorError;
+            }
+          }
+        }
+
+        return accounts;
+      });
+    }
+  }]);
+
+  return BankAccount;
+}(PaymentAccount);
+
+module.exports = BankAccount;
+
+/***/ }),
+/* 261 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var Address = __webpack_require__(258);
+
+module.exports = CoinifyBank;
+
+function CoinifyBank(obj, api) {
+  this._api = api;
+
+  this._id = obj.id; // Not used in buy
+  this._type = obj.account.type; // Missing in API
+  this._currency = obj.account.currency; // Missing in API
+  this._bic = obj.account.bic;
+  this._number = obj.account.number;
+  this._bank_address = new Address(obj.bank.address);
+  this._holder_name = obj.holder.name;
+  this._holder_address = new Address(obj.holder.address);
+  this._referenceText = obj.referenceText;
+  this._updated_at = obj.updateTime; // Not used in buy
+  this._created_at = obj.createTime; // Not used in buy
+}
+
+Object.defineProperties(CoinifyBank.prototype, {
+  // 'id': {
+  //   configurable: false,
+  //   get: function () {
+  //     return this._id;
+  //   }
+  // },
+  'type': {
+    configurable: false,
+    get: function get() {
+      return this._type;
+    }
+  },
+  'currency': {
+    configurable: false,
+    get: function get() {
+      return this._currency;
+    }
+  },
+  'bic': {
+    configurable: false,
+    get: function get() {
+      return this._bic;
+    }
+  },
+  'number': {
+    configurable: false,
+    get: function get() {
+      return this._number;
+    }
+  },
+  'bankName': {
+    configurable: false,
+    get: function get() {
+      return this._bank_name;
+    }
+  },
+  'bankAddress': {
+    configurable: false,
+    get: function get() {
+      return this._bank_address;
+    }
+  },
+  'holderName': {
+    configurable: false,
+    get: function get() {
+      return this._holder_name;
+    }
+  },
+  'holderAddress': {
+    configurable: false,
+    get: function get() {
+      return this._holder_address;
+    }
+  },
+  'referenceText': {
+    configurable: false,
+    get: function get() {
+      return this._referenceText;
+    }
+  }
+  // 'createdAt': {
+  //   configurable: false,
+  //   get: function () {
+  //     return this._created_at;
+  //   }
+  // },
+  // 'updatedAt': {
+  //   configurable: false,
+  //   get: function () {
+  //     return this._updated_at;
+  //   }
+  // }
+});
+
+/***/ }),
+/* 262 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Exchange = __webpack_require__(26);
+var CoinifyProfile = __webpack_require__(268);
+var Trade = __webpack_require__(68);
+var CoinifyKYC = __webpack_require__(152);
+var PaymentMedium = __webpack_require__(154);
+var ExchangeRate = __webpack_require__(263);
+var Quote = __webpack_require__(269);
+var API = __webpack_require__(259);
+var KYC = __webpack_require__(152);
+var Helpers = __webpack_require__(26).Helpers;
+
+var assert = __webpack_require__(1);
+
+var Coinify = function (_Exchange$Exchange) {
+  _inherits(Coinify, _Exchange$Exchange);
+
+  function Coinify(obj, delegate) {
+    _classCallCheck(this, Coinify);
+
+    var api = new API('https://app-api.coinify.com/');
+
+    var _this = _possibleConstructorReturn(this, (Coinify.__proto__ || Object.getPrototypeOf(Coinify)).call(this, obj, delegate, api, Trade, Quote, PaymentMedium));
+
+    assert(delegate.getToken, 'delegate.getToken() required');
+    _this._partner_id = null;
+    _this._user = obj.user;
+    _this._auto_login = obj.auto_login;
+    _this._offlineToken = obj.offline_token;
+
+    _this._api = api;
+    _this._api._offlineToken = _this._offlineToken;
+
+    _this._profile = new CoinifyProfile(_this._api);
+
+    _this._buyCurrencies = null;
+    _this._sellCurrencies = null;
+
+    _this._kycs = [];
+
+    _this.exchangeRate = new ExchangeRate(_this._api);
+    return _this;
+  }
+
+  _createClass(Coinify, [{
+    key: 'getTrades',
+    value: function getTrades() {
+      return _get(Coinify.prototype.__proto__ || Object.getPrototypeOf(Coinify.prototype), 'getTrades', this).call(this, Quote);
+    }
+  }, {
+    key: 'toJSON',
+    value: function toJSON() {
+      var coinify = {
+        user: this._user,
+        offline_token: this._offlineToken,
+        auto_login: this._auto_login,
+        trades: Trade.filteredTrades(this._trades)
+      };
+
+      return coinify;
+    }
+
+    // Country and default currency must be set
+    // Email must be set and verified
+
+  }, {
+    key: 'signup',
+    value: function signup(countryCode, currencyCode) {
+      var self = this;
+      var runChecks = function runChecks() {
+        assert(!self.user, 'Already signed up');
+
+        assert(self.delegate, 'ExchangeDelegate required');
+
+        assert(countryCode && Exchange.Helpers.isString(countryCode) && countryCode.length === 2 && countryCode.match(/[a-zA-Z]{2}/), 'ISO 3166-1 alpha-2');
+
+        assert(currencyCode, 'currency required');
+
+        assert(self.delegate.email(), 'email required');
+        assert(self.delegate.isEmailVerified(), 'email must be verified');
+      };
+
+      var doSignup = function doSignup(emailToken) {
+        assert(emailToken, 'email token missing');
+        return this._api.POST('signup/trader', {
+          email: self.delegate.email(),
+          partnerId: self.partnerId,
+          defaultCurrency: currencyCode, // ISO 4217
+          profile: {
+            address: {
+              country: countryCode.toUpperCase()
+            }
+          },
+          trustedEmailValidationToken: emailToken,
+          generateOfflineToken: true
+        });
+      };
+
+      var saveMetadata = function saveMetadata(res) {
+        this._user = res.trader.id;
+        this._offlineToken = res.offlineToken;
+        this._api._offlineToken = this._offlineToken;
+        return this._delegate.save.bind(this._delegate)().then(function () {
+          return res;
+        });
+      };
+
+      var getToken = function getToken() {
+        return this.delegate.getToken.bind(this.delegate)('coinify', { walletAge: true });
+      };
+
+      return Promise.resolve().then(runChecks.bind(this)).then(getToken.bind(this)).then(doSignup.bind(this)).then(saveMetadata.bind(this));
+    }
+  }, {
+    key: 'fetchProfile',
+    value: function fetchProfile() {
+      return this._profile.fetch();
+    }
+  }, {
+    key: 'triggerKYC',
+    value: function triggerKYC() {
+      var _this2 = this;
+
+      var addKYC = function addKYC(kyc) {
+        _this2._kycs.push(kyc);
+        return kyc;
+      };
+
+      return CoinifyKYC.trigger(this._api).then(addKYC);
+    }
+  }, {
+    key: 'updateKYCs',
+    value: function updateKYCs(list, items) {
+      var item;
+      for (var i = 0; i < items.length; i++) {
+        item = undefined;
+        for (var k = 0; k < list.length; k++) {
+          var itemId = Helpers.isNumber(items[i].id) ? items[i].id : items[i].id.toLowerCase();
+          if (list[k]._id === itemId) {
+            item = list[k];
+            item.debug = this.debug;
+            item.set.bind(item)(items[i]);
+          }
+        }
+        if (item === undefined) {
+          item = new KYC(items[i], this._api, this.delegate, this);
+          item.debug = this.debug;
+          list.push(item);
+        }
+      }
+    }
+  }, {
+    key: 'getKYCs',
+    value: function getKYCs() {
+      var _this3 = this;
+
+      var save = function save() {
+        return _this3.delegate.save.bind(_this3.delegate)().then(function () {
+          return _this3._kycs;
+        });
+      };
+      var update = function update(kycs) {
+        _this3.updateKYCs(_this3._kycs, kycs, CoinifyKYC);
+      };
+      return CoinifyKYC.fetchAll(this._api, this).then(update).then(save);
+    }
+  }, {
+    key: 'getBuyCurrencies',
+    value: function getBuyCurrencies() {
+      var getCurrencies = function getCurrencies(paymentMethods) {
+        var currencies = [];
+        var _iteratorNormalCompletion = true;
+        var _didIteratorError = false;
+        var _iteratorError = undefined;
+
+        try {
+          for (var _iterator = Object.entries(paymentMethods)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+            var _step$value = _slicedToArray(_step.value, 2),
+                paymentMethod = _step$value[1];
+
+            var _iteratorNormalCompletion2 = true;
+            var _didIteratorError2 = false;
+            var _iteratorError2 = undefined;
+
+            try {
+              for (var _iterator2 = paymentMethod.inCurrencies[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                var inCurrency = _step2.value;
+
+                if (currencies.indexOf(inCurrency) === -1) {
+                  currencies.push(inCurrency);
+                }
+              }
+            } catch (err) {
+              _didIteratorError2 = true;
+              _iteratorError2 = err;
+            } finally {
+              try {
+                if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                  _iterator2.return();
+                }
+              } finally {
+                if (_didIteratorError2) {
+                  throw _iteratorError2;
+                }
+              }
+            }
+          }
+        } catch (err) {
+          _didIteratorError = true;
+          _iteratorError = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion && _iterator.return) {
+              _iterator.return();
+            }
+          } finally {
+            if (_didIteratorError) {
+              throw _iteratorError;
+            }
+          }
+        }
+
+        this._buyCurrencies = JSON.parse(JSON.stringify(currencies));
+        return currencies;
+      };
+      return this.getBuyMethods().then(getCurrencies.bind(this));
+    }
+  }, {
+    key: 'getSellCurrencies',
+    value: function getSellCurrencies() {
+      var getCurrencies = function getCurrencies(paymentMethods) {
+        var currencies = [];
+        var _iteratorNormalCompletion3 = true;
+        var _didIteratorError3 = false;
+        var _iteratorError3 = undefined;
+
+        try {
+          for (var _iterator3 = Object.entries(paymentMethods)[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+            var _step3$value = _slicedToArray(_step3.value, 2),
+                paymentMethod = _step3$value[1];
+
+            var _iteratorNormalCompletion4 = true;
+            var _didIteratorError4 = false;
+            var _iteratorError4 = undefined;
+
+            try {
+              for (var _iterator4 = paymentMethod.outCurrencies[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+                var outCurrency = _step4.value;
+
+                if (currencies.indexOf(outCurrency) === -1) {
+                  currencies.push(outCurrency);
+                }
+              }
+            } catch (err) {
+              _didIteratorError4 = true;
+              _iteratorError4 = err;
+            } finally {
+              try {
+                if (!_iteratorNormalCompletion4 && _iterator4.return) {
+                  _iterator4.return();
+                }
+              } finally {
+                if (_didIteratorError4) {
+                  throw _iteratorError4;
+                }
+              }
+            }
+          }
+        } catch (err) {
+          _didIteratorError3 = true;
+          _iteratorError3 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion3 && _iterator3.return) {
+              _iterator3.return();
+            }
+          } finally {
+            if (_didIteratorError3) {
+              throw _iteratorError3;
+            }
+          }
+        }
+
+        this._sellCurrencies = JSON.parse(JSON.stringify(currencies));
+        return currencies;
+      };
+      return this.getSellMethods().then(getCurrencies.bind(this));
+    }
+  }, {
+    key: 'profile',
+    get: function get() {
+      return this._profile;
+    }
+  }, {
+    key: 'kycs',
+    get: function get() {
+      return this._kycs;
+    }
+  }, {
+    key: 'hasAccount',
+    get: function get() {
+      return Boolean(this._offlineToken);
+    }
+  }, {
+    key: 'partnerId',
+    get: function get() {
+      return this._partner_id;
+    },
+    set: function set(value) {
+      this._partner_id = value;
+    }
+  }, {
+    key: 'buyCurrencies',
+    get: function get() {
+      return this._buyCurrencies;
+    }
+  }, {
+    key: 'sellCurrencies',
+    get: function get() {
+      return this._sellCurrencies;
+    }
+  }, {
+    key: 'bank',
+    get: function get() {
+      return this._bank;
+    }
+  }], [{
+    key: 'new',
+    value: function _new(delegate) {
+      assert(delegate, 'Coinify.new requires delegate');
+      var object = {
+        auto_login: true
+      };
+      var coinify = new Coinify(object, delegate);
+      return coinify;
+    }
+  }]);
+
+  return Coinify;
+}(Exchange.Exchange);
+
+module.exports = Coinify;
+
+/***/ }),
+/* 263 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var assert = __webpack_require__(1);
+
+module.exports = ExchangeRate;
+
+function ExchangeRate(coinify) {
+  this._coinify = coinify;
+}
+
+ExchangeRate.prototype.get = function (baseCurrency, quoteCurrency) {
+  var self = this;
+  var performChecks = function performChecks() {
+    assert(baseCurrency, 'Base currency required');
+    assert(quoteCurrency, 'Quote currency required');
+  };
+  var getRate = function getRate() {
+    return self._coinify.GET('rates/approximate', {
+      baseCurrency: baseCurrency,
+      quoteCurrency: quoteCurrency
+    });
+  };
+  var processRate = function processRate(res) {
+    return res.rate;
+  };
+  return Promise.resolve().then(performChecks).then(getRate).then(processRate);
+};
+
+/***/ }),
+/* 264 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(262);
+
+/***/ }),
+/* 265 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = Level;
+
+function Level(obj) {
+  this._currency = obj.currency;
+  this._feePercentage = obj.feePercentage;
+  this._requirements = obj.requirements;
+  this._name = obj.name;
+}
+
+Object.defineProperties(Level.prototype, {
+  'currency': {
+    configurable: false,
+    get: function get() {
+      return this._currency;
+    }
+  },
+  'feePercentage': {
+    configurable: false,
+    get: function get() {
+      return this._feePercentage;
+    }
+  },
+  'limits': {
+    configurable: false,
+    get: function get() {
+      return this._limits;
+    }
+  },
+  'name': {
+    configurable: false,
+    get: function get() {
+      return this._name;
+    }
+  },
+  'requirements': {
+    configurable: false,
+    get: function get() {
+      return this._requirements;
+    }
+  }
+});
+
+/***/ }),
+/* 266 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = Limit;
+
+var fallbackLimits = { DKK: Infinity, EUR: Infinity, USD: Infinity, GBP: Infinity, BTC: Infinity };
+
+function Limit(method) {
+  this._inRemaining = method.limitInAmounts || fallbackLimits;
+  this._minimumInAmounts = method.minimumInAmounts;
+}
+
+Object.defineProperties(Limit.prototype, {
+  'inRemaining': {
+    configurable: false,
+    get: function get() {
+      return this._inRemaining;
+    }
+  },
+  'minimumInAmounts': {
+    configurable: false,
+    get: function get() {
+      return this._minimumInAmounts;
+    }
+  }
+});
+
+/***/ }),
+/* 267 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var Limit = __webpack_require__(266);
+
+module.exports = Limits;
+
+function Limits(methods) {
+  this._card = new Limit(methods.find(function (method) {
+    return method.inMedium === 'card';
+  }));
+  this._bank = new Limit(methods.find(function (method) {
+    return method.inMedium === 'bank';
+  }));
+  this._blockchain = new Limit(methods.find(function (method) {
+    return method.inMedium === 'blockchain';
+  }));
+}
+
+Object.defineProperties(Limits.prototype, {
+  'card': {
+    configurable: false,
+    get: function get() {
+      return this._card;
+    }
+  },
+  'bank': {
+    configurable: false,
+    get: function get() {
+      return this._bank;
+    }
+  },
+  'blockchain': {
+    configurable: false,
+    get: function get() {
+      return this._blockchain;
+    }
+  }
+});
+
+/***/ }),
+/* 268 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var assert = __webpack_require__(1);
+var Limits = __webpack_require__(267);
+var Level = __webpack_require__(265);
+
+module.exports = CoinifyProfile;
+
+function CoinifyProfile(api) {
+  this._api = api;
+  this._did_fetch;
+}
+
+Object.defineProperties(CoinifyProfile.prototype, {
+  'fullName': {
+    configurable: false,
+    get: function get() {
+      return this._full_name;
+    }
+  },
+  'defaultCurrency': { // read-only
+    configurable: false,
+    get: function get() {
+      return this._default_currency;
+    }
+  },
+  'email': { // ready-only
+    configurable: false,
+    get: function get() {
+      return this._email;
+    }
+  },
+  'gender': {
+    configurable: false,
+    get: function get() {
+      return this._gender;
+    }
+  },
+  'mobile': { // setter not implemented yet
+    configurable: false,
+    get: function get() {
+      return this._mobile;
+    }
+  },
+  'city': {
+    configurable: false,
+    get: function get() {
+      return this._city;
+    }
+  },
+  'country': {
+    configurable: false,
+    get: function get() {
+      return this._country;
+    }
+  },
+  'state': { // ISO 3166-2, the part after the dash
+    configurable: false,
+    get: function get() {
+      return this._state;
+    }
+  },
+  'street': {
+    configurable: false,
+    get: function get() {
+      return this._street;
+    }
+  },
+  'zipcode': {
+    configurable: false,
+    get: function get() {
+      return this._zipcode;
+    }
+  },
+  'level': {
+    configurable: false,
+    get: function get() {
+      return this._level;
+    }
+  },
+  'nextLevel': {
+    configurable: false,
+    get: function get() {
+      return this._nextLevel;
+    }
+  },
+  'currentLimits': {
+    configurable: false,
+    get: function get() {
+      return this._currentLimits;
+    }
+  },
+  'limits': {
+    configurable: false,
+    get: function get() {
+      return this._limits;
+    }
+  },
+  'canTrade': {
+    configurable: false,
+    get: function get() {
+      return this._canTrade;
+    }
+  },
+  'canTradeAfter': {
+    configurable: false,
+    get: function get() {
+      return this._canTradeAfter;
+    }
+  },
+  'cannotTradeReason': {
+    configurable: false,
+    get: function get() {
+      return this._cannotTradeReason;
+    }
+  }
+});
+
+CoinifyProfile.prototype.fetch = function () {
+  var parentThis = this;
+
+  var processProfile = function processProfile(res) {
+    parentThis._full_name = res.profile.name;
+    parentThis._gender = res.profile.gender;
+
+    parentThis._email = res.email;
+
+    if (res.profile.mobile.countryCode) {
+      parentThis._mobile = '+' + res.profile.mobile.countryCode + res.profile.mobile.number.replace('-', '');
+    }
+
+    parentThis._default_currency = res.defaultCurrency;
+
+    // TODO: use new Address(res.profile.address);
+    parentThis._street = res.profile.address.street;
+    parentThis._city = res.profile.address.city;
+    parentThis._state = res.profile.address.state;
+    parentThis._zipcode = res.profile.address.zipcode;
+    parentThis._country = res.profile.address.country;
+
+    parentThis._level = new Level(res.level);
+    parentThis._limits = parentThis.limits || {};
+    parentThis._currentLimits = res.currentLimits;
+
+    parentThis._canTrade = res.canTrade == null ? true : Boolean(res.canTrade);
+    parentThis._canTradeAfter = new Date(res.canTradeAfter);
+    parentThis._cannotTradeReason = res.cannotTradeReason;
+
+    parentThis._did_fetch = true;
+
+    return parentThis;
+  };
+
+  var getLimits = function getLimits() {
+    return parentThis._api.hasAccount ? parentThis._api.authGET('trades/payment-methods') : parentThis._api.GET('trades/payment-methods');
+  };
+
+  var setLimits = function setLimits(methods) {
+    parentThis._limits = new Limits(methods);
+  };
+
+  if (this._api.hasAccount) {
+    return this._api.authGET('traders/me').then(processProfile).then(getLimits).then(setLimits);
+  } else {
+    return getLimits().then(setLimits);
+  }
+};
+
+CoinifyProfile.prototype.setFullName = function (value) {
+  var parentThis = this;
+
+  return this.update({ profile: { name: value } }).then(function (res) {
+    parentThis._full_name = res.profile.name;
+  });
+};
+
+CoinifyProfile.prototype.setGender = function (value) {
+  assert(value === null || value === 'male' || value === 'female', 'invalid gender');
+  var parentThis = this;
+
+  return this.update({ profile: { gender: value } }).then(function (res) {
+    parentThis._gender = res.profile.gender;
+  });
+};
+
+CoinifyProfile.prototype.setCity = function (value) {
+  var parentThis = this;
+
+  return this.update({ profile: { address: { city: value } } }).then(function (res) {
+    parentThis._city = res.profile.address.city;
+  });
+};
+
+CoinifyProfile.prototype.setCountry = function (value) {
+  var parentThis = this;
+
+  return this.update({ profile: { address: { country: value } } }).then(function (res) {
+    parentThis._country = res.profile.address.country;
+  });
+};
+
+CoinifyProfile.prototype.setState = function (value) {
+  var parentThis = this;
+
+  return this.update({ profile: { address: { state: value } } }).then(function (res) {
+    parentThis._state = res.profile.address.state;
+  });
+};
+
+CoinifyProfile.prototype.setStreet = function (value) {
+  var parentThis = this;
+
+  return this.update({ profile: { address: { street: value } } }).then(function (res) {
+    parentThis._street = res.profile.address.street;
+  });
+};
+
+CoinifyProfile.prototype.setZipcode = function (value) {
+  var parentThis = this;
+  return this.update({ profile: { address: { zipcode: value } } }).then(function (res) {
+    parentThis._zipcode = res.profile.address.zipcode;
+  });
+};
+
+CoinifyProfile.prototype.update = function (values) {
+  return this._api.authPATCH('traders/me', values);
+};
+
+/***/ }),
+/* 269 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var PaymentMethod = __webpack_require__(154);
+var Exchange = __webpack_require__(26);
+var Trade = __webpack_require__(68);
+
+var Quote = function (_Exchange$Quote) {
+  _inherits(Quote, _Exchange$Quote);
+
+  function Quote(obj, api, delegate, debug) {
+    _classCallCheck(this, Quote);
+
+    var _this = _possibleConstructorReturn(this, (Quote.__proto__ || Object.getPrototypeOf(Quote)).call(this, api, delegate, Trade, PaymentMethod, debug));
+
+    var expiresAt = new Date(obj.expiryTime);
+    var timeOfRequest = new Date(obj.issueTime);
+
+    // Debug, make quote expire in 15 seconds:
+    // expiresAt = new Date(new Date().getTime() + 15 * 1000);
+
+    _this._id = obj.id;
+    _this._baseCurrency = obj.baseCurrency;
+    _this._quoteCurrency = obj.quoteCurrency;
+    _this._timeOfRequest = timeOfRequest;
+    _this._expiresAt = obj.id ? expiresAt : new Date(expiresAt.getTime() + 10 * 60 * 1000);
+
+    if (_this._baseCurrency === 'BTC') {
+      _this._baseAmount = Math.round(obj.baseAmount * 100000000);
+      _this._quoteAmount = obj.quoteAmount;
+    } else {
+      _this._baseAmount = obj.baseAmount;
+      _this._quoteAmount = Math.round(obj.quoteAmount * 100000000);
+    }
+
+    obj.baseAmount;
+    return _this;
+  }
+
+  _createClass(Quote, [{
+    key: 'expire',
+
+
+    // QA tool
+    value: function expire() {
+      this._expiresAt = new Date(new Date().getTime() + 3 * 1000);
+    }
+  }, {
+    key: 'paymentMediums',
+    get: function get() {
+      return this._paymentMediums;
+    }
+  }], [{
+    key: 'getQuote',
+    value: function getQuote(api, delegate, amount, baseCurrency, quoteCurrency, debug) {
+      var processQuote = function processQuote(quote) {
+        return new Quote(quote, api, delegate);
+      };
+
+      var getQuote = function getQuote(_baseAmount) {
+        var getAnonymousQuote = function getAnonymousQuote() {
+          return api.POST('trades/quote', {
+            baseCurrency: baseCurrency,
+            quoteCurrency: quoteCurrency,
+            baseAmount: parseFloat(_baseAmount)
+          });
+        };
+
+        var getQuote = function getQuote() {
+          return api.authPOST('trades/quote', {
+            baseCurrency: baseCurrency,
+            quoteCurrency: quoteCurrency,
+            baseAmount: parseFloat(_baseAmount)
+          });
+        };
+
+        if (!api.hasAccount) {
+          return getAnonymousQuote().then(processQuote);
+        } else {
+          return getQuote().then(processQuote);
+        }
+      };
+
+      return _get(Quote.__proto__ || Object.getPrototypeOf(Quote), 'getQuote', this).call(this, amount, baseCurrency, quoteCurrency, ['BTC', 'EUR', 'GBP', 'USD', 'DKK'], debug).then(getQuote);
+    }
+  }]);
+
+  return Quote;
+}(Exchange.Quote);
+
+module.exports = Quote;
+
+/***/ }),
+/* 270 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -48355,7 +48341,7 @@ var API = function () {
 module.exports = API;
 
 /***/ }),
-/* 272 */
+/* 271 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -48549,7 +48535,7 @@ var Exchange = function () {
 module.exports = Exchange;
 
 /***/ }),
-/* 273 */
+/* 272 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -48612,7 +48598,7 @@ var PaymentAccount = function () {
 module.exports = PaymentAccount;
 
 /***/ }),
-/* 274 */
+/* 273 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -48715,7 +48701,7 @@ var PaymentMedium = function () {
 module.exports = PaymentMedium;
 
 /***/ }),
-/* 275 */
+/* 274 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -48876,7 +48862,7 @@ var Quote = function () {
 module.exports = Quote;
 
 /***/ }),
-/* 276 */
+/* 275 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -49242,6 +49228,20 @@ var Trade = function () {
 }();
 
 module.exports = Trade;
+
+/***/ }),
+/* 276 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var OPS = __webpack_require__(12);
+
+var map = {};
+for (var op in OPS) {
+  var code = OPS[op];
+  map[code] = op;
+}
+
+module.exports = map;
 
 /***/ }),
 /* 277 */
@@ -73778,8 +73778,14 @@ var Trade = function () {
     this._error = obj.error;
     this._hashIn = obj.hashIn;
     this._hashOut = obj.hashOut;
-    this._time = obj.time ? new Date(obj.time) : void 0;
     this._quote = obj.quote;
+
+    /* prefer `timestamp` if exists */
+    if (obj.timestamp) {
+      this._time = new Date(obj.timestamp);
+    } else if (obj.time) {
+      this._time = new Date(obj.time);
+    }
   }
 
   _createClass(Trade, [{
@@ -73811,6 +73817,8 @@ var Trade = function () {
         hashIn: this._hashIn,
         hashOut: this._hashOut,
         time: this._time && this._time.toString(),
+        // save `timestamp` as UNIX timestamp integer
+        timestamp: this._time && this._time.getTime(),
         quote: this.isComplete ? this._quote.toPartialJSON() : this._quote.toJSON()
       };
     }
