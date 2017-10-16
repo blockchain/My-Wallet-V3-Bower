@@ -32233,8 +32233,8 @@ var PaymentMedium = function (_ExchangePaymentMediu) {
 
     if (quote) {
       var amt = quote.baseCurrency === 'BTC' ? quote.quoteAmount : quote.baseAmount;
-      var percentageFee = amt < 0 ? _this.inPercentageFee : -_this.outPercentageFee;
-      _this._fee = Math.round(_this.inFixedFee + -amt * (percentageFee / 100));
+      var percentageFee = obj.inMedium === 'blockchain' ? -_this.outPercentageFee : _this.inPercentageFee;
+      _this._fee = parseFloat((_this.inFixedFee + -amt * (percentageFee / 100)).toFixed(2));
       _this._total = -amt + _this._fee;
     }
     return _this;
@@ -32295,7 +32295,6 @@ var PaymentMedium = function (_ExchangePaymentMediu) {
     value: function getAll(inCurrency, outCurrency, api, quote) {
       var params = {};
       if (inCurrency) {
-        /* including inCurrency restricts the response to only include limits in that one currency */
         params.inCurrency = inCurrency;
       }
       if (outCurrency) {
@@ -46406,7 +46405,7 @@ var Quote = function () {
 
       var inCurrency = this.baseCurrency;
       var outCurrency = this.quoteCurrency;
-      if (this.baseCurrency === 'BTC' && this.baseAmount > 0) {
+      if (this.baseAmount > 0) {
         inCurrency = this.quoteCurrency;
         outCurrency = this.baseCurrency;
       }
