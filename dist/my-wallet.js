@@ -38641,6 +38641,16 @@ Object.defineProperties(Wallet.prototype, {
       });
     }
   },
+  'spendableAddresses': {
+    configurable: false,
+    get: function get() {
+      return this.keys.filter(function (k) {
+        return !k.isWatchOnly;
+      }).map(function (k) {
+        return k.address;
+      });
+    }
+  },
   'spendableActiveAddresses': {
     configurable: false,
     get: function get() {
@@ -69466,7 +69476,7 @@ var BchImported = function (_BchSpendable) {
   }, {
     key: 'addresses',
     get: function get() {
-      return this._wallet.spendableActiveAddresses;
+      return this._wallet.spendableAddresses;
     }
   }, {
     key: 'label',

@@ -1,18 +1,27 @@
 __Blockchain Wallet V3__
 
-#   (2017-10-29)
+#   (2017-11-02)
 
 
 
 ---
 
+## Features
+
+- **cash:** treat archived imported addresses as active for bch
+  ([966939bb](https://github.com/blockchain/My-Wallet-V3/commit/966939bb76248b9f3b50552fc10eddb969fae4d6))
+
+
 ## Chore
 
-- **release:**
-  - v3.39.6
-  ([8cf977ca](https://github.com/blockchain/My-Wallet-V3/commit/8cf977ca0ab947cab01f7c226849420ed0ff3e77))
-  - upgrade sfox/coinify clients
-  ([0abe116a](https://github.com/blockchain/My-Wallet-V3/commit/0abe116a99c2144c3ea9a70db2eb6c6770d33c41))
+- **release:** v3.39.7
+  ([890e4920](https://github.com/blockchain/My-Wallet-V3/commit/890e4920d256c021b43eeb929832d0fa8f457d87))
+
+
+## Pull requests merged
+
+- Merge pull request #455 from blockchain/bch-archived
+  ([873be810](https://github.com/blockchain/My-Wallet-V3/commit/873be810dd609315516d13646b19928b0c9fe01e))
 
 
 
