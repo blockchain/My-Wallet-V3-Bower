@@ -1,27 +1,24 @@
 __Blockchain Wallet V3__
 
-#   (2017-11-02)
+#   (2017-11-09)
 
 
 
 ---
 
-## Features
-
-- **cash:** treat archived imported addresses as active for bch
-  ([966939bb](https://github.com/blockchain/My-Wallet-V3/commit/966939bb76248b9f3b50552fc10eddb969fae4d6))
-
-
 ## Chore
 
-- **release:** v3.39.7
-  ([890e4920](https://github.com/blockchain/My-Wallet-V3/commit/890e4920d256c021b43eeb929832d0fa8f457d87))
+- **release:**
+  - v3.40.0
+  ([ba59a39d](https://github.com/blockchain/My-Wallet-V3/commit/ba59a39d9b86f8e08b5067b5210568b65b953557))
+  - update bitcoin-coinify-client dependency
+  ([85a1834e](https://github.com/blockchain/My-Wallet-V3/commit/85a1834ec8dfd29d913c712c178c516e81a5b7ba))
 
 
 ## Pull requests merged
 
-- Merge pull request #455 from blockchain/bch-archived
-  ([873be810](https://github.com/blockchain/My-Wallet-V3/commit/873be810dd609315516d13646b19928b0c9fe01e))
+- Merge pull request #448 from blockchain/v3.39-release
+  ([e3cf5367](https://github.com/blockchain/My-Wallet-V3/commit/e3cf5367453562b81738e949bc363a6b6fddfd1e))
 
 
 
