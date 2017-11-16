@@ -1,24 +1,24 @@
 __Blockchain Wallet V3__
 
-#   (2017-11-09)
+#   (2017-11-16)
 
 
 
 ---
 
+## Features
+
+- **recurring buy:** if recurring exists change addr label
+  ([e0330c56](https://github.com/blockchain/My-Wallet-V3/commit/e0330c56f1a8fd5a098d7deb40dedd66798d4399))
+
+
 ## Chore
 
 - **release:**
-  - v3.40.0
-  ([ba59a39d](https://github.com/blockchain/My-Wallet-V3/commit/ba59a39d9b86f8e08b5067b5210568b65b953557))
-  - update bitcoin-coinify-client dependency
-  ([85a1834e](https://github.com/blockchain/My-Wallet-V3/commit/85a1834ec8dfd29d913c712c178c516e81a5b7ba))
-
-
-## Pull requests merged
-
-- Merge pull request #448 from blockchain/v3.39-release
-  ([e3cf5367](https://github.com/blockchain/My-Wallet-V3/commit/e3cf5367453562b81738e949bc363a6b6fddfd1e))
+  - v3.40.1
+  ([bf23e64c](https://github.com/blockchain/My-Wallet-V3/commit/bf23e64c9c2d4a9b9cf0792e7f033875cff0e30e))
+  - upgrade clients
+  ([6f5cd8c2](https://github.com/blockchain/My-Wallet-V3/commit/6f5cd8c2893e491d8e306031b9a189257a4e5af3))
 
 
 
