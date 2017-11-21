@@ -20882,7 +20882,7 @@ var Trade = function (_Exchange$Trade) {
       }
 
       if (obj.transferOut) {
-        this._receiveAmount = this._is_buy ? obj.transferIn.receiveAmount : obj.transferOut.receiveAmount;
+        this._receiveAmount = obj.transferOut.receiveAmount;
       }
 
       if (this._inCurrency === 'BTC') {
@@ -29464,7 +29464,7 @@ Object.defineProperties(External.prototype, {
   'hasExchangeAccount': {
     configurable: false,
     get: function get() {
-      return this._coinify && this._coinify.hasAccount || this._sfox && this._sfox.hasAccount || this._unocoin && this._unocoin.hasAccount || false;
+      return this._coinify && this._coinify.hasAccount && 'coinify' || this._unocoin && this._unocoin.hasAccount && 'unocoin' || this._sfox && this._sfox.hasAccount && 'sfox' || false;
     }
   }
 });
@@ -33117,7 +33117,7 @@ var Trade = function (_Exchange$Trade) {
           this._receiveAmount = this._outAmount;
         }
       } else if (this._delegate.ticker) {
-        this._receiveAmount = Math.round(this._inAmount / this._delegate.ticker.buy.price * 100000000);
+        this._receiveAmount = parseFloat((this._inAmount / this._delegate.ticker.buy.price).toFixed(8));
       }
     }
   }, {
@@ -46683,6 +46683,7 @@ function CoinifyBank(obj, api) {
   this._referenceText = obj.referenceText;
   this._updated_at = obj.updateTime; // Not used in buy
   this._created_at = obj.createTime; // Not used in buy
+  this._bank_name = obj.bank.name;
 }
 
 Object.defineProperties(CoinifyBank.prototype, {
