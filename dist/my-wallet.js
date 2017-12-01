@@ -7001,12 +7001,12 @@ API.prototype.incrementLoginViaQrStats = function () {
   return fetch(this.ROOT_URL + 'event?name=wallet_web_login_via_qr');
 };
 
-API.prototype.incrementBtcEthUsageStats = function (btcBalance, ethBalance) {
+API.prototype.incrementCurrencyUsageStats = function (btcBalance, ethBalance, bchBalance) {
   var base = this.ROOT_URL + 'event?name=wallet_login_balance';
-  var makeEventUrl = function makeEventUrl(btc, eth) {
-    return base + '_btc_' + (btc ? 1 : 0) + '_eth_' + (eth ? 1 : 0);
+  var makeEventUrl = function makeEventUrl(btc, eth, bch) {
+    return base + '_btc_' + (btc ? 1 : 0) + '_eth_' + (eth ? 1 : 0) + '_bch_' + (bch ? 1 : 0);
   };
-  fetch(makeEventUrl(btcBalance > 0, ethBalance > 0));
+  fetch(makeEventUrl(btcBalance > 0, ethBalance > 0, bchBalance > 0));
 };
 
 API.prototype.getPriceChartData = function (params) {
@@ -39193,16 +39193,6 @@ Object.defineProperties(Wallet.prototype, {
       });
     }
   },
-  'spendableAddresses': {
-    configurable: false,
-    get: function get() {
-      return this.keys.filter(function (k) {
-        return !k.isWatchOnly;
-      }).map(function (k) {
-        return k.address;
-      });
-    }
-  },
   'spendableActiveAddresses': {
     configurable: false,
     get: function get() {
@@ -68762,7 +68752,7 @@ var BchImported = function (_BchSpendable) {
   }, {
     key: 'addresses',
     get: function get() {
-      return this._wallet.spendableAddresses;
+      return this._wallet.spendableActiveAddresses;
     }
   }, {
     key: 'label',
@@ -69067,7 +69057,7 @@ var BitcoinCashWallet = function () {
       var _this2 = this;
 
       var addrs = this.importedAddresses == null ? [] : this.importedAddresses.addresses;
-      var xpubs = this.accounts.map(function (a) {
+      var xpubs = this.activeAccounts.map(function (a) {
         return a.xpub;
       });
       return BchApi.multiaddr(addrs.concat(xpubs), 50).then(function (result) {
@@ -69112,6 +69102,13 @@ var BitcoinCashWallet = function () {
     key: 'defaultAccount',
     get: function get() {
       return this.accounts[this._wallet.hdwallet.defaultAccountIndex];
+    }
+  }, {
+    key: 'activeAccounts',
+    get: function get() {
+      return this.accounts.filter(function (a) {
+        return !a.archived;
+      });
     }
   }], [{
     key: 'fromBlockchainWallet',
