@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2017-12-01)
+#   (2017-12-06)
 
 
 
@@ -8,25 +8,17 @@ __Blockchain Wallet V3__
 
 ## Features
 
-- **bch:**
-  - only fetch data for active bch accounts
-  ([edad95c2](https://github.com/blockchain/My-Wallet-V3/commit/edad95c2cf1b1ae96d67687b91fc3e84366fd4bf))
-  - add bch to currency balance stats
-  ([5ace69a3](https://github.com/blockchain/My-Wallet-V3/commit/5ace69a383630da2fd65382d9cae640e20196426))
+- **bch:** use v2 export
+  ([f327b4ec](https://github.com/blockchain/My-Wallet-V3/commit/f327b4ec7ae08c9231e548a15e13437ae663544e))
 
 
 ## Chore
 
-- **release:** v3.40.4
-  ([525cdac9](https://github.com/blockchain/My-Wallet-V3/commit/525cdac9ab0c47e35821196dda0560a6ece988e1))
-
-
-## Pull requests merged
-
-- Merge pull request #463 from blockchain/bch-archived
-  ([c4cd39b1](https://github.com/blockchain/My-Wallet-V3/commit/c4cd39b124af21233641a8bb8cdd28feb11ea8c5))
-- Merge pull request #462 from blockchain/bch-stats
-  ([762af93a](https://github.com/blockchain/My-Wallet-V3/commit/762af93a7179a9b38bcbce6dd2b5de6248fbb19c))
+- **release:**
+  - v3.40.6
+  ([ef48185d](https://github.com/blockchain/My-Wallet-V3/commit/ef48185d9d060df7795cb6ca4870e514a6d9206b))
+  - update bitcoincashjs-lib dep
+  ([fc071e03](https://github.com/blockchain/My-Wallet-V3/commit/fc071e034cceb8fef48cfbb345adbc2ed7fd391c))
 
 
 
