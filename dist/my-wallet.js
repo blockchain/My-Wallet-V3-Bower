@@ -2388,265 +2388,6 @@ if (typeof Object.create === 'function') {
 /* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var ERRORS = __webpack_require__(221);
-var NATIVE = __webpack_require__(140);
-
-// short-hand
-var tfJSON = ERRORS.tfJSON;
-var TfTypeError = ERRORS.TfTypeError;
-var TfPropertyTypeError = ERRORS.TfPropertyTypeError;
-var tfSubError = ERRORS.tfSubError;
-var getValueTypeName = ERRORS.getValueTypeName;
-
-var TYPES = {
-  arrayOf: function arrayOf(type) {
-    type = compile(type);
-
-    function _arrayOf(array, strict) {
-      if (!NATIVE.Array(array)) return false;
-      if (NATIVE.Nil(array)) return false;
-
-      return array.every(function (value, i) {
-        try {
-          return typeforce(type, value, strict);
-        } catch (e) {
-          throw tfSubError(e, i);
-        }
-      });
-    }
-    _arrayOf.toJSON = function () {
-      return '[' + tfJSON(type) + ']';
-    };
-
-    return _arrayOf;
-  },
-
-  maybe: function maybe(type) {
-    type = compile(type);
-
-    function _maybe(value, strict) {
-      return NATIVE.Nil(value) || type(value, strict, maybe);
-    }
-    _maybe.toJSON = function () {
-      return '?' + tfJSON(type);
-    };
-
-    return _maybe;
-  },
-
-  map: function map(propertyType, propertyKeyType) {
-    propertyType = compile(propertyType);
-    if (propertyKeyType) propertyKeyType = compile(propertyKeyType);
-
-    function _map(value, strict) {
-      if (!NATIVE.Object(value)) return false;
-      if (NATIVE.Nil(value)) return false;
-
-      for (var propertyName in value) {
-        try {
-          if (propertyKeyType) {
-            typeforce(propertyKeyType, propertyName, strict);
-          }
-        } catch (e) {
-          throw tfSubError(e, propertyName, 'key');
-        }
-
-        try {
-          var propertyValue = value[propertyName];
-          typeforce(propertyType, propertyValue, strict);
-        } catch (e) {
-          throw tfSubError(e, propertyName);
-        }
-      }
-
-      return true;
-    }
-
-    if (propertyKeyType) {
-      _map.toJSON = function () {
-        return '{' + tfJSON(propertyKeyType) + ': ' + tfJSON(propertyType) + '}';
-      };
-    } else {
-      _map.toJSON = function () {
-        return '{' + tfJSON(propertyType) + '}';
-      };
-    }
-
-    return _map;
-  },
-
-  object: function object(uncompiled) {
-    var type = {};
-
-    for (var typePropertyName in uncompiled) {
-      type[typePropertyName] = compile(uncompiled[typePropertyName]);
-    }
-
-    function _object(value, strict) {
-      if (!NATIVE.Object(value)) return false;
-      if (NATIVE.Nil(value)) return false;
-
-      var propertyName;
-
-      try {
-        for (propertyName in type) {
-          var propertyType = type[propertyName];
-          var propertyValue = value[propertyName];
-
-          typeforce(propertyType, propertyValue, strict);
-        }
-      } catch (e) {
-        throw tfSubError(e, propertyName);
-      }
-
-      if (strict) {
-        for (propertyName in value) {
-          if (type[propertyName]) continue;
-
-          throw new TfPropertyTypeError(undefined, propertyName);
-        }
-      }
-
-      return true;
-    }
-    _object.toJSON = function () {
-      return tfJSON(type);
-    };
-
-    return _object;
-  },
-
-  oneOf: function oneOf() {
-    var types = [].slice.call(arguments).map(compile);
-
-    function _oneOf(value, strict) {
-      return types.some(function (type) {
-        try {
-          return typeforce(type, value, strict);
-        } catch (e) {
-          return false;
-        }
-      });
-    }
-    _oneOf.toJSON = function () {
-      return types.map(tfJSON).join('|');
-    };
-
-    return _oneOf;
-  },
-
-  quacksLike: function quacksLike(type) {
-    function _quacksLike(value) {
-      return type === getValueTypeName(value);
-    }
-    _quacksLike.toJSON = function () {
-      return type;
-    };
-
-    return _quacksLike;
-  },
-
-  tuple: function tuple() {
-    var types = [].slice.call(arguments).map(compile);
-
-    function _tuple(values, strict) {
-      if (NATIVE.Nil(values)) return false;
-      if (NATIVE.Nil(values.length)) return false;
-      if (strict && values.length !== types.length) return false;
-
-      return types.every(function (type, i) {
-        try {
-          return typeforce(type, values[i], strict);
-        } catch (e) {
-          throw tfSubError(e, i);
-        }
-      });
-    }
-    _tuple.toJSON = function () {
-      return '(' + types.map(tfJSON).join(', ') + ')';
-    };
-
-    return _tuple;
-  },
-
-  value: function value(expected) {
-    function _value(actual) {
-      return actual === expected;
-    }
-    _value.toJSON = function () {
-      return expected;
-    };
-
-    return _value;
-  }
-};
-
-function compile(type) {
-  if (NATIVE.String(type)) {
-    if (type[0] === '?') return TYPES.maybe(type.slice(1));
-
-    return NATIVE[type] || TYPES.quacksLike(type);
-  } else if (type && NATIVE.Object(type)) {
-    if (NATIVE.Array(type)) return TYPES.arrayOf(type[0]);
-
-    return TYPES.object(type);
-  } else if (NATIVE.Function(type)) {
-    return type;
-  }
-
-  return TYPES.value(type);
-}
-
-function typeforce(type, value, strict, surrogate) {
-  if (NATIVE.Function(type)) {
-    if (type(value, strict)) return true;
-
-    throw new TfTypeError(surrogate || type, value);
-  }
-
-  // JIT
-  return typeforce(compile(type), value, strict);
-}
-
-// assign types to typeforce function
-for (var typeName in NATIVE) {
-  typeforce[typeName] = NATIVE[typeName];
-}
-
-for (typeName in TYPES) {
-  typeforce[typeName] = TYPES[typeName];
-}
-
-var EXTRA = __webpack_require__(510);
-for (typeName in EXTRA) {
-  typeforce[typeName] = EXTRA[typeName];
-}
-
-// async wrapper
-function __async(type, value, strict, callback) {
-  // default to falsy strict if using shorthand overload
-  if (typeof strict === 'function') return __async(type, value, false, strict);
-
-  try {
-    typeforce(type, value, strict);
-  } catch (e) {
-    return callback(e);
-  }
-
-  callback();
-}
-
-typeforce.async = __async;
-typeforce.compile = compile;
-typeforce.TfTypeError = TfTypeError;
-typeforce.TfPropertyTypeError = TfPropertyTypeError;
-
-module.exports = typeforce;
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
 "use strict";
 
 
@@ -2658,7 +2399,7 @@ var BIP39 = __webpack_require__(51);
 var BigNumber = __webpack_require__(256);
 var ethUtil = __webpack_require__(80);
 var ImportExport = __webpack_require__(93);
-var constants = __webpack_require__(15);
+var constants = __webpack_require__(13);
 var WalletCrypo = __webpack_require__(18);
 var has = __webpack_require__(468);
 var allPass = __webpack_require__(463);
@@ -3318,6 +3059,265 @@ Helpers.trace = function () {
 };
 
 module.exports = Helpers;
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var ERRORS = __webpack_require__(221);
+var NATIVE = __webpack_require__(140);
+
+// short-hand
+var tfJSON = ERRORS.tfJSON;
+var TfTypeError = ERRORS.TfTypeError;
+var TfPropertyTypeError = ERRORS.TfPropertyTypeError;
+var tfSubError = ERRORS.tfSubError;
+var getValueTypeName = ERRORS.getValueTypeName;
+
+var TYPES = {
+  arrayOf: function arrayOf(type) {
+    type = compile(type);
+
+    function _arrayOf(array, strict) {
+      if (!NATIVE.Array(array)) return false;
+      if (NATIVE.Nil(array)) return false;
+
+      return array.every(function (value, i) {
+        try {
+          return typeforce(type, value, strict);
+        } catch (e) {
+          throw tfSubError(e, i);
+        }
+      });
+    }
+    _arrayOf.toJSON = function () {
+      return '[' + tfJSON(type) + ']';
+    };
+
+    return _arrayOf;
+  },
+
+  maybe: function maybe(type) {
+    type = compile(type);
+
+    function _maybe(value, strict) {
+      return NATIVE.Nil(value) || type(value, strict, maybe);
+    }
+    _maybe.toJSON = function () {
+      return '?' + tfJSON(type);
+    };
+
+    return _maybe;
+  },
+
+  map: function map(propertyType, propertyKeyType) {
+    propertyType = compile(propertyType);
+    if (propertyKeyType) propertyKeyType = compile(propertyKeyType);
+
+    function _map(value, strict) {
+      if (!NATIVE.Object(value)) return false;
+      if (NATIVE.Nil(value)) return false;
+
+      for (var propertyName in value) {
+        try {
+          if (propertyKeyType) {
+            typeforce(propertyKeyType, propertyName, strict);
+          }
+        } catch (e) {
+          throw tfSubError(e, propertyName, 'key');
+        }
+
+        try {
+          var propertyValue = value[propertyName];
+          typeforce(propertyType, propertyValue, strict);
+        } catch (e) {
+          throw tfSubError(e, propertyName);
+        }
+      }
+
+      return true;
+    }
+
+    if (propertyKeyType) {
+      _map.toJSON = function () {
+        return '{' + tfJSON(propertyKeyType) + ': ' + tfJSON(propertyType) + '}';
+      };
+    } else {
+      _map.toJSON = function () {
+        return '{' + tfJSON(propertyType) + '}';
+      };
+    }
+
+    return _map;
+  },
+
+  object: function object(uncompiled) {
+    var type = {};
+
+    for (var typePropertyName in uncompiled) {
+      type[typePropertyName] = compile(uncompiled[typePropertyName]);
+    }
+
+    function _object(value, strict) {
+      if (!NATIVE.Object(value)) return false;
+      if (NATIVE.Nil(value)) return false;
+
+      var propertyName;
+
+      try {
+        for (propertyName in type) {
+          var propertyType = type[propertyName];
+          var propertyValue = value[propertyName];
+
+          typeforce(propertyType, propertyValue, strict);
+        }
+      } catch (e) {
+        throw tfSubError(e, propertyName);
+      }
+
+      if (strict) {
+        for (propertyName in value) {
+          if (type[propertyName]) continue;
+
+          throw new TfPropertyTypeError(undefined, propertyName);
+        }
+      }
+
+      return true;
+    }
+    _object.toJSON = function () {
+      return tfJSON(type);
+    };
+
+    return _object;
+  },
+
+  oneOf: function oneOf() {
+    var types = [].slice.call(arguments).map(compile);
+
+    function _oneOf(value, strict) {
+      return types.some(function (type) {
+        try {
+          return typeforce(type, value, strict);
+        } catch (e) {
+          return false;
+        }
+      });
+    }
+    _oneOf.toJSON = function () {
+      return types.map(tfJSON).join('|');
+    };
+
+    return _oneOf;
+  },
+
+  quacksLike: function quacksLike(type) {
+    function _quacksLike(value) {
+      return type === getValueTypeName(value);
+    }
+    _quacksLike.toJSON = function () {
+      return type;
+    };
+
+    return _quacksLike;
+  },
+
+  tuple: function tuple() {
+    var types = [].slice.call(arguments).map(compile);
+
+    function _tuple(values, strict) {
+      if (NATIVE.Nil(values)) return false;
+      if (NATIVE.Nil(values.length)) return false;
+      if (strict && values.length !== types.length) return false;
+
+      return types.every(function (type, i) {
+        try {
+          return typeforce(type, values[i], strict);
+        } catch (e) {
+          throw tfSubError(e, i);
+        }
+      });
+    }
+    _tuple.toJSON = function () {
+      return '(' + types.map(tfJSON).join(', ') + ')';
+    };
+
+    return _tuple;
+  },
+
+  value: function value(expected) {
+    function _value(actual) {
+      return actual === expected;
+    }
+    _value.toJSON = function () {
+      return expected;
+    };
+
+    return _value;
+  }
+};
+
+function compile(type) {
+  if (NATIVE.String(type)) {
+    if (type[0] === '?') return TYPES.maybe(type.slice(1));
+
+    return NATIVE[type] || TYPES.quacksLike(type);
+  } else if (type && NATIVE.Object(type)) {
+    if (NATIVE.Array(type)) return TYPES.arrayOf(type[0]);
+
+    return TYPES.object(type);
+  } else if (NATIVE.Function(type)) {
+    return type;
+  }
+
+  return TYPES.value(type);
+}
+
+function typeforce(type, value, strict, surrogate) {
+  if (NATIVE.Function(type)) {
+    if (type(value, strict)) return true;
+
+    throw new TfTypeError(surrogate || type, value);
+  }
+
+  // JIT
+  return typeforce(compile(type), value, strict);
+}
+
+// assign types to typeforce function
+for (var typeName in NATIVE) {
+  typeforce[typeName] = NATIVE[typeName];
+}
+
+for (typeName in TYPES) {
+  typeforce[typeName] = TYPES[typeName];
+}
+
+var EXTRA = __webpack_require__(510);
+for (typeName in EXTRA) {
+  typeforce[typeName] = EXTRA[typeName];
+}
+
+// async wrapper
+function __async(type, value, strict, callback) {
+  // default to falsy strict if using shorthand overload
+  if (typeof strict === 'function') return __async(type, value, false, strict);
+
+  try {
+    typeforce(type, value, strict);
+  } catch (e) {
+    return callback(e);
+  }
+
+  callback();
+}
+
+typeforce.async = __async;
+typeforce.compile = compile;
+typeforce.TfTypeError = TfTypeError;
+typeforce.TfPropertyTypeError = TfPropertyTypeError;
+
+module.exports = typeforce;
 
 /***/ }),
 /* 6 */
@@ -6707,11 +6707,11 @@ module.exports = {
 var Buffer = __webpack_require__(2).Buffer;
 var bip66 = __webpack_require__(54);
 var pushdata = __webpack_require__(199);
-var typeforce = __webpack_require__(4);
+var typeforce = __webpack_require__(5);
 var types = __webpack_require__(10);
 var scriptNumber = __webpack_require__(162);
 
-var OPS = __webpack_require__(14);
+var OPS = __webpack_require__(15);
 var REVERSE_OPS = __webpack_require__(275);
 var OP_INT_BASE = OPS.OP_RESERVED; // OP_1 - 1
 
@@ -6926,10 +6926,11 @@ module.exports = {
 module.exports = new API();
 
 var assert = __webpack_require__(1);
-var Helpers = __webpack_require__(5);
+var Helpers = __webpack_require__(4);
 var WalletStore = __webpack_require__(34);
 var WalletCrypto = __webpack_require__(18);
 var MyWallet = __webpack_require__(24);
+var constants = __webpack_require__(13);
 
 // API class
 function API() {
@@ -7169,7 +7170,10 @@ API.prototype.requestApi = function (endpoint, data) {
 };
 
 API.prototype.getFees = function () {
-  return this.requestApi('mempool/fees');
+  var NETWORK = constants.NETWORK,
+      SERVER_FEE_FALLBACK = constants.SERVER_FEE_FALLBACK;
+
+  return NETWORK === 'testnet' ? Promise.resolve(SERVER_FEE_FALLBACK) : this.requestApi('mempool/fees');
 };
 
 API.prototype.getExchangeRate = function (currency, base) {
@@ -7256,7 +7260,7 @@ API.prototype.getBlockchainAddress = function () {
 /* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var typeforce = __webpack_require__(4);
+var typeforce = __webpack_require__(5);
 
 var UINT31_MAX = Math.pow(2, 31) - 1;
 function UInt31(value) {
@@ -7348,31 +7352,6 @@ module.exports = {
 /* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-
-var elliptic = exports;
-
-elliptic.version = __webpack_require__(545).version;
-elliptic.utils = __webpack_require__(382);
-elliptic.rand = __webpack_require__(167);
-elliptic.curve = __webpack_require__(79);
-elliptic.curves = __webpack_require__(374);
-
-// Protocols
-elliptic.ec = __webpack_require__(375);
-elliptic.eddsa = __webpack_require__(378);
-
-/***/ }),
-/* 14 */
-/***/ (function(module, exports) {
-
-module.exports = {"OP_FALSE":0,"OP_0":0,"OP_PUSHDATA1":76,"OP_PUSHDATA2":77,"OP_PUSHDATA4":78,"OP_1NEGATE":79,"OP_RESERVED":80,"OP_1":81,"OP_TRUE":81,"OP_2":82,"OP_3":83,"OP_4":84,"OP_5":85,"OP_6":86,"OP_7":87,"OP_8":88,"OP_9":89,"OP_10":90,"OP_11":91,"OP_12":92,"OP_13":93,"OP_14":94,"OP_15":95,"OP_16":96,"OP_NOP":97,"OP_VER":98,"OP_IF":99,"OP_NOTIF":100,"OP_VERIF":101,"OP_VERNOTIF":102,"OP_ELSE":103,"OP_ENDIF":104,"OP_VERIFY":105,"OP_RETURN":106,"OP_TOALTSTACK":107,"OP_FROMALTSTACK":108,"OP_2DROP":109,"OP_2DUP":110,"OP_3DUP":111,"OP_2OVER":112,"OP_2ROT":113,"OP_2SWAP":114,"OP_IFDUP":115,"OP_DEPTH":116,"OP_DROP":117,"OP_DUP":118,"OP_NIP":119,"OP_OVER":120,"OP_PICK":121,"OP_ROLL":122,"OP_ROT":123,"OP_SWAP":124,"OP_TUCK":125,"OP_CAT":126,"OP_SUBSTR":127,"OP_LEFT":128,"OP_RIGHT":129,"OP_SIZE":130,"OP_INVERT":131,"OP_AND":132,"OP_OR":133,"OP_XOR":134,"OP_EQUAL":135,"OP_EQUALVERIFY":136,"OP_RESERVED1":137,"OP_RESERVED2":138,"OP_1ADD":139,"OP_1SUB":140,"OP_2MUL":141,"OP_2DIV":142,"OP_NEGATE":143,"OP_ABS":144,"OP_NOT":145,"OP_0NOTEQUAL":146,"OP_ADD":147,"OP_SUB":148,"OP_MUL":149,"OP_DIV":150,"OP_MOD":151,"OP_LSHIFT":152,"OP_RSHIFT":153,"OP_BOOLAND":154,"OP_BOOLOR":155,"OP_NUMEQUAL":156,"OP_NUMEQUALVERIFY":157,"OP_NUMNOTEQUAL":158,"OP_LESSTHAN":159,"OP_GREATERTHAN":160,"OP_LESSTHANOREQUAL":161,"OP_GREATERTHANOREQUAL":162,"OP_MIN":163,"OP_MAX":164,"OP_WITHIN":165,"OP_RIPEMD160":166,"OP_SHA1":167,"OP_SHA256":168,"OP_HASH160":169,"OP_HASH256":170,"OP_CODESEPARATOR":171,"OP_CHECKSIG":172,"OP_CHECKSIGVERIFY":173,"OP_CHECKMULTISIG":174,"OP_CHECKMULTISIGVERIFY":175,"OP_NOP1":176,"OP_NOP2":177,"OP_CHECKLOCKTIMEVERIFY":177,"OP_NOP3":178,"OP_NOP4":179,"OP_NOP5":180,"OP_NOP6":181,"OP_NOP7":182,"OP_NOP8":183,"OP_NOP9":184,"OP_NOP10":185,"OP_PUBKEYHASH":253,"OP_PUBKEY":254,"OP_INVALIDOPCODE":255}
-
-/***/ }),
-/* 15 */
-/***/ (function(module, exports, __webpack_require__) {
-
 var Bitcoin = __webpack_require__(12);
 
 module.exports = {
@@ -7380,6 +7359,14 @@ module.exports = {
   APP_NAME: 'javascript_web',
   APP_VERSION: '3.0',
   SHAPE_SHIFT_KEY: void 0,
+  SERVER_FEE_FALLBACK: {
+    'limits': {
+      'min': 50,
+      'max': 450
+    },
+    'regular': 240,
+    'priority': 300
+  },
   getNetwork: function getNetwork(bitcoinjs) {
     if (bitcoinjs) {
       return bitcoinjs.networks[this.NETWORK];
@@ -7396,6 +7383,31 @@ module.exports = {
     };
   }
 };
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var elliptic = exports;
+
+elliptic.version = __webpack_require__(545).version;
+elliptic.utils = __webpack_require__(382);
+elliptic.rand = __webpack_require__(167);
+elliptic.curve = __webpack_require__(79);
+elliptic.curves = __webpack_require__(374);
+
+// Protocols
+elliptic.ec = __webpack_require__(375);
+elliptic.eddsa = __webpack_require__(378);
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports) {
+
+module.exports = {"OP_FALSE":0,"OP_0":0,"OP_PUSHDATA1":76,"OP_PUSHDATA2":77,"OP_PUSHDATA4":78,"OP_1NEGATE":79,"OP_RESERVED":80,"OP_1":81,"OP_TRUE":81,"OP_2":82,"OP_3":83,"OP_4":84,"OP_5":85,"OP_6":86,"OP_7":87,"OP_8":88,"OP_9":89,"OP_10":90,"OP_11":91,"OP_12":92,"OP_13":93,"OP_14":94,"OP_15":95,"OP_16":96,"OP_NOP":97,"OP_VER":98,"OP_IF":99,"OP_NOTIF":100,"OP_VERIF":101,"OP_VERNOTIF":102,"OP_ELSE":103,"OP_ENDIF":104,"OP_VERIFY":105,"OP_RETURN":106,"OP_TOALTSTACK":107,"OP_FROMALTSTACK":108,"OP_2DROP":109,"OP_2DUP":110,"OP_3DUP":111,"OP_2OVER":112,"OP_2ROT":113,"OP_2SWAP":114,"OP_IFDUP":115,"OP_DEPTH":116,"OP_DROP":117,"OP_DUP":118,"OP_NIP":119,"OP_OVER":120,"OP_PICK":121,"OP_ROLL":122,"OP_ROT":123,"OP_SWAP":124,"OP_TUCK":125,"OP_CAT":126,"OP_SUBSTR":127,"OP_LEFT":128,"OP_RIGHT":129,"OP_SIZE":130,"OP_INVERT":131,"OP_AND":132,"OP_OR":133,"OP_XOR":134,"OP_EQUAL":135,"OP_EQUALVERIFY":136,"OP_RESERVED1":137,"OP_RESERVED2":138,"OP_1ADD":139,"OP_1SUB":140,"OP_2MUL":141,"OP_2DIV":142,"OP_NEGATE":143,"OP_ABS":144,"OP_NOT":145,"OP_0NOTEQUAL":146,"OP_ADD":147,"OP_SUB":148,"OP_MUL":149,"OP_DIV":150,"OP_MOD":151,"OP_LSHIFT":152,"OP_RSHIFT":153,"OP_BOOLAND":154,"OP_BOOLOR":155,"OP_NUMEQUAL":156,"OP_NUMEQUALVERIFY":157,"OP_NUMNOTEQUAL":158,"OP_LESSTHAN":159,"OP_GREATERTHAN":160,"OP_LESSTHANOREQUAL":161,"OP_GREATERTHANOREQUAL":162,"OP_MIN":163,"OP_MAX":164,"OP_WITHIN":165,"OP_RIPEMD160":166,"OP_SHA1":167,"OP_SHA256":168,"OP_HASH160":169,"OP_HASH256":170,"OP_CODESEPARATOR":171,"OP_CHECKSIG":172,"OP_CHECKSIGVERIFY":173,"OP_CHECKMULTISIG":174,"OP_CHECKMULTISIGVERIFY":175,"OP_NOP1":176,"OP_NOP2":177,"OP_CHECKLOCKTIMEVERIFY":177,"OP_NOP3":178,"OP_NOP4":179,"OP_NOP5":180,"OP_NOP6":181,"OP_NOP7":182,"OP_NOP8":183,"OP_NOP9":184,"OP_NOP10":185,"OP_PUBKEYHASH":253,"OP_PUBKEY":254,"OP_INVALIDOPCODE":255}
 
 /***/ }),
 /* 16 */
@@ -16996,13 +17008,13 @@ var WalletSignup = __webpack_require__(540);
 var WalletNetwork = __webpack_require__(96);
 var API = __webpack_require__(9);
 var Wallet = __webpack_require__(226);
-var Helpers = __webpack_require__(5);
+var Helpers = __webpack_require__(4);
 var BlockchainSocket = __webpack_require__(524);
 var RNG = __webpack_require__(64);
 var BIP39 = __webpack_require__(51);
 var Bitcoin = __webpack_require__(12);
 var pbkdf2 = __webpack_require__(47);
-var constants = __webpack_require__(15);
+var constants = __webpack_require__(13);
 var range = __webpack_require__(484);
 
 var isInitialized = false;
@@ -18590,7 +18602,7 @@ module.exports = {
 /* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var typeforce = __webpack_require__(4);
+var typeforce = __webpack_require__(5);
 
 function nBuffer(value, n) {
   typeforce(types.Buffer, value);
@@ -19824,16 +19836,6 @@ module.exports = {
 // Dogecoin BIP32 is a proposed standard: https://bitcointalk.org/index.php?topic=409731
 
 module.exports = {
-  bitcoingold: {
-    messagePrefix: '\x18Bitcoin Gold Signed Message:\n',
-    bip32: {
-      public: 0x0488b21e,
-      private: 0x0488ade4
-    },
-    pubKeyHash: 0x26,
-    scriptHash: 0x17,
-    wif: 0x80
-  },
   bitcoin: {
     messagePrefix: '\x18Bitcoin Signed Message:\n',
     bech32: 'bc',
@@ -20412,7 +20414,7 @@ var randomBytes = __webpack_require__(27);
 var API = __webpack_require__(9);
 var Buffer = __webpack_require__(0).Buffer;
 var assert = __webpack_require__(1);
-var Helpers = __webpack_require__(5);
+var Helpers = __webpack_require__(4);
 
 module.exports.randomBytes = randomBytes;
 
@@ -21221,7 +21223,7 @@ module.exports = Helpers;
 var bs58check = __webpack_require__(57);
 var ecdsa = __webpack_require__(92);
 var randomBytes = __webpack_require__(27);
-var typeforce = __webpack_require__(4);
+var typeforce = __webpack_require__(5);
 var types = __webpack_require__(36);
 var wif = __webpack_require__(516);
 
@@ -21356,7 +21358,7 @@ module.exports = ECPair;
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var bip66 = __webpack_require__(54);
-var typeforce = __webpack_require__(4);
+var typeforce = __webpack_require__(5);
 var types = __webpack_require__(36);
 
 var BigInteger = __webpack_require__(11);
@@ -21450,7 +21452,7 @@ module.exports = ECSignature;
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var bip66 = __webpack_require__(54);
 var bufferutils = __webpack_require__(56);
-var typeforce = __webpack_require__(4);
+var typeforce = __webpack_require__(5);
 var types = __webpack_require__(36);
 
 var OPS = __webpack_require__(63);
@@ -23296,8 +23298,8 @@ var _require2 = __webpack_require__(200),
 var API = __webpack_require__(9);
 var Coin = __webpack_require__(90);
 var Bitcoin = __webpack_require__(161);
-var constants = __webpack_require__(15);
-var Helpers = __webpack_require__(5);
+var constants = __webpack_require__(13);
+var Helpers = __webpack_require__(4);
 
 var scriptToAddress = function scriptToAddress(coin) {
   var scriptBuffer = Buffer.from(coin.script, 'hex');
@@ -23574,7 +23576,7 @@ KeyRing.prototype.toJSON = function () {
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var createHmac = __webpack_require__(44);
-var typeforce = __webpack_require__(4);
+var typeforce = __webpack_require__(5);
 var types = __webpack_require__(36);
 
 var BigInteger = __webpack_require__(11);
@@ -23808,7 +23810,7 @@ var Base58 = __webpack_require__(72);
 var Unorm = __webpack_require__(222);
 var WalletCrypto = __webpack_require__(18);
 var Buffer = __webpack_require__(0).Buffer;
-var constants = __webpack_require__(15);
+var constants = __webpack_require__(13);
 
 var hash256 = Bitcoin.crypto.hash256;
 
@@ -23970,8 +23972,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var WalletCrypto = __webpack_require__(18);
 var Bitcoin = __webpack_require__(12);
 var API = __webpack_require__(9);
-var Helpers = __webpack_require__(5);
-var constants = __webpack_require__(15);
+var Helpers = __webpack_require__(4);
+var constants = __webpack_require__(13);
 
 // individual imports to reduce bundle size
 var assoc = __webpack_require__(464);
@@ -24236,9 +24238,9 @@ module.exports = Metadata;
 
 var assert = __webpack_require__(1);
 var Bitcoin = __webpack_require__(12);
-var Helpers = __webpack_require__(5);
+var Helpers = __webpack_require__(4);
 var Buffer = __webpack_require__(0).Buffer;
-var constants = __webpack_require__(15);
+var constants = __webpack_require__(13);
 
 // Error messages that can be seen by the user should take the form of:
 // {error: "NOT_GOOD", some_param: 1}
@@ -24464,7 +24466,7 @@ module.exports = Transaction;
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var API = __webpack_require__(9);
-var Helpers = __webpack_require__(5);
+var Helpers = __webpack_require__(4);
 var WalletCrypto = __webpack_require__(18);
 var WalletStore = __webpack_require__(34);
 var MyWallet = __webpack_require__(24);
@@ -25111,7 +25113,7 @@ var bs58check = __webpack_require__(98);
 var bscript = __webpack_require__(8);
 var btemplates = __webpack_require__(102);
 var networks = __webpack_require__(55);
-var typeforce = __webpack_require__(4);
+var typeforce = __webpack_require__(5);
 var types = __webpack_require__(10);
 
 function fromBase58Check(address) {
@@ -25211,7 +25213,7 @@ var baddress = __webpack_require__(99);
 var bcrypto = __webpack_require__(40);
 var ecdsa = __webpack_require__(297);
 var randomBytes = __webpack_require__(27);
-var typeforce = __webpack_require__(4);
+var typeforce = __webpack_require__(5);
 var types = __webpack_require__(10);
 var wif = __webpack_require__(295);
 
@@ -25344,7 +25346,7 @@ module.exports = ECPair;
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var bip66 = __webpack_require__(54);
-var typeforce = __webpack_require__(4);
+var typeforce = __webpack_require__(5);
 var types = __webpack_require__(10);
 
 var BigInteger = __webpack_require__(11);
@@ -25556,8 +25558,8 @@ var Buffer = __webpack_require__(2).Buffer;
 var bcrypto = __webpack_require__(40);
 var bscript = __webpack_require__(8);
 var bufferutils = __webpack_require__(160);
-var opcodes = __webpack_require__(14);
-var typeforce = __webpack_require__(4);
+var opcodes = __webpack_require__(15);
+var typeforce = __webpack_require__(5);
 var types = __webpack_require__(10);
 var varuint = __webpack_require__(141);
 
@@ -25590,8 +25592,6 @@ Transaction.SIGHASH_ANYONECANPAY = 0x80;
 Transaction.SIGHASH_BITCOINCASHBIP143 = 0x40;
 Transaction.ADVANCED_TRANSACTION_MARKER = 0x00;
 Transaction.ADVANCED_TRANSACTION_FLAG = 0x01;
-Transaction.FORKID_BTG = 0x4F; // 79
-Transaction.FORKID_BCH = 0x00;
 
 var EMPTY_SCRIPT = Buffer.allocUnsafe(0);
 var EMPTY_WITNESS = [];
@@ -25985,33 +25985,6 @@ Transaction.prototype.hashForCashSignature = function (inIndex, prevOutScript, i
   }
 };
 
-/**
- * Hash transaction for signing a specific input for Bitcoin Gold.
- */
-Transaction.prototype.hashForGoldSignature = function (inIndex, prevOutScript, inAmount, hashType, sigVersion) {
-  typeforce(types.tuple(types.UInt32, types.Buffer, /* types.UInt8 */types.Number, types.maybe(types.UInt53)), arguments);
-
-  // Bitcoin Gold also implements segregated witness
-  // therefore we can pull out the setting of nForkHashType
-  // and pass it into the functions.
-
-  var nForkHashType = hashType;
-  var fUseForkId = (hashType & Transaction.SIGHASH_BITCOINCASHBIP143) > 0;
-  if (fUseForkId) {
-    nForkHashType |= Transaction.FORKID_BTG << 8;
-  }
-
-  // BIP143 sighash activated in BitcoinCash via 0x40 bit
-  if (sigVersion || fUseForkId) {
-    if (types.Null(inAmount)) {
-      throw new Error('Bitcoin Cash sighash requires value of input to be signed.');
-    }
-    return this.hashForWitnessV0(inIndex, prevOutScript, inAmount, nForkHashType);
-  } else {
-    return this.hashForSignature(inIndex, prevOutScript, nForkHashType);
-  }
-};
-
 Transaction.prototype.getHash = function () {
   return bcrypto.hash256(this.__toBuffer(undefined, undefined, false));
 };
@@ -26123,7 +26096,7 @@ module.exports = Transaction;
 var bscript = __webpack_require__(70);
 var bufferutils = __webpack_require__(56);
 var opcodes = __webpack_require__(63);
-var typeforce = __webpack_require__(4);
+var typeforce = __webpack_require__(5);
 var types = __webpack_require__(36);
 
 function Transaction() {
@@ -28914,11 +28887,11 @@ var Base58 = __webpack_require__(72);
 var RNG = __webpack_require__(64);
 var API = __webpack_require__(9);
 var Bitcoin = __webpack_require__(12);
-var Helpers = __webpack_require__(5);
+var Helpers = __webpack_require__(4);
 var MyWallet = __webpack_require__(24); // This cyclic import should be avoided once the refactor is complete
 var ImportExport = __webpack_require__(93);
 var WalletCrypto = __webpack_require__(18);
-var constants = __webpack_require__(15);
+var constants = __webpack_require__(13);
 
 // Address class
 function Address(object) {
@@ -29606,7 +29579,7 @@ var SFOX = __webpack_require__(278);
 var Unocoin = __webpack_require__(286);
 var Metadata = __webpack_require__(94);
 var ExchangeDelegate = __webpack_require__(528);
-var Helpers = __webpack_require__(5);
+var Helpers = __webpack_require__(4);
 
 var METADATA_TYPE_EXTERNAL = 3;
 
@@ -29769,11 +29742,11 @@ var Bitcoin = __webpack_require__(12);
 var WalletCrypto = __webpack_require__(18);
 var Transaction = __webpack_require__(95);
 var API = __webpack_require__(9);
-var Helpers = __webpack_require__(5);
+var Helpers = __webpack_require__(4);
 var KeyRing = __webpack_require__(91);
 var EventEmitter = __webpack_require__(46);
 var util = __webpack_require__(223);
-var constants = __webpack_require__(15);
+var constants = __webpack_require__(13);
 var mapObjIndexed = __webpack_require__(480);
 
 // Payment Class
@@ -29782,14 +29755,7 @@ function Payment(wallet, payment) {
   EventEmitter.call(this);
   this._wallet = wallet;
 
-  var serverFeeFallback = {
-    'limits': {
-      'min': 50,
-      'max': 450
-    },
-    'regular': 240,
-    'priority': 300
-  };
+  var serverFeeFallback = constants.SERVER_FEE_FALLBACK;
 
   var initialState = {
     fees: serverFeeFallback, // fallback for fee-service
@@ -33537,7 +33503,7 @@ module.exports = {
   address: __webpack_require__(99),
   crypto: __webpack_require__(40),
   networks: __webpack_require__(55),
-  opcodes: __webpack_require__(14),
+  opcodes: __webpack_require__(15),
   script: script
 };
 
@@ -33617,8 +33583,8 @@ module.exports = {
 
 var bscript = __webpack_require__(8);
 var types = __webpack_require__(10);
-var typeforce = __webpack_require__(4);
-var OPS = __webpack_require__(14);
+var typeforce = __webpack_require__(5);
+var OPS = __webpack_require__(15);
 var OP_INT_BASE = OPS.OP_RESERVED; // OP_1 - 1
 
 function check(script, allowIncomplete) {
@@ -33683,8 +33649,8 @@ module.exports = {
 
 var bscript = __webpack_require__(8);
 var types = __webpack_require__(10);
-var typeforce = __webpack_require__(4);
-var OPS = __webpack_require__(14);
+var typeforce = __webpack_require__(5);
+var OPS = __webpack_require__(15);
 
 function check(script) {
   var buffer = bscript.compile(script);
@@ -33721,8 +33687,8 @@ module.exports = {
 
 var bscript = __webpack_require__(8);
 var types = __webpack_require__(10);
-var typeforce = __webpack_require__(4);
-var OPS = __webpack_require__(14);
+var typeforce = __webpack_require__(5);
+var OPS = __webpack_require__(15);
 
 function check(script) {
   var buffer = bscript.compile(script);
@@ -33758,7 +33724,7 @@ module.exports = {
 /* WEBPACK VAR INJECTION */(function(Buffer) {var bs58check = __webpack_require__(57);
 var bscript = __webpack_require__(70);
 var networks = __webpack_require__(33);
-var typeforce = __webpack_require__(4);
+var typeforce = __webpack_require__(5);
 var types = __webpack_require__(36);
 
 function fromBase58Check(address) {
@@ -35519,7 +35485,7 @@ module.exports = function xor(a, b) {
 /* 199 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var OPS = __webpack_require__(14);
+var OPS = __webpack_require__(15);
 
 function encodingLength(i) {
   return i < OPS.OP_PUSHDATA1 ? 1 : i <= 0xff ? 2 : i <= 0xffff ? 3 : 5;
@@ -39209,7 +39175,7 @@ var WalletStore = __webpack_require__(34);
 var WalletCrypto = __webpack_require__(18);
 var HDWallet = __webpack_require__(530);
 var Address = __webpack_require__(144);
-var Helpers = __webpack_require__(5);
+var Helpers = __webpack_require__(4);
 var MyWallet = __webpack_require__(24); // This cyclic import should be avoided once the refactor is complete
 var API = __webpack_require__(9);
 var BlockchainSettingsAPI = __webpack_require__(145);
@@ -39219,7 +39185,7 @@ var Block = __webpack_require__(523);
 var External = __webpack_require__(146);
 var AccountInfo = __webpack_require__(517);
 var Metadata = __webpack_require__(94);
-var constants = __webpack_require__(15);
+var constants = __webpack_require__(13);
 var Payment = __webpack_require__(147);
 var Labels = __webpack_require__(533);
 var EthWallet = __webpack_require__(527);
@@ -40180,13 +40146,14 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     });
   };
 
+  var fetchBchWallet = function fetchBchWallet() {
+    this._bch = BitcoinCash.fromBlockchainWallet(this);
+    return this._bch.fetch();
+  };
+
   var fetchShapeShift = function fetchShapeShift() {
     this._shapeshift = ShapeShift.fromBlockchainWallet(this, constants.SHAPE_SHIFT_KEY);
     return this._shapeshift.fetch();
-  };
-
-  var loadBch = function loadBch() {
-    this._bch = BitcoinCash.fromBlockchainWallet(this);
   };
 
   var promises = [];
@@ -40196,13 +40163,13 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     promises.push(fetchExternal.call(this));
     promises.push(fetchEthWallet.call(this));
     promises.push(fetchShapeShift.call(this));
+    promises.push(fetchBchWallet.call(this));
   }
 
   // Labels only works for v3 wallets
   if (this.isUpgradedToHD) {
     // Labels currently don't use the KV Store, so this should never fail.
     promises.push(fetchLabels.call(this));
-    promises.push(loadBch.call(this));
   }
 
   return Promise.all(promises);
@@ -40261,7 +40228,7 @@ var EthereumTx = __webpack_require__(383);
 var util = __webpack_require__(80);
 var API = __webpack_require__(9);
 
-var _require = __webpack_require__(5),
+var _require = __webpack_require__(4),
     toWei = _require.toWei,
     fromWei = _require.fromWei,
     toBigNumber = _require.toBigNumber,
@@ -40416,7 +40383,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var _require = __webpack_require__(5),
+var _require = __webpack_require__(4),
     toBigNumber = _require.toBigNumber,
     fromWei = _require.fromWei,
     toArrayFormat = _require.toArrayFormat;
@@ -40758,9 +40725,9 @@ var _require2 = __webpack_require__(200),
 
 var Bitcoin = __webpack_require__(12);
 var BitcoinCash = __webpack_require__(161);
-var constants = __webpack_require__(15);
+var constants = __webpack_require__(13);
 var WalletCrypto = __webpack_require__(18);
-var Helpers = __webpack_require__(5);
+var Helpers = __webpack_require__(4);
 var KeyRing = __webpack_require__(91);
 
 var getKey = function getKey(BitcoinLib, priv, addr) {
@@ -40879,7 +40846,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var EventEmitter = __webpack_require__(46);
-var Helpers = __webpack_require__(5);
+var Helpers = __webpack_require__(4);
 
 var PING_INTERVAL = 15000;
 var PING_TIMEOUT = 5000;
@@ -42642,7 +42609,7 @@ Object.defineProperties(BuySell.prototype, {
 var assert = __webpack_require__(1);
 
 var API = __webpack_require__(9);
-var Helpers = __webpack_require__(5);
+var Helpers = __webpack_require__(4);
 
 function postTokenEndpoint(method, token, extraParams) {
   assert(token, 'Token required');
@@ -49253,7 +49220,7 @@ module.exports = Trade;
 /* 275 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var OPS = __webpack_require__(14);
+var OPS = __webpack_require__(15);
 
 var map = {};
 for (var op in OPS) {
@@ -51070,7 +51037,7 @@ module.exports = {
 var Buffer = __webpack_require__(2).Buffer;
 var bcrypto = __webpack_require__(40);
 var fastMerkleRoot = __webpack_require__(411);
-var typeforce = __webpack_require__(4);
+var typeforce = __webpack_require__(5);
 var types = __webpack_require__(10);
 var varuint = __webpack_require__(141);
 
@@ -51251,7 +51218,7 @@ module.exports = Block;
 
 var Buffer = __webpack_require__(2).Buffer;
 var createHmac = __webpack_require__(44);
-var typeforce = __webpack_require__(4);
+var typeforce = __webpack_require__(5);
 var types = __webpack_require__(10);
 
 var BigInteger = __webpack_require__(11);
@@ -51399,8 +51366,8 @@ module.exports = {
 var Buffer = __webpack_require__(2).Buffer;
 var bscript = __webpack_require__(8);
 var p2mso = __webpack_require__(163);
-var typeforce = __webpack_require__(4);
-var OPS = __webpack_require__(14);
+var typeforce = __webpack_require__(5);
+var OPS = __webpack_require__(15);
 
 function partialSignature(value) {
   return value === OPS.OP_0 || bscript.isCanonicalSignature(value);
@@ -51476,8 +51443,8 @@ module.exports = {
 
 var bscript = __webpack_require__(8);
 var types = __webpack_require__(10);
-var typeforce = __webpack_require__(4);
-var OPS = __webpack_require__(14);
+var typeforce = __webpack_require__(5);
+var OPS = __webpack_require__(15);
 
 function check(script) {
   var buffer = bscript.compile(script);
@@ -51515,7 +51482,7 @@ module.exports = {
 // {signature}
 
 var bscript = __webpack_require__(8);
-var typeforce = __webpack_require__(4);
+var typeforce = __webpack_require__(5);
 
 function check(script) {
   var chunks = bscript.decompile(script);
@@ -51560,8 +51527,8 @@ module.exports = {
 // {pubKey} OP_CHECKSIG
 
 var bscript = __webpack_require__(8);
-var typeforce = __webpack_require__(4);
-var OPS = __webpack_require__(14);
+var typeforce = __webpack_require__(5);
+var OPS = __webpack_require__(15);
 
 function check(script) {
   var chunks = bscript.decompile(script);
@@ -51598,7 +51565,7 @@ module.exports = {
 // {signature} {pubKey}
 
 var bscript = __webpack_require__(8);
-var typeforce = __webpack_require__(4);
+var typeforce = __webpack_require__(5);
 
 function check(script) {
   var chunks = bscript.decompile(script);
@@ -51655,8 +51622,8 @@ module.exports = {
 
 var bscript = __webpack_require__(8);
 var types = __webpack_require__(10);
-var typeforce = __webpack_require__(4);
-var OPS = __webpack_require__(14);
+var typeforce = __webpack_require__(5);
+var OPS = __webpack_require__(15);
 
 function check(script) {
   var buffer = bscript.compile(script);
@@ -51702,7 +51669,7 @@ module.exports = {
 
 var Buffer = __webpack_require__(2).Buffer;
 var bscript = __webpack_require__(8);
-var typeforce = __webpack_require__(4);
+var typeforce = __webpack_require__(5);
 
 var p2ms = __webpack_require__(103);
 var p2pk = __webpack_require__(104);
@@ -51789,8 +51756,8 @@ module.exports = {
 
 var bscript = __webpack_require__(8);
 var types = __webpack_require__(10);
-var typeforce = __webpack_require__(4);
-var OPS = __webpack_require__(14);
+var typeforce = __webpack_require__(5);
+var OPS = __webpack_require__(15);
 
 function check(script) {
   var buffer = bscript.compile(script);
@@ -51836,8 +51803,8 @@ module.exports = {
 var Buffer = __webpack_require__(2).Buffer;
 var bscript = __webpack_require__(8);
 var types = __webpack_require__(10);
-var typeforce = __webpack_require__(4);
-var OPS = __webpack_require__(14);
+var typeforce = __webpack_require__(5);
+var OPS = __webpack_require__(15);
 
 var HEADER = Buffer.from('aa21a9ed', 'hex');
 
@@ -51889,7 +51856,7 @@ module.exports = {
 // {signature} {pubKey}
 
 var bscript = __webpack_require__(8);
-var typeforce = __webpack_require__(4);
+var typeforce = __webpack_require__(5);
 
 function isCompressedCanonicalPubKey(pubKey) {
   return bscript.isCanonicalPubKey(pubKey) && pubKey.length === 33;
@@ -51948,7 +51915,7 @@ module.exports = {
 
 var bscript = __webpack_require__(8);
 var types = __webpack_require__(10);
-var typeforce = __webpack_require__(4);
+var typeforce = __webpack_require__(5);
 
 var p2ms = __webpack_require__(103);
 var p2pk = __webpack_require__(104);
@@ -52018,8 +51985,8 @@ var bcrypto = __webpack_require__(40);
 var bscript = __webpack_require__(8);
 var btemplates = __webpack_require__(102);
 var networks = __webpack_require__(55);
-var ops = __webpack_require__(14);
-var typeforce = __webpack_require__(4);
+var ops = __webpack_require__(15);
+var typeforce = __webpack_require__(5);
 var types = __webpack_require__(10);
 var scriptTypes = btemplates.types;
 var SIGNABLE = [btemplates.types.P2PKH, btemplates.types.P2PK, btemplates.types.MULTISIG];
@@ -52188,7 +52155,7 @@ function expandInput(scriptSig, witnessStack) {
 }
 
 // could be done in expandInput, but requires the original Transaction for hashForSignature
-function fixMultisigOrder(input, transaction, vin, value, forkId) {
+function fixMultisigOrder(input, transaction, vin, value, bitcoinCash) {
   if (input.redeemScriptType !== scriptTypes.MULTISIG || !input.redeemScript) return;
   if (input.pubKeys.length === input.signatures.length) return;
 
@@ -52206,20 +52173,14 @@ function fixMultisigOrder(input, transaction, vin, value, forkId) {
       // TODO: avoid O(n) hashForSignature
       var parsed = ECSignature.parseScriptSignature(signature);
       var hash;
-      switch (forkId) {
-        case Transaction.FORKID_BCH:
-          hash = transaction.hashForCashSignature(vin, input.signScript, value, parsed.hashType);
-          break;
-        case Transaction.FORKID_BTG:
-          hash = transaction.hashForGoldSignature(vin, input.signScript, value, parsed.hashType);
-          break;
-        default:
-          if (input.witness) {
-            hash = transaction.hashForWitnessV0(vin, input.signScript, value, parsed.hashType);
-          } else {
-            hash = transaction.hashForSignature(vin, input.signScript, parsed.hashType);
-          }
-          break;
+      if (bitcoinCash) {
+        hash = transaction.hashForCashSignature(vin, input.signScript, value, parsed.hashType);
+      } else {
+        if (input.witness) {
+          hash = transaction.hashForWitnessV0(vin, input.signScript, value, parsed.hashType);
+        } else {
+          hash = transaction.hashForSignature(vin, input.signScript, parsed.hashType);
+        }
       }
 
       // skip if signature does not match pubKey
@@ -52506,7 +52467,6 @@ function TransactionBuilder(network, maximumFeeRate) {
 
   this.inputs = [];
   this.bitcoinCash = false;
-  this.bitcoinGold = false;
   this.tx = new Transaction();
 }
 
@@ -52516,14 +52476,6 @@ TransactionBuilder.prototype.enableBitcoinCash = function (enable) {
   }
 
   this.bitcoinCash = enable;
-};
-
-TransactionBuilder.prototype.enableBitcoinGold = function (enable) {
-  if (typeof enable === 'undefined') {
-    enable = true;
-  }
-
-  this.bitcoinGold = enable;
 };
 
 TransactionBuilder.prototype.setLockTime = function (locktime) {
@@ -52550,16 +52502,9 @@ TransactionBuilder.prototype.setVersion = function (version) {
   this.tx.version = version;
 };
 
-TransactionBuilder.fromTransaction = function (transaction, network, forkId) {
+TransactionBuilder.fromTransaction = function (transaction, network, bitcoinCashTx) {
   var txb = new TransactionBuilder(network);
-
-  if (typeof forkId === 'number') {
-    if (forkId === Transaction.FORKID_BTG) {
-      txb.enableBitcoinGold(true);
-    } else if (forkId === Transaction.FORKID_BCH) {
-      txb.enableBitcoinCash(true);
-    }
-  }
+  txb.enableBitcoinCash(Boolean(bitcoinCashTx));
 
   // Copy transaction fields
   txb.setVersion(transaction.version);
@@ -52582,7 +52527,7 @@ TransactionBuilder.fromTransaction = function (transaction, network, forkId) {
 
   // fix some things not possible through the public API
   txb.inputs.forEach(function (input, i) {
-    fixMultisigOrder(input, transaction, i, input.value, forkId);
+    fixMultisigOrder(input, transaction, i, input.value, bitcoinCashTx);
   });
 
   return txb;
@@ -52746,9 +52691,7 @@ TransactionBuilder.prototype.sign = function (vin, keyPair, redeemScript, hashTy
 
   // ready to sign
   var signatureHash;
-  if (this.bitcoinGold) {
-    signatureHash = this.tx.hashForGoldSignature(vin, input.signScript, witnessValue, hashType, input.witness);
-  } else if (this.bitcoinCash) {
+  if (this.bitcoinCash) {
     signatureHash = this.tx.hashForCashSignature(vin, input.signScript, witnessValue, hashType);
   } else {
     if (input.witness) {
@@ -54266,7 +54209,7 @@ module.exports = {
 /* WEBPACK VAR INJECTION */(function(Buffer) {// much of this based on https://github.com/indutny/self-signed/blob/gh-pages/lib/rsa.js
 var createHmac = __webpack_require__(44);
 var crt = __webpack_require__(110);
-var EC = __webpack_require__(13).ec;
+var EC = __webpack_require__(14).ec;
 var BN = __webpack_require__(6);
 var parseKeys = __webpack_require__(82);
 var curves = __webpack_require__(236);
@@ -54417,7 +54360,7 @@ module.exports.makeKey = makeKey;
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {// much of this based on https://github.com/indutny/self-signed/blob/gh-pages/lib/rsa.js
 var BN = __webpack_require__(6);
-var EC = __webpack_require__(13).ec;
+var EC = __webpack_require__(14).ec;
 var parseKeys = __webpack_require__(82);
 var curves = __webpack_require__(236);
 
@@ -55113,7 +55056,7 @@ addToUnscopables('entries');
 /* 359 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var elliptic = __webpack_require__(13);
+/* WEBPACK VAR INJECTION */(function(Buffer) {var elliptic = __webpack_require__(14);
 var BN = __webpack_require__(6);
 
 module.exports = function createECDH(curve) {
@@ -56184,7 +56127,7 @@ module.exports = getCurveByName;
 
 
 var BN = __webpack_require__(6);
-var elliptic = __webpack_require__(13);
+var elliptic = __webpack_require__(14);
 var utils = elliptic.utils;
 var getNAF = utils.getNAF;
 var getJSF = utils.getJSF;
@@ -56520,7 +56463,7 @@ BasePoint.prototype.dblp = function dblp(k) {
 
 
 var curve = __webpack_require__(79);
-var elliptic = __webpack_require__(13);
+var elliptic = __webpack_require__(14);
 var BN = __webpack_require__(6);
 var inherits = __webpack_require__(3);
 var Base = curve.base;
@@ -56916,7 +56859,7 @@ var BN = __webpack_require__(6);
 var inherits = __webpack_require__(3);
 var Base = curve.base;
 
-var elliptic = __webpack_require__(13);
+var elliptic = __webpack_require__(14);
 var utils = elliptic.utils;
 
 function MontCurve(conf) {
@@ -57093,7 +57036,7 @@ Point.prototype.getX = function getX() {
 
 
 var curve = __webpack_require__(79);
-var elliptic = __webpack_require__(13);
+var elliptic = __webpack_require__(14);
 var BN = __webpack_require__(6);
 var inherits = __webpack_require__(3);
 var Base = curve.base;
@@ -57964,7 +57907,7 @@ JPoint.prototype.isInfinity = function isInfinity() {
 var curves = exports;
 
 var hash = __webpack_require__(123);
-var elliptic = __webpack_require__(13);
+var elliptic = __webpack_require__(14);
 
 var assert = elliptic.utils.assert;
 
@@ -58127,7 +58070,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 var BN = __webpack_require__(6);
 var HmacDRBG = __webpack_require__(398);
-var elliptic = __webpack_require__(13);
+var elliptic = __webpack_require__(14);
 var utils = elliptic.utils;
 var assert = utils.assert;
 
@@ -58346,7 +58289,7 @@ EC.prototype.getKeyRecoveryParam = function (e, signature, Q, enc) {
 
 
 var BN = __webpack_require__(6);
-var elliptic = __webpack_require__(13);
+var elliptic = __webpack_require__(14);
 var utils = elliptic.utils;
 var assert = utils.assert;
 
@@ -58458,7 +58401,7 @@ KeyPair.prototype.inspect = function inspect() {
 
 var BN = __webpack_require__(6);
 
-var elliptic = __webpack_require__(13);
+var elliptic = __webpack_require__(14);
 var utils = elliptic.utils;
 var assert = utils.assert;
 
@@ -58591,7 +58534,7 @@ Signature.prototype.toDER = function toDER(enc) {
 
 
 var hash = __webpack_require__(123);
-var elliptic = __webpack_require__(13);
+var elliptic = __webpack_require__(14);
 var utils = elliptic.utils;
 var assert = utils.assert;
 var parseBytes = utils.parseBytes;
@@ -58711,7 +58654,7 @@ EDDSA.prototype.isPoint = function isPoint(val) {
 "use strict";
 
 
-var elliptic = __webpack_require__(13);
+var elliptic = __webpack_require__(14);
 var utils = elliptic.utils;
 var assert = utils.assert;
 var parseBytes = utils.parseBytes;
@@ -58810,7 +58753,7 @@ module.exports = KeyPair;
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var BN = __webpack_require__(6);
-var elliptic = __webpack_require__(13);
+var elliptic = __webpack_require__(14);
 var utils = elliptic.utils;
 var assert = utils.assert;
 var cachedProperty = utils.cachedProperty;
@@ -66318,7 +66261,7 @@ exports.signatureImportLax = function (sig) {
 var Buffer = __webpack_require__(2).Buffer;
 var createHash = __webpack_require__(16);
 var BN = __webpack_require__(6);
-var EC = __webpack_require__(13).ec;
+var EC = __webpack_require__(14).ec;
 
 var messages = __webpack_require__(237);
 
@@ -67313,7 +67256,7 @@ var Buffer = __webpack_require__(2).Buffer;
 var base58check = __webpack_require__(98);
 var bcrypto = __webpack_require__(40);
 var createHmac = __webpack_require__(44);
-var typeforce = __webpack_require__(4);
+var typeforce = __webpack_require__(5);
 var types = __webpack_require__(10);
 var NETWORKS = __webpack_require__(55);
 
@@ -67631,7 +67574,7 @@ module.exports = HDNode;
 /* WEBPACK VAR INJECTION */(function(Buffer) {var base58check = __webpack_require__(57);
 var bcrypto = __webpack_require__(35);
 var createHmac = __webpack_require__(44);
-var typeforce = __webpack_require__(4);
+var typeforce = __webpack_require__(5);
 var types = __webpack_require__(36);
 var NETWORKS = __webpack_require__(33);
 
@@ -68804,7 +68747,7 @@ module.exports = {
 
 
 var assert = __webpack_require__(1);
-var Helpers = __webpack_require__(5);
+var Helpers = __webpack_require__(4);
 
 module.exports = AccountInfo;
 
@@ -68935,7 +68878,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Helpers = __webpack_require__(5);
+var Helpers = __webpack_require__(4);
 
 var assert = __webpack_require__(1);
 
@@ -69028,18 +68971,22 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 /* eslint-disable semi */
 var BchSpendable = __webpack_require__(225);
 var BchShiftPayment = __webpack_require__(229);
-
-var ACCOUNT_LABEL_PREFIX = 'Bitcoin Cash - ';
+var H = __webpack_require__(4);
 
 var BchAccount = function (_BchSpendable) {
   _inherits(BchAccount, _BchSpendable);
 
-  function BchAccount(bchWallet, wallet, btcAccount) {
+  function BchAccount(bchWallet, wallet, btcAccount, accountData) {
     _classCallCheck(this, BchAccount);
 
     var _this = _possibleConstructorReturn(this, (BchAccount.__proto__ || Object.getPrototypeOf(BchAccount)).call(this, bchWallet, wallet));
 
+    _this._sync = function () {
+      return bchWallet.sync();
+    };
     _this._btcAccount = btcAccount;
+    _this._label = accountData.label || BchAccount.defaultLabel(_this.index);
+    _this._archived = accountData.archived == null ? false : accountData.archived;
     return _this;
   }
 
@@ -69059,6 +69006,14 @@ var BchAccount = function (_BchSpendable) {
       return BchShiftPayment.fromWallet(wallet, this);
     }
   }, {
+    key: 'toJSON',
+    value: function toJSON() {
+      return {
+        label: this.label,
+        archived: this.archived
+      };
+    }
+  }, {
     key: 'index',
     get: function get() {
       return this._btcAccount.index;
@@ -69071,12 +69026,29 @@ var BchAccount = function (_BchSpendable) {
   }, {
     key: 'archived',
     get: function get() {
-      return this._btcAccount.archived;
+      return this._archived;
+    },
+    set: function set(value) {
+      if (typeof value !== 'boolean') {
+        throw new Error('BchAccount.archived must be a boolean');
+      }
+      if (this === this._bchWallet.defaultAccount) {
+        throw new Error('Cannot archive default BCH account');
+      }
+      this._archived = value;
+      this._sync();
     }
   }, {
     key: 'label',
     get: function get() {
-      return ACCOUNT_LABEL_PREFIX + this._btcAccount.label;
+      return this._label;
+    },
+    set: function set(value) {
+      if (!H.isValidLabel(value)) {
+        throw new Error('BchAccount.label must be an alphanumeric string');
+      }
+      this._label = value;
+      this._sync();
     }
   }, {
     key: 'balance',
@@ -69103,6 +69075,12 @@ var BchAccount = function (_BchSpendable) {
     key: 'coinCode',
     get: function get() {
       return 'bch';
+    }
+  }], [{
+    key: 'defaultLabel',
+    value: function defaultLabel(accountIdx) {
+      var label = 'My Bitcoin Cash Wallet';
+      return accountIdx > 0 ? label + ' ' + (accountIdx + 1) : label;
     }
   }]);
 
@@ -69220,7 +69198,7 @@ var _require = __webpack_require__(22),
 var Coin = __webpack_require__(90);
 var BchApi = __webpack_require__(89);
 
-var _require2 = __webpack_require__(5),
+var _require2 = __webpack_require__(4),
     isBitcoinAddress = _require2.isBitcoinAddress,
     isPositiveInteger = _require2.isPositiveInteger;
 
@@ -69431,24 +69409,17 @@ var BchAccount = __webpack_require__(519);
 var BchImported = __webpack_require__(520);
 
 var BCH_FORK_HEIGHT = 478558;
+var METADATA_TYPE_BCH = 7;
 
 var BitcoinCashWallet = function () {
-  function BitcoinCashWallet(wallet) {
-    var _this = this;
-
+  function BitcoinCashWallet(wallet, metadata) {
     _classCallCheck(this, BitcoinCashWallet);
 
     this._wallet = wallet;
+    this._metadata = metadata;
     this._balance = null;
     this._addressInfo = {};
     this._txs = [];
-
-    var imported = new BchImported(this, this._wallet);
-    this.importedAddresses = imported.addresses.length > 0 ? imported : null;
-
-    this.accounts = wallet.hdwallet.accounts.map(function (account) {
-      return new BchAccount(_this, _this._wallet, account);
-    });
   }
 
   _createClass(BitcoinCashWallet, [{
@@ -69468,7 +69439,7 @@ var BitcoinCashWallet = function () {
   }, {
     key: 'getHistory',
     value: function getHistory() {
-      var _this2 = this;
+      var _this = this;
 
       var addrs = this.importedAddresses == null ? [] : this.importedAddresses.addresses;
       var xpubs = this.activeAccounts.map(function (a) {
@@ -69481,18 +69452,18 @@ var BitcoinCashWallet = function () {
             info = result.info;
 
 
-        _this2._balance = wallet.final_balance;
-        _this2._addressInfo = fromPairs(map(function (a) {
+        _this._balance = wallet.final_balance;
+        _this._addressInfo = fromPairs(map(function (a) {
           return [a.address, a];
         }, addresses));
 
-        _this2._txs = txs.filter(function (tx) {
+        _this._txs = txs.filter(function (tx) {
           return !tx.block_height || tx.block_height >= BCH_FORK_HEIGHT;
         }).map(function (tx) {
           return Tx.factory(tx, 'bch');
         });
 
-        _this2._txs.forEach(function (tx) {
+        _this._txs.forEach(function (tx) {
           tx.confirmations = Tx.setConfirmations(tx.block_height, info.latest_block);
         });
       });
@@ -69503,9 +69474,50 @@ var BitcoinCashWallet = function () {
       return new BchPayment(this._wallet);
     }
   }, {
+    key: 'fetch',
+    value: function fetch() {
+      var _this2 = this;
+
+      return this._metadata.fetch().then(function (data) {
+        var accountsData = data ? data.accounts : [];
+        _this2._defaultAccountIdx = data ? data.default_account_idx : 0;
+
+        var imported = new BchImported(_this2, _this2._wallet);
+        _this2._importedAddresses = imported.addresses.length > 0 ? imported : null;
+
+        _this2._accounts = _this2._wallet.hdwallet.accounts.map(function (account, i) {
+          var accountData = accountsData[i] || {};
+          return new BchAccount(_this2, _this2._wallet, account, accountData);
+        });
+      });
+    }
+  }, {
+    key: 'sync',
+    value: function sync() {
+      return this._metadata.update(this);
+    }
+  }, {
+    key: 'toJSON',
+    value: function toJSON() {
+      return {
+        default_account_idx: this.defaultAccountIdx,
+        accounts: this.accounts
+      };
+    }
+  }, {
     key: 'balance',
     get: function get() {
       return this._balance;
+    }
+  }, {
+    key: 'importedAddresses',
+    get: function get() {
+      return this._importedAddresses;
+    }
+  }, {
+    key: 'accounts',
+    get: function get() {
+      return this._accounts;
     }
   }, {
     key: 'txs',
@@ -69513,9 +69525,14 @@ var BitcoinCashWallet = function () {
       return this._txs;
     }
   }, {
+    key: 'defaultAccountIdx',
+    get: function get() {
+      return this._defaultAccountIdx;
+    }
+  }, {
     key: 'defaultAccount',
     get: function get() {
-      return this.accounts[this._wallet.hdwallet.defaultAccountIndex];
+      return this.accounts[this.defaultAccountIdx];
     }
   }, {
     key: 'activeAccounts',
@@ -69527,7 +69544,8 @@ var BitcoinCashWallet = function () {
   }], [{
     key: 'fromBlockchainWallet',
     value: function fromBlockchainWallet(wallet) {
-      return new BitcoinCashWallet(wallet);
+      var metadata = wallet.metadata(METADATA_TYPE_BCH);
+      return new BitcoinCashWallet(wallet, metadata);
     }
   }]);
 
@@ -69611,7 +69629,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var StableSocket = __webpack_require__(232);
-var Helpers = __webpack_require__(5);
+var Helpers = __webpack_require__(4);
 
 var OP_WALLET_SUB = 'wallet_sub';
 var OP_BLOCKS_SUB = 'blocks_sub';
@@ -69699,7 +69717,7 @@ var EthTxBuilder = __webpack_require__(227);
 var EthWalletTx = __webpack_require__(228);
 var API = __webpack_require__(9);
 
-var _require = __webpack_require__(5),
+var _require = __webpack_require__(4),
     toBigNumber = _require.toBigNumber,
     toWei = _require.toWei,
     fromWei = _require.fromWei;
@@ -70037,7 +70055,7 @@ var EthHd = __webpack_require__(384);
 var _require = __webpack_require__(22),
     construct = _require.construct;
 
-var _require2 = __webpack_require__(5),
+var _require2 = __webpack_require__(4),
     isPositiveNumber = _require2.isPositiveNumber,
     asyncOnce = _require2.asyncOnce,
     dedup = _require2.dedup;
@@ -70561,7 +70579,7 @@ module.exports = EthWallet;
 var API = __webpack_require__(9);
 var WalletStore = __webpack_require__(34);
 var TX = __webpack_require__(65);
-var Helpers = __webpack_require__(5);
+var Helpers = __webpack_require__(4);
 var assert = __webpack_require__(1);
 
 module.exports = ExchangeDelegate;
@@ -70774,12 +70792,12 @@ module.exports = HDAccount;
 
 var Bitcoin = __webpack_require__(12);
 var assert = __webpack_require__(1);
-var Helpers = __webpack_require__(5);
+var Helpers = __webpack_require__(4);
 var KeyRing = __webpack_require__(91);
 var MyWallet = __webpack_require__(24); // This cyclic import should be avoided once the refactor is complete
 var API = __webpack_require__(9);
 var Transaction = __webpack_require__(95);
-var constants = __webpack_require__(15);
+var constants = __webpack_require__(13);
 var BtcShiftPayment = __webpack_require__(535);
 
 // HDAccount Class
@@ -71156,7 +71174,7 @@ module.exports = HDWallet;
 var Bitcoin = __webpack_require__(12);
 var assert = __webpack_require__(1);
 var R = __webpack_require__(22);
-var Helpers = __webpack_require__(5);
+var Helpers = __webpack_require__(4);
 var HDAccount = __webpack_require__(529);
 var BIP39 = __webpack_require__(51);
 var MyWallet = __webpack_require__(24); // This cyclic import should be avoided once the refactor is complete
@@ -71170,7 +71188,7 @@ var _require2 = __webpack_require__(142),
 
 var signer = __webpack_require__(231);
 var Coin = __webpack_require__(90);
-var constants = __webpack_require__(15);
+var constants = __webpack_require__(13);
 
 function HDWallet(object) {
   function addAccount(o, index) {
@@ -71533,7 +71551,7 @@ module.exports = {
   Payment: __webpack_require__(147),
   ImportExport: __webpack_require__(93),
   BlockchainSettingsAPI: __webpack_require__(145),
-  Helpers: __webpack_require__(5),
+  Helpers: __webpack_require__(4),
   API: __webpack_require__(9),
   Tx: __webpack_require__(65),
   WalletTokenEndpoints: __webpack_require__(243),
@@ -71545,7 +71563,7 @@ module.exports = {
   Bitcoin: __webpack_require__(12),
   External: __webpack_require__(146),
   BuySell: __webpack_require__(242),
-  constants: __webpack_require__(15),
+  constants: __webpack_require__(13),
   BigInteger: __webpack_require__(11),
   BIP39: __webpack_require__(51),
   Networks: __webpack_require__(33),
@@ -71563,8 +71581,8 @@ module.exports = KeyChain;
 
 var Bitcoin = __webpack_require__(12);
 var assert = __webpack_require__(1);
-var Helpers = __webpack_require__(5);
-var constants = __webpack_require__(15);
+var Helpers = __webpack_require__(4);
+var constants = __webpack_require__(13);
 
 // keychain
 function KeyChain(extendedKey, index, cache, bitcoinjs) {
@@ -71629,7 +71647,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Helpers = __webpack_require__(5);
+var Helpers = __webpack_require__(4);
 var AddressHD = __webpack_require__(518);
 var BlockchainAPI = __webpack_require__(9);
 
@@ -72282,7 +72300,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /* eslint-disable semi */
-var _require = __webpack_require__(5),
+var _require = __webpack_require__(4),
     delay = _require.delay,
     asyncOnce = _require.asyncOnce,
     trace = _require.trace;
@@ -72510,7 +72528,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 /* eslint-disable semi */
 var Quote = __webpack_require__(230);
 
-var _require = __webpack_require__(5),
+var _require = __webpack_require__(4),
     trace = _require.trace;
 
 var Trade = function () {
@@ -72721,7 +72739,7 @@ module.exports = Trade;
 
 
 var EventEmitter = __webpack_require__(46);
-var Helpers = __webpack_require__(5);
+var Helpers = __webpack_require__(4);
 var Tx = __webpack_require__(65);
 
 var TransactionList = function TransactionList(loadNumber) {
