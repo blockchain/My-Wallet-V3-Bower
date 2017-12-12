@@ -69407,6 +69407,7 @@ var BchPayment = __webpack_require__(521);
 var Tx = __webpack_require__(65);
 var BchAccount = __webpack_require__(519);
 var BchImported = __webpack_require__(520);
+var Helpers = __webpack_require__(4);
 
 var BCH_FORK_HEIGHT = 478558;
 var METADATA_TYPE_BCH = 7;
@@ -69423,6 +69424,11 @@ var BitcoinCashWallet = function () {
   }
 
   _createClass(BitcoinCashWallet, [{
+    key: 'isValidAccountIndex',
+    value: function isValidAccountIndex(index) {
+      return Helpers.isPositiveInteger(index) && index < this._accounts.length;
+    }
+  }, {
     key: 'getAddressBalance',
     value: function getAddressBalance(xpubOrAddress) {
       var info = this._addressInfo[xpubOrAddress];
@@ -69528,6 +69534,14 @@ var BitcoinCashWallet = function () {
     key: 'defaultAccountIdx',
     get: function get() {
       return this._defaultAccountIdx;
+    },
+    set: function set(val) {
+      if (this.isValidAccountIndex(val)) {
+        this._defaultAccountIdx = val;
+        this.sync();
+      } else {
+        throw new Error('invalid default index account');
+      }
     }
   }, {
     key: 'defaultAccount',
