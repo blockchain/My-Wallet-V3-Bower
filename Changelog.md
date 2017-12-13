@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2017-12-12)
+#   (2017-12-13)
 
 
 
@@ -8,26 +8,23 @@ __Blockchain Wallet V3__
 
 ## Features
 
-- **bch:** add bch defaultAccountIdx setter
-  ([36ce5246](https://github.com/blockchain/My-Wallet-V3/commit/36ce5246f5a2985eb6712d1146cd307ed276b52f))
-
-
-## Style
-
-- **bch:** spelling fix
-  ([7885c0ec](https://github.com/blockchain/My-Wallet-V3/commit/7885c0ec7af3a505be1f8abd59606ceeb49deb96))
+- **bch:**
+  - add bitcoin cash websocket
+  ([6672b736](https://github.com/blockchain/My-Wallet-V3/commit/6672b736d77d45788b901dad1c6c974c0e19c038))
+  - set a hasSeen flag
+  ([b2494dac](https://github.com/blockchain/My-Wallet-V3/commit/b2494dac38657de6f5c0377f05d774d277d3c170))
 
 
 ## Chore
 
-- **release:** v3.40.8
-  ([1128b390](https://github.com/blockchain/My-Wallet-V3/commit/1128b39072efcaf455e99b14c5c05fc9d7c60316))
+- **release:** v3.40.9
+  ([91c3cc1d](https://github.com/blockchain/My-Wallet-V3/commit/91c3cc1d7da8fcf903b68ffbfecfefbae76a523a))
 
 
 ## Pull requests merged
 
-- Merge pull request #471 from blockchain/bch-default
-  ([1ef6a362](https://github.com/blockchain/My-Wallet-V3/commit/1ef6a362f65170c6ed1a419cd2ed6cb9ace83ed9))
+- Merge pull request #473 from blockchain/bch-ws
+  ([e88ddf00](https://github.com/blockchain/My-Wallet-V3/commit/e88ddf0063ec41d06496610314b5aef4ec40c7af))
 
 
 
