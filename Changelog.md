@@ -1,30 +1,18 @@
 __Blockchain Wallet V3__
 
-#   (2017-12-13)
+#   (2017-12-14)
 
 
 
 ---
 
-## Features
-
-- **bch:**
-  - add bitcoin cash websocket
-  ([6672b736](https://github.com/blockchain/My-Wallet-V3/commit/6672b736d77d45788b901dad1c6c974c0e19c038))
-  - set a hasSeen flag
-  ([b2494dac](https://github.com/blockchain/My-Wallet-V3/commit/b2494dac38657de6f5c0377f05d774d277d3c170))
-
-
 ## Chore
 
-- **release:** v3.40.9
-  ([91c3cc1d](https://github.com/blockchain/My-Wallet-V3/commit/91c3cc1d7da8fcf903b68ffbfecfefbae76a523a))
-
-
-## Pull requests merged
-
-- Merge pull request #473 from blockchain/bch-ws
-  ([e88ddf00](https://github.com/blockchain/My-Wallet-V3/commit/e88ddf0063ec41d06496610314b5aef4ec40c7af))
+- **release:**
+  - v3.41.0
+  ([8567814c](https://github.com/blockchain/My-Wallet-V3/commit/8567814c386b1e3e6076f20ac598529ab4f12074))
+  - upgrade bitcoin-sfox-client
+  ([cc0d87ef](https://github.com/blockchain/My-Wallet-V3/commit/cc0d87eff9529d83080b93ed8ec2908879a89ab3))
 
 
 
