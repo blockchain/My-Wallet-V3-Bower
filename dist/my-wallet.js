@@ -24994,21 +24994,12 @@ var Trade = function (_Exchange$Trade) {
       return this._api.authGET('transaction/' + this._id).then(this.set.bind(this)).then(this._delegate.save.bind(this._delegate));
     }
 
-    // QA tool:
+    // QA Tool
 
   }, {
-    key: 'fakeAchSuccess',
-    value: function fakeAchSuccess() {
-      var options = { id: this.id };
-      return this._api.authPOST('testing/approvedeposit', options).then(this.set.bind(this)).then(this._delegate.save.bind(this._delegate));
-    }
-
-    // QA tool:
-
-  }, {
-    key: 'fakeAchFail',
-    value: function fakeAchFail() {
-      var options = { id: this.id, status: 'rejected' };
+    key: 'fakeStatus',
+    value: function fakeStatus(status) {
+      var options = { id: this.id, status: status };
       return this._api.authPOST('testing/changestatus', options).then(this.set.bind(this)).then(this._delegate.save.bind(this._delegate));
     }
   }, {
