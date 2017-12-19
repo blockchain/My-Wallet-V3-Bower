@@ -50041,6 +50041,7 @@ var SFOX = function (_Exchange$Exchange) {
 
     var obj = object || {};
     _this._partner_id = null;
+    _this._hasSeen = false;
     _this._user = obj.user;
     _this._auto_login = obj.auto_login;
     _this._accountToken = obj.account_token;
@@ -50051,6 +50052,11 @@ var SFOX = function (_Exchange$Exchange) {
   }
 
   _createClass(SFOX, [{
+    key: 'setHasSeen',
+    value: function setHasSeen(val) {
+      this._hasSeen = val;
+    }
+  }, {
     key: 'getTrades',
     value: function getTrades() {
       return _get(SFOX.prototype.__proto__ || Object.getPrototypeOf(SFOX.prototype), 'getTrades', this).call(this, Quote);
@@ -50088,6 +50094,7 @@ var SFOX = function (_Exchange$Exchange) {
 
       var saveMetadata = function saveMetadata(res) {
         this._user = res.account.id;
+        this._hasSeen = res.hasSeen;
         this._accountToken = res.token;
         this._api._accountToken = this._accountToken;
         return this._delegate.save.bind(this._delegate)().then(function () {
@@ -50111,6 +50118,7 @@ var SFOX = function (_Exchange$Exchange) {
     value: function toJSON() {
       var sfox = {
         user: this._user,
+        has_seen: this._hasSeen,
         account_token: this._accountToken,
         auto_login: this._auto_login,
         trades: this._TradeClass.filteredTrades(this._trades)
@@ -50142,6 +50150,11 @@ var SFOX = function (_Exchange$Exchange) {
     key: 'bankLink',
     get: function get() {
       return this._bankLink;
+    }
+  }, {
+    key: 'hasSeen',
+    get: function get() {
+      return this._hasSeen;
     }
   }], [{
     key: 'new',
