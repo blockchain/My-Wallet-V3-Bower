@@ -49817,7 +49817,7 @@ var Profile = function () {
         state: this._state,
         zipcode: this._zipcode,
         country: this._country,
-        complete: Boolean(this._street1 && this._street2 && this._city && this._state && this._zipcode && this._country)
+        complete: Boolean(this._street1 && this._city && this._state && this._zipcode && this._country)
       };
     }
   }, {
