@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2017-12-21)
+#   (2018-01-17)
 
 
 
@@ -8,11 +8,8 @@ __Blockchain Wallet V3__
 
 ## Chore
 
-- **release:**
-  - v3.41.3
-  ([1f4a5873](https://github.com/blockchain/My-Wallet-V3/commit/1f4a5873ff3a3961ae905805fa9c739d11a3ec84))
-  - upgrade bitcoin-sfox-client
-  ([d400b845](https://github.com/blockchain/My-Wallet-V3/commit/d400b845776632f6d4c4cd85c6866d8dd149f6f3))
+- **release:** v3.41.6
+  ([3f8cb722](https://github.com/blockchain/My-Wallet-V3/commit/3f8cb7226479414e1037ce41f73f535a08aea967))
 
 
 
