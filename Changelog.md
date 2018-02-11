@@ -1,45 +1,27 @@
 __Blockchain Wallet V3__
 
-#   (2018-02-05)
+#   (2018-02-11)
 
 
 
 ---
 
-## Bug Fixes
-
-- **eth:** When tx fails, send can be blocked 'waiting for confirmation'
-  ([79aa80ce](https://github.com/blockchain/My-Wallet-V3/commit/79aa80ce5e3ee41a443d288c6a67194a3c757f1c))
-
-
 ## Features
 
-- **eth:** handle pending and confirmed eth txs from websocket
-  ([dea69e2e](https://github.com/blockchain/My-Wallet-V3/commit/dea69e2e12267b9295fb6703a74bbf3b570c9f64))
-- **eth websocket:** Handle new websocket messages
-  ([99409190](https://github.com/blockchain/My-Wallet-V3/commit/99409190e0ca6b1d49b4fa48ac95e117e2ebf3de))
+- **mew:** sweep
+  ([dbbf820d](https://github.com/blockchain/My-Wallet-V3/commit/dbbf820de06f9b58430f5f51b4bd56c11d73045c))
 
 
 ## Chore
 
-- **release:** v3.42.0
-  ([a54ace12](https://github.com/blockchain/My-Wallet-V3/commit/a54ace129e45d70dfe03cbb2e188bf58592f0607))
-
-
-## Branchs merged
-
-- Merge branch 'v3.41-release' into eth-ws-update
-  ([9dc12eea](https://github.com/blockchain/My-Wallet-V3/commit/9dc12eea445c2492a0bd6269d83ac756559eb3bd))
+- **release:** v3.42.1
+  ([620fcef1](https://github.com/blockchain/My-Wallet-V3/commit/620fcef14fe883f82faecde0798c7364821344d9))
 
 
 ## Pull requests merged
 
-- Merge pull request #498 from blockchain/send-eth
-  ([f023b4e3](https://github.com/blockchain/My-Wallet-V3/commit/f023b4e3dbb9b160faaa8f45b0e6f228afaf353d))
-- Merge pull request #495 from blockchain/eth-ws-update
-  ([59e25dbf](https://github.com/blockchain/My-Wallet-V3/commit/59e25dbfc901d44db3bde7471231c7815fd32471))
-- Merge pull request #488 from blockchain/v3.41-release
-  ([6ddad299](https://github.com/blockchain/My-Wallet-V3/commit/6ddad299f07b215affafd94fcf1e6530c1ab10f4))
+- Merge pull request #501 from blockchain/mew-sweep
+  ([d7506687](https://github.com/blockchain/My-Wallet-V3/commit/d7506687e2d8663c48894d999a161f340cb7c37e))
 
 
 
