@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2018-02-11)
+#   (2018-02-13)
 
 
 
@@ -8,20 +8,14 @@ __Blockchain Wallet V3__
 
 ## Features
 
-- **mew:** sweep
-  ([dbbf820d](https://github.com/blockchain/My-Wallet-V3/commit/dbbf820de06f9b58430f5f51b4bd56c11d73045c))
+- **api:** increment event stat
+  ([578e1b30](https://github.com/blockchain/My-Wallet-V3/commit/578e1b30ee7213f26d5b46c802dda1cf573ad255))
 
 
 ## Chore
 
-- **release:** v3.42.1
-  ([620fcef1](https://github.com/blockchain/My-Wallet-V3/commit/620fcef14fe883f82faecde0798c7364821344d9))
-
-
-## Pull requests merged
-
-- Merge pull request #501 from blockchain/mew-sweep
-  ([d7506687](https://github.com/blockchain/My-Wallet-V3/commit/d7506687e2d8663c48894d999a161f340cb7c37e))
+- **release:** v3.42.2
+  ([a9cebe6c](https://github.com/blockchain/My-Wallet-V3/commit/a9cebe6ce616264c7bb302cc233a681734a44fa3))
 
 
 
