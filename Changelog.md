@@ -1,21 +1,21 @@
 __Blockchain Wallet V3__
 
-#   (2018-02-13)
+#   (2018-02-26)
 
 
 
 ---
 
-## Features
+## Bug Fixes
 
-- **api:** increment event stat
-  ([578e1b30](https://github.com/blockchain/My-Wallet-V3/commit/578e1b30ee7213f26d5b46c802dda1cf573ad255))
+- **release:** linter issues
+  ([ef3c4c5b](https://github.com/blockchain/My-Wallet-V3/commit/ef3c4c5b0d5f82da8506a9b53d7ed480ac8e5598))
 
 
 ## Chore
 
-- **release:** v3.42.2
-  ([a9cebe6c](https://github.com/blockchain/My-Wallet-V3/commit/a9cebe6ce616264c7bb302cc233a681734a44fa3))
+- **release:** v3.43.1
+  ([a7f13d51](https://github.com/blockchain/My-Wallet-V3/commit/a7f13d51b86ab8d09ae77992ecf51095bd6b5539))
 
 
 

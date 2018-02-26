@@ -3059,6 +3059,20 @@ Helpers.trace = function () {
   }
 };
 
+Helpers.unsortedEquals = function (arrA, arrB) {
+  var arrAsorted = arrA.sort();
+  var arrBsorted = arrB.sort();
+  if (arrAsorted.length !== arrBsorted.length) {
+    return false;
+  }
+  for (var i = 0; i < arrAsorted.length; i++) {
+    if (arrAsorted[i] !== arrBsorted[i]) {
+      return false;
+    }
+  }
+  return true;
+};
+
 Helpers.bitcoincash = {
   messagePrefix: '\x18Bitcoin Signed Message:\n',
   bip32: {
@@ -7593,6 +7607,7 @@ module.exports = function createHash(alg) {
 
 var crypto = __webpack_require__(62);
 var assert = __webpack_require__(2);
+var scrypt = __webpack_require__(501);
 
 var _require = __webpack_require__(47),
     pbkdf2Sync = _require.pbkdf2Sync;
@@ -7940,216 +7955,6 @@ function hashNTimes(data, iterations) {
 
 function sha256(data) {
   return crypto.createHash('sha256').update(data).digest();
-}
-
-function smix(B, Bi, r, N, V, XY) {
-  var Xi = 0;
-  var Yi = 128 * r;
-  var i;
-
-  arraycopy32(B, Bi, XY, Xi, Yi);
-
-  for (i = 0; i < N; i++) {
-    arraycopy32(XY, Xi, V, i * Yi, Yi);
-    blockmix_salsa8(XY, Xi, Yi, r);
-  }
-
-  for (i = 0; i < N; i++) {
-    var j = integerify(XY, Xi, r) & N - 1;
-    blockxor(V, j * Yi, XY, Xi, Yi);
-    blockmix_salsa8(XY, Xi, Yi, r);
-  }
-
-  arraycopy32(XY, Xi, B, Bi, Yi);
-}
-
-function blockmix_salsa8(BY, Bi, Yi, r) {
-  // eslint-disable-line camelcase
-  var X = [];
-  var i;
-
-  arraycopy32(BY, Bi + (2 * r - 1) * 64, X, 0, 64);
-
-  for (i = 0; i < 2 * r; i++) {
-    blockxor(BY, i * 64, X, 0, 64);
-    salsa20_8(X);
-    arraycopy32(X, 0, BY, Yi + i * 64, 64);
-  }
-
-  for (i = 0; i < r; i++) {
-    arraycopy32(BY, Yi + i * 2 * 64, BY, Bi + i * 64, 64);
-  }
-
-  for (i = 0; i < r; i++) {
-    arraycopy32(BY, Yi + (i * 2 + 1) * 64, BY, Bi + (i + r) * 64, 64);
-  }
-}
-
-function R(a, b) {
-  return a << b | a >>> 32 - b;
-}
-
-function salsa20_8(B) {
-  // eslint-disable-line camelcase
-  var B32 = new Array(32);
-  var x = new Array(32);
-  var i;
-
-  for (i = 0; i < 16; i++) {
-    B32[i] = (B[i * 4 + 0] & 0xff) << 0;
-    B32[i] |= (B[i * 4 + 1] & 0xff) << 8;
-    B32[i] |= (B[i * 4 + 2] & 0xff) << 16;
-    B32[i] |= (B[i * 4 + 3] & 0xff) << 24;
-  }
-
-  arraycopy(B32, 0, x, 0, 16);
-
-  for (i = 8; i > 0; i -= 2) {
-    /*eslint-disable */
-    x[4] ^= R(x[0] + x[12], 7);x[8] ^= R(x[4] + x[0], 9);
-    x[12] ^= R(x[8] + x[4], 13);x[0] ^= R(x[12] + x[8], 18);
-    x[9] ^= R(x[5] + x[1], 7);x[13] ^= R(x[9] + x[5], 9);
-    x[1] ^= R(x[13] + x[9], 13);x[5] ^= R(x[1] + x[13], 18);
-    x[14] ^= R(x[10] + x[6], 7);x[2] ^= R(x[14] + x[10], 9);
-    x[6] ^= R(x[2] + x[14], 13);x[10] ^= R(x[6] + x[2], 18);
-    x[3] ^= R(x[15] + x[11], 7);x[7] ^= R(x[3] + x[15], 9);
-    x[11] ^= R(x[7] + x[3], 13);x[15] ^= R(x[11] + x[7], 18);
-    x[1] ^= R(x[0] + x[3], 7);x[2] ^= R(x[1] + x[0], 9);
-    x[3] ^= R(x[2] + x[1], 13);x[0] ^= R(x[3] + x[2], 18);
-    x[6] ^= R(x[5] + x[4], 7);x[7] ^= R(x[6] + x[5], 9);
-    x[4] ^= R(x[7] + x[6], 13);x[5] ^= R(x[4] + x[7], 18);
-    x[11] ^= R(x[10] + x[9], 7);x[8] ^= R(x[11] + x[10], 9);
-    x[9] ^= R(x[8] + x[11], 13);x[10] ^= R(x[9] + x[8], 18);
-    x[12] ^= R(x[15] + x[14], 7);x[13] ^= R(x[12] + x[15], 9);
-    x[14] ^= R(x[13] + x[12], 13);x[15] ^= R(x[14] + x[13], 18);
-    /*eslint-enable */
-  }
-
-  for (i = 0; i < 16; ++i) {
-    B32[i] = x[i] + B32[i];
-  }for (i = 0; i < 16; i++) {
-    var bi = i * 4;
-    B[bi + 0] = B32[i] >> 0 & 0xff;
-    B[bi + 1] = B32[i] >> 8 & 0xff;
-    B[bi + 2] = B32[i] >> 16 & 0xff;
-    B[bi + 3] = B32[i] >> 24 & 0xff;
-  }
-}
-
-function blockxor(S, Si, D, Di, len) {
-  var i = len >> 6;
-  while (i--) {
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-    D[Di++] ^= S[Si++];D[Di++] ^= S[Si++];
-  }
-}
-
-function integerify(B, bi, r) {
-  var n;
-
-  bi += (2 * r - 1) * 64;
-
-  n = (B[bi + 0] & 0xff) << 0;
-  n |= (B[bi + 1] & 0xff) << 8;
-  n |= (B[bi + 2] & 0xff) << 16;
-  n |= (B[bi + 3] & 0xff) << 24;
-
-  return n;
-}
-
-function arraycopy(src, srcPos, dest, destPos, length) {
-  while (length--) {
-    dest[destPos++] = src[srcPos++];
-  }
-}
-
-function arraycopy32(src, srcPos, dest, destPos, length) {
-  var i = length >> 5;
-  while (i--) {
-    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
-
-    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
-
-    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
-
-    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
-    dest[destPos++] = src[srcPos++];dest[destPos++] = src[srcPos++];
-  }
-}
-
-function scrypt(passwd, salt, N, r, p, dkLen, callback) {
-  if (N === 0 || (N & N - 1) !== 0) throw Error('N must be > 0 and a power of 2');
-
-  var MAX_VALUE = 2147483647;
-  if (N > MAX_VALUE / 128 / r) throw Error('Parameter N is too large');
-  if (r > MAX_VALUE / 128 / p) throw Error('Parameter r is too large');
-
-  if (!Buffer.isBuffer(passwd)) {
-    passwd = new Buffer(passwd, 'utf8');
-  }
-
-  if (!Buffer.isBuffer(salt)) {
-    salt = new Buffer(salt, 'utf8');
-  }
-
-  var B = pbkdf2(passwd, salt, 1, p * 128 * r, ALGO.SHA256);
-
-  var XY = [];
-  var V = [];
-
-  for (var i = 0; i < p; i++) {
-    smix(B, i * 128 * r, r, N, V, XY);
-  }
-
-  callback(pbkdf2(passwd, B, 1, dkLen, ALGO.SHA256));
 }
 
 module.exports = {
@@ -24098,69 +23903,66 @@ var ImportExport = new function () {
     if (!isECMult) {
       var addresshash = Buffer(hex.slice(3, 7));
 
-      WalletCrypto.scrypt(passphrase, addresshash, 16384, 8, 8, 64, function (derivedBytes) {
-        var k = derivedBytes.slice(32, 32 + 32);
+      var derivedBytes = WalletCrypto.scrypt(passphrase, addresshash, 16384, 8, 8, 64);
+      var k = derivedBytes.slice(32, 32 + 32);
 
-        var decryptedBytes = WalletCrypto.AES.decrypt(Buffer(hex.slice(7, 7 + 32)), k, null, AESopts);
-        for (var x = 0; x < 32; x++) {
-          decryptedBytes[x] ^= derivedBytes[x];
-        }
+      var decryptedBytes = WalletCrypto.AES.decrypt(Buffer(hex.slice(7, 7 + 32)), k, null, AESopts);
+      for (var x = 0; x < 32; x++) {
+        decryptedBytes[x] ^= derivedBytes[x];
+      }
 
-        decrypted = BigInteger.fromBuffer(decryptedBytes);
+      decrypted = BigInteger.fromBuffer(decryptedBytes);
 
-        verifyHashAndReturn();
-      });
+      verifyHashAndReturn();
     } else {
       var ownerentropy = hex.slice(7, 7 + 8);
       var ownersalt = Buffer(!hasLotSeq ? ownerentropy : ownerentropy.slice(0, 4));
 
-      WalletCrypto.scrypt(passphrase, ownersalt, 16384, 8, 8, 32, function (prefactorA) {
-        var passfactor;
+      var prefactorA = WalletCrypto.scrypt(passphrase, ownersalt, 16384, 8, 8, 32);
+      var passfactor;
 
-        if (!hasLotSeq) {
-          passfactor = prefactorA;
-        } else {
-          var prefactorB = Buffer.concat([prefactorA, Buffer(ownerentropy)]);
-          passfactor = hash256(prefactorB);
-        }
+      if (!hasLotSeq) {
+        passfactor = prefactorA;
+      } else {
+        var prefactorB = Buffer.concat([prefactorA, Buffer(ownerentropy)]);
+        passfactor = hash256(prefactorB);
+      }
 
-        var kp = new Bitcoin.ECPair(BigInteger.fromBuffer(passfactor), null, { network: constants.getNetwork() });
+      var kp = new Bitcoin.ECPair(BigInteger.fromBuffer(passfactor), null, { network: constants.getNetwork() });
 
-        var passpoint = kp.getPublicKeyBuffer();
+      var passpoint = kp.getPublicKeyBuffer();
 
-        var encryptedpart2 = Buffer(hex.slice(23, 23 + 16));
+      var encryptedpart2 = Buffer(hex.slice(23, 23 + 16));
 
-        var addresshashplusownerentropy = Buffer(hex.slice(3, 3 + 12));
+      var addresshashplusownerentropy = Buffer(hex.slice(3, 3 + 12));
 
-        WalletCrypto.scrypt(passpoint, addresshashplusownerentropy, 1024, 1, 1, 64, function (derived) {
-          var k = derived.slice(32);
+      var derived = WalletCrypto.scrypt(passpoint, addresshashplusownerentropy, 1024, 1, 1, 64);
+      var _k = derived.slice(32);
 
-          var unencryptedpart2Bytes = WalletCrypto.AES.decrypt(encryptedpart2, k, null, AESopts);
+      var unencryptedpart2Bytes = WalletCrypto.AES.decrypt(encryptedpart2, _k, null, AESopts);
 
-          for (var i = 0; i < 16; i++) {
-            unencryptedpart2Bytes[i] ^= derived[i + 16];
-          }
+      for (var i = 0; i < 16; i++) {
+        unencryptedpart2Bytes[i] ^= derived[i + 16];
+      }
 
-          var encryptedpart1 = Buffer.concat([Buffer(hex.slice(15, 15 + 8)), Buffer(unencryptedpart2Bytes.slice(0, 0 + 8))]);
+      var encryptedpart1 = Buffer.concat([Buffer(hex.slice(15, 15 + 8)), Buffer(unencryptedpart2Bytes.slice(0, 0 + 8))]);
 
-          var unencryptedpart1Bytes = WalletCrypto.AES.decrypt(encryptedpart1, k, null, AESopts);
+      var unencryptedpart1Bytes = WalletCrypto.AES.decrypt(encryptedpart1, _k, null, AESopts);
 
-          for (var ii = 0; ii < 16; ii++) {
-            unencryptedpart1Bytes[ii] ^= derived[ii];
-          }
+      for (var ii = 0; ii < 16; ii++) {
+        unencryptedpart1Bytes[ii] ^= derived[ii];
+      }
 
-          var seedb = Buffer.concat([Buffer(unencryptedpart1Bytes.slice(0, 0 + 16)), Buffer(unencryptedpart2Bytes.slice(8, 8 + 8))]);
+      var seedb = Buffer.concat([Buffer(unencryptedpart1Bytes.slice(0, 0 + 16)), Buffer(unencryptedpart2Bytes.slice(8, 8 + 8))]);
 
-          var factorb = hash256(seedb);
+      var factorb = hash256(seedb);
 
-          // secp256k1: N
-          var N = BigInteger.fromHex('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141');
+      // secp256k1: N
+      var N = BigInteger.fromHex('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141');
 
-          decrypted = BigInteger.fromBuffer(passfactor).multiply(BigInteger.fromBuffer(factorb)).remainder(N);
+      decrypted = BigInteger.fromBuffer(passfactor).multiply(BigInteger.fromBuffer(factorb)).remainder(N);
 
-          verifyHashAndReturn();
-        });
-      });
+      verifyHashAndReturn();
     }
   };
 }();
@@ -24322,7 +24124,15 @@ Metadata.extractResponse = curry(function (encKey, res) {
   if (res === null) {
     return res;
   } else {
-    return encKey ? compose(JSON.parse, M.decrypt(encKey), prop('payload'))(res) : compose(JSON.parse, M.BufferToString, M.B64ToBuffer, prop('payload'))(res);
+    var parseOrLog = function parseOrLog(str) {
+      try {
+        return JSON.parse(str);
+      } catch (e) {
+        console.log('Unable to parse metadata contents: ' + str);
+        throw e;
+      }
+    };
+    return encKey ? compose(parseOrLog, M.decrypt(encKey), prop('payload'))(res) : compose(parseOrLog, M.BufferToString, M.B64ToBuffer, prop('payload'))(res);
   }
 });
 
@@ -70747,22 +70557,31 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var crypto = __webpack_require__(62);
 var WebSocket = __webpack_require__(144);
 var ethUtil = __webpack_require__(63);
+var WalletCrypto = __webpack_require__(18);
 var EthHd = __webpack_require__(387);
 
 var _require = __webpack_require__(22),
-    construct = _require.construct;
+    construct = _require.construct,
+    has = _require.has;
 
 var _require2 = __webpack_require__(4),
     isPositiveNumber = _require2.isPositiveNumber,
+    isHex = _require2.isHex,
     asyncOnce = _require2.asyncOnce,
-    dedup = _require2.dedup;
+    dedup = _require2.dedup,
+    unsortedEquals = _require2.unsortedEquals;
 
 var API = __webpack_require__(9);
 var EthTxBuilder = __webpack_require__(229);
 var EthAccount = __webpack_require__(528);
 var EthSocket = __webpack_require__(529);
 var EthWalletTx = __webpack_require__(230);
-ethUtil.scrypt = __webpack_require__(501);
+
+var objHasKeys = function objHasKeys(obj, keys) {
+  return keys.every(function (k) {
+    return has(k, obj);
+  });
+};
 
 var METADATA_TYPE_ETH = 5;
 var DERIVATION_PATH = "m/44'/60'/0'/0";
@@ -71196,39 +71015,99 @@ var EthWallet = function () {
       return Buffer.concat([decipher.update(data), decipher.final()]);
     }
   }, {
-    key: 'fromMew',
-    value: function fromMew(input, password, nonStrict) {
-      var json = (typeof input === 'undefined' ? 'undefined' : _typeof(input)) === 'object' ? input : JSON.parse(nonStrict ? input.toLowerCase() : input);
-      if (json.version !== 3) {
-        throw new Error('Not a v3 wallet');
+    key: 'extractSeed',
+    value: function extractSeed(derivedKey, json) {
+      if (!Buffer.isBuffer(derivedKey)) {
+        throw new Error('Expected key to be a Buffer');
       }
-      var derivedKey;
-      var kdfparams;
-      if (json.crypto.kdf === 'scrypt') {
-        kdfparams = json.crypto.kdfparams;
-        derivedKey = ethUtil.scrypt(new Buffer(password), new Buffer(kdfparams.salt, 'hex'), kdfparams.n, kdfparams.r, kdfparams.p, kdfparams.dklen);
-      } else if (json.crypto.kdf === 'pbkdf2') {
-        kdfparams = json.crypto.kdfparams;
-        if (kdfparams.prf !== 'hmac-sha256') {
-          throw new Error('Unsupported parameters to PBKDF2');
-        }
-        derivedKey = crypto.pbkdf2Sync(new Buffer(password), new Buffer(kdfparams.salt, 'hex'), kdfparams.c, kdfparams.dklen, 'sha256');
-      } else {
-        throw new Error('Unsupported key derivation scheme');
+      if (_typeof(json.crypto) !== 'object') {
+        throw new Error('Expected crypto to be an object');
       }
-
       var ciphertext = new Buffer(json.crypto.ciphertext, 'hex');
       var mac = ethUtil.sha3(Buffer.concat([derivedKey.slice(16, 32), ciphertext]));
       if (mac.toString('hex') !== json.crypto.mac) {
         throw new Error('Key derivation failed - possibly wrong passphrase');
       }
+
       var decipher = crypto.createDecipheriv(json.crypto.cipher, derivedKey.slice(0, 16), new Buffer(json.crypto.cipherparams.iv, 'hex'));
       var seed = this.decipherBuffer(decipher, ciphertext, 'hex');
       while (seed.length < 32) {
         var nullBuff = new Buffer([0x00]);
         seed = Buffer.concat([nullBuff, seed]);
       }
-      return EthAccount.fromMew(seed);
+      return seed;
+    }
+  }, {
+    key: 'fromMew',
+    value: function fromMew(json, password) {
+      if ((typeof json === 'undefined' ? 'undefined' : _typeof(json)) !== 'object') {
+        throw new Error('Not a supported file type');
+      }
+      if (isNaN(json.version)) {
+        throw new Error('Not a supported wallet. Please use a valid wallet version.');
+      }
+      if (!objHasKeys(json, ['crypto', 'id', 'version'])) {
+        throw new Error('File is malformatted');
+      }
+      if (!objHasKeys(json.crypto, ['cipher', 'cipherparams', 'ciphertext', 'kdf', 'kdfparams', 'mac'])) {
+        throw new Error('Crypto is not valid');
+      }
+      if (!isHex(json.crypto.cipherparams.iv)) {
+        throw new Error('Not a supported param: cipherparams.iv');
+      }
+      if (!isHex(json.crypto.ciphertext)) {
+        throw new Error('Not a supported param: ciphertext');
+      }
+
+      var kdfparams = void 0;
+      if (json.crypto.kdf === 'scrypt') {
+        kdfparams = json.crypto.kdfparams;
+        if (!unsortedEquals(Object.keys(kdfparams), ['dklen', 'n', 'p', 'r', 'salt'])) {
+          throw new Error('File is malformatted');
+        }
+        if (!objHasKeys(kdfparams, ['dklen', 'n', 'p', 'r'])) {
+          throw new Error('Not a supported param: kdfparams');
+        }
+        if (!isHex(kdfparams.salt)) {
+          throw new Error('Not a supported param: kdfparams.salt');
+        }
+
+        var _kdfparams = kdfparams,
+            salt = _kdfparams.salt,
+            n = _kdfparams.n,
+            r = _kdfparams.r,
+            p = _kdfparams.p,
+            dklen = _kdfparams.dklen;
+
+        var derivedKey = WalletCrypto.scrypt(Buffer.from(password), Buffer.from(salt, 'hex'), n, r, p, dklen);
+        var seed = this.extractSeed(derivedKey, json);
+        return EthAccount.fromMew(seed);
+      } else if (json.crypto.kdf === 'pbkdf2') {
+        kdfparams = json.crypto.kdfparams;
+        if (!unsortedEquals(Object.keys(kdfparams), ['c', 'dklen', 'prf', 'salt'])) {
+          throw new Error('File is malformatted');
+        }
+        if (!isHex(kdfparams.salt)) {
+          throw new Error('Not a supported param: kdfparams.salt');
+        }
+        if (kdfparams.prf !== 'hmac-sha256') {
+          throw new Error('Unsupported parameters to PBKDF2');
+        }
+        if (!objHasKeys(kdfparams, ['c', 'dklen'])) {
+          throw new Error('Not a supported param: kdfparams');
+        }
+
+        var _kdfparams2 = kdfparams,
+            _salt = _kdfparams2.salt,
+            c = _kdfparams2.c,
+            _dklen = _kdfparams2.dklen;
+
+        var _derivedKey = WalletCrypto.pbkdf2(Buffer.from(password), Buffer.from(_salt, 'hex'), c, _dklen, 'sha256');
+        var _seed = this.extractSeed(_derivedKey, json);
+        return EthAccount.fromMew(_seed);
+      } else {
+        throw new Error('Unsupported key derivation scheme');
+      }
     }
 
     /* end mew */
