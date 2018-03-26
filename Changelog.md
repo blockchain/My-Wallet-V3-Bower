@@ -1,6 +1,6 @@
 __Blockchain Wallet V3__
 
-#   (2018-02-26)
+#   (2018-03-26)
 
 
 
@@ -8,14 +8,8 @@ __Blockchain Wallet V3__
 
 ## Bug Fixes
 
-- **release:** linter issues
-  ([ef3c4c5b](https://github.com/blockchain/My-Wallet-V3/commit/ef3c4c5b0d5f82da8506a9b53d7ed480ac8e5598))
-
-
-## Chore
-
-- **release:** v3.43.1
-  ([a7f13d51](https://github.com/blockchain/My-Wallet-V3/commit/a7f13d51b86ab8d09ae77992ecf51095bd6b5539))
+- **deps:** use different commit hash
+  ([4511c9a5](https://github.com/blockchain/My-Wallet-V3/commit/4511c9a5974c000b429f0048731c729682fda70d))
 
 
 

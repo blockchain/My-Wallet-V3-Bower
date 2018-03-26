@@ -24944,22 +24944,20 @@ var Trade = function (_Exchange$Trade) {
       }
 
       this._is_buy = obj.action === 'buy';
-
+      this._feeAmount = obj.fee_amount;
       this._inCurrency = this._is_buy ? obj.quote_currency.toUpperCase() : obj.base_currency.toUpperCase();
       this._outCurrency = this._is_buy ? obj.base_currency.toUpperCase() : obj.quote_currency.toUpperCase();
 
       if (this._inCurrency === 'BTC') {
         this._inAmount = toSatoshi(obj.base_amount);
         this._sendAmount = toSatoshi(obj.base_amount);
-        this._feeAmount = obj.fee_amount;
         this._feeCurrency = obj.fee_currency;
-        this._receiveAmount = obj.quote_amount - obj.fee_amount;
+        this._receiveAmount = obj.quote_amount;
       } else {
         this._inAmount = toSatoshi(obj.quote_amount);
         this._sendAmount = toSatoshi(obj.quote_amount);
         this._receiveAmount = obj.base_amount;
       }
-      this._feeAmount = obj.fee_amount;
 
       /* istanbul ignore if */
       if (this.debug) {
@@ -24972,7 +24970,7 @@ var Trade = function (_Exchange$Trade) {
       }
 
       this._receiveAddress = obj.address;
-      this._txHash = obj.blockchain_tx_hash || this._txHash;
+      this._txHash = obj.blockchain_tx_hash || (!this._is_buy ? this._txHash : null);
     }
   }, {
     key: 'setFromJSON',
@@ -52495,7 +52493,7 @@ function TransactionBuilder(network, maximumFeeRate) {
   this.network = network || networks.bitcoin;
 
   // WARNING: This is __NOT__ to be relied on, its just another potential safety mechanism (safety in-depth)
-  this.maximumFeeRate = maximumFeeRate || 2500;
+  this.maximumFeeRate = maximumFeeRate || 1000;
 
   this.inputs = [];
   this.bitcoinCash = false;
@@ -70569,7 +70567,8 @@ var _require2 = __webpack_require__(4),
     isHex = _require2.isHex,
     asyncOnce = _require2.asyncOnce,
     dedup = _require2.dedup,
-    unsortedEquals = _require2.unsortedEquals;
+    unsortedEquals = _require2.unsortedEquals,
+    isNumber = _require2.isNumber;
 
 var API = __webpack_require__(9);
 var EthTxBuilder = __webpack_require__(229);
@@ -71060,6 +71059,7 @@ var EthWallet = function () {
       }
 
       var kdfparams = void 0;
+      // TODO: breakout format validation into separate function
       if (json.crypto.kdf === 'scrypt') {
         kdfparams = json.crypto.kdfparams;
         if (!unsortedEquals(Object.keys(kdfparams), ['dklen', 'n', 'p', 'r', 'salt'])) {
@@ -71070,6 +71070,11 @@ var EthWallet = function () {
         }
         if (!isHex(kdfparams.salt)) {
           throw new Error('Not a supported param: kdfparams.salt');
+        }
+        if (!['dklen', 'n', 'p', 'r'].every(function (i) {
+          return isNumber(kdfparams[i]);
+        })) {
+          throw new Error('Not a supported param: dklen, n, p, r must be numbers');
         }
 
         var _kdfparams = kdfparams,
@@ -71095,6 +71100,11 @@ var EthWallet = function () {
         }
         if (!objHasKeys(kdfparams, ['c', 'dklen'])) {
           throw new Error('Not a supported param: kdfparams');
+        }
+        if (!['c', 'dklen'].every(function (i) {
+          return isNumber(kdfparams[i]);
+        })) {
+          throw new Error('Not a supported param: c and dklen must be numbers');
         }
 
         var _kdfparams2 = kdfparams,
