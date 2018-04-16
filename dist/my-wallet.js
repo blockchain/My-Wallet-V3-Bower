@@ -47819,6 +47819,12 @@ Object.defineProperties(CoinifyProfile.prototype, {
     get: function get() {
       return this._cannotTradeReason;
     }
+  },
+  'tradeSubscriptionsAllowed': {
+    configurable: false,
+    get: function get() {
+      return this._tradeSubscriptionsAllowed;
+    }
   }
 });
 
@@ -47836,6 +47842,7 @@ CoinifyProfile.prototype.fetch = function () {
     }
 
     parentThis._default_currency = res.defaultCurrency;
+    parentThis._tradeSubscriptionsAllowed = res.tradeSubscriptionsAllowed;
 
     // TODO: use new Address(res.profile.address);
     parentThis._street = res.profile.address.street;

@@ -1,21 +1,18 @@
 __Blockchain Wallet V3__
 
-#   (2018-03-27)
+#   (2018-04-16)
 
 
 
 ---
 
-## Bug Fixes
-
-- **deps:** use blockchain repo for BCH
-  ([3341f2d0](https://github.com/blockchain/My-Wallet-V3/commit/3341f2d02775c386d2bf1bad13eb0802dcf556b3))
-
-
 ## Chore
 
-- **release:** bump version
-  ([594bb83a](https://github.com/blockchain/My-Wallet-V3/commit/594bb83a9acf051ab657f48b93b91027fc44b871))
+- **release:**
+  - v3.44.0
+  ([133a16bf](https://github.com/blockchain/My-Wallet-V3/commit/133a16bf78e8ea3e74f997a1c0727d90c4d06615))
+  - upgrade client
+  ([332aef2d](https://github.com/blockchain/My-Wallet-V3/commit/332aef2dcc5bb8a65be808f2a222ef01419cd223))
 
 
 
