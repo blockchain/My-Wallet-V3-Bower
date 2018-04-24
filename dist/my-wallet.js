@@ -24945,6 +24945,7 @@ var Trade = function (_Exchange$Trade) {
 
       this._is_buy = obj.action === 'buy';
       this._feeAmount = obj.fee_amount;
+      this._expectedDelivery = obj.expected_delivery;
       this._inCurrency = this._is_buy ? obj.quote_currency.toUpperCase() : obj.base_currency.toUpperCase();
       this._outCurrency = this._is_buy ? obj.base_currency.toUpperCase() : obj.quote_currency.toUpperCase();
 
@@ -25038,6 +25039,11 @@ var Trade = function (_Exchange$Trade) {
     key: 'isBuy',
     get: function get() {
       return this._is_buy;
+    }
+  }, {
+    key: 'expectedDelivery',
+    get: function get() {
+      return this._expectedDelivery;
     }
   }], [{
     key: 'fetchAll',
@@ -49610,6 +49616,7 @@ var Profile = function () {
     this._canSell = obj.account.can_sell;
     this._verification_status = obj.account.verification_status;
     this._limits = obj.account.limits.available;
+    this._processingTimes = obj.processing_times;
   }
 
   _createClass(Profile, [{
@@ -49675,6 +49682,7 @@ var Profile = function () {
         _this._canBuy = res.account.can_buy;
         _this._canSell = res.account.can_sell;
         _this._limits = res.account.limits.available;
+        _this._processingTimes = res.processing_times;
         _this._verification_status = res.account.verification_status;
       });
     }
@@ -49729,6 +49737,11 @@ var Profile = function () {
     key: 'canSell',
     get: function get() {
       return this._canSell;
+    }
+  }, {
+    key: 'processingTimes',
+    get: function get() {
+      return this._processingTimes;
     }
   }, {
     key: 'address',
@@ -69104,7 +69117,10 @@ exports.createContext = Script.createContext = function (context) {
 
   function parseHeaders(rawHeaders) {
     var headers = new Headers();
-    rawHeaders.split(/\r?\n/).forEach(function (line) {
+    // Replace instances of \r\n and \n followed by at least one space or horizontal tab with a space
+    // https://tools.ietf.org/html/rfc7230#section-3.2
+    var preProcessedHeaders = rawHeaders.replace(/\r?\n[\t ]+/g, ' ');
+    preProcessedHeaders.split(/\r?\n/).forEach(function (line) {
       var parts = line.split(':');
       var key = parts.shift().trim();
       if (key) {
@@ -69123,7 +69139,7 @@ exports.createContext = Script.createContext = function (context) {
     }
 
     this.type = 'default';
-    this.status = 'status' in options ? options.status : 200;
+    this.status = options.status === undefined ? 200 : options.status;
     this.ok = this.status >= 200 && this.status < 300;
     this.statusText = 'statusText' in options ? options.statusText : 'OK';
     this.headers = new Headers(options.headers);
@@ -69190,6 +69206,8 @@ exports.createContext = Script.createContext = function (context) {
 
       if (request.credentials === 'include') {
         xhr.withCredentials = true;
+      } else if (request.credentials === 'omit') {
+        xhr.withCredentials = false;
       }
 
       if ('responseType' in xhr && support.blob) {
